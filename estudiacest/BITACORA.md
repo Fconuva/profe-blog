@@ -1,5 +1,12 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-05, ampliación sustantiva de la entrevista NM2 tras revisión docente
+
+- Francisco rechaza la brevedad y reitera que una sola lectura no basta. Se amplía la misma Clase 12 a tres entrevistas originales completas: Radio Patio (571 palabras), divulgación científica sobre un río (602) y entrevista cultural a un fotógrafo (611). Total: 1784 palabras, 24 ítems (5 Localizar, 12 Interpretar, 7 Reflexionar), seis productos escritos y tres cierres. Los doce ítems originales conservan numeración, contenido y pauta; se preserva el borrador real iniciado.
+- La práctica incluye dos productos guiados y cuatro de transferencia: repregunta con evidencia, dato/inferencia/límite, reformulación de un supuesto, contexto de una imagen, comparación con citas de los tres textos y corrección justificada de dos titulares. El servidor guarda los nueve campos escritos y el panel docente muestra los seis nuevos productos. Las claves permanecen privadas; no se infiere calidad de escritura a partir de longitud.
+- Planificación y presentación reconstruidas con instrucción explícita y planificación inversa: 21 pantallas, tres aperturas independientes, I Do, We Do, controles, You Do, plenario y metacognición. 90 minutos previstos y 52 minutos de práctica, distinguiendo distribución horaria de duración observada. Se documentan hipótesis de lectura, decisión y escritura; no se afirma que la actividad haya sido cronometrada en aula. Extensión de transferencia para quienes terminan antes.
+- PDF A4 de 17 páginas, numeración continua, lecturas y preguntas sin cortes, seis espacios de desarrollo de ocho renglones de 7 mm. Se conserva el video de modelado y la ruta personal guiada. El generador reproducible es `scripts/expand-simce-u3s12.js`; auditoría focalizada actualizada para impedir volver a una única lectura. Verificación de publicación se registra al cerrar.
+
 ## 2026-10-05, corrección de estructura y publicación de la entrevista NM2
 
 - Se corrige la Clase 12 con las skills de instrucción explícita y planificación inversa: 90 minutos exactos, apertura en tres diapositivas independientes, modelamiento, controles de comprensión, 20 minutos de práctica guiada y 34 de práctica independiente, plenario y metacognición. Los dominios conceptual, procedimental y actitudinal quedan vinculados a evidencia observable; estrategia PARA y dos controles con umbral de 80 %.

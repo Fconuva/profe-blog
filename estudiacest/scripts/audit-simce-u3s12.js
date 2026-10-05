@@ -29,10 +29,13 @@ const objective = 'Analizar cómo las preguntas y respuestas construyen el prop�
 expect(page.includes(objective) && teacher.includes(objective), 'El objetivo no coincide entre guía y planificación.');
 expect(page.includes('Miércoles 7 de octubre de 2026') && teacher.includes('Miércoles 7 de octubre de 2026'), 'Falta la fecha explícita de aplicación.');
 expect(page.includes('2°A HC · 2°B HC') && teacher.includes('2°A HC y 2°B HC'), 'Faltan ambos cursos en los materiales.');
-expect((page.match(/data-question="q\d+"/g) || []).length === 12, 'La guía no contiene exactamente 12 preguntas.');
-expect((page.match(/class="skill">LOCALIZAR/g) || []).length === 3, 'La guía debe contener 3 ítems de Localizar.');
-expect((page.match(/class="skill">INTERPRETAR/g) || []).length === 6, 'La guía debe contener 6 ítems de Interpretar.');
-expect((page.match(/class="skill">REFLEXIONAR/g) || []).length === 3, 'La guía debe contener 3 ítems de Reflexionar.');
+expect((page.match(/data-question="q\d+"/g) || []).length === 24, 'La guía no contiene exactamente 24 preguntas.');
+expect((page.match(/class="skill">LOCALIZAR/g) || []).length === 5, 'La guía debe contener 5 ítems de Localizar.');
+expect((page.match(/class="skill">INTERPRETAR/g) || []).length === 12, 'La guía debe contener 12 ítems de Interpretar.');
+expect((page.match(/class="skill">REFLEXIONAR/g) || []).length === 7, 'La guía debe contener 7 ítems de Reflexionar.');
+expect((page.match(/data-reading="texto\d"/g)||[]).length===3, 'La clase debe tener tres entrevistas completas, no una lectura única.');
+expect(['g1','g2','a1','a2','a3','a4'].every(id=>page.includes(`id="${id}"`) && client.includes(`'${id}'`) && backend.includes(`'${id}'`)), 'Los seis productos no están integrados al guardado.');
+expect(page.includes('Cita un fragmento breve de cada texto') && page.includes('Reescribe dos titulares'), 'Faltan comparación intertextual y transferencia editorial.');
 expect(page.includes('Texto original de carácter ficticio creado para esta clase'), 'La entrevista no declara su carácter original y ficticio.');
 expect(page.includes('ATENCIÓN') && page.includes('A falla'), 'Falta el modelamiento con análisis de distractores.');
 expect(['m1','m2','m3'].every(id => page.includes(`id="${id}"`)), 'Faltan los tres cierres metacognitivos.');
@@ -62,11 +65,12 @@ expect(priorIndex >= 0 && priorIndex < rulesIndex && rulesIndex < objectiveIndex
 expect(slides.includes('I Do') && slides.includes('We Do') && slides.includes('You Do'), 'La presentación no contiene la liberación gradual de responsabilidad.');
 expect(slides.includes('CFU 1') && slides.includes('CFU 2') && slides.includes('80 %'), 'La presentación no contiene controles de comprensión y umbral de avance.');
 expect(slides.includes('Revisemos un distractor') && slides.includes('Lo que me llevo'), 'La presentación no cierra con revisión y sistematización.');
-expect(teacher.includes('00:00–00:05') && teacher.includes('00:48–01:22') && teacher.includes('01:26–01:30'), 'La planificación no mide los 90 minutos de inicio a cierre.');
-expect(teacher.includes('54 minutos de práctica del estudiante') && teacher.includes('20 guiados + 34 independientes'), 'La planificación no declara el tiempo efectivo de práctica.');
+expect(teacher.includes('00:00–00:05') && teacher.includes('00:46–01:20') && teacher.includes('01:26–01:30'), 'La planificación no distribuye los 90 minutos de inicio a cierre.');
+expect(teacher.includes('52 minutos de práctica del estudiante') && teacher.includes('18 guiados + 34 independientes'), 'La planificación no declara la práctica prevista.');
+expect(teacher.includes('1784 palabras') && teacher.includes('todavía no una medición de aplicación'), 'Debe distinguir carga material comprobada de tiempo estimado.');
 expect(['Conceptual','Procedimental','Actitudinal','Estrategia PARA'].every(text => teacher.includes(text)), 'La planificación no alinea dominios y procedimiento.');
 expect(printGuide.includes('Nombre y apellido') && printGuide.includes('Curso') && printGuide.includes('Fecha'), 'La guía imprimible no tiene identificación completa.');
-expect((printGuide.match(/Página \d de 6/g) || []).length === 6, 'La guía imprimible no contiene las seis páginas planificadas.');
+expect((printGuide.match(/Página \d+ de 17/g) || []).length === 17, 'La guía imprimible debe tener sus 17 páginas numeradas.');
 expect(/min-height:\s*10mm/.test(printGuide) && /\.lines\s*\{[\s\S]*?height:\s*34mm/.test(printGuide), 'Los campos y espacios de respuesta imprimibles son insuficientes.');
 expect(['Conceptual','Procedimental','Actitudinal','Precisar la tarea','Apoyar y descartar'].every(text => printGuide.includes(text)), 'La guía imprimible no enseña los dominios y PARA.');
 expect(exists('estudiantes/simce-u3-clase12-entrevista/guia-imprimible.pdf'), 'Falta el PDF A4 de la guía imprimible.');
@@ -96,4 +100,4 @@ if (failures.length) {
   process.exit(1);
 }
 
-console.log('SIMCE U3S12 auditada: 90 minutos exactos, I Do/We Do/You Do, dominios conceptual-procedimental-actitudinal, estrategia PARA, video de modelado, guía 3/6/3, ruta personal, entrega API atómica y PDF A4 verificados.');
+console.log('SIMCE U3S12 auditada: tres entrevistas, 1784 palabras, 24 ítems 5/12/7, seis productos escritos guardables, comparación y transferencia; 90 minutos previstos sin afirmar validación de aula; entrega API y PDF A4 de 17 páginas.');

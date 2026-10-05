@@ -10,9 +10,10 @@
   };
   const API = '/api/estudiantes';
   const SESSION_ID = 'sesion-u3-12';
-  const QUESTION_IDS = Array.from({ length:12 }, (_, index) => `q${index + 1}`);
+  const QUESTION_IDS = Array.from({ length:24 }, (_, index) => `q${index + 1}`);
   const QUESTIONS = QUESTION_IDS;
-  const META_IDS = ['m1', 'm2', 'm3'];
+  const WORK_IDS = ['g1', 'g2', 'a1', 'a2', 'a3', 'a4'];
+  const META_IDS = [...WORK_IDS, 'm1', 'm2', 'm3'];
   const META_MIN = 25;
   const LOCAL_PREVIEW = ['localhost', '127.0.0.1'].includes(location.hostname) && new URLSearchParams(location.search).get('preview') === '1';
   const LOGIN_URL = `/lecturas/?next=${encodeURIComponent('/estudiantes/guia-u3-s12-entrevista.html')}`;
@@ -52,9 +53,10 @@
 
   function updateUi() {
     const answered = QUESTION_IDS.filter((id) => answers[id]).length;
-    const metaReady = META_IDS.filter((id) => $(id).value.trim().length >= META_MIN).length;
-    $('progressText').textContent = `${answered} de 12 preguntas · ${metaReady} de 3 cierres`;
-    $('progressFill').style.width = `${Math.round(((answered + metaReady) / 15) * 100)}%`;
+    const workReady = WORK_IDS.filter((id) => $(id).value.trim().length >= 80).length;
+    const metaReady = ['m1','m2','m3'].filter((id) => $(id).value.trim().length >= META_MIN).length;
+    $('progressText').textContent = `${answered}/24 preguntas · ${workReady}/6 tareas · ${metaReady}/3 cierres`;
+    $('progressFill').style.width = `${Math.round(((answered + workReady + metaReady) / 33) * 100)}%`;
     META_IDS.forEach((id) => { $(`count-${id}`).textContent = $(id).value.length; });
   }
 
@@ -151,7 +153,7 @@
 
   function validate() {
     const missing = QUESTION_IDS.filter((id) => !answers[id]);
-    const shortMeta = META_IDS.filter((id) => $(id).value.trim().length < META_MIN);
+    const shortMeta = META_IDS.filter((id) => $(id).value.trim().length < (WORK_IDS.includes(id) ? 80 : META_MIN));
     const fields = [...missing, ...shortMeta];
     markMissing(fields);
     if (!fields.length) return true;
@@ -166,7 +168,7 @@
       return;
     }
     if (!user) return;
-    if (!window.confirm('¿Confirmas la entrega de tus 12 respuestas y el cierre? Después no podrás modificarlas.')) return;
+    if (!window.confirm('¿Confirmas tus 24 respuestas, seis tareas escritas y tres cierres? Después no podrás modificarlos.')) return;
     submitting = true;
     $('submit').disabled = true;
     $('submit').textContent = 'Confirmando…';
@@ -223,7 +225,7 @@
       if (!state.session.active && !(state.attempt && state.attempt.completada)) throw new Error('Esta clase está cerrada por el docente.');
       restore(state.attempt);
       updateUi();
-      if (submitted) lockCompleted(false);
+    if (submitted) lockCompleted(false);
       else if (!LOCAL_PREVIEW) setMessage(`Avance disponible para ${state.student.nombre} · ${state.student.curso}.`);
     } catch (error) {
       setMessage(error.message);

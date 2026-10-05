@@ -5,14 +5,20 @@ const SESSION_ID = 'sesion-u3-12';
 const COURSES = new Set(['2A-HC', '2B-HC']);
 const ANSWER_KEY = {
     q1:'A', q2:'C', q3:'B', q4:'D', q5:'B', q6:'D',
-    q7:'A', q8:'C', q9:'C', q10:'A', q11:'D', q12:'B'
+    q7:'A', q8:'C', q9:'C', q10:'A', q11:'D', q12:'B',
+    q13:'A', q14:'C', q15:'B', q16:'D', q17:'A', q18:'C',
+    q19:'B', q20:'D', q21:'A', q22:'C', q23:'B', q24:'D'
 };
 const SKILLS = {
     q1:'LOCALIZAR', q2:'INTERPRETAR', q3:'INTERPRETAR', q4:'REFLEXIONAR',
     q5:'LOCALIZAR', q6:'INTERPRETAR', q7:'INTERPRETAR', q8:'REFLEXIONAR',
-    q9:'LOCALIZAR', q10:'INTERPRETAR', q11:'INTERPRETAR', q12:'REFLEXIONAR'
+    q9:'LOCALIZAR', q10:'INTERPRETAR', q11:'INTERPRETAR', q12:'REFLEXIONAR',
+    q13:'LOCALIZAR', q14:'INTERPRETAR', q15:'INTERPRETAR', q16:'REFLEXIONAR',
+    q17:'INTERPRETAR', q18:'REFLEXIONAR', q19:'LOCALIZAR', q20:'INTERPRETAR',
+    q21:'INTERPRETAR', q22:'REFLEXIONAR', q23:'INTERPRETAR', q24:'REFLEXIONAR'
 };
-const META_IDS = ['m1', 'm2', 'm3'];
+const WORK_IDS = ['g1', 'g2', 'a1', 'a2', 'a3', 'a4'];
+const META_IDS = [...WORK_IDS, 'm1', 'm2', 'm3'];
 const META_MIN = 25;
 
 function bodyOf(req) {
@@ -34,7 +40,7 @@ function cleanAnswers(raw) {
 
 function cleanMeta(raw) {
     const source = raw && typeof raw === 'object' ? raw : {};
-    return Object.fromEntries(META_IDS.map((id) => [id, cleanText(source[id])]));
+    return Object.fromEntries(META_IDS.map((id) => [id, cleanText(source[id], WORK_IDS.includes(id) ? 1200 : 700)]));
 }
 
 function safeAttempt(value) {
@@ -46,6 +52,7 @@ function safeAttempt(value) {
         completada: value.completada === true,
         startedAt: Number(value.startedAt || 0),
         updatedAt: Number(value.updatedAt || 0),
+        total: Number(value.total || 12),
         submittedAt: Number(value.submittedAt || 0)
     };
 }
@@ -67,9 +74,9 @@ function scoreAnswers(answers) {
 
 function validateFinal(payload) {
     const unanswered = Object.keys(ANSWER_KEY).filter((id) => !payload.answers[id]);
-    const shortMeta = META_IDS.filter((id) => payload.metaResponses[id].length < META_MIN);
+    const shortMeta = META_IDS.filter((id) => payload.metaResponses[id].length < (WORK_IDS.includes(id) ? 80 : META_MIN));
     if (unanswered.length || shortMeta.length) {
-        const error = new Error('Completa las 12 preguntas y desarrolla los tres cierres antes de confirmar.');
+        const error = new Error('Completa las 24 preguntas, las seis tareas escritas y los tres cierres antes de confirmar.');
         error.status = 400;
         error.fields = [...unanswered, ...shortMeta];
         throw error;
@@ -157,7 +164,8 @@ async function manejar(req, res, action, db, auth) {
                 updatedAt:now,
                 last_save:now,
                 score:null,
-                total:12,
+                total:24,
+                version:'entrevista-tres-textos-v2',
                 formativa:true
             });
             return res.status(200).json({ ok:true, updatedAt:now });
@@ -168,6 +176,12 @@ async function manejar(req, res, action, db, auth) {
         const scored = scoreAnswers(payload.answers);
         const percentage = Math.round((scored.score / scored.total) * 100);
         const ticket = {
+            repregunta_guiada:payload.metaResponses.g1,
+            limite_guiado:payload.metaResponses.g2,
+            reformulacion_rio:payload.metaResponses.a1,
+            evidencia_fotografia:payload.metaResponses.a2,
+            comparacion_entrevistas:payload.metaResponses.a3,
+            titulares_corregidos:payload.metaResponses.a4,
             pregunta_orienta:payload.metaResponses.m1,
             evidencia_pregunta:payload.metaResponses.m2,
             estrategia_mejora:payload.metaResponses.m3

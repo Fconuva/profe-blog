@@ -3,9 +3,11 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
+const http = require('node:http');
 const { chromium } = require('playwright');
 const root = path.resolve(__dirname, '..');
-const origin = (process.env.SIMCE_CHECK_ORIGIN || 'https://www.estudiacest.com').replace(/\/$/, '');
+let origin = (process.env.SIMCE_CHECK_ORIGIN || 'https://www.estudiacest.com').replace(/\/$/, '');
+let server;
 const files = [
   'estudiantes/guia-u3-s12-entrevista.html',
   'estudiantes/simce-u3-clase12-entrevista/index.html',
@@ -14,6 +16,18 @@ const files = [
   'estudiantes/assets/u3s12/modelo-entrevista-para.mp4'
 ];
 async function main() {
+  if(process.argv.includes('--local')) {
+    server=http.createServer((req,res)=>{
+      let file=path.resolve(root,'.'+new URL(req.url,'http://localhost').pathname);
+      if(!file.startsWith(root+path.sep)){res.writeHead(403).end();return;}
+      if(fs.existsSync(file)&&fs.statSync(file).isDirectory())file=path.join(file,'index.html');
+      if(!fs.existsSync(file)){res.writeHead(404).end();return;}
+      res.setHeader('Content-Type',({'.html':'text/html','.js':'text/javascript','.png':'image/png','.mp4':'video/mp4','.pdf':'application/pdf'})[path.extname(file)]||'application/octet-stream');
+      fs.createReadStream(file).pipe(res);
+    });
+    await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+    origin=`http://127.0.0.1:${server.address().port}`;
+  }
   for (const file of files) {
     const response = await fetch(`${origin}/${file}?revision=${Date.now()}`);
     assert.equal(response.status, 200, file);
@@ -24,12 +38,12 @@ async function main() {
   const browser = await chromium.launch({ headless:true });
   try {
     for (const width of [390, 1440, 3840]) {
-      const page = await browser.newPage({ viewport:{ width, height:width === 390 ? 844 : 1080 } });
+      const page = await browser.newPage({ viewport:{ width, height:width === 390 ? 844 : 1080 }, reducedMotion:'reduce' });
       const errors = [];
       page.on('pageerror', error => errors.push(error.message));
       await page.goto(`${origin}/estudiantes/simce-u3-clase12-entrevista/`, { waitUntil:'networkidle' });
-      assert.equal(await page.locator('.slide').count(), 15);
-      for (let slide = 0; slide < 15; slide++) {
+      assert.equal(await page.locator('.slide').count(), 21);
+      for (let slide = 0; slide < 21; slide++) {
         assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, `Desborde ${width}, pantalla ${slide+1}`);
         if (slide === 5) {
           const video = page.locator('video');
@@ -48,13 +62,27 @@ async function main() {
           assert.equal(result.playing, true);
           assert.ok(result.current > 0);
         }
-        if (slide < 14) await page.locator('#next').click();
+        if (slide < 20) await page.locator('#next').click();
       }
       assert.deepEqual(errors, []);
-      console.log(`Presentación pública ${width}px: 15 pantallas, sin desborde ni errores, video reproducible.`);
+      console.log(`Presentación pública ${width}px: 21 pantallas, sin desborde ni errores, video reproducible.`);
+      if(server) {
+        await page.goto(`${origin}/estudiantes/guia-u3-s12-entrevista.html?preview=1`,{waitUntil:'networkidle'});
+        assert.equal(await page.locator('[data-reading]').count(),3);
+        assert.equal(await page.locator('[data-question]').count(),24);
+        assert.equal(await page.locator('textarea').count(),9);
+        assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+        for(let n=1;n<=24;n++)await page.locator(`[data-question="q${n}"] .option`).first().click();
+        for(const id of ['g1','g2','a1','a2','a3','a4','m1','m2','m3'])await page.locator(`#${id}`).fill('Respuesta ficticia para verificar la interfaz y su validación: relaciona la cita y explica sus límites con detalle suficiente.');
+        await page.locator('#submit').click();
+        assert.match(await page.locator('#saveState').innerText(),/validación está correcta/);
+        assert.match(await page.locator('#progressText').innerText(),/24\/24.*6\/6.*3\/3/);
+        assert.deepEqual(errors,[]);
+        console.log(`Guía local ${width}px: tres lecturas, 24 ítems, nueve campos y validación completa.`);
+      }
       await page.close();
     }
   } finally { await browser.close(); }
   console.log('Cinco recursos públicos coinciden exactamente en SHA-256 con la fuente local.');
 }
-main().catch(error => { console.error(error); process.exitCode = 1; });
+main().catch(error => { console.error(error); process.exitCode = 1; }).finally(()=>{if(server)server.close();});

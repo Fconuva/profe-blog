@@ -13,7 +13,7 @@ const COURSES = ['2A-HC', '2B-HC'];
 function standardSession(publishedAt) {
   return {
     titulo:'Unidad 3 · Clase 12 — La entrevista',
-    descripcion:'Doce preguntas para analizar cómo las preguntas y respuestas construyen propósito, postura e información.',
+    descripcion:'Tres entrevistas, 24 preguntas y seis tareas de evidencia, reformulación y comparación.',
     orden:312,
     programa:'simce',
     activa:true,

@@ -57,8 +57,9 @@ async function main() {
       assert.equal(await card.count(), 1, 'La Clase 12 debe aparecer una vez en la Unidad 3.');
       await page.goto(`${origin}/estudiantes/guia-u3-s12-entrevista.html`, { waitUntil:'networkidle' });
       await page.waitForFunction(() => !document.getElementById('submit').disabled);
-      assert.equal(await page.locator('[data-question]').count(), 12);
-      console.log('Panel estudiantil público: Clase 12 visible en Unidad 3 y guía operativa en celular.');
+      assert.equal(await page.locator('[data-question]').count(), 24);
+      assert.equal(await page.locator('[data-reading]').count(), 3);
+      console.log('Panel público: Clase 12 visible, tres textos, 24 preguntas y seis productos escritos en celular.');
     } finally { await browser.close(); }
 
     const draftAnswers = { q1:'A', q2:'A', q3:'A', q4:'A' };
@@ -68,8 +69,9 @@ async function main() {
       throw new Error('El autoguardado no devolvió un borrador canónico de cuatro respuestas.');
     }
 
-    const answers = Object.fromEntries(Array.from({ length:12 }, (_, index) => [`q${index + 1}`, 'A']));
+    const answers = Object.fromEntries(Array.from({ length:24 }, (_, index) => [`q${index + 1}`, 'A']));
     const metaResponses = {
+      ...Object.fromEntries(['g1','g2','a1','a2','a3','a4'].map(id=>[id, 'Respuesta ficticia de verificación técnica: cita el fragmento, explica la relación y reconoce los límites de la evidencia del texto.'])),
       m1:'La pregunta delimita el aspecto que la respuesta debe desarrollar.',
       m2:'La repregunta por el caso concreto permitió conocer un registro.',
       m3:'Revisaré la evidencia y descartaré opciones que exageran el texto.'
@@ -84,7 +86,7 @@ async function main() {
     const platform = await readPlatform();
     const storedResponse = platform.respuestas?.[SESSION_ID]?.[uid];
     const storedResult = platform.resultados?.[SESSION_ID]?.[uid];
-    if (!storedResponse?.submitted || !storedResponse?.completada || storedResult?.total !== 12 || storedResult?.score !== 3) {
+    if (!storedResponse?.submitted || !storedResponse?.completada || storedResult?.total !== 24 || storedResult?.score !== 6 || !storedResult?.ticket?.comparacion_entrevistas) {
       throw new Error('La verificación administrativa no coincide con la entrega controlada.');
     }
     console.log(JSON.stringify({

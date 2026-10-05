@@ -1,5 +1,13 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-05, nómina privada de informes NM4 y revisión de laboriosidad
+
+- A solicitud docente se extraen y revisan los informes de 4°A, 4°B, 4°C y 4°E TP, incluyendo los avances no entregados de los dos últimos cursos. Lectura autenticada de cinco bases de informes de producción, con comprobación de health y SHA-256 de sus esquemas públicos. No se modifican respuestas, marcas de entrega ni notas de Firebase o Lirmi.
+- Se contrastan los 171 estudiantes con la nómina canónica y se incluyen parejas, respaldos individuales y versiones anteriores sin fusionar casos distintos ni presentar el histórico como entrega vigente. La comprobación final recoge una nueva entrega realizada durante la revisión: 84 estudiantes con entrega confirmada (81 informes), 72 con avances sin entrega y 15 sin respuestas guardadas. De los avances sin entrega, 47 corresponden a 4°C/4°E; dos evidencias de 4°E proceden de la versión anterior.
+- Revisión privada en escala de laboriosidad 7/5/3/1: avance esperado, campos opcionales excluidos y media unidad para intentos incompletos, con observaciones de contenido y siguientes pasos. El fallo del botón no rebaja la nota. Los casos sin desarrollo quedan en 1,0 provisional para validar asistencia, licencia o trabajo por otra vía, no como calificaciones asentadas. Todas las identidades, respuestas, decisiones individuales y archivos HTML/CSV quedan fuera del repositorio y del sitio público.
+- Herramienta reproducible de solo lectura `scripts/export-nm4-informes-review.js`; pruebas ficticias `scripts/test-nm4-informes-review.js` aprobadas: límites de escala, respuestas parciales, opcionales, parejas, nulos, históricos, respaldos y escape HTML/CSV. Build integral y 654 recursos críticos aprobados. Reporte privado probado en navegador a 390/1440 px: 171 filas, búsqueda por nombre/curso, filtro de nota, apertura de respuestas, sin desbordes ni errores.
+- Cierre acotado a herramienta, prueba y bitácora, con commit y push de rutas explícitas. No corresponde despliegue: no hay cambios en el sitio ni escrituras académicas. Se entrega al docente el enlace local a la nómina y planilla completa.
+
 ## 2026-10-05, video operativo de los seis pasos del anuario 4°D TP
 
 - Francisco aprueba el MP4 preparado con «deja el video operativo». Se conserva el contenido de las seis escenas, los tres productos y la entrega del lunes 26 de octubre; no se modifican cuentas, notas, archivos originales ni correos enviados.

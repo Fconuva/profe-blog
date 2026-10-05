@@ -15,6 +15,7 @@ async function check(){
  assert.deepEqual(avatar.CAPAS,['fondo','piernas','cuerpo','rostro','pelo','expresion','accesorios']);
  assert.ok(scene.pieza.every(p=>catalogo.some(m=>m.id===p.id)));
  assert.equal((await ask('habitaciones',{sala:comun})).data.comun,true);
+ assert.equal((await ask('lista')).data.comun.uid,comun,'El servidor resuelve el curso sin confiar en la etiqueta PAES');
  assert.equal((await ask('habitaciones',{sala:otro})).status,404);
  assert.equal((await ask('entrar',{sala:comun},'studentD')).status,404);
  assert.equal((await ask('entrar',{sala:comun},'hiddenAccount')).status,403);

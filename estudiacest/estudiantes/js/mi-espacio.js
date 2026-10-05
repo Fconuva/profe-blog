@@ -964,7 +964,7 @@
           if (hay) dibujar();
         }, 400);
         if (!silencioso) avisar(sala === S.uid ? 'Estás en tu casa' : 'Llegaste de visita');
-        pintarCabecera();
+        pintarCabecera();pintarInteracciones();
         return true;
       })
       .catch(function () { avisar('Sin conexión con la sala'); return false; });
@@ -1005,9 +1005,9 @@
       (S.comun?'':'<button class="esp-btn-chico esp-puerta" id="espPuerta"'+(!S.housesEnabled||S.cambiando?' disabled':'')+'>🚪 '+(S.habitacion==='estudio'?'Ir a principal':'Ir al estudio')+'</button>') +
       (S.visitando
         ? (S.comun?'':'<button class="esp-btn-chico" id="espRegalar">🎁 Regalar</button>') +
-          '<button class="esp-btn-chico esp-btn-junto" id="espVolver">Volver a mi casa</button>'
-        : '<button class="esp-btn-chico" id="espVisitar">Visitar</button>'+(CATALOGO.idCurso(S.curso)?'<button class="esp-btn-chico" id="espCurso">Sala del curso</button>':''));
-    var bc=cab.querySelector('#espCurso');if(bc)bc.addEventListener('click',function(){irACasa(CATALOGO.idCurso(S.curso));});
+          '<button class="esp-btn-chico esp-btn-junto" id="espVolver"'+(S.cargandoCasa||S.cambiando?' disabled':'')+'>Volver a mi casa</button>'
+        : '<button class="esp-btn-chico" id="espVisitar">Visitar</button>'+(CATALOGO.idCurso(S.curso)?'<button class="esp-btn-chico" id="espCurso"'+(!S.housesEnabled||!S.sala||S.cargandoCasa||S.cambiando?' disabled':'')+'>Sala del curso</button>':''));
+    var bc=cab.querySelector('#espCurso');if(bc)bc.addEventListener('click',function(){irACasa('curso_propio');});
     var bv = cab.querySelector('#espVisitar'), bb = cab.querySelector('#espVolver'), br = cab.querySelector('#espRegalar');
     if (bv) bv.addEventListener('click', abrirVisitas);
     if (bb) bb.addEventListener('click', function () { irACasa(S.uid); });
@@ -1054,7 +1054,7 @@
             avisar(error.message||'No se pudo pasar: sigues en esta habitación');
           }).catch(function(){avisar('Sin conexión. Reintenta la puerta cuando vuelva.');});
         })
-        .finally(function(){S.cambiando=false;pintarCabecera();});
+        .finally(function(){S.cambiando=false;pintarCabecera();pintarInteracciones();});
     });
   }
 
@@ -1222,10 +1222,14 @@
   function irACasa(uid, nombreDueno) {
     if (!S.housesEnabled) { avisar('Las casas están deshabilitadas'); return; }
     if (uid === S.sala || S.cargandoCasa || S.cambiando) return;
-    S.cargandoCasa=true;
+    S.cargandoCasa=true;pintarCabecera();pintarInteracciones();
     var esMia = uid === S.uid;
-    return esperarGuardado().then(function(){return api('habitaciones',{sala:uid});}).then(function (d) {
+    return esperarGuardado().then(function(){
+      if(uid!=='curso_propio')return;
+      return api('lista').then(function(r){if(!r||!r.ok||!r.comun||!r.comun.uid)throw Error('No se pudo identificar tu curso');uid=r.comun.uid;});
+    }).then(function(){return api('habitaciones',{sala:uid});}).then(function (d) {
       if(!d||!d.ok)throw new Error(d&&d.error||'No se pudo cargar la casa');
+      if(d.comun&&d.sala)uid=d.sala;
       desconectarSala();
       S.visitando = !esMia;S.comun=d.comun===true;S.juego={};
       S.duenoNombre = d.nombre || nombreDueno || '';
@@ -1236,7 +1240,7 @@
       if(ok)observarHabitacion(uid);
       else if(!esMia){S.cargandoCasa=false;return irACasa(S.uid);}
     }).catch(function (error) { avisar(error.message||'No se pudo entrar a esa casa'); })
-      .finally(function(){S.cargandoCasa=false;});
+      .finally(function(){S.cargandoCasa=false;pintarCabecera();pintarInteracciones();});
   }
   function cargar_(n) { cargar(n, dibujar); }
 
@@ -1441,7 +1445,7 @@
   function pintarInteracciones(){
     if(!S.host)return;
     var cont=S.host.querySelector('#espAccionesMuebles');if(!cont)return;
-    cont.innerHTML=S.pieza.map(function(m,i){var a=CATALOGO.accion(m.id);if(!a||m.pared)return '';var disabled=!S.housesEnabled||(S.visitando&&!S.comun&&a.tipo==='encender');return '<button type="button" data-usar="'+i+'"'+(disabled?' disabled':'')+'>'+esc(ficha(m.id).nom)+(m.clave?' · '+esc(m.clave):'')+'<span>'+(a.tipo==='encender'?(m.encendido?'Apagar':'Encender'):a.nombre)+'</span></button>';}).join('')||'<p>No hay muebles con acciones en esta habitación.</p>';
+    cont.innerHTML=S.pieza.map(function(m,i){var a=CATALOGO.accion(m.id);if(!a||m.pared)return '';var disabled=!S.housesEnabled||!S.sala||S.cargandoCasa||S.cambiando||(S.visitando&&!S.comun&&a.tipo==='encender');return '<button type="button" data-usar="'+i+'"'+(disabled?' disabled':'')+'>'+esc(ficha(m.id).nom)+(m.clave?' · '+esc(m.clave):'')+'<span>'+(a.tipo==='encender'?(m.encendido?'Apagar':'Encender'):a.nombre)+'</span></button>';}).join('')||'<p>No hay muebles con acciones en esta habitación.</p>';
     cont.querySelectorAll('[data-usar]').forEach(function(b){b.addEventListener('click',function(){interactuarIndice(Number(b.dataset.usar));});});
     pintarReto();
   }

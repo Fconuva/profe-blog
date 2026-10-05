@@ -12,13 +12,13 @@ const academics=JSON.stringify(fixture.state.datos.plataforma_paes),house=JSON.s
   for(const uid of ['studentA','studentB','studentC']){
    const page=await browser.newPage({viewport:{width:1200,height:1000}});pages.push(page);
    page.on('pageerror',e=>errors.push(e.message));page.on('response',r=>{if(r.status()>=400)errors.push('HTTP '+r.status()+' '+new URL(r.url()).pathname);});
-   if(uid!=='studentA')await page.route('**/preview-student',async route=>{const response=await route.fetch();await route.fulfill({response,body:(await response.text()).replaceAll('studentA',uid)});});
-   await page.goto(base+'/preview-student');await page.locator('[data-p="pieza"]').click();await page.locator('#espCurso').waitFor();
+   await page.route('**/preview-student',async route=>{const response=await route.fetch();await route.fulfill({response,body:(await response.text()).replaceAll('studentA',uid).replace("curso:'3B-HC'","curso:'3°B HC'")});});
+   await page.goto(base+'/preview-student');await page.locator('[data-p="pieza"]').click();await page.locator('#espCurso:not([disabled])').waitFor();
   }
   const page=pages[0],act=async(p,i)=>{const done=p.waitForResponse(r=>r.url().endsWith('/api/estudiantes')&&r.request().postDataJSON()?.action==='salas-interactuar');await p.locator('[data-usar="'+i+'"]').click();const data=await(await done).json();assert.equal(data.ok,true);};
   await act(page,0);assert.equal(pe.avatar.studentA.pieza[0].encendido,true);await page.reload();await page.locator('[data-p="pieza"]').click();await page.locator('[data-usar="0"] span').filter({hasText:'Apagar'}).waitFor();
   const privateAfter=JSON.stringify(pe.avatar);
-  for(const p of pages){await p.locator('#espCurso').click();await p.locator('#espReto').waitFor();await p.locator('#espVolver').waitFor();assert.equal(await p.locator('#espDecorar').isDisabled(),true);assert.equal(await p.locator('#espMueblesBloque').isVisible(),false);assert.equal(await p.locator('#espRegalar').count(),0);}
+  for(const p of pages){await p.locator('#espCurso:not([disabled])').click();await p.locator('#espReto').waitFor();await p.locator('#espVolver').waitFor();assert.equal(await p.locator('#espDecorar').isDisabled(),true);assert.equal(await p.locator('#espMueblesBloque').isVisible(),false);assert.equal(await p.locator('#espRegalar').count(),0);}
   await act(pages[0],0);await pages[1].locator('[data-usar="0"] span').filter({hasText:'Apagar'}).waitFor();
   await act(pages[1],1);await act(pages[2],2);for(const p of pages)await p.locator('#espReto.completo').waitFor();
   await act(page,3);assert.equal(pe.salas_comunes[catalogo.idCurso('3B-HC')].presentes.studentA.actividad,'tocar');

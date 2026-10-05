@@ -538,7 +538,7 @@ async function accesoSala(db,sala,yo){
 async function habitaciones(req,res,db,yo){
     const sala=idSala(req.body.sala||yo.uid);
     if(!sala||!await accesoSala(db,sala,yo))return res.status(404).json({error:'Casa no disponible.'});
-    if(esComun(sala))return res.status(200).json({ok:true,comun:true,nombre:'Sala de '+yo.curso,actual:'principal',habitaciones:{principal:CATALOGO_CASA.salaCurso(yo.curso)}});
+    if(esComun(sala))return res.status(200).json({ok:true,sala,comun:true,nombre:'Sala de '+yo.curso.replace(/^([1-4])([A-Z])-(HC|TP)$/,'$1°$2 $3'),actual:'principal',habitaciones:{principal:CATALOGO_CASA.salaCurso(yo.curso)}});
     const av=(await db.ref(`${BASE}/avatar/${sala}`).once('value')).val()||{};
     const rooms=Object.fromEntries(MAPAS_CASA.HABITACIONES.map(h=>[h,MAPAS_CASA.habitacion(av,h)]));
     const presencias=await Promise.all(MAPAS_CASA.HABITACIONES.map(h=>db.ref(`${rutaSala(sala,h)}/presentes/${yo.uid}`).once('value')));

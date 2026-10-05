@@ -22,7 +22,7 @@ No se incorporan sprites ni código de otros juegos sin permiso de uso. Tiled de
 
 El laboratorio `scripts/mi-espacio-lab/` ya prueba la etapa 1 sin cuentas ni Firebase. Tiled 1.12.2 abrió y reexportó el archivo `sala-en-l.json`; el adaptador volvió a leer ese export con 40 casillas de suelo, tres muebles y entrada en (1,1). En el navegador se hizo clic en un hueco y fue rechazado; otro clic recorrió una ruta de 11 casillas hasta (6,6). Zoom, arrastre y centrado funcionaron a 390, 1200 y 3840 px sin errores de consola, solicitudes fallidas ni desborde horizontal. Ejecutar `node scripts/mi-espacio-lab/probar.js` para repetir la prueba de navegador.
 
-## Evidencia hist?rica de la etapa 2 (30 de septiembre)
+## Evidencia histórica de la etapa 2 (30 de septiembre)
 
 La geometría de Tiled se compiló en `estudiantes/js/mapas-casa.js` y se añadió «Salón en L 7 × 7» a la selección de `Mi casa`. El panel pinta únicamente las 40 baldosas, dibuja muros por borde expuesto, limita rutas/clics/colocación al suelo y rechaza el cambio de forma si algún mueble quedaría fuera; el avatar se recoloca en la entrada cuando corresponde. La API de presencia también valida coordenadas según la casa del dueño. Las visitas observan en tiempo real los cambios de casa y pieza sin leer el perfil escolar.
 

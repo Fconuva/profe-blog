@@ -69,6 +69,11 @@ const COURSE_VERSION = { '4ATP': 'industrial', '4BTP': 'automotriz', '4CTP': 'el
 const ADMINS = 'plataforma_estudiantes/admins';
 const ROSTER = ROWS.map(([hash, curso, n, nombre]) => ({ hash, curso, n, nombre }));
 const BY_HASH = new Map(ROSTER.map(student => [student.hash, student]));
+// Acceso docente a la actividad, separado de la nómina y de los informes privados.
+// Solo se conserva el hash del RUN; esta vista no consulta ni escribe entregas.
+const PREVIEW_TEACHERS = new Map([
+  ['a89a5648e23090db430a2fd9', { nombre: 'Profesora Alicia', curso: '4ATP', version: 'industrial' }]
+]);
 
 const cleanRut = value => String(value || '').replace(/[^0-9kK]/g, '').toUpperCase();
 const hashRut = value => crypto.createHash('sha256').update(SALT + cleanRut(value)).digest('hex').slice(0, 24);
@@ -473,6 +478,17 @@ module.exports = async function informeTecnico(req, res, { admin, db }) {
     }
     if (action === 'admin-list' && req.method === 'GET') return await handleAdminList(req, res, admin, db, version);
     if (req.method !== 'POST') return res.status(405).json({ error: 'Método no disponible.' });
+    const teacher = PREVIEW_TEACHERS.get(hashRut(body(req).rut));
+    if (teacher) {
+      const teacherVersion = VERSIONS[teacher.version];
+      if (version !== teacherVersion) return res.status(403).json({ error: 'Tu acceso docente corresponde al informe de mantenimiento de 4°A TP.', ruta: teacherVersion.ruta });
+      if (action !== 'get-guia-state') return res.status(403).json({ error: 'La vista docente es solo de lectura.' });
+      return res.status(200).json({
+        ok: true, previewOnly: true,
+        student: { nombre: teacher.nombre, curso: teacher.curso, n: null, role: 'docente' },
+        attempt: null, supportsPairs: false
+      });
+    }
     if (action === 'get-guia-state') return await handleState(req, res, db, version);
     if (action === 'validate-partner') return await handleValidatePartner(req, res, db, version);
     if (action === 'join-pair') return await handleJoinPair(req, res, db, version);

@@ -1,5 +1,13 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-05, acceso docente al informe de mantenimiento de 4°A TP
+
+- A solicitud de Francisco se habilita una docente invitada para consultar la actividad de mantenimiento de Mecánica Industrial con su RUN. El servidor conserva únicamente su hash y limita el permiso a la versión Industrial de 4°A TP; no se incorpora a la nómina estudiantil ni al registro de administradores.
+- La vista docente incluye las doce páginas, instrucciones, fotografías, modelos, libreta e impresión. Los 27 campos quedan deshabilitados y se ocultan avance, parejas y entrega. No consulta informes privados, no recupera borradores y no escribe en Firebase; la revisión de entregas mantiene su autenticación administrativa.
+- Auditoría NM4 y build integral aprobados, con 637 recursos críticos presentes. Prueba local con la función real y base simulada: 69 comprobaciones aprobadas en 320/390/1440/3840, reingreso, salida, imágenes, libreta, bloqueo de seis acciones de escritura y de las otras cuatro especialidades. Ninguna consulta a la base durante el acceso docente; el estudiante ficticio conserva sus 27 campos editables y entrega.
+- Evidencia local sin identificación en formularios: `%TEMP%/nm4-preview-4t4rRj`. Se revisan las capturas de celular y escritorio. Se agrega `scripts/check-nm4-teacher-preview.js` para repetir la prueba local o pública con el RUN solo en el entorno privado del proceso; el script no forma parte del build.
+- Archivos acotados: API del informe, página Industrial, auditoría NM4, prueba focalizada y esta bitácora. Publicación pendiente del despliegue seguro y comprobación pública del flujo; se conserva todo cambio ajeno y no se modifican notas, trabajos ni cuentas.
+
 ## 2026-10-04, estándar para las próximas planificaciones, clases y guías
 
 - Francisco pide dejar como regla el estilo de planificación, clase y formatos recién aprobado. Se registra en `REGLAS.md`, sección 13, única fuente normativa; no se crean reglas paralelas en OneDrive, Portabot o la Bóveda.

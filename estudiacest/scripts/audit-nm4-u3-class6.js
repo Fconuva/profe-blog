@@ -161,6 +161,13 @@ const industrialAudit = auditSpecialty({
   forbidden: /pastilla|amortiguador|PLC-01|vehículo V-17/i,
   assets: ['i1-conjunto-motor-bomba.png', 'i2-acoplamiento-fuga.png', 'i3-medicion-vibracion.png']
 });
+const industrialStudent = read('nm4/u3-clase6-informe-industrial/informe/index.html');
+['PREVIEW_TEACHERS', "version: 'industrial'", "role: 'docente'", 'previewOnly: true', "action !== 'get-guia-state'", 'La vista docente es solo de lectura.'].forEach(token =>
+  expect(api.includes(token), `Vista docente: falta el permiso acotado de servidor ${token}.`));
+['previewOnly = data.previewOnly === true', 'Ver actividad', 'control.disabled = true', "setSave('Solo lectura'", 'if (previewOnly) return;', 'previewOnly || delivered || submitting', 'previewOnly || submitting || delivered'].forEach(token =>
+  expect(industrialStudent.includes(token), `Vista docente: falta el bloqueo de interfaz ${token}.`));
+const previewHashes = [...api.matchAll(/\['([a-f0-9]{24})', \{ nombre: 'Profesora/g)].map(match => match[1]);
+expect(previewHashes.length === 1 && previewHashes.every(hash => !ROWS.some(row => row[0] === hash)), 'La vista docente debe permanecer separada de la nómina y de sus entregas.');
 const automotiveAudit = auditSpecialty({
   label: '4°B Automotriz', route: 'u3-clase6-informe-automotriz', version: 'automotriz', course: '4BTP', sessionKey: 'informeNM4automotriz',
   caseTokens: ['V-17', '128.450 km', '2,5 mm', '3,5 %', 'CONASET'],

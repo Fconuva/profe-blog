@@ -129,6 +129,12 @@ const baseB = {
   const inlineScripts = [...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)].map(match => match[1]).filter(script => script.trim());
   assert.strictEqual(inlineScripts.length, 1, 'El panel debe tener un único script inline auditable.');
   new vm.Script(inlineScripts[0], { filename: 'termas/admin.html' });
+  const ordenar = vm.runInNewContext('(' + inlineScripts[0].match(/function ordenarFilas\([\s\S]*?\n    }/)[0] + ')');
+  const ejemplo = [{nombre:'Z',apellido:'Z',correo:'z',creado:100,actualizado:900},{nombre:'A',apellido:'A',correo:'a',creado:200,actualizado:300},{nombre:'Sin fecha',apellido:'B',correo:'b',creado:null}];
+  assert.strictEqual(ordenar(ejemplo,'primero').map(f=>f.correo).join(','),'z,a,b');
+  assert.strictEqual(ordenar(ejemplo,'ultimo').map(f=>f.correo).join(','),'a,z,b');
+  assert.strictEqual(ordenar(ejemplo,'nombre').map(f=>f.correo).join(','),'a,b,z');
+  assert.strictEqual(ejemplo.map(f=>f.correo).join(','),'z,a,b','Ordenar no debe mutar los datos.');
   for (const text of ['Resultados de la votación', '+ Inscribir persona', 'Editar inscripción', 'Papelera reciente', 'admin-guardar', 'admin-restaurar']) {
     assert.ok(html.includes(text), `Falta en el panel: ${text}`);
   }

@@ -1,5 +1,11 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-05, orden cronológico de inscripciones de Termas
+
+- A solicitud docente, `/termas/admin` inicia con primera inscripción a última, usando `creado` y sin confundirlo con `actualizado`. Selector adicional: última a primera o apellidos A–Z. Desempate estable por nombre/correo; registros sin fecha al final de ambos órdenes cronológicos, sin inventar su fecha.
+- Se muestra la fecha de inscripción junto a cada persona. Búsqueda y filtros siguen combinándose; CSV completo respeta el orden elegido. No se modifican inscripciones, votos, asientos, autenticación ni datos de Firebase.
+- Auditoría focalizada incorpora regresión de fechas originales pese a edición posterior, orden inverso, A–Z y conservación del arreglo. Navegador con datos ficticios 390/1440/3840: orden, búsqueda, filtros y diseño sin errores ni desbordes; cero escrituras. Publicación y prueba pública se registran al concluir.
+
 ## 2026-10-05, manual ilustrado de impresora 3D y guía imprimible de 4°D
 
 - Francisco pidió el mismo proyecto de 4°A, B, C y E para 4°D y reiteró que debe incluir la guía imprimible. Se incorpora 4°D · Gráfica, con la Original Prusa MK4S como referencia documental: lectura adaptada al español, seis partes, cuatro términos y modelamiento de una advertencia sobre enfriamiento. Se conservan los materiales de los otros cursos, cuatro sesiones de 90 minutos, grupos de tres y entrega presencial.

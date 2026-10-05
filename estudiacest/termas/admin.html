@@ -62,7 +62,7 @@
     .opcion-linea strong { font-variant-numeric: tabular-nums; }
     .progreso { height: 9px; border-radius: 99px; background: #e9e5de; overflow: hidden; margin-top: 5px; }
     .progreso span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--pino), var(--termal)); min-width: 0; }
-    .barra { display: grid; grid-template-columns: minmax(230px, 1fr) minmax(190px, 280px) auto; gap: 10px; align-items: end; }
+    .barra { display: grid; grid-template-columns: minmax(200px, 1fr) minmax(170px, 240px) minmax(210px, 260px) auto; gap: 10px; align-items: end; }
     .barra .campo { margin: 0; }
     .conteo { min-height: 46px; display: flex; align-items: center; color: var(--gris); font-weight: 700; }
     .tabla { width: 100%; overflow: auto; margin-top: 14px; border: 1px solid var(--linea); border-radius: 14px; background: #fff; }
@@ -177,6 +177,7 @@
               <option value="ninguna">Solo almuerzo</option>
             </select>
           </div>
+          <div class="campo"><label for="orden">Ordenar por</label><select id="orden"><option value="primero">Inscripción: primera a última</option><option value="ultimo">Inscripción: última a primera</option><option value="nombre">Apellidos: A–Z</option></select></div>
           <div class="conteo" id="conteoFilas"></div>
         </div>
         <div class="tabla">
@@ -317,16 +318,29 @@
       return f.asiste === 'si' && f.comida === filtro;
     }
 
+    function ordenarFilas(filas, orden) {
+      const nombre = (a,b) => `${a.apellido} ${a.nombre}`.localeCompare(`${b.apellido} ${b.nombre}`, 'es') || String(a.correo).localeCompare(String(b.correo));
+      return [...filas].sort((a,b) => {
+        if (orden === 'nombre') return nombre(a,b);
+        const x = Number(a.creado), y = Number(b.creado);
+        const tieneX = Number.isFinite(x) && x > 0, tieneY = Number.isFinite(y) && y > 0;
+        if (tieneX !== tieneY) return tieneX ? -1 : 1;
+        if (!tieneX) return nombre(a,b);
+        return (orden === 'ultimo' ? y-x : x-y) || nombre(a,b);
+      });
+    }
+
     function pintarFilas() {
       const filtro = $('filtro').value;
       const consulta = normalizar($('buscar').value.trim());
-      const filas = datos.filas.filter(f => coincideFiltro(f, filtro) && (!consulta || normalizar([f.nombre, f.apellido, f.correo, f.telefono].join(' ')).includes(consulta)));
+      const filas = ordenarFilas(datos.filas.filter(f => coincideFiltro(f, filtro) && (!consulta || normalizar([f.nombre, f.apellido, f.correo, f.telefono].join(' ')).includes(consulta))), $('orden').value);
       $('conteoFilas').textContent = filas.length + (filas.length === 1 ? ' resultado' : ' resultados');
       const cuerpo = $('filas'); cuerpo.innerHTML = '';
       if (!filas.length) { const tr = document.createElement('tr'); const td = crear('td', 'muted', 'No hay inscripciones que coincidan.'); td.colSpan = 9; tr.appendChild(td); cuerpo.appendChild(tr); return; }
       filas.forEach(f => {
         const tr = document.createElement('tr');
         const persona = document.createElement('td'); persona.append(crear('strong', '', f.nombre + ' ' + f.apellido), crear('small', '', f.correo));
+        persona.appendChild(crear('small', '', f.creado ? 'Inscripción: ' + fecha(f.creado) : 'Inscripción: sin fecha registrada'));
         if (f.gestionAdmin) persona.appendChild(crear('span', 'tag manual', 'Gestionada por admin'));
         const telefono = crear('td', '', f.telefono || '—');
         const emergencia = document.createElement('td'); emergencia.append(crear('strong', '', f.emergenciaNombre || '—'), crear('small', '', f.emergenciaTelefono || ''));
@@ -443,7 +457,7 @@
       if (!datos) return;
       const esc = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
       const lineas = [['Apellidos', 'Nombres', 'Correo', 'Teléfono', 'Contacto de emergencia', 'Teléfono de emergencia', 'Asiste', 'Transporte', 'Asiento', 'Alimentación', 'Actualizado'].map(esc).join(';')];
-      datos.filas.forEach(f => lineas.push([f.apellido, f.nombre, f.correo, f.telefono, f.emergenciaNombre, f.emergenciaTelefono, f.asiste === 'si' ? 'Sí' : 'No', f.asiste === 'si' ? (f.transporte === 'bus' ? 'Bus' : 'Propio') : '', f.asiento || '', f.asiste === 'si' ? COMIDA[f.comida || ''] : '', fecha(f.actualizado)].map(esc).join(';')));
+      ordenarFilas(datos.filas, $('orden').value).forEach(f => lineas.push([f.apellido, f.nombre, f.correo, f.telefono, f.emergenciaNombre, f.emergenciaTelefono, f.asiste === 'si' ? 'Sí' : 'No', f.asiste === 'si' ? (f.transporte === 'bus' ? 'Bus' : 'Propio') : '', f.asiento || '', f.asiste === 'si' ? COMIDA[f.comida || ''] : '', fecha(f.actualizado)].map(esc).join(';')));
       const blob = new Blob(['\ufeff' + lineas.join('\r\n')], { type: 'text/csv;charset=utf-8' });
       const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'termas-panimavida-inscripciones.csv'; a.click();
       setTimeout(() => URL.revokeObjectURL(a.href), 2000);
@@ -463,6 +477,7 @@
     $('btnCsv').addEventListener('click', csv);
     $('btnSalir').addEventListener('click', () => auth.signOut());
     $('filtro').addEventListener('change', pintarFilas);
+    $('orden').addEventListener('change', pintarFilas);
     $('buscar').addEventListener('input', pintarFilas);
     $('edAsiste').addEventListener('change', sincronizarEditor);
     $('edTransporte').addEventListener('change', () => { pintarAsientos($('edAsiento').value); sincronizarEditor(); });

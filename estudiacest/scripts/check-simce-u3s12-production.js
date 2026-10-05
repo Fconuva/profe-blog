@@ -1,6 +1,8 @@
 'use strict';
 
 const crypto = require('crypto');
+const assert = require('node:assert/strict');
+const { chromium } = require('playwright');
 const { closeFirebase, readPlatform, updatePlatform } = require('./firebase-maintenance-db');
 
 const API_KEY = 'AIzaSyCuDQ_iHDHmTd8bPeqUbsXQqdxw2SObt8w';
@@ -36,11 +38,28 @@ async function main() {
     uid = account.localId;
     idToken = account.idToken;
     await updatePlatform({
-      [`estudiantes/${uid}`]:{ nombre:'CUENTA TÉCNICA PRUEBA U3S12', curso:'2A-HC', email, activa:true, createdAt:Date.now() }
+      [`estudiantes/${uid}`]:{ nombre:'CUENTA TÉCNICA PRUEBA U3S12', curso:'2A-HC', email, activa:true, perfil_completo:true, programa:'simce', createdAt:Date.now() }
     });
 
     const initial = await callClass(origin, idToken, 'simce-u3s12-state');
     if (!initial.session?.active || initial.attempt) throw new Error('El estado inicial no está activo y vacío.');
+
+    const browser = await chromium.launch({ headless:true });
+    try {
+      const page = await browser.newPage({ viewport:{ width:390, height:844 } });
+      await page.goto(`${origin}/estudiantes/`, { waitUntil:'networkidle' });
+      await page.evaluate(async ({ email, password }) => {
+        await firebase.auth().signInWithEmailAndPassword(email, password);
+      }, { email, password });
+      await page.goto(`${origin}/estudiantes/dashboard.html`, { waitUntil:'networkidle' });
+      const card = page.locator('#currentSessionList a[href*="guia-u3-s12-entrevista.html"]');
+      await card.waitFor({ state:'attached', timeout:30000 });
+      assert.equal(await card.count(), 1, 'La Clase 12 debe aparecer una vez en la Unidad 3.');
+      await page.goto(`${origin}/estudiantes/guia-u3-s12-entrevista.html`, { waitUntil:'networkidle' });
+      await page.waitForFunction(() => !document.getElementById('submit').disabled);
+      assert.equal(await page.locator('[data-question]').count(), 12);
+      console.log('Panel estudiantil público: Clase 12 visible en Unidad 3 y guía operativa en celular.');
+    } finally { await browser.close(); }
 
     const draftAnswers = { q1:'A', q2:'A', q3:'A', q4:'A' };
     await callClass(origin, idToken, 'simce-u3s12-save', 'POST', { answers:draftAnswers, metaResponses:{ m1:'', m2:'', m3:'' }, startedAt:Date.now() });

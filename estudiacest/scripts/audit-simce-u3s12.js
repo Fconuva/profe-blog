@@ -38,7 +38,7 @@ expect(['g1','g2','a1','a2','a3','a4'].every(id=>page.includes(`id="${id}"`) && 
 expect(page.includes('Cita un fragmento breve de cada texto') && page.includes('Reescribe dos titulares'), 'Faltan comparación intertextual y transferencia editorial.');
 expect(page.includes('Texto original de carácter ficticio creado para esta clase'), 'La entrevista no declara su carácter original y ficticio.');
 expect(page.includes('ATENCIÓN') && page.includes('A falla'), 'Falta el modelamiento con análisis de distractores.');
-expect(['m1','m2','m3'].every(id => page.includes(`id="${id}"`)), 'Faltan los tres cierres metacognitivos.');
+expect(page.includes('id="m1"') && !page.includes('id="m2"') && !page.includes('id="m3"'), 'El cierre debe tener una sola pregunta.');
 expect(page.includes('Confirmar y entregar') && page.includes('Entrega confirmada'), 'Faltan el botón o el mensaje inequívoco de entrega.');
 expect(page.includes('prefers-reduced-motion') && page.includes('@media(max-width:760px)'), 'Faltan ajustes de accesibilidad o respuesta móvil.');
 expect(page.includes('/estudiantes/assets/u3s12/entrevista-hero-ia.png') && exists('estudiantes/assets/u3s12/entrevista-hero-ia.png'), 'Falta la ilustración IA en el proyecto.');

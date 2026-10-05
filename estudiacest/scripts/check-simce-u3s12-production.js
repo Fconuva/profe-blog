@@ -63,7 +63,8 @@ async function main() {
     } finally { await browser.close(); }
 
     const draftAnswers = { q1:'A', q2:'A', q3:'A', q4:'A' };
-    await callClass(origin, idToken, 'simce-u3s12-save', 'POST', { answers:draftAnswers, metaResponses:{ m1:'', m2:'', m3:'' }, startedAt:Date.now() });
+    await callClass(origin, idToken, 'simce-u3s12-save', 'POST', { answers:draftAnswers, metaResponses:{ m1:'', m2:'Evidencia histórica ficticia que debe conservarse.', m3:'Reflexión histórica ficticia que debe conservarse.' }, startedAt:Date.now() });
+    await callClass(origin, idToken, 'simce-u3s12-save', 'POST', { answers:draftAnswers, metaResponses:{ m1:'' } });
     const draft = await callClass(origin, idToken, 'simce-u3s12-state');
     if (!draft.attempt || draft.attempt.submitted || draft.attempt.completada || Object.keys(draft.attempt.answers || {}).length !== 4) {
       throw new Error('El autoguardado no devolvió un borrador canónico de cuatro respuestas.');
@@ -79,9 +80,7 @@ async function main() {
     const answers = Object.fromEntries(Array.from({ length:24 }, (_, index) => [`q${index + 1}`, 'A']));
     const metaResponses = {
       ...Object.fromEntries(['g1','g2','a1','a2','a3','a4'].map(id=>[id, 'Respuesta ficticia de verificación técnica: cita el fragmento, explica la relación y reconoce los límites de la evidencia del texto.'])),
-      m1:'La pregunta delimita el aspecto que la respuesta debe desarrollar.',
-      m2:'La repregunta por el caso concreto permitió conocer un registro.',
-      m3:'Revisaré la evidencia y descartaré opciones que exageran el texto.'
+      m1:'La pregunta delimita el aspecto que la respuesta debe desarrollar.'
     };
     await callClass(origin, idToken, 'simce-u3s12-submit', 'POST', { answers, metaResponses, startedAt:Date.now() - 120000 });
     const finalState = await callClass(origin, idToken, 'simce-u3s12-state');
@@ -89,6 +88,8 @@ async function main() {
       throw new Error('La relectura pública no confirmó submitted y completada.');
     }
     Object.entries(metaResponses).forEach(([id,value])=>assert.equal(finalState.attempt.metaResponses[id],value,`Escritura no conservada: ${id}`));
+    assert.equal(finalState.attempt.metaResponses.m2,'Evidencia histórica ficticia que debe conservarse.');
+    assert.equal(finalState.attempt.metaResponses.m3,'Reflexión histórica ficticia que debe conservarse.');
     if (finalState.result !== null) throw new Error('El resultado se publicó antes de la liberación docente.');
 
     const platform = await readPlatform();

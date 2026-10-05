@@ -74,9 +74,9 @@ function scoreAnswers(answers) {
 
 function validateFinal(payload) {
     const unanswered = Object.keys(ANSWER_KEY).filter((id) => !payload.answers[id]);
-    const shortMeta = META_IDS.filter((id) => payload.metaResponses[id].length < (WORK_IDS.includes(id) ? 80 : META_MIN));
+    const shortMeta = [...WORK_IDS, 'm1'].filter((id) => payload.metaResponses[id].length < (WORK_IDS.includes(id) ? 80 : META_MIN));
     if (unanswered.length || shortMeta.length) {
-        const error = new Error('Completa las 24 preguntas, las seis tareas escritas y los tres cierres antes de confirmar.');
+        const error = new Error('Completa las 24 preguntas, las seis tareas escritas y la pregunta de cierre antes de confirmar.');
         error.status = 400;
         error.fields = [...unanswered, ...shortMeta];
         throw error;
@@ -150,6 +150,12 @@ async function manejar(req, res, action, db, auth) {
 
         const request = bodyOf(req);
         const payload = { answers:cleanAnswers(request.answers), metaResponses:cleanMeta(request.metaResponses) };
+        // Conservar evidencia histórica retirada de la interfaz, sin exigirla de nuevo.
+        for (const id of ['m2','m3']) {
+            if (!Object.prototype.hasOwnProperty.call(request.metaResponses || {}, id)) {
+                payload.metaResponses[id] = cleanText(current?.metaResponses?.[id]);
+            }
+        }
         const now = Date.now();
         const startedAt = Number((current && current.startedAt) || request.startedAt || now);
 

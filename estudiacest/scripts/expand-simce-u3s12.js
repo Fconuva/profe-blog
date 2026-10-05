@@ -62,7 +62,7 @@ const esc = s => String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replac
 const exchanges = rows => rows.map(([q,a]) => `<p class="q">Entrevistadora: ${esc(q)}</p><p><b>Entrevistado/a:</b> ${esc(a)}</p>`).join('\n');
 const reading = t => `<section class="card" id="${t.id}" data-reading="${t.id}"><div class="eyebrow">${t.label}</div><h2>${t.title}</h2><article class="reading"><p class="standfirst">${t.intro}</p>${exchanges(t.exchanges)}<p class="source">Texto original de carácter ficticio creado para esta clase. Personas, lugares y datos tienen función pedagógica.</p></article></section>`;
 const question = ([n,skill,prompt,opts]) => `<article class="question" data-question="q${n}"><div class="qhead"><h3>${n}. ${prompt}</h3><span class="skill">${skill}</span></div><div class="options">${opts.map((o,i)=>`<label class="option"><input type="radio" name="q${n}" value="${'ABCD'[i]}"><span class="letter">${'ABCD'[i]}</span><span>${o}</span></label>`).join('')}</div></article>`;
-const field = ([id,title,prompt,hint]) => `<div class="field"><label for="${id}">${title}<small>${prompt}</small></label><p>${hint}</p><textarea id="${id}" maxlength="1200" placeholder="Cita, explica y revisa tu conclusión..."></textarea><div class="count"><span id="count-${id}">0</span>/1200</div></div>`;
+const field = ([id,title,prompt,hint]) => `<div class="field"><label for="${id}">${title}<small style="display:block;margin-top:.5rem">${prompt}</small></label><p>${hint}</p><textarea id="${id}" maxlength="1200" placeholder="Cita, explica y revisa tu conclusión..."></textarea><div class="count"><span id="count-${id}">0</span>/1200</div></div>`;
 function main() {
   const guidePath = path.join(root,'estudiantes/guia-u3-s12-entrevista.html');
   let guide = fs.readFileSync(guidePath,'utf8');
@@ -73,15 +73,17 @@ function main() {
   guide = guide.replace('<section class="card" id="cierre">',`<!-- AMPLIACION_TRABAJO --><section class="card" id="taller"><div class="eyebrow">Taller de evidencia</div><h2>No basta con marcar: demuestra cómo lo sabes</h2><p class="lead">Resuelve las dos primeras tareas con el curso. Después completa las cuatro tareas de transferencia. Las extensiones orientan el desarrollo; no son un contador automático de calidad.</p><div class="meta-grid">${tasks.map(field).join('\n')}</div></section><!-- FIN_AMPLIACION_TRABAJO -->\n<section class="card" id="cierre">`);
   guide = guide.replace(/id="texto"(?: data-reading="texto1")*/g,'id="texto" data-reading="texto1"').replace('Lectura central','Texto 1 · Entrevista escolar').replace('12 preguntas con evidencia','24 preguntas: leer, relacionar y evaluar').replaceAll('Tus 12 respuestas','Tus 24 respuestas').replace('0 de 12 preguntas respondidas','0 de 24 preguntas respondidas').replace('Lee la entrevista completa','Lee las tres entrevistas completas');
   guide = guide.replace('Las respuestas correctas no se mostrarán', 'Resuelve 1–6 con el curso y 7–24 de forma individual. En cada bloque, vuelve al texto indicado. Las respuestas correctas no se mostrarán');
-  guide = guide.replace('y el cierre quedaron guardados','y las seis tareas escritas y el cierre quedaron guardados');
+  guide = guide.replace(/Tus 24 respuestas[^<]*?quedaron guardados\./,'Tus 24 respuestas, las seis tareas escritas y tu respuesta de cierre quedaron guardados.');
+  guide = guide.replace(/<section class="card" id="cierre">[\s\S]*?<\/section>/,'<section class="card" id="cierre"><div class="eyebrow">Cierre</div><h2>Una idea para terminar</h2><div class="field"><label for="m1">¿Cómo puede una pregunta orientar la respuesta?<small style="display:block;margin-top:.5rem">Explica con un ejemplo de una de las entrevistas.</small></label><textarea id="m1" maxlength="700" placeholder="Una pregunta orienta la respuesta cuando..."></textarea><div class="count"><span id="count-m1">0</span>/700</div></div></section>');
   guide = guide.replace('<h2>Haz visible tu estrategia</h2>','<h2>Haz visible tu estrategia</h2>').replace('Escribe al menos 25 caracteres en cada respuesta.','Explica tu aprendizaje con una idea desarrollada en cada respuesta.');
   guide = guide.replace('Cita una pregunta del texto y explica qué permitió saber.','Cita una pregunta de cualquiera de los tres textos y explica qué permitió saber.');
   fs.writeFileSync(guidePath,guide,'utf8');
 
   const printPath = path.join(root,'estudiantes/simce-u3-clase12-entrevista/guia-imprimible.html');
   let print = fs.readFileSync(printPath,'utf8').replace(/<!-- AMPLIACION_IMPRESA -->[\s\S]*?<!-- FIN_AMPLIACION_IMPRESA -->/g,'');
-  const closure=(print.match(/<section class="page">[\s\S]*?<\/section>/g)||[]).find(section=>section.includes('Cierre y metacognición')) || '';
+  let closure=(print.match(/<section class="page">[\s\S]*?<\/section>/g)||[]).find(section=>section.includes('Cierre y metacognición')) || '';
   if(closure) print=print.replace(closure,'');
+  closure=closure.replace(/<div class="closure">[\s\S]*?<\/div>/g,(block)=>block.includes('1. ¿Cómo')?block.replace('Explica una relación entre ambas voces.','Explica con un ejemplo de una de las entrevistas.').replace('class="short-lines"','class="lines"'):'').replace(/<div class="deliver">[\s\S]*?<\/div>/,'<div class="deliver"><b>Antes de entregar:</b> revisé las 24 alternativas, las seis tareas y mi respuesta de cierre. □</div>').replace('Explica con evidencia y registra una mejora','Una sola pregunta para terminar');
   const header = print.match(/<header class="head">[\s\S]*?<\/header>/)[0];
   const printPage = (title,body) => `<section class="page extended">${header}<div class="identity"><div class="field"><b>Nombre y apellido</b></div><div class="field"><b>Curso</b></div></div><h2>${title}</h2>${body}<footer class="footer">Guía imprimible · Clase 12</footer></section>`;
   let additions = '';
@@ -153,7 +155,12 @@ function main() {
     fs.writeFileSync(file,fs.readFileSync(file,'utf8').replaceAll('Doce preguntas para analizar cómo las preguntas y respuestas construyen propósito, postura e información.','Tres entrevistas, 24 preguntas y seis tareas de evidencia, reformulación y comparación.'),'utf8');
   }
   fs.writeFileSync(teacherPath,fs.readFileSync(teacherPath,'utf8').replace('Clase 12 · Tres entrevistas, una lectura crítica','Planificación Clase 12 · Tres entrevistas, una lectura crítica').replaceAll('13 ítems de Interpretar','12 ítems de Interpretar').replaceAll('seis ítems de Reflexionar','siete ítems de Reflexionar').replaceAll('Interpretar 13, Reflexionar 6','Interpretar 12, Reflexionar 7'),'utf8');
-  console.log(JSON.stringify({texts:3,readingWords:[wordCount(original),...texts.map(t=>wordCount([t.intro,...t.exchanges.flat()].join(' ')))],questions:24,evidenceTasks:6,metacognitiveTasks:3,printPages:total},null,2));
+  for(const file of [teacherPath,slidesPath]) {
+    let content=fs.readFileSync(file,'utf8').replaceAll('Tres reflexiones sobre procedimiento y errores.','Una pregunta con un ejemplo de las entrevistas.').replaceAll('tres cierres','un cierre').replaceAll('m1–m3','m1').replace('Completa los un cierre m1.','Responde la única pregunta de cierre.');
+    if(file===teacherPath) content=content.replace('lectura y relectura 9–13 min; 24 decisiones con evidencia 20–26 min; seis productos escritos 15–20 min; revisión y cierre 4–6 min.','lectura y relectura 9–13 min (1784 palabras, supuesto de 180–220 palabras/min más búsquedas); 24 decisiones con evidencia 20–26 min (50–65 segundos por ítem); seis productos escritos 26–34 min (dos guiados: 8–10; cuatro de transferencia: 18–24); revisión y cierre 4–6 min. Trabajo previsto: 59–79 minutos, repartido entre lectura compartida, We Do y You Do. El taller supone 280–400 palabras: no solo teclear, también localizar citas, planificar, comparar y revisar. Con la explicación y los controles, el extremo alto puede superar 90 minutos: registrar el tiempo activo y continuar en la siguiente sesión si hace falta, sin exigir respuestas apresuradas.');
+    fs.writeFileSync(file,content,'utf8');
+  }
+  console.log(JSON.stringify({texts:3,readingWords:[wordCount(original),...texts.map(t=>wordCount([t.intro,...t.exchanges.flat()].join(' ')))],questions:24,evidenceTasks:6,metacognitiveTasks:1,printPages:total},null,2));
 }
 if(require.main===module) main();
 module.exports={texts,questions,tasks};

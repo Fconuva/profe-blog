@@ -81,15 +81,16 @@ async function main() {
         await page.goto(`${origin}/estudiantes/guia-u3-s12-entrevista.html?preview=1`,{waitUntil:'networkidle'});
         assert.equal(await page.locator('[data-reading]').count(),3);
         assert.equal(await page.locator('[data-question]').count(),24);
-        assert.equal(await page.locator('textarea').count(),9);
+        assert.equal(await page.locator('textarea').count(),7);
+        assert.equal(await page.locator('#cierre textarea').count(),1);
         assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
         for(let n=1;n<=24;n++)await page.locator(`[data-question="q${n}"] .option`).first().click();
-        for(const id of ['g1','g2','a1','a2','a3','a4','m1','m2','m3'])await page.locator(`#${id}`).fill('Respuesta ficticia para verificar la interfaz y su validación: relaciona la cita y explica sus límites con detalle suficiente.');
+        for(const id of ['g1','g2','a1','a2','a3','a4','m1'])await page.locator(`#${id}`).fill('Respuesta ficticia para verificar la interfaz y su validación: relaciona la cita y explica sus límites con detalle suficiente.');
         await page.locator('#submit').click();
         assert.match(await page.locator('#saveState').innerText(),/validación está correcta/);
-        assert.match(await page.locator('#progressText').innerText(),/24\/24.*6\/6.*3\/3/);
+        assert.match(await page.locator('#progressText').innerText(),/24\/24.*6\/6.*1\/1/);
         assert.deepEqual(errors,[]);
-        console.log(`Guía local ${width}px: tres lecturas, 24 ítems, nueve campos y validación completa.`);
+        console.log(`Guía local ${width}px: tres lecturas, 24 ítems, seis tareas y un cierre, validación completa.`);
       }
       await page.close();
     }

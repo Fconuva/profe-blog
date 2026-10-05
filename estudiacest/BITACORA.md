@@ -1,5 +1,11 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-05, medición del taller y cierre único de entrevista NM2
+
+- Francisco solicita medir y reparar el taller y retirar el exceso del cierre. Se conservan tres lecturas (1784 palabras), 24 ítems y seis productos escritos (280–400 palabras orientativas); el cierre queda exclusivamente en «¿Cómo puede una pregunta orientar la respuesta?», con un ejemplo de las entrevistas. Se retiran las otras dos preguntas de guía, PDF y presentación, no los registros históricos.
+- Skills de plataforma e instrucción explícita: carga del taller estimada en 26–34 minutos (8–10 guiados, 18–24 transferencia), incluyendo búsqueda de citas, planificación y revisión. Trabajo total estimado 59–79 minutos; al añadir explicación y controles puede superar los 90 previstos. Se explicitan supuestos y continuidad, sin afirmar cronometraje de aula.
+- Cliente y servidor exigen seis tareas y un cierre; progreso sobre 31 productos. El servidor conserva m2/m3 históricos cuando la nueva interfaz no los envía. Se separan títulos y consignas y se corrige una duplicación del mensaje de confirmación. PDF mantiene 17 páginas; última página renderizada e inspeccionada con una pregunta y espacio de respuesta. Validación y publicación se registran al cerrar.
+
 ## 2026-10-05, nómina privada de informes NM4 y revisión de laboriosidad
 
 - A solicitud docente se extraen y revisan los informes de 4°A, 4°B, 4°C y 4°E TP, incluyendo los avances no entregados de los dos últimos cursos. Lectura autenticada de cinco bases de informes de producción, con comprobación de health y SHA-256 de sus esquemas públicos. No se modifican respuestas, marcas de entrega ni notas de Firebase o Lirmi.

@@ -1,5 +1,12 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-05, corrección de estructura y publicación de la entrevista NM2
+
+- Se corrige la Clase 12 con las skills de instrucción explícita y planificación inversa: 90 minutos exactos, apertura en tres diapositivas independientes, modelamiento, controles de comprensión, 20 minutos de práctica guiada y 34 de práctica independiente, plenario y metacognición. Los dominios conceptual, procedimental y actitudinal quedan vinculados a evidencia observable; estrategia PARA y dos controles con umbral de 80 %.
+- Presentación de quince pantallas, planificación docente y guía digital coherentes. PDF regenerado: seis páginas A4, ambos logos comprobados visualmente y cuadros de aprendizaje y estrategia.
+- Modelo animado original de 35 segundos, cinco escenas, 1920 × 1080: pregunta sesgada, reformulación neutral, relación entre pregunta y respuesta, límites de la evidencia y estrategia PARA. Silencio deliberado con diálogos escritos. Proyecto fuente en `videos/modelo-entrevista-nm2/`, MP4 integrado a los materiales y al manifiesto de publicación. HyperFrames check aprobado, contraste 48/48 y escenas inspeccionadas.
+- Francisco informa que aún no ve la actualización operativa; se completa el MP4 y se publica mediante el procedimiento seguro. La verificación pública y el identificador del despliegue se registran al finalizar.
+
 ## 2026-10-05, SIMCE NM2: Clase 12 «La entrevista» y recalificación completa de la Unidad 3
 
 - Francisco confirma que el Ensayo 4 ya fue aplicado y solicita construir la clase de la entrevista, dejarla operativa en Estudia CEST y volver a revisar las tareas tras la reapertura extraordinaria. La Clase 12 queda fechada para el miércoles 7 de octubre, 90 minutos, 2°A HC y 2°B HC. Objetivo común: «Analizar cómo las preguntas y respuestas construyen el propósito, la postura y la información de una entrevista, fundamentando cada interpretación con evidencia textual».

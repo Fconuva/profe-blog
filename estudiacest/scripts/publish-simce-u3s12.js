@@ -30,8 +30,7 @@ function standardSession(publishedAt) {
     link_guia:'/estudiantes/guia-u3-s12-entrevista.html',
     prefer_guia:true,
     asignados:COURSES,
-    publicada_at:publishedAt,
-    contenido:{ textos:[], preguntas:[] }
+    publicada_at:publishedAt
   };
 }
 
@@ -52,8 +51,7 @@ function personalSession(assigned, publishedAt) {
     link_guia:'/estudiantes/apoyo-personal/actividad.html?sesion=12',
     prefer_guia:true,
     asignados:assigned,
-    publicada_at:publishedAt,
-    contenido:{ textos:[], preguntas:[] }
+    publicada_at:publishedAt
   };
 }
 

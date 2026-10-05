@@ -39,6 +39,8 @@ expect(['m1','m2','m3'].every(id => page.includes(`id="${id}"`)), 'Faltan los tr
 expect(page.includes('Confirmar y entregar') && page.includes('Entrega confirmada'), 'Faltan el botón o el mensaje inequívoco de entrega.');
 expect(page.includes('prefers-reduced-motion') && page.includes('@media(max-width:760px)'), 'Faltan ajustes de accesibilidad o respuesta móvil.');
 expect(page.includes('/estudiantes/assets/u3s12/entrevista-hero-ia.png') && exists('estudiantes/assets/u3s12/entrevista-hero-ia.png'), 'Falta la ilustración IA en el proyecto.');
+expect(['Conceptual','Procedimental','Actitudinal','Estrategia PARA'].every(text => page.includes(text)), 'La guía no explicita los tres dominios y la estrategia PARA.');
+expect(page.includes('/estudiantes/assets/u3s12/modelo-entrevista-para.mp4'), 'La guía no integra el video de modelado.');
 
 expect(client.includes("const SESSION_ID = 'sesion-u3-12'"), 'El cliente no usa el sessionId canónico.');
 expect(client.includes("callApi('simce-u3s12-save'") && client.includes("callApi('simce-u3s12-submit'"), 'Faltan guardado y entrega por API.');
@@ -57,12 +59,16 @@ const priorIndex = slides.indexOf('1. Conocimientos previos');
 const rulesIndex = slides.indexOf('2. Reglas de trabajo');
 const objectiveIndex = slides.indexOf('3. Objetivo');
 expect(priorIndex >= 0 && priorIndex < rulesIndex && rulesIndex < objectiveIndex, 'Las tres diapositivas iniciales no están en el orden obligatorio.');
-expect(slides.includes('Modelamiento') && slides.includes('Práctica guiada') && slides.includes('Práctica individual'), 'La presentación no contiene la progresión didáctica.');
-expect(slides.includes('Revisemos el error') && slides.includes('Sistematización y metacognición'), 'La presentación no cierra con revisión y sistematización.');
-expect(teacher.includes('Inicio · 8 min') && teacher.includes('Práctica individual · 35 min') && teacher.includes('Sistematización · 10 min'), 'La planificación no distribuye los 90 minutos.');
+expect(slides.includes('I Do') && slides.includes('We Do') && slides.includes('You Do'), 'La presentación no contiene la liberación gradual de responsabilidad.');
+expect(slides.includes('CFU 1') && slides.includes('CFU 2') && slides.includes('80 %'), 'La presentación no contiene controles de comprensión y umbral de avance.');
+expect(slides.includes('Revisemos un distractor') && slides.includes('Lo que me llevo'), 'La presentación no cierra con revisión y sistematización.');
+expect(teacher.includes('00:00–00:05') && teacher.includes('00:48–01:22') && teacher.includes('01:26–01:30'), 'La planificación no mide los 90 minutos de inicio a cierre.');
+expect(teacher.includes('54 minutos de práctica del estudiante') && teacher.includes('20 guiados + 34 independientes'), 'La planificación no declara el tiempo efectivo de práctica.');
+expect(['Conceptual','Procedimental','Actitudinal','Estrategia PARA'].every(text => teacher.includes(text)), 'La planificación no alinea dominios y procedimiento.');
 expect(printGuide.includes('Nombre y apellido') && printGuide.includes('Curso') && printGuide.includes('Fecha'), 'La guía imprimible no tiene identificación completa.');
 expect((printGuide.match(/Página \d de 6/g) || []).length === 6, 'La guía imprimible no contiene las seis páginas planificadas.');
-expect(printGuide.includes('min-height:10mm') && printGuide.includes('.lines{height:34mm}'), 'Los campos y espacios de respuesta imprimibles son insuficientes.');
+expect(/min-height:\s*10mm/.test(printGuide) && /\.lines\s*\{[\s\S]*?height:\s*34mm/.test(printGuide), 'Los campos y espacios de respuesta imprimibles son insuficientes.');
+expect(['Conceptual','Procedimental','Actitudinal','Precisar la tarea','Apoyar y descartar'].every(text => printGuide.includes(text)), 'La guía imprimible no enseña los dominios y PARA.');
 expect(exists('estudiantes/simce-u3-clase12-entrevista/guia-imprimible.pdf'), 'Falta el PDF A4 de la guía imprimible.');
 
 expect(dashboard.includes("'sesion-u3-12'") && dashboard.includes("fecha_aplicacion:'2026-10-07'"), 'El dashboard no registra la Clase 12.');
@@ -73,6 +79,7 @@ expect(admin.includes("pregunta_orienta:'Cierre · cómo orienta una pregunta'")
 expect(contract.files.some(entry => entry.path === pagePath && entry.storage === 'api' && entry.backend === 'api/_simce-u3s12.js'), 'La Clase 12 no está en el contrato de entrega.');
 expect(manifest.criticalFiles.some(entry => entry.path === pagePath && entry.contains === 'La entrevista'), 'La guía no está protegida por el manifiesto académico.');
 expect(manifest.criticalFiles.some(entry => entry.path === 'estudiantes/assets/u3s12/entrevista-hero-ia.png'), 'La ilustración no está protegida por el manifiesto académico.');
+expect(manifest.criticalFiles.some(entry => entry.path === 'estudiantes/assets/u3s12/modelo-entrevista-para.mp4'), 'El video de modelado no está protegido por el manifiesto académico.');
 
 expect(personalIndex.includes('actividad.html?sesion=12'), 'La ruta personal no muestra la Sesión 12.');
 expect(personalClient.includes("version: 'simce-personal-u3-s2-s12-v1'"), 'El catálogo personal no declara cobertura hasta la Sesión 12.');
@@ -89,4 +96,4 @@ if (failures.length) {
   process.exit(1);
 }
 
-console.log('SIMCE U3S12 auditada: planificación de 90 minutos, presentación, guía de 12 ítems 3/6/3, ilustración IA, ruta personal, entrega API atómica y PDF A4 verificados.');
+console.log('SIMCE U3S12 auditada: 90 minutos exactos, I Do/We Do/You Do, dominios conceptual-procedimental-actitudinal, estrategia PARA, video de modelado, guía 3/6/3, ruta personal, entrega API atómica y PDF A4 verificados.');

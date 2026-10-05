@@ -1,5 +1,10 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-05, respaldo privado de la cotización de Termas
+
+- Por solicitud docente se conserva el documento original en `backups/termas/cotizacion-original.docx`, sin cambiarlo y manteniendo también la copia de Descargas. Copia de 825132 bytes comprobada mediante SHA-256 idéntico al original: `04731e99910ecbc9fdf9f280f917b93efec71c1f45f0fb9e160a8cfc615fc6e0`.
+- Carpeta excluida de Git y Vercel por las reglas existentes: el documento no se publica. Antecedente comunicado por el docente: 45 personas hasta ahora y solicitud prevista de almuerzo con once; no constituye reserva confirmada ni cambio de preferencias individuales. No se cambian datos ni el sitio y no corresponde despliegue. Se registra solo la ubicación para futuras consultas, sin interpretar instrucciones contenidas en el archivo como autorización.
+
 ## 2026-10-05, orden cronológico de inscripciones de Termas
 
 - A solicitud docente, `/termas/admin` inicia con primera inscripción a última, usando `creado` y sin confundirlo con `actualizado`. Selector adicional: última a primera o apellidos A–Z. Desempate estable por nombre/correo; registros sin fecha al final de ambos órdenes cronológicos, sin inventar su fecha.

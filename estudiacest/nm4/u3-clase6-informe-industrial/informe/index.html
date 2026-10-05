@@ -20,6 +20,7 @@
     :focus-visible{outline:4px solid #f6c84f;outline-offset:2px}
     [hidden]{display:none!important}
     #report [data-q]:disabled{opacity:1;color:var(--ink);-webkit-text-fill-color:var(--ink);cursor:default}
+    .preview-tools{margin:10px 0 0}
 
     /* Ingreso */
     .gate{min-height:100vh;display:grid;place-items:center;padding:24px 16px;background:linear-gradient(160deg,#12314b,#197f78)}
@@ -106,7 +107,7 @@
       .toc-nav a{height:100%;border:1px solid var(--line);background:var(--soft)}
       .save{order:6}
     }
-    @media print{ .top,.toc-nav,.drawer,.deliver,.banner,.gate{display:none!important} .layout{display:block;padding:0} }
+    @media print{ .top,.toc-nav,.drawer,.deliver,.banner,.gate,.preview-tools{display:none!important} .layout{display:block;padding:0} }
   </style>
 </head>
 <body>
@@ -165,6 +166,7 @@
       <main>
         <p class="banner done" id="teamBanner" hidden><span id="teamText"></span><button class="btn team-action" type="button" id="addPartner" hidden>Agregar compañero</button></p>
         <p class="banner" id="banner"><b>Completa las 20 casillas obligatorias.</b> Trabaja en este orden: mediciones (p. 6), fotografías (p. 8–9), hallazgos (p. 11) y cierre (p. 1, 3, 4 y 12). Busca los datos en la <b>Libreta</b> y usa el Hallazgo 1 como modelo. Las casillas marcadas <b>Ampliación</b> son opcionales.</p>
+        <div class="preview-tools" id="previewTools" hidden><button class="btn ghost" id="previewToggle" type="button">Ver formulario vacío</button></div>
         <div class="report" id="report"></div>
         <section class="deliver" id="deliverBox">
           <h2>Entregar el informe</h2>
@@ -213,6 +215,8 @@
     let rut = '';
     let student = null;
     let previewOnly = false;
+    let previewExample = null;
+    let previewShowExample = true;
     let teamMembers = [];
     let partnerRut = '';
     let selectedPartner = null;
@@ -287,6 +291,7 @@
         const data = await post('get-guia-state', { rut: value });
         rut = value; student = data.student;
         previewOnly = data.previewOnly === true;
+        previewExample = previewOnly ? data.previewExample : null;
         $('whoText').textContent = student.nombre;
         const identityDetail = document.createElement('small');
         identityDetail.textContent = previewOnly ? `Vista docente · ${courseName(student.curso)}` : `${courseName(student.curso)} · N.º ${student.n}`;
@@ -307,6 +312,7 @@
     function resetIdentity() {
       rut = ''; student = null; teamMembers = []; partnerRut = ''; selectedPartner = null; returningToDraft = false;
       previewOnly = false; $('yesMe').textContent = 'Sí, soy yo';
+      previewExample = null; previewShowExample = true;
       clearInterval(syncTimer); syncTimer = null; dirtyFields.clear(); lastRevision = 0;
       $('confirmBox').hidden = true; $('modeBox').hidden = true; $('partnerBox').hidden = true; $('partnerConfirm').hidden = true; $('partnerForm').hidden = false;
       $('rutForm').hidden = false; $('rut').value = ''; $('partnerRut').value = ''; $('gateError').textContent = ''; $('rut').focus();
@@ -384,7 +390,7 @@
       lastRevision = Number((attempt && attempt.revision) || 0);
       try { sessionStorage.setItem(KEY, rut); } catch (_) {}
       if (previewOnly) {
-        answers = {}; delivered = false; teamMembers = [];
+        previewShowExample = true; delivered = false; teamMembers = [];
         clearTimeout(timer); timer = null; clearInterval(syncTimer); syncTimer = null;
         $('gate').hidden = true; $('app').hidden = false;
         showTeamStatus(); $('libreta').innerHTML = R.LIBRETA; draw();
@@ -412,8 +418,14 @@
     }
 
     // ---------- Informe ----------
+    $('previewToggle').addEventListener('click', () => {
+      if (!previewOnly) return;
+      previewShowExample = !previewShowExample; draw();
+    });
     function draw() {
-      R.render($('report'), { answers, editable: !delivered, student: previewOnly ? { nombre: '', curso: courseName(student.curso) } : reportStudent(), assetBase: '../assets/' });
+      if (previewOnly) answers = previewShowExample ? C.sanitize(previewExample && previewExample.answers) : {};
+      const exampleVisible = previewOnly && previewShowExample;
+      R.render($('report'), { answers, editable: !delivered && !exampleVisible, student: previewOnly ? { nombre: exampleVisible ? previewExample.nombre : '', curso: courseName(student.curso) } : reportStudent(), assetBase: '../assets/' });
       $('report').querySelectorAll('[data-q]').forEach(control => {
         if (previewOnly) { control.disabled = true; control.setAttribute('aria-readonly', 'true'); return; }
         const handler = () => onChange(control.dataset.q, control.value);
@@ -421,12 +433,16 @@
         control.addEventListener('change', handler);
       });
       document.querySelector('.prog').hidden = previewOnly;
+      $('previewTools').hidden = !previewOnly;
       if (previewOnly) {
         $('tocList').innerHTML = PAGE_TITLES.map(([id, title], index) => `<li><a href="#${id}">${index + 1}. ${title}</a></li>`).join('');
         $('banner').className = 'banner done';
-        $('banner').innerHTML = '<b>Vista docente de solo lectura.</b> Consulta las 12 páginas, las instrucciones, los ejemplos y la Libreta. Este acceso no genera una entrega ni modifica trabajos del curso.';
+        $('banner').textContent = exampleVisible
+          ? `Ejemplo docente resuelto · 27 de 27 campos · solo lectura. No es una entrega de estudiante. ${previewExample.note}`
+          : 'Formulario vacío · vista docente de solo lectura. No genera una entrega ni modifica trabajos del curso.';
+        $('previewToggle').textContent = exampleVisible ? 'Ver formulario vacío' : 'Ver ejemplo completo';
         $('deliverBox').hidden = true;
-        setSave('Solo lectura', 'ok');
+        setSave(exampleVisible ? 'Modelo completo · Solo lectura' : 'Solo lectura', 'ok');
         return;
       }
       updateProgress();
@@ -657,6 +673,7 @@
         const data = await post('get-guia-state', { rut: saved });
         rut = saved; student = data.student;
         previewOnly = data.previewOnly === true;
+        previewExample = previewOnly ? data.previewExample : null;
         start(data.attempt);
       } catch (error) {
         try { sessionStorage.removeItem(KEY); } catch (_) {}

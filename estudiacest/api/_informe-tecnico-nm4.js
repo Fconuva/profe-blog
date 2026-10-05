@@ -72,8 +72,59 @@ const BY_HASH = new Map(ROSTER.map(student => [student.hash, student]));
 // Acceso docente a la actividad, separado de la nómina y de los informes privados.
 // Solo se conserva el hash del RUN; esta vista no consulta ni escribe entregas.
 const PREVIEW_TEACHERS = new Map([
-  ['a89a5648e23090db430a2fd9', { nombre: 'Profesora Alicia', curso: '4ATP', version: 'industrial' }]
+  ['a89a5648e23090db430a2fd9', { nombre: 'Profesora Alicia', versions: ['industrial'] }],
+  ['7fb29490cd17d525ffd2c2aa', { nombre: 'Profesor Francisco', versions: ['industrial', 'automotriz'] }]
 ]);
+// Modelos didácticos: no son intentos, resultados ni reparaciones ejecutadas.
+// Permanecen en el servidor y solo se envían al acceso docente habilitado.
+const PREVIEW_MODELS = {
+  industrial: {
+    emision: '2026-09-29', especialidad: 'Mecánica Industrial',
+    resumen: 'Se diagnosticó el conjunto motor–bomba BP-04 mediante inspección visual, revisión de la bitácora y mediciones. El motor registró 4,2 mm/s RMS; la bomba, 9,6 mm/s RMS y 82 °C. Se observó un resguardo desplazado con una fijación faltante, una huella de lubricante de 18 × 6 cm y mantenimiento vencido por 70 h. Se recomienda mantener el conjunto detenido y bloqueado, corregir el resguardo y revisar alineación, apriete, lubricación y sello. El retorno requiere comprobar las correcciones y registrar nuevas mediciones.',
+    obj2: 'Comparar las mediciones y el estado del resguardo con los criterios establecidos para BP-04.',
+    obj3: 'Proponer correcciones priorizadas y comprobaciones antes de autorizar el retorno del conjunto a operación.',
+    vibracionMotor: '4,2', vibracionBomba: '9,6', temperaturaRodamiento: '82', horasOperacion: '6470',
+    estado: 'Crítico: detener y aislar',
+    f2Desc: 'La Foto 2 muestra el resguardo del acoplamiento desplazado aproximadamente 35 mm. Falta el perno delantero derecho y queda una abertura hacia las partes móviles. Bajo el alojamiento se observa una huella de lubricante de 18 × 6 cm, corroborada por la bitácora de las 08:28. La imagen no permite determinar la causa de estas condiciones.',
+    f3Desc: 'La Foto 3 ubica el vibrómetro en el rodamiento de BP-04, lado del acoplamiento. La bitácora registra allí 9,6 mm/s RMS a las 08:40; en el motor M-04, del mismo lado, se midieron 4,2 mm/s RMS. La medición identifica una condición de alerta en la bomba, pero no demuestra por sí sola su causa.',
+    puntoMedicion: 'Rodamiento de BP-04, lado del acoplamiento.',
+    proximaMantencion: '2026-09-29',
+    h2Criterio: 'PI-BP04 establece alerta sobre 7,1 mm/s RMS y detención sobre 11,0 mm/s RMS. Los 9,6 mm/s de la bomba superan la alerta, pero no el umbral de detención por vibración. MAN-BP04 fija un máximo de 75 °C en este punto; los 82 °C lo superan en 7 °C.',
+    h2Efecto: 'Si estas condiciones se mantienen, pueden acelerar el deterioro del rodamiento y del sello y afectar la continuidad del proceso. No se confirma una falla interna porque el diagnóstico no desmontó el rodamiento.',
+    h2Recomendacion: 'La jefatura debe mantener el equipo aislado y encargar a mantenimiento la revisión de alineación, apriete, lubricación y sello. Tras las correcciones y la restitución del resguardo, debe registrar nuevas lecturas en los mismos puntos y comparar con PI-BP04 y MAN-BP04 antes de autorizar el retorno.',
+    h2Riesgo: 'Alto',
+    h3Titulo: 'Mantenimiento vencido y pérdida visible de lubricante', h3Riesgo: 'Alto',
+    h3Evidencia: 'Bitácora de diagnóstico',
+    h3Condicion: 'El contador registra 6.470 h. El último mantenimiento quedó registrado a las 5.400 h el 18-07-2026; transcurrieron 1.070 h sin una orden posterior cerrada. El intervalo de 1.000 h está excedido por 70 h. Además, la Foto 2 y la bitácora registran una huella de lubricante de 18 × 6 cm bajo el alojamiento.',
+    h3Criterio: 'El plan MP-BP04 exige mantenimiento cada 1.000 h. Desde las 5.400 h registradas, la siguiente intervención correspondía a las 6.400 h. La evidencia del caso indica que no debe mantenerse una pérdida visible de lubricante sin revisión.',
+    h3Efecto: 'El retraso y la pérdida pueden reducir la lubricación disponible, favorecer desgaste y temperatura elevada y aumentar el riesgo de una detención no planificada. No se establece todavía el origen de la pérdida.',
+    h3Recomendacion: 'Mantenimiento debe abrir y ejecutar la orden pendiente con el equipo bloqueado, localizar la pérdida y revisar el sello y la lubricación según MP-BP04. Como propuesta de este ejemplo, se prioriza la intervención el 29-09-2026. Se debe comprobar ausencia de pérdidas y cerrar la orden con fecha, responsable y horas del contador.',
+    conclusion: 'BP-04 debe permanecer detenida y bloqueada. La prioridad es restituir la protección del acoplamiento; luego deben corregirse la temperatura sobre límite, la vibración en alerta y las condiciones de mantenimiento y lubricación. La decisión se basa en fotografías, mediciones y bitácora, sin atribuir causas no comprobadas. Solo corresponde autorizar el retorno tras verificar el resguardo, registrar nuevas mediciones conformes y cerrar la orden de mantenimiento.',
+    declaracion: 'Declaro que el informe se basa solo en la evidencia del caso'
+  },
+  automotriz: {
+    emision: '2026-09-29', especialidad: 'Mecánica Automotriz',
+    resumen: 'Se diagnosticaron los frenos delanteros y la suspensión del vehículo V-17, recibido con 128.450 km. La pastilla interior delantera izquierda mide 2,5 mm, bajo el mínimo de 3,0 mm; el disco de esa rueda mide 21,4 mm, sobre el mínimo de 21,0 mm. El líquido de frenos registra 3,5 % de humedad y el amortiguador delantero izquierdo presenta una huella húmeda continua. Se recomienda mantener V-17 fuera de servicio, intervenir los frenos y la suspensión y realizar comprobaciones controladas antes del retorno.',
+    obj2: 'Comparar la humedad del líquido y el estado del amortiguador con los criterios del caso.',
+    obj3: 'Determinar la aptitud del vehículo y priorizar reparaciones y comprobaciones para su retorno al servicio.',
+    kilometraje: '128450', espesorPastilla: '2,5', espesorDisco: '21,4', humedadLiquido: '3,5',
+    estado: 'No apto para circular',
+    f2Desc: 'La Foto 2 muestra la inspección del freno delantero izquierdo. La bitácora de las 08:32 registra 2,5 mm en la pastilla interior y 5,0 mm en la exterior, una diferencia de 2,5 mm. La interior está bajo el mínimo de 3,0 mm. El disco mide 21,4 mm, todavía sobre su mínimo de 21,0 mm. El desgaste desigual debe revisarse; la evidencia no confirma una causa en la pinza.',
+    f3Desc: 'La Foto 3 muestra una huella húmeda continua desde la zona del sello del amortiguador delantero izquierdo, con polvo adherido. La bitácora de las 09:00 indica que el resorte no presenta fisuras y la manguera de freno está intacta y bien guiada. Se observa pérdida de aceite, pero no se establece la causa ni se informa una reparación ejecutada.',
+    ruedaInspeccionada: 'Delantera izquierda.', proximaMantencion: '2026-09-29',
+    h2Criterio: 'TA-FR-03 exige reemplazar el líquido y purgar cuando la humedad es igual o superior a 3,0 %. El valor registrado de 3,5 % supera el criterio en 0,5 puntos porcentuales; por lo tanto, corresponde realizar el cambio y la purga.',
+    h2Efecto: 'La humedad sobre el criterio del taller puede comprometer la respuesta del sistema de frenos. La condición se suma a la pastilla bajo mínimo y requiere corrección antes del retorno; no se afirma que ya ocurrió una pérdida total de frenado.',
+    h2Recomendacion: 'El taller debe mantener el vehículo fuera de servicio, reemplazar el líquido y purgar según TA-FR-03. Debe inspeccionar mangueras y uniones, comprobar ausencia de aire y fugas y registrar la prueba de frenado después de reparar también las pastillas y la suspensión.',
+    h2Riesgo: 'Alto', h3Titulo: 'Pérdida de aceite en el amortiguador delantero izquierdo', h3Riesgo: 'Alto',
+    h3Evidencia: 'Foto 3 · amortiguador',
+    h3Condicion: 'El amortiguador delantero izquierdo presenta una huella húmeda continua desde la zona del sello y polvo adherido. El conductor informó que el vehículo rebota más de una vez después de pasar un resalto. El resorte no muestra fisuras; no se realizó prueba en ruta por las condiciones inseguras detectadas.',
+    h3Criterio: 'El criterio de suspensión citado en el caso exige comprobar fijaciones y pérdidas de líquido en los amortiguadores, por su relación con oscilaciones excesivas. La pérdida visible requiere revisión y corrección antes de autorizar el servicio.',
+    h3Efecto: 'La condición puede disminuir el control de las oscilaciones y afectar estabilidad y frenado. El síntoma informado por el conductor es compatible con el hallazgo, pero no sustituye una comprobación posterior de la suspensión.',
+    h3Recomendacion: 'El taller debe inspeccionar el amortiguador, sus fijaciones y la suspensión y resolver la pérdida según el procedimiento aplicable. Se propone intervenir el 29-09-2026, sin presentar esa fecha como una reparación ya ejecutada. Después debe comprobar estanqueidad y respuesta del componente y realizar una prueba controlada de estabilidad, con los frenos previamente reparados.',
+    conclusion: 'V-17 no está apto para circular. Se debe priorizar la pastilla delantera izquierda bajo mínimo, reemplazar y purgar el líquido de frenos y corregir la pérdida del amortiguador. El disco izquierdo está sobre su mínimo, lo que no elimina los otros riesgos. No se atribuye el desgaste desigual a una causa sin comprobación. El retorno requiere verificar espesores, ausencia de aire y fugas y una prueba controlada de frenado y estabilidad, dejando la orden cerrada y documentada.',
+    declaracion: 'Declaro que el informe se basa solo en la evidencia del caso'
+  }
+};
 
 const cleanRut = value => String(value || '').replace(/[^0-9kK]/g, '').toUpperCase();
 const hashRut = value => crypto.createHash('sha256').update(SALT + cleanRut(value)).digest('hex').slice(0, 24);
@@ -480,13 +531,18 @@ module.exports = async function informeTecnico(req, res, { admin, db }) {
     if (req.method !== 'POST') return res.status(405).json({ error: 'Método no disponible.' });
     const teacher = PREVIEW_TEACHERS.get(hashRut(body(req).rut));
     if (teacher) {
-      const teacherVersion = VERSIONS[teacher.version];
-      if (version !== teacherVersion) return res.status(403).json({ error: 'Tu acceso docente corresponde al informe de mantenimiento de 4°A TP.', ruta: teacherVersion.ruta });
+      const versionKey = Object.keys(VERSIONS).find(key => VERSIONS[key] === version);
+      if (!teacher.versions.includes(versionKey)) return res.status(403).json({ error: 'Tu acceso docente no incluye esta especialidad.', ruta: VERSIONS[teacher.versions[0]].ruta });
       if (action !== 'get-guia-state') return res.status(403).json({ error: 'La vista docente es solo de lectura.' });
       return res.status(200).json({
         ok: true, previewOnly: true,
-        student: { nombre: teacher.nombre, curso: teacher.curso, n: null, role: 'docente' },
-        attempt: null, supportsPairs: false
+        student: { nombre: teacher.nombre, curso: version.cursos[0], n: null, role: 'docente' },
+        attempt: null, supportsPairs: false,
+        previewExample: {
+          nombre: 'Equipo docente · ejemplo resuelto',
+          answers: version.campos.sanitize(PREVIEW_MODELS[versionKey]),
+          note: 'Las fechas del ejemplo son propuestas didácticas, no reparaciones ejecutadas.'
+        }
       });
     }
     if (action === 'get-guia-state') return await handleState(req, res, db, version);

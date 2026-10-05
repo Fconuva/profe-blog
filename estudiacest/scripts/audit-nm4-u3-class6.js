@@ -162,12 +162,29 @@ const industrialAudit = auditSpecialty({
   assets: ['i1-conjunto-motor-bomba.png', 'i2-acoplamiento-fuga.png', 'i3-medicion-vibracion.png']
 });
 const industrialStudent = read('nm4/u3-clase6-informe-industrial/informe/index.html');
-['PREVIEW_TEACHERS', "version: 'industrial'", "role: 'docente'", 'previewOnly: true', "action !== 'get-guia-state'", 'La vista docente es solo de lectura.'].forEach(token =>
+['PREVIEW_TEACHERS', "versions: ['industrial', 'automotriz']", "role: 'docente'", 'previewOnly: true', "action !== 'get-guia-state'", 'La vista docente es solo de lectura.', 'previewExample', 'PREVIEW_MODELS'].forEach(token =>
   expect(api.includes(token), `Vista docente: falta el permiso acotado de servidor ${token}.`));
-['previewOnly = data.previewOnly === true', 'Ver actividad', 'control.disabled = true', "setSave('Solo lectura'", 'if (previewOnly) return;', 'previewOnly || delivered || submitting', 'previewOnly || submitting || delivered'].forEach(token =>
-  expect(industrialStudent.includes(token), `Vista docente: falta el bloqueo de interfaz ${token}.`));
-const previewHashes = [...api.matchAll(/\['([a-f0-9]{24})', \{ nombre: 'Profesora/g)].map(match => match[1]);
-expect(previewHashes.length === 1 && previewHashes.every(hash => !ROWS.some(row => row[0] === hash)), 'La vista docente debe permanecer separada de la nómina y de sus entregas.');
+['industrial', 'automotriz'].forEach(version => {
+  const previewPage = read(`nm4/u3-clase6-informe-${version}/informe/index.html`);
+  ['previewOnly = data.previewOnly === true', 'Ver actividad', 'control.disabled = true', 'Solo lectura', 'if (previewOnly) return;', 'previewOnly || delivered || submitting', 'previewOnly || submitting || delivered', 'Ver formulario vacío', 'Ver ejemplo completo', 'previewExample.answers', '27 de 27 campos', 'No es una entrega de estudiante'].forEach(token =>
+    expect(previewPage.includes(token), `Vista docente ${version}: falta el bloqueo o modelo ${token}.`));
+});
+const previewHashes = [...api.matchAll(/\['([a-f0-9]{24})', \{ nombre: 'Profesor/g)].map(match => match[1]);
+expect(previewHashes.length === 2 && previewHashes.every(hash => !ROWS.some(row => row[0] === hash)), 'Las vistas docentes deben permanecer separadas de la nómina y de sus entregas.');
+const previewData = require('node:vm').runInNewContext(api + '\n;({ PREVIEW_MODELS, PREVIEW_TEACHERS })', {
+  require: require('node:module').createRequire(path.join(root, 'api/_informe-tecnico-nm4.js')),
+  module: { exports: {} }, console
+});
+['industrial', 'automotriz'].forEach(version => {
+  const fields = require(path.join(root, `nm4/u3-clase6-informe-${version}/informe/campos.js`));
+  const model = previewData.PREVIEW_MODELS[version];
+  const clean = fields.sanitize(model);
+  expect(Object.keys(model).length === 27 && fields.questions.every(question => fields.isComplete(question, clean[question.id])), `${version}: el ejemplo no completa los 27 campos.`);
+  expect(JSON.stringify(model) === JSON.stringify(clean), `${version}: hay respuestas inválidas o truncadas en el ejemplo.`);
+  expect(!read(`nm4/u3-clase6-informe-${version}/informe/campos.js`).includes('PREVIEW_MODELS'), `${version}: se publicaron respuestas docentes en el formulario estudiantil.`);
+});
+expect(previewData.PREVIEW_MODELS.industrial.vibracionBomba === '9,6' && previewData.PREVIEW_MODELS.industrial.horasOperacion === '6470' && previewData.PREVIEW_MODELS.industrial.temperaturaRodamiento === '82', 'El ejemplo Industrial altera mediciones de BP-04.');
+expect(previewData.PREVIEW_MODELS.automotriz.espesorPastilla === '2,5' && previewData.PREVIEW_MODELS.automotriz.espesorDisco === '21,4' && previewData.PREVIEW_MODELS.automotriz.humedadLiquido === '3,5', 'El ejemplo Automotriz altera mediciones de V-17.');
 const automotiveAudit = auditSpecialty({
   label: '4°B Automotriz', route: 'u3-clase6-informe-automotriz', version: 'automotriz', course: '4BTP', sessionKey: 'informeNM4automotriz',
   caseTokens: ['V-17', '128.450 km', '2,5 mm', '3,5 %', 'CONASET'],

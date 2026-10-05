@@ -60,6 +60,26 @@ window.MANUAL_COURSES = {
     guidedQuestion:'¿Cómo explicarías HOLD a un principiante sin hacerle creer que el circuito queda apagado?',
     guidedAnswer:'HOLD mantiene el número en la pantalla. No corta la energía del circuito.'
   },
+  '4D': {
+    name:'4°D · Gráfica', equipment:'Impresora 3D Original Prusa MK4S',
+    photo:'assets/equipo-impresora3d-ia.webp', detail:'assets/impresora3d-detalle.jpg', diagram:'assets/plano-impresora3d-ia.webp', originalPhoto:'assets/impresora3d.jpg',
+    alt:'Ilustración didáctica de IA basada en la impresora 3D Original Prusa MK4S', detailAlt:'Vista del fabricante de la pantalla y la perilla de control de la Original Prusa MK4S',
+    credit:'Equipo y plano: ilustraciones IA de Estudia CEST, basadas en Prusa MK4S; sin escala. Detalle y fotografía original: Prusa Research.',
+    source:'https://www.prusa3d.com/downloads/manual/prusa3d_manual_mk4s_mk39s_101_en.pdf',
+    sourceName:'Prusa MK4S · Manual original de impresión 3D (inglés)',
+    reference:'Prusa Research, 3D Printing Handbook, MK4S/MK3.9S, v. 1.01 (2024), pp. 7–9, 13–17 y 57–58. Adaptación al español: Estudia CEST.',
+    sections:[
+      ['Identificación','Esta impresora forma objetos por capas. La bobina suministra filamento; el extrusor lo impulsa hacia la boquilla caliente. La lámina recibe las capas sobre la base calefactada. La pantalla muestra menús y estado; la perilla selecciona y confirma opciones.'],
+      ['Preparación del puesto','El equipo necesita una superficie estable y espacio para mover la base sin obstáculos. El lugar debe estar seco y ventilado. Revisa cables y componentes: si están dañados, suspende el uso y solicita asistencia.'],
+      ['Advertencias y cuidado','La boquilla, el cabezal y la base pueden causar quemaduras. No toques partes calientes ni introduzcas las manos entre piezas en movimiento. Espera a que el equipo enfríe antes de retirar la pieza o manipular la lámina. Antes de mantener componentes, consulta el manual y desconecta la alimentación.'],
+      ['Límite de esta lectura','Leemos, diseñamos y escribimos un manual ilustrado; no imprimimos ni conectamos equipos. El producto escolar no reemplaza la capacitación ni las instrucciones del fabricante. No inventen temperaturas ni ajustes.']
+    ],
+    parts:['Bobina de filamento: suministra el material de impresión.','Extrusor: impulsa el filamento hacia la boquilla.','Boquilla: deposita el material fundido en capas.','Lámina de impresión: superficie removible que recibe la pieza.','Pantalla: muestra menús y estado del equipo.','Perilla de control: selecciona y confirma opciones.'],
+    vocabulary:[['Filamento','Material en forma de hilo con el que se fabrica la pieza.'],['Extrusor','Mecanismo que impulsa el filamento hacia la boquilla.'],['Boquilla','Salida por la que se deposita el material fundido.'],['Lámina de impresión','Superficie removible colocada sobre la base calefactada.']],
+    guidedOriginal:'La finalización del trabajo de impresión no implica el enfriamiento inmediato de los componentes; la manipulación de la pieza y la lámina requiere esperar a que enfríen.',
+    guidedQuestion:'¿Cómo explicarías que una impresión terminada todavía puede causar quemaduras?',
+    guidedAnswer:'Espera a que el equipo enfríe antes de retirar la pieza o tocar la lámina. Aunque la impresión termine, la boquilla y la base pueden seguir calientes.'
+  },
   '4E': {
     name:'4°E · Electrónica', equipment:'Estación de soldadura HAKKO FX-888DX',
     photo:'assets/equipo-estacion-ia.webp', detail:'assets/estacion-detalle.jpg', diagram:'assets/plano-estacion-ia.webp', originalPhoto:'assets/estacion-soldadura.jpg',

@@ -2,9 +2,9 @@
 const http=require('node:http'),fs=require('node:fs'),path=require('node:path'),os=require('node:os');
 const {chromium}=require('playwright');const {PDFDocument}=require('pdf-lib');
 const root=path.resolve(__dirname,'..'),prefix='/nm4/u3-clase7-manual-ilustrado/';
-const courses=['4A','4B','4C','4E'];
-const diagrams={'4A':'plano-taladro-ia.webp','4B':'plano-gato-ia.webp','4C':'plano-multimetro-ia.webp','4E':'plano-estacion-ia.webp'};
-const originals={'4A':'taladro.png','4B':'gato-dimensiones.png','4C':'multimetro.jpg','4E':'estacion-soldadura.jpg'};
+const courses=['4A','4B','4C','4D','4E'];
+const diagrams={'4A':'plano-taladro-ia.webp','4B':'plano-gato-ia.webp','4C':'plano-multimetro-ia.webp','4D':'plano-impresora3d-ia.webp','4E':'plano-estacion-ia.webp'};
+const originals={'4A':'taladro.png','4B':'gato-dimensiones.png','4C':'multimetro.jpg','4D':'impresora3d.jpg','4E':'estacion-soldadura.jpg'};
 const output=fs.mkdtempSync(path.join(os.tmpdir(),'nm4-manual-qa-'));
 const mime={'.html':'text/html; charset=utf-8','.js':'application/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.svg':'image/svg+xml','.jpg':'image/jpeg','.png':'image/png','.webp':'image/webp','.woff2':'font/woff2','.pdf':'application/pdf'};
 let server;const requested=process.argv.find(x=>x.startsWith('--origin='));const presentationOnly=process.argv.includes('--presentation-only');
@@ -19,7 +19,7 @@ async function main(){
    for(const course of courses){
     await page.goto(`${origin}${prefix}?curso=${course}`,{waitUntil:'networkidle'});
     if(await page.locator('#course').inputValue()!==course)throw new Error('Curso inicial incorrecto');
-    if(await page.locator('#course option').count()!==4)failures.push('No están los cuatro cursos en el selector.');
+    if(await page.locator('#course option').count()!==5)failures.push('No están los cinco cursos en el selector.');
     const flow=await page.evaluate(()=>[...document.querySelectorAll('.slide')].map(el=>({stage:el.dataset.stage,opening:el.dataset.opening||null,minutes:Number(el.dataset.minutes),commands:el.querySelectorAll('ol.steps>li').length})));
     if(flow.map(x=>x.stage).join(',')!=='inicio,inicio,inicio,desarrollo,desarrollo,desarrollo,desarrollo,desarrollo,desarrollo,cierre'||flow.slice(0,3).map(x=>x.opening).join(',')!=='activation,norms,objective'||flow.slice(0,3).map(x=>x.minutes).join(',')!=='5,2,3'||flow.reduce((total,x)=>total+x.minutes,0)!==90||flow.some(x=>x.opening!=='objective'&&x.commands<3))failures.push(`${width}/${course}: secuencia, inicio separado o consignas incompletas`);checks++;
     const teaching=await page.evaluate(()=>({opening:[...document.querySelectorAll('[data-opening]')].map(el=>el.dataset.opening).join(','),objective:document.querySelector('[data-lesson-objective]').textContent,monitoring:!!document.querySelector('[data-monitoring]'),closing:[...document.querySelectorAll('[data-closing]')].map(el=>el.dataset.closing).join(',')}));

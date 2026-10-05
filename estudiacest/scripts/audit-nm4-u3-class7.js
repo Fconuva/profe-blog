@@ -76,7 +76,7 @@ for(const label of ['Identificación del grupo','Nombre y apellido','Fecha:','Gr
 expect(printGenerator.includes('content.names!==3')&&printGenerator.includes('content.instructions!==4')&&printGenerator.includes('getBoundingClientRect().height>=26')&&printGenerator.includes('layout.boxes'),'La generación debe validar tres nombres, cuatro instrucciones y cuadros imprimibles con espacio de escritura.');
 expect(read('manual.css').includes('.reading-guide .print-box{border:.6pt solid')&&read('manual.css').includes('.reading-guide .identity-name{height:8mm}'),'La guía completa debe tener cuadros de bordes reales y espacios de nombres de 8 mm.');
 const context={window:{}};vm.runInNewContext(read('contenidos.js'),context);const data=context.window.MANUAL_COURSES;
-for(const course of ['4A','4B','4C','4E']){
+for(const course of ['4A','4B','4C','4D','4E']){
  const item=data[course];expect(item?.sections.length===4,`${course}: lectura incompleta.`);expect(item?.parts.length===6,`${course}: deben existir seis partes del plano.`);
  expect(item?.vocabulary.length===4,`${course}: deben estar disponibles los cuatro términos del glosario.`);
  for(const key of ['photo','detail','diagram'])expect(fs.statSync(path.join(base,item[key])).size>1000,`${course}: recurso visual incompleto.`);
@@ -90,7 +90,7 @@ for(const specialty of ['industrial','automotriz','tecnico','electronica'])expec
 const manifest=JSON.parse(fs.readFileSync(path.join(root,'scripts/academic-release-manifest.json'),'utf8'));
 for(const logo of ['insignia_talca_1.png','sdb-logo-big.png'])expect(manifest.criticalFiles.some(entry=>entry.path===`estudiantes/assets/${logo}`),`Logo institucional sin registro crítico: ${logo}`);
 const receipt=JSON.parse(read('assets/imagenes-ia.json'));const hashes=new Set();
-expect(receipt.provider==='image_gen'&&receipt.mode==='built-in'&&receipt.images.length===9,'Deben estar guardadas nueve imágenes generadas con IA y sus prompts.');
+expect(receipt.provider==='image_gen'&&receipt.mode==='built-in'&&receipt.images.length===11,'Deben estar guardadas once imágenes generadas con IA y sus prompts.');
 for(const item of receipt.images){
  const bytes=fs.readFileSync(path.join(base,'assets',item.file));
  expect(bytes.subarray(0,4).toString()==='RIFF'&&bytes.subarray(8,12).toString()==='WEBP'&&bytes.length>=50000&&bytes.length<250000,`${item.file}: formato o peso web inválido.`);
@@ -98,10 +98,13 @@ for(const item of receipt.images){
  expect(item.callouts.join(',')===(item.file.startsWith('plano-')?'1,2,3,4,5,6':item.file.startsWith('linterna-')?'1,2,3,4':''),`${item.file}: numeración declarada incompatible.`);
  hashes.add(crypto.createHash('sha256').update(bytes).digest('hex'));
 }
-expect(hashes.size===9,'Las nueve imágenes IA deben ser distintas.');
+expect(hashes.size===11,'Las once imágenes IA deben ser distintas.');
 const files=fs.readdirSync(base,{recursive:true}).filter(file=>fs.statSync(path.join(base,file)).isFile());
 for(const file of files)expect(manifest.criticalFiles.some(entry=>entry.path===`nm4/u3-clase7-manual-ilustrado/${file.replaceAll('\\','/')}`),`Recurso crítico sin registro: ${file}`);
-expect(Object.keys(data).length===4,'Los cuatro cursos deben tener materiales propios.');
-expect(read('manual.js').includes('Object.hasOwn(window.MANUAL_COURSES'),'La selección debe validar los cuatro cursos y evitar caer en otro curso.');
+expect(Object.keys(data).length===5,'Los cinco cursos deben tener materiales propios.');
+expect(data['4D'].equipment.includes('Prusa MK4S')&&data['4D'].name==='4°D · Gráfica','4°D debe trabajar una impresora 3D en Gráfica.');
+expect(data['4D'].parts.map(part=>part.split(':')[0]).join(',')==='Bobina de filamento,Extrusor,Boquilla,Lámina de impresión,Pantalla,Perilla de control','El plano de 4°D debe mantener la correspondencia de sus seis partes.');
+expect(data['4D'].guidedAnswer.includes('seguir calientes')&&data['4D'].sections[3][1].includes('No inventen temperaturas'),'4°D debe conservar las advertencias y los límites de la adaptación.');
+expect(read('manual.js').includes('Object.hasOwn(window.MANUAL_COURSES'),'La selección debe validar los cinco cursos y evitar caer en otro curso.');
 if(failures.length){console.error(failures.join('\n'));process.exit(1);}
-console.log(`Manual ilustrado NM4 auditado: proyecto de 4 sesiones de 90 minutos, 10 pantallas con activación/normas/objetivo separados, 4 cursos, borrador de 3 páginas y manual final de 6, ${files.length} recursos y todos los informes conservados.`);
+console.log(`Manual ilustrado NM4 auditado: proyecto de 4 sesiones de 90 minutos, 10 pantallas con activación/normas/objetivo separados, 5 cursos, borrador de 3 páginas y manual final de 6, ${files.length} recursos y todos los informes conservados.`);

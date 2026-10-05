@@ -5,6 +5,9 @@ const {chromium}=require('playwright'),{PDFDocument}=require('pdf-lib');
 const root=path.resolve(__dirname,'..'),base='nm4/u3-clase7-manual-ilustrado';
 const mime={'.html':'text/html; charset=utf-8','.js':'application/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.png':'image/png','.jpg':'image/jpeg','.webp':'image/webp','.pdf':'application/pdf'};
 const completeOnly=process.argv.includes('--completa');
+const requestedCourse=process.argv.find(value=>value.startsWith('--course='))?.slice(9);
+const courses=['4A','4B','4C','4D','4E'];
+if(requestedCourse&&!courses.includes(requestedCourse))throw new Error('Curso no válido.');
 async function addReadingSheets(page,course){
  await page.evaluate(course=>{
   const item=window.MANUAL_COURSES[course],main=document.querySelector('main'),worksheets=[...main.querySelectorAll('.sheet')];
@@ -61,7 +64,7 @@ async function main(){
   browser=await chromium.launch({headless:true});
   const page=await browser.newPage({viewport:{width:1440,height:900}});
   const jobs=completeOnly?[['completa','plantilla.html',5]]:[['borrador','plantilla.html',3],['final','manual-final.html',6],['completa','plantilla.html',5]];
-  for(const course of ['4A','4B','4C','4E'])for(const [kind,file,pages] of jobs){
+  for(const course of requestedCourse?[requestedCourse]:courses)for(const [kind,file,pages] of jobs){
    await page.goto(`http://127.0.0.1:${server.address().port}/${base}/${file}?curso=${course}`,{waitUntil:'networkidle'});
    if(kind==='completa')await addReadingSheets(page,course);
    await page.evaluate(()=>document.fonts.ready);await page.emulateMedia({media:'print'});

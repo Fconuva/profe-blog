@@ -9,7 +9,7 @@ language: es
 audience: "Estudiantes de segundo medio en preparación SIMCE"
 length: 35s
 angle: "modelado comparativo de una pregunta sesgada y una pregunta neutral"
-narration: no
+narration: "HeyGen, Lenny, español; cinco intervenciones sincronizadas"
 ---
 
 ## Intent
@@ -22,7 +22,8 @@ fondo de la sala y útil como punto de partida del modelamiento docente.
 
 - Diálogo completo en pantalla para funcionar sin parlantes.
 - Cierre con la estrategia PARA: Precisar, Analizar, Relacionar y Apoyar.
-- Silencio deliberado: el docente puede pausar y pensar en voz alta sobre cada decisión.
+- Voz en español y subtítulos integrados al MP4, sincronizados con los tiempos de palabras entregados por el proveedor. Sin música para favorecer la comprensión.
+- El docente puede pausar y pensar en voz alta sobre cada decisión.
 
 ## Notes
 

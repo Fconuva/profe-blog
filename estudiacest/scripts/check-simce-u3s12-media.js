@@ -4,6 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const http = require('node:http');
+const { execFileSync } = require('node:child_process');
 const { chromium } = require('playwright');
 const root = path.resolve(__dirname, '..');
 let origin = (process.env.SIMCE_CHECK_ORIGIN || 'https://www.estudiacest.com').replace(/\/$/, '');
@@ -13,9 +14,13 @@ const files = [
   'estudiantes/simce-u3-clase12-entrevista/index.html',
   'estudiantes/simce-u3-clase12-entrevista/docente.html',
   'estudiantes/simce-u3-clase12-entrevista/guia-imprimible.pdf',
-  'estudiantes/assets/u3s12/modelo-entrevista-para.mp4'
+  'estudiantes/assets/u3s12/modelo-entrevista-para.mp4',
+  'estudiantes/assets/u3s12/modelo-entrevista-para.vtt'
 ];
 async function main() {
+  const probe = JSON.parse(execFileSync('ffprobe',['-v','quiet','-show_streams','-of','json',path.join(root,files[4])],{encoding:'utf8'}));
+  assert.ok(probe.streams.some(stream=>stream.codec_type==='audio'&&stream.codec_name==='aac'),'Falta voz en el MP4');
+  assert.equal((fs.readFileSync(path.join(root,files[5]),'utf8').match(/ --> /g)||[]).length,14);
   if(process.argv.includes('--local')) {
     server=http.createServer((req,res)=>{
       let file=path.resolve(root,'.'+new URL(req.url,'http://localhost').pathname);
@@ -83,6 +88,6 @@ async function main() {
       await page.close();
     }
   } finally { await browser.close(); }
-  console.log('Cinco recursos públicos coinciden exactamente en SHA-256 con la fuente local.');
+  console.log('Seis recursos públicos coinciden en SHA-256; MP4 con audio AAC y 14 subtítulos sincronizados.');
 }
 main().catch(error => { console.error(error); process.exitCode = 1; }).finally(()=>{if(server)server.close();});

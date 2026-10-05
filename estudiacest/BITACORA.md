@@ -1,5 +1,11 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-05, voz y subtítulos para el modelo de entrevista NM2
+
+- A solicitud docente se añade narración sintética en español al modelo de 35 segundos: cinco intervenciones HeyGen, voz Lenny, sin música. Se conservan las cinco escenas, la clase ampliada y todos los registros académicos.
+- Catorce subtítulos integrados al MP4 y copia WebVTT, derivados de los tiempos de palabras del proveedor. Fuente reproducible y audios en `videos/modelo-entrevista-nm2/`; el video ocupa la misma ruta pública en guía y presentación.
+- HyperFrames: cero errores y advertencias, contraste 57/57; lámina de seis fotogramas inspeccionada, subtítulos legibles y separados del contenido. Build integral aprobado con 652 recursos críticos. Verificación del MP4, publicación segura y comprobación pública se registran al concluir.
+
 ## 2026-10-05, seguimiento del anuario 4°D TP y plazo de impresión
 
 - Por indicación docente, la entrega final se adelanta del 31 al lunes 26 de octubre de 2026: tres copias impresas y cosidas, después de revisar el PDF y recibir autorización. Se actualizan todos los avisos de la carpeta y la auditoría; no se modifican calificaciones ni registros del alumnado.

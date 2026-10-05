@@ -132,6 +132,19 @@ const GUIDED_SESSIONS = {
             q5:'El fragmento presenta el nombre del personaje, su parlamento y una acción escénica.',
             q6:'Cambiar de género modifica la forma de contar, pero no autoriza a inventar hechos.'
         }
+    },
+    '12': {
+        id: 'personal-u3-12-entrevista',
+        key: { q1:'B', q2:'C', q3:'A', q4:'D', q5:'B', q6:'C' },
+        skills: { q1:'LOCALIZAR', q2:'INTERPRETAR', q3:'LOCALIZAR', q4:'INTERPRETAR', q5:'REFLEXIONAR', q6:'REFLEXIONAR' },
+        feedback: {
+            q1:'La primera respuesta relaciona libros guardados con títulos que otros estudiantes buscaban.',
+            q2:'La repregunta pide explicar qué evidencia sostiene la afirmación anterior.',
+            q3:'Martín señala explícitamente que registraron solicitudes durante dos semanas.',
+            q4:'La última respuesta distingue lo observado de lo que todavía debe evaluarse.',
+            q5:'Los datos permiten afirmar que hubo algunas coincidencias, no que se resolverán todas las solicitudes.',
+            q6:'Los intercambios concretados y las solicitudes pendientes permiten evaluar el funcionamiento real.'
+        }
     }
 };
 

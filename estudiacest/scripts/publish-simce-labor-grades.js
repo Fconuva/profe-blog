@@ -7,7 +7,7 @@ const { readPlatform, updatePlatform } = require('./firebase-maintenance-db');
 // Clases 1 a 8 y 10 de la Unidad 3; la Clase 9 es informativa y no lleva nota.
 const EXPECTED_SESSIONS = [1, 2, 3, 4, 5, 6, 7, 8, 10].map(number => `sesion-u3-${number}`);
 const ALLOWED_GRADES = new Set([1, 3, 5, 7]);
-const MODEL_VERSION = 'laboriosidad-u3-c1-c10-2026-09-30-r4';
+const MODEL_VERSION = 'laboriosidad-u3-c1-c10-2026-10-05-r5';
 // Debe coincidir con el exportador: esas clases no se publican y su nota se retira.
 const NOT_EVALUATED = { 'sesion-u3-8': ['2A-HC', '2B-HC'] };
 const COURSES = ['2A-HC', '2B-HC'];

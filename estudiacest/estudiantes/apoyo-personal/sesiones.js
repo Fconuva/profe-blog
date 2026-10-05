@@ -1,7 +1,7 @@
 'use strict';
 
 window.SIMCE_PERSONAL_GUIDED_DATA = {
-  version: 'simce-personal-u3-s2-s11-v1',
+  version: 'simce-personal-u3-s2-s12-v1',
   sessions: {
     '2': {
       sessionId: 'personal-u3-2-teatro',
@@ -232,6 +232,31 @@ window.SIMCE_PERSONAL_GUIDED_DATA = {
         { id:'q4', skill:'LOCALIZAR', prompt:'¿Qué elemento es propio de un diálogo dramático?', cue:'Recuerda cómo se presenta lo que dice y hace cada personaje.', options:{ A:'Un titular que resume el hecho.', B:'Una entrada con la información principal.', C:'Un cuerpo ordenado de manera informativa.', D:'Parlamentos y acotaciones entre paréntesis.' } },
         { id:'q5', skill:'INTERPRETAR', prompt:'¿Cuál fragmento transforma el relato en diálogo dramático?', cue:'Busca nombres de personajes, parlamentos y una acción entre paréntesis.', options:{ A:'Cuaderno recuperado durante el segundo recreo.', B:'EMILIA: Encontré este cuaderno. (Lo entrega en inspectoría).', C:'Durante el recreo ocurrió un hallazgo en el patio.', D:'La estudiante llevó el objeto al lugar indicado.' } },
         { id:'q6', skill:'REFLEXIONAR', prompt:'¿Qué regla debe respetarse en ambas transformaciones?', cue:'Compara noticia y diálogo con el relato original.', options:{ A:'Cambiar el lugar para hacer el texto más interesante.', B:'Agregar personajes que expliquen lo ocurrido.', C:'Conservar los hechos principales sin inventar información.', D:'Eliminar quién encontró y recuperó el cuaderno.' } }
+      ]
+    },
+    '12': {
+      sessionId: 'personal-u3-12-entrevista',
+      title: 'Preguntar y escuchar',
+      objective: 'Reconocer cómo una pregunta orienta la respuesta y comprobar una interpretación con evidencia.',
+      steps: ['Identifica qué quiere comprender quien pregunta.', 'Relaciona cada repregunta con la respuesta anterior.', 'Descarta opciones que inventan o exageran información.'],
+      stimulusLabel: 'Entrevista breve',
+      stimulusTitle: 'Una pregunta abre otra',
+      stimulus: [
+        'ENTREVISTADORA: ¿Por qué crearon un punto de intercambio de libros?',
+        'MARTÍN: Porque varios libros quedaban guardados después de leerlos, mientras otros estudiantes buscaban esos mismos títulos.',
+        'ENTREVISTADORA: Dices que otros estudiantes los buscaban. ¿Cómo lo supieron?',
+        'MARTÍN: Durante dos semanas anotamos los títulos solicitados en la biblioteca y los comparamos con los libros ofrecidos por los cursos.',
+        'ENTREVISTADORA: ¿El registro demuestra que el intercambio resolverá todas las solicitudes?',
+        'MARTÍN: No. Solo muestra que algunos títulos coinciden. Tendremos que observar el funcionamiento y volver a registrar los datos.'
+      ],
+      visual: { title:'Ruta de escucha', items:['Pregunta inicial: abre el tema', 'Repregunta: precisa una idea anterior', 'Evidencia: permite comprobar la respuesta'] },
+      questions: [
+        { id:'q1', skill:'LOCALIZAR', prompt:'¿Por qué se creó el punto de intercambio?', cue:'Relee la primera respuesta de Martín.', options:{ A:'Porque sobraban estantes en la biblioteca.', B:'Porque algunos libros guardados coincidían con títulos buscados.', C:'Porque se prohibió pedir libros prestados.', D:'Porque todos los cursos recibieron libros nuevos.' } },
+        { id:'q2', skill:'INTERPRETAR', prompt:'¿Qué función cumple “¿Cómo lo supieron?”?', cue:'Relaciona la pregunta con la afirmación que aparece justo antes.', options:{ A:'Cambiar el tema hacia la biblioteca.', B:'Cerrar la entrevista con una opinión.', C:'Pedir evidencia para precisar una afirmación.', D:'Afirmar que el proyecto ya tuvo éxito.' } },
+        { id:'q3', skill:'LOCALIZAR', prompt:'¿Durante cuánto tiempo registraron títulos?', cue:'Busca una expresión de tiempo en la segunda respuesta.', options:{ A:'Durante dos semanas.', B:'Durante un semestre.', C:'Durante tres días.', D:'Durante todo el año.' } },
+        { id:'q4', skill:'INTERPRETAR', prompt:'¿Qué postura muestra Martín en su última respuesta?', cue:'Observa qué puede afirmar y qué todavía debe comprobar.', options:{ A:'Está seguro de resolver todas las solicitudes.', B:'Rechaza usar datos para evaluar el proyecto.', C:'Piensa que registrar títulos fue inútil.', D:'Es cauteloso y reconoce los límites de la evidencia.' } },
+        { id:'q5', skill:'REFLEXIONAR', prompt:'¿Qué conclusión está mejor respaldada por el texto?', cue:'Elige una idea que no vaya más allá de los datos mencionados.', options:{ A:'El intercambio resolverá todas las necesidades lectoras.', B:'La comparación mostró algunas coincidencias de títulos.', C:'La biblioteca dejó de prestar libros.', D:'Todos los estudiantes participaron del registro.' } },
+        { id:'q6', skill:'REFLEXIONAR', prompt:'¿Qué dato adicional permitiría evaluar mejor el proyecto después de iniciarlo?', cue:'Piensa qué resultado debería observarse durante el funcionamiento.', options:{ A:'El color de las cajas usadas.', B:'La edad de quien hizo la entrevista.', C:'La cantidad de intercambios concretados y solicitudes pendientes.', D:'El nombre de cada persona que ofreció un libro.' } }
       ]
     }
   }

@@ -67,7 +67,7 @@ expect(manifestEntry && manifestEntry.contains === 'Noticia y diálogo dramátic
 expect(manifest.criticalFiles.some(entry => entry.path === 'estudiantes/assets/u3s11/partes-noticia-ia.webp'), 'La infografía IA no está protegida por el manifiesto académico.');
 expect(manifest.criticalFiles.some(entry => entry.path === 'estudiantes/assets/u3s11/partes-dialogo-dramatico-ia.webp'), 'La infografía IA del diálogo dramático no está protegida por el manifiesto académico.');
 expect(personalIndex.includes('actividad.html?sesion=11'), 'La ruta personal no muestra la Sesión 11.');
-expect(personalClient.includes("version: 'simce-personal-u3-s2-s11-v1'"), 'El catálogo personal no declara cobertura hasta la Sesión 11.');
+expect(/version: 'simce-personal-u3-s2-s(?:11|12)-v1'/.test(personalClient), 'El catálogo personal no conserva cobertura desde la Sesión 11.');
 expect(personalClient.includes("sessionId: 'personal-u3-11-transformacion-generos'"), 'Falta la actividad adaptada de la Sesión 11 en el cliente.');
 expect(personalServer.includes("id: 'personal-u3-11-transformacion-generos'"), 'Falta la pauta privada de la Sesión 11 adaptada.');
 expect(personalClient.includes('Noticia: titular, entrada y cuerpo') && personalClient.includes('Diálogo dramático: personajes, parlamentos y acotaciones'), 'La adaptación no conserva los dos géneros trabajados en la clase común.');

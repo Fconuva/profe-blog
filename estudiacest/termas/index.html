@@ -67,10 +67,20 @@
         linear-gradient(0deg, rgba(6,25,38,.68) 0%, rgba(6,25,38,.02) 62%, rgba(6,25,38,.2) 100%);
     }
     .hero-arte { position: absolute; inset: 0; z-index: 0; margin: 0; }
-    .hero-arte img {
+    .hero-arte img, .hero-video {
       display: block; width: 100%; height: 100%; object-fit: cover; object-position: 68% center;
       transform: scale(1.025);
     }
+    .hero-video { position: absolute; inset: 0; z-index: 0; opacity: 0; pointer-events: none; }
+    .hero.video-listo .hero-video { opacity: 1; }
+    .hero-motion {
+      position: absolute; top: 16px; right: 16px; z-index: 4; min-height: 44px; padding: 8px 14px;
+      border: 1px solid rgba(255,255,255,.7); border-radius: 24px; background: rgba(6,25,38,.85);
+      color: #fff; font-size: 13px; cursor: pointer;
+    }
+    .hero-motion:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+    .hero-invitacion { margin: 16px 0 0; font-weight: 700; color: #b3eee1; }
+    .hero-credito { margin: 12px 0 0; font-size: 12px; color: rgba(255,255,255,.82); }
     .hero-in { position: relative; z-index: 3; width: min(980px, 100%); margin: 0 auto; padding-bottom: 54px; }
     .marca { display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 700; letter-spacing: .01em; color: rgba(255,255,255,.82); }
     .marca img { width: 30px; height: 30px; border-radius: 50%; background: #fff; padding: 2px; }
@@ -90,12 +100,6 @@
     @keyframes latido { 0% { box-shadow: 0 0 0 0 rgba(95,240,168,.6); } 70% { box-shadow: 0 0 0 9px rgba(95,240,168,0); } 100% { box-shadow: 0 0 0 0 rgba(95,240,168,0); } }
     .bruma { position: absolute; inset: auto 0 0; z-index: 2; height: 112px; overflow: hidden; pointer-events: none; }
     .bruma::after { content: ""; position: absolute; inset: auto -5% -84px; height: 112px; border-radius: 50% 50% 0 0; background: var(--arena); filter: blur(1px); }
-    .bruma i {
-      position: absolute; bottom: 18px; left: var(--x); width: 48px; height: 126px; border: 5px solid rgba(255,255,255,.38);
-      border-color: rgba(255,255,255,.38) transparent transparent transparent; border-radius: 50%; opacity: 0;
-      animation: vaporFoto var(--t) ease-in-out infinite; animation-delay: var(--d);
-    }
-    @keyframes vaporFoto { 0% { opacity: 0; transform: translate3d(0, 34px, 0) rotate(-6deg) scale(.75); } 35% { opacity: .75; } 100% { opacity: 0; transform: translate3d(18px, -54px, 0) rotate(8deg) scale(1.25); } }
 
     .estado-paseo { position: relative; z-index: 4; padding: 0 16px; }
     .estado-in {
@@ -354,7 +358,7 @@
     @media (min-width: 760px) {
       .hero { min-height: 560px; padding: 38px 32px 0; }
       .hero-in { padding-bottom: 74px; }
-      .hero-arte img { object-position: center center; }
+      .hero-arte img, .hero-video { object-position: center center; }
       .hero h1 { font-size: 68px; }
       .estado-paseo { padding: 0 32px; }
       .estado-in { grid-template-columns: 1.35fr .85fr .8fr 1fr; }
@@ -398,6 +402,7 @@
       html { scroll-behavior: auto; }
       *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
       .hero-arte img, .escena:hover img { transform: none !important; }
+      .hero-video, .hero-motion { display: none !important; }
     }
   </style>
 </head>
@@ -407,15 +412,17 @@
       <source media="(max-width: 700px)" srcset="/termas/assets/panimavida-termal-mobile.webp">
       <img src="/termas/assets/panimavida-termal-ia.webp" alt="" width="2103" height="748" fetchpriority="high" decoding="async">
     </picture>
+    <video class="hero-video" id="heroVideo" data-src="/termas/assets/termas-portada.mp4" muted loop playsinline preload="none" aria-hidden="true" tabindex="-1"></video>
+    <button class="hero-motion" id="heroMotionToggle" type="button" aria-controls="heroVideo" hidden>Pausar fondo</button>
     <div class="hero-in">
       <div class="marca"><img src="/termas/assets/logo-cest-96.webp" alt="" width="96" height="96">Paseo 2026 para docentes CEST</div>
       <h1>Termas de <em>Panimávida</em></h1>
+      <p class="hero-invitacion">Un día para desconectarnos.</p>
       <p class="lead">Confirma si vas, cómo llegas y elige una de 3 opciones: con desayuno, con once o solo almuerzo. Si te subes al bus, también eliges tu asiento.</p>
       <a class="hero-cta" href="#contenido">Ir a la inscripción</a>
+      <p class="hero-credito">Ilustración referencial animada con IA</p>
     </div>
-    <div class="bruma" aria-hidden="true">
-      <i style="--x:58%;--t:7s;--d:-2s"></i><i style="--x:70%;--t:8.5s;--d:-5s"></i><i style="--x:83%;--t:6.5s;--d:-1s"></i><i style="--x:91%;--t:9s;--d:-6s"></i>
-    </div>
+    <div class="bruma" aria-hidden="true"></div>
   </header>
 
   <section class="estado-paseo" aria-label="Datos principales del paseo">
@@ -936,5 +943,6 @@
     iniciar();
   })();
   </script>
+  <script src="/termas/assets/portada-video.js" defer></script>
 </body>
 </html>

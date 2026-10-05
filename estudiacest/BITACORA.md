@@ -1,5 +1,13 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-05, video operativo de los seis pasos del anuario 4°D TP
+
+- Francisco aprueba el MP4 preparado con «deja el video operativo». Se conserva el contenido de las seis escenas, los tres productos y la entrega del lunes 26 de octubre; no se modifican cuentas, notas, archivos originales ni correos enviados.
+- Render final H.264, 1920 × 1080, 30 fps, 72 segundos, sin audio, 6 901 057 bytes. HyperFrames actualizado de 0.8.133 a 0.8.134 y comprobado: cero errores, contraste 34/34; siete avisos estructurales revisados. La exportación recupera un cierre transitorio de los navegadores y finaliza con código 0. Se abren los seis fotogramas medios extraídos del MP4.
+- Integración en `/4dtp/avance-anuario/?slide=4`: controles nativos, pantalla completa, descarga, portada y seis pasos por escrito desplegables. Sin reproducción automática; pausa al cambiar de diapositiva y teclas del reproductor sin navegar la clase. Enlace visible en la portada `/4dtp/`.
+- Auditorías focalizadas, build integral y 654 recursos críticos aprobados. Prueba local en 390/1440/3840 px: nueve diapositivas, cuenta regresiva, duración/resolución, reproducción con avance, pausa al salir, texto alternativo y acceso directo; consola/recursos sin errores ni desbordes. Evidencia en `%TEMP%/anuario-avance-qa-rHFauL` y `%TEMP%/anuario-video-1f1139892b3e4ca69643a9dc81940d68`.
+- MP4, portada y recursos registrados en el manifiesto. Publicación segura y prueba pública pendientes de registrar al concluir; no se afirma que la actualización local ya esté publicada.
+
 ## 2026-10-05, voz y subtítulos para el modelo de entrevista NM2
 
 - A solicitud docente se añade narración sintética en español al modelo de 35 segundos: cinco intervenciones HeyGen, voz Lenny, sin música. Se conservan las cinco escenas, la clase ampliada y todos los registros académicos.

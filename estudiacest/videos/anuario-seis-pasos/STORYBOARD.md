@@ -20,5 +20,7 @@ Corregir lo indicado y esperar autorización del docente. Enviar no equivale a e
 ## 60–72 s · Impriman tres copias
 Hacer primero una prueba, comprobar legibilidad y encuadernar. Entrega lunes 26 de octubre de 2026. Imagen de encuadernación. Pregunta final: ¿en qué paso estás tú? Entrada `spring-pop-entrance`; progreso `stat-bars-and-fills`.
 
-## Validación pendiente
-Abrir Studio, revisar seis cortes y recibir aprobación del usuario antes del render final. No publicar un MP4 sin aprobación.
+## Validación y aprobación
+El 5 de octubre Francisco aprueba el render y la publicación. HyperFrames 0.8.134: cero errores; siete avisos de organización del proyecto, sin incidencias de ejecución, diseño ni movimiento, contraste 34/34. La exportación recupera automáticamente un cierre transitorio de los navegadores y termina correctamente. MP4 H.264, 1920 × 1080, 30 fps, 72 segundos, sin audio. Se inspeccionan los seis fotogramas medios extraídos del MP4.
+
+Reproductor en la diapositiva 4, con controles, pantalla completa nativa, descarga, texto equivalente desplegable y pausa al salir de la diapositiva. Prueba local aprobada en 390/1440/3840 px. Publicación y prueba pública se registran en `BITACORA.md`.

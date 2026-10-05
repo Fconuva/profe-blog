@@ -8,7 +8,7 @@ duration: 72
 audience: 4°D TP, especialidad Gráfica
 destination: presentación de aula y Estudia CEST
 audio: silent
-status: preview-pending-approval
+status: rendered-pending-publication
 ---
 
 Mensaje: reconocer el paso en que está el anuario y avanzar sin saltarse la revisión docente antes de imprimir.
@@ -19,4 +19,6 @@ Los productos son memoria escolar, proyecto de especialidad y cierre personal. L
 
 Estilo editorial de taller gráfico: papel cálido, tinta azul, páginas y márgenes reales; tipografía Montserrat + IBM Plex Mono, texto grande y poco contenido por escena. Animación moderada que revele el orden de producción. Sin música ni voz en la primera vista: el profesor explica y pausa. Ofrecer voz de apoyo al revisar.
 
-La publicación del material de clase es independiente del MP4: no renderizar el video final antes de la aprobación de su vista previa.
+La publicación del material de clase es independiente del MP4. El 5 de octubre de 2026 Francisco aprueba el render y su integración en la clase con «deja el video operativo».
+
+Render de entrega comprobado: MP4 H.264, 1920 × 1080, 30 fps, 72 segundos, sin audio. HyperFrames actualizado de 0.8.133 a 0.8.134 y comprobado antes del render. Reproductor, descarga y acceso directo en `/4dtp/avance-anuario/?slide=4`; pausa al cambiar de diapositiva, sin reproducción automática.

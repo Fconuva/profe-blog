@@ -194,10 +194,10 @@ for(const resource of ['plantilla-anuario-4d.zip','plantilla-anuario-4d.pdf','as
 }
 for (const script of ['4dtp/book-guide.js','4dtp/media.js','4dtp/modelo-content.js']) checkSyntax(script);
 requireText(page, '<h2>Memoria escolar</h2>', 'Página 4DTP');
-requireText(page, '31 de octubre de 2026', 'Página 4DTP');
+requireText(page, '26 de octubre de 2026', 'Página 4DTP');
 requireText(page, 'Revisión 1 · 4 de septiembre', 'Página 4DTP');
 requireText(page, 'Revisión 2 · 25 de septiembre', 'Página 4DTP');
-requireText(page, 'Ruta de producción hasta el 31 de octubre', 'Página 4DTP');
+requireText(page, 'Ruta de producción hasta el 26 de octubre', 'Página 4DTP');
 requireText(page, 'Retroalimentación', 'Página 4DTP');
 // Las nueve secciones están disponibles y se preserva el contenido anterior.
 requireText(page, 'Las partes del modelo', 'Página 4DTP');

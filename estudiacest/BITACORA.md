@@ -1,5 +1,13 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-05, seguimiento del anuario 4°D TP y plazo de impresión
+
+- Por indicación docente, la entrega final se adelanta del 31 al lunes 26 de octubre de 2026: tres copias impresas y cosidas, después de revisar el PDF y recibir autorización. Se actualizan todos los avisos de la carpeta y la auditoría; no se modifican calificaciones ni registros del alumnado.
+- Clase de esta semana en `/4dtp/avance-anuario/`: nueve pantallas, activación/normas/objetivo separados, modelamiento de los seis pasos, revisión de los tres productos, 60 minutos de actividad y monitoreo, plenario y metacognición. Plan docente de 90 minutos. Objetivo en infinitivo; diseño y avances previos conservados. La entrevista se distingue de memoria escolar, proyecto de especialidad y cierre personal.
+- Revisión privada de 29 registros y material accesible de carpeta/correo. Retroalimentación individual enviada y releída en Gmail en 17 casos, con fortalezas, acciones, fragmento corregido y productos por completar o revisar. No se repiten los correos anteriores. Identidades, trabajos y evidencias permanecen fuera del repositorio. No observado no equivale a no realizado; los archivos compartidos con el correo escolar siguen pendientes de acceso desde el Drive conectado y algunos archivos locales requieren corroborar autor.
+- Video silencioso de seis pasos, 72 segundos, preparado como vista previa en `videos/anuario-seis-pasos/`, exclusivamente con ejemplos ficticios. HyperFrames check: sin errores de ejecución, diseño ni movimiento; contraste 34/34. Render final pendiente de aprobación docente, sin afirmar que exista un MP4 publicado.
+- Auditoría focalizada: nueve pantallas y navegación, 390/1440 px sin desbordes ni errores; cuenta regresiva comprobada para 5/6/26/27 de octubre (21/20/0/-1). Build integral y 651 recursos críticos aprobados. Publicación y verificación pública se registran al concluir.
+
 ## 2026-10-05, ampliación sustantiva de la entrevista NM2 tras revisión docente
 
 - Francisco rechaza la brevedad y reitera que una sola lectura no basta. Se amplía la misma Clase 12 a tres entrevistas originales completas: Radio Patio (571 palabras), divulgación científica sobre un río (602) y entrevista cultural a un fotógrafo (611). Total: 1784 palabras, 24 ítems (5 Localizar, 12 Interpretar, 7 Reflexionar), seis productos escritos y tres cierres. Los doce ítems originales conservan numeración, contenido y pauta; se preserva el borrador real iniciado.

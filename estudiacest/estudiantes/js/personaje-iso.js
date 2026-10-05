@@ -242,6 +242,7 @@
     var abajo  = color('abajoColor', look.abajoColor, '#3f5a80');
     var calza  = color('zapatosColor', look.zapatosColor, '#2c3340');
     var trazo  = 'rgba(28,34,44,.85)';
+    function capa(nombre){return !movimiento.capa||movimiento.capa===nombre;}
 
     function X(v){ return centroX + v*e; }
     function Y(v){ return baseY + v*e; }
@@ -256,6 +257,7 @@
     cx.save();
     cx.lineJoin='miter';
 
+    if(capa('fondo')){
     // sombra
     cx.beginPath();
     cx.ellipse(X(0), Y(1), 20*e, 6.5*e, 0, 0, Math.PI*2);
@@ -267,6 +269,8 @@
       caja(-9,-52,18,12,4,'#5f6b7d');
     }
 
+    }
+    if(capa('piernas')){
     // ---- piernas ----
     var ab = look.abajo;
     if (sentado){
@@ -298,6 +302,8 @@
            caja(-13,-3+paso,12,3,0,'#ffffffaa',true); caja(1,-3-paso,12,3,0,'#ffffffaa',true);
            caja(-10,-6+paso,5,1,0,'#ffffff',true); caja(4,-6-paso,5,1,0,'#ffffff',true); }
 
+    }
+    if(capa('cuerpo')){
     // ---- torso ----
     var ar = look.arriba;
     caja(-16,-60,32,31,3,arriba);
@@ -383,9 +389,11 @@
       cx.strokeStyle='#c0483c'; cx.lineWidth=2*e; cx.stroke();
     }
 
+    }
     // ---- cabeza ----
     var cabeceo = gesto === 'asentir' ? Math.round(Math.sin(tiempo/140)*2) : 0;
     cx.save(); cx.translate(gesto === 'negar' ? Math.round(Math.sin(tiempo/140)*2)*e : 0, cabeceo*e);
+    if(capa('rostro')){
     cx.beginPath();
     [[-16,-98],[8,-103],[19,-95],[19,-72],[12,-65],[-13,-67],[-18,-74]].forEach(function(v,i){if(i)cx.lineTo(X(v[0]),Y(v[1]));else cx.moveTo(X(v[0]),Y(v[1]));});
     cx.closePath();cx.fillStyle=piel;cx.fill();cx.strokeStyle=trazo;cx.lineWidth=1.2*e;cx.stroke();
@@ -394,6 +402,9 @@
     caja(-20,-86,6,10,2,piel); caja(17,-85,3,7,1,piel);
     caja(-19,-84,2,5,0,'#00000040',true); caja(18,-83,1,3,0,'#00000030',true);
 
+    }
+    var peloClaro = '#ffffff28';
+    if(capa('pelo')){
     // ---- pelo ----
     var p = look.pelo;
     if (p!=='rapado'){
@@ -439,7 +450,6 @@
       cx.restore();
     }
     // Mechones y volumen: pocos grupos de píxeles, no una superficie lisa.
-    var peloClaro = '#ffffff28';
     if (p==='rapado') { caja(-16,-99,32,8,1,pelo,true); }
     else if (p==='mohicano') { caja(-3,-112,2,17,0,peloClaro,true); }
     else {
@@ -450,6 +460,8 @@
       if (p==='largo'||p==='trenzas') { caja(-21,-89,2,16,0,peloClaro,true); caja(19,-89,2,16,0,peloClaro,true); }
     }
 
+    }
+    if(capa('expresion')){
     // ---- cejas ----
     cx.strokeStyle=pelo; cx.lineCap='round';
     var cj=look.cejas;
@@ -522,6 +534,8 @@
       caja(-10,-66,20,2,0,piel,true);
     }
 
+    }
+    if(capa('accesorios')){
     // ---- lentes ----
     var le=look.lentes;
     if (le!=='nada' && le && !espalda){
@@ -569,6 +583,7 @@
       caja(-15,-66,30,9,4,'#d95d4a'); caja(-4,-60,9,16,3,'#d95d4a');
     }
 
+    }
     cx.restore(); // cabeza
     cx.restore();
   }
@@ -576,6 +591,8 @@
   // Raster de trabajo pequeño + escalado sin suavizado: píxeles reales, no
   // curvas borrosas. Caché acotada por look, orientación y fotograma.
   var fotogramas = new Map();
+  var CAPAS = ['fondo','piernas','cuerpo','rostro','pelo','expresion','accesorios'];
+  var CAMPOS_CAPA = {fondo:['accesorio'],piernas:['piel','abajo','abajoColor','zapatos','zapatosColor'],cuerpo:['piel','arriba','arribaColor','accesorio'],rostro:['piel'],pelo:['pelo','peloColor'],expresion:['piel','cejas','ojos','boca','peloColor'],accesorios:['gorro','lentes','accesorio','piel']};
   function pintar(cx, centroX, baseY, look, escala, postura, gesto, movimiento){
     movimiento = movimiento || {};
     var t = movimiento.t == null ? Date.now() : movimiento.t;
@@ -585,19 +602,22 @@
     var blink = !reducido && !/^(NE|NW|N)$/.test(dir) && t%4800<150;
     var motion = {dir:dir,t:frame*110,caminar:!reducido && !!movimiento.caminar,parpadeo:blink};
     if (!global.document || !global.document.createElement) { pintarVector(cx,centroX,baseY,look,escala,postura,gesto,motion); return; }
-    var key = JSON.stringify([look,postura,gesto,dir,frame,blink,motion.caminar]);
-    var cv = fotogramas.get(key);
-    if (!cv) {
-      cv=global.document.createElement('canvas'); cv.width=80; cv.height=132;
-      var pen=cv.getContext('2d');
-      if (dir==='SW'||dir==='NW'||dir==='W') { pen.translate(80,0); pen.scale(-1,1); }
-      pintarVector(pen,40,124,look,1,postura,gesto,motion);
-      if(fotogramas.size>=192) fotogramas.delete(fotogramas.keys().next().value);
-      fotogramas.set(key,cv);
-    }
     var e=escala||1;
     cx.save(); cx.imageSmoothingEnabled=false;
-    cx.drawImage(cv,centroX-40*e,baseY-124*e,80*e,132*e); cx.restore();
+    CAPAS.forEach(function(capa){
+      var campos=CAMPOS_CAPA[capa].map(function(k){return look[k];});
+      var key=JSON.stringify([capa,campos,postura,gesto,dir,frame,blink,motion.caminar]),cv=fotogramas.get(key);
+      if(!cv){
+        cv=global.document.createElement('canvas');cv.width=80;cv.height=132;
+        var pen=cv.getContext('2d');
+        if(dir==='SW'||dir==='NW'||dir==='W'){pen.translate(80,0);pen.scale(-1,1);}
+        pintarVector(pen,40,124,look,1,postura,gesto,Object.assign({},motion,{capa:capa}));
+        if(fotogramas.size>=448)fotogramas.delete(fotogramas.keys().next().value);
+        fotogramas.set(key,cv);
+      }
+      cx.drawImage(cv,centroX-40*e,baseY-124*e,80*e,132*e);
+    });
+    cx.restore();
   }
 
   function render(contenedor, opciones){
@@ -1062,6 +1082,7 @@
   global.AvatarLookSystem = {
     KIT: KIT,
     GESTOS: GESTOS,
+    CAPAS: CAPAS,
     getKitPreview: function(cat,id){
       var item=KIT.find(function(p){return p.tipo===cat && p.opcion===id;});
       return item ? item.url : '';

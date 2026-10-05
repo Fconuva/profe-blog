@@ -375,7 +375,15 @@
         });
         cx.restore();
       }
-    } else cx.drawImage(im, x, y);
+    } else {
+      cx.save();
+      var accion=mueble&&CATALOGO.accion(mueble.id);
+      if(accion&&accion.tipo==='encender'){
+        if(mueble.encendido){cx.shadowColor='#fef08a';cx.shadowBlur=18;}
+        else cx.filter='brightness(.65)';
+      }
+      cx.drawImage(im,x,y);cx.restore();
+    }
     if (mueble && mueble.id === 'aquarium' && S.housesEnabled) {
       var t = (S.fxTime || 0) / 800;
       cx.save();
@@ -475,6 +483,11 @@
       cx.fillText(gestoMeta ? gestoMeta.icono : '',
         cxp + 18 + Math.sin((S.fxTime || 0) / 230) * 4, base - 104);
       cx.restore();
+    }
+    var actividad=pers.uid===S.uid?S.actividad:(S.otros[pers.uid]&&{tipo:S.otros[pers.uid].actividad,hasta:S.otros[pers.uid].actividadHasta});
+    if(actividad&&Number(actividad.hasta)>Date.now()){
+      cx.save();cx.fillStyle='#fef08a';cx.font='bold 20px sans-serif';cx.textAlign='center';
+      cx.fillText(actividad.tipo==='tocar'?'♫':actividad.tipo==='ejercitar'?'✦':actividad.tipo==='acariciar'?'♥':'…',cxp-26,base-80);cx.restore();
     }
     if (pers.nombre) {
       cx.save();
@@ -717,6 +730,7 @@
   }
   function puertaActual(){return global.MapasCasa.puerta(S.casa,S.pieza,POR_ID);}
   function pintarPuerta(){
+    if(S.comun){S.cajaPuerta=null;return;}
     var puerta=puertaActual();S.cajaPuerta=null;if(!puerta)return;
     var p=celda(puerta.col,puerta.fila),cx=S.cx,x=p.x+47,y=p.y-65;
     cx.save();cx.fillStyle='#26374b';cx.strokeStyle='#94a3b8';cx.lineWidth=3;
@@ -896,6 +910,7 @@
   }
 
   function desconectarSala(sinSalir) {
+    if(S.refJuego)S.refJuego.off();S.refJuego=null;S.actividad=null;
     if (S.refPresentes) S.refPresentes.off();
     if (S.refChat) S.refChat.off();
     if (S.refCasaVisitada) S.refCasaVisitada.off();
@@ -921,7 +936,11 @@
         S.sala = sala; S.otros = {}; S.vistos = {}; S.placasDe = {}; S.destino = null; S.burbujas = {};
         // El servidor devuelve cómo te ven los demás (con desempate si hace falta)
         if (r.yo) S.miNombre = r.yo;
-        var path=S.base+'/salas/'+sala+(S.habitacion==='estudio'?'/habitaciones/estudio':'');
+        var path=S.comun ? S.base+'/salas_comunes/'+sala : S.base+'/salas/'+sala+(S.habitacion==='estudio'?'/habitaciones/estudio':'');
+        if(S.comun){
+          S.refJuego=S.db.ref(path+'/juego');
+          S.refJuego.on('value',function(snap){S.juego=snap.val()||{};Object.keys(S.juego.interacciones||{}).forEach(function(i){if(S.pieza[i])S.pieza[i].encendido=S.juego.interacciones[i].encendido===true;});pintarInteracciones();dibujar();});
+        }
         S.refPresentes = S.db.ref(path+'/presentes');
         S.refPresentes.on('value', function (snap) {
           S.otros = snap.val() || {};
@@ -980,19 +999,20 @@
     var cab = S.host.querySelector('#espSalaCab');
     if (!cab) return;
     var n = Object.keys(S.otros || {}).length;
-    var titulo = (S.visitando ? 'Casa de ' + esc(nombreCorto(S.duenoNombre)) : 'Mi casa')+' · '+(S.habitacion==='estudio'?'Estudio':'Principal');
+    var titulo = S.comun ? esc(S.duenoNombre) : (S.visitando ? 'Casa de ' + esc(nombreCorto(S.duenoNombre)) : 'Mi casa')+' · '+(S.habitacion==='estudio'?'Estudio':'Principal');
     cab.innerHTML = '<span class="esp-sala-tit">' + titulo + '</span>' +
       '<span class="esp-sala-n">' + n + ' ' + (n === 1 ? 'persona' : 'personas') + '</span>' +
-      '<button class="esp-btn-chico esp-puerta" id="espPuerta"'+(!S.housesEnabled||S.cambiando?' disabled':'')+'>🚪 '+(S.habitacion==='estudio'?'Ir a principal':'Ir al estudio')+'</button>' +
+      (S.comun?'':'<button class="esp-btn-chico esp-puerta" id="espPuerta"'+(!S.housesEnabled||S.cambiando?' disabled':'')+'>🚪 '+(S.habitacion==='estudio'?'Ir a principal':'Ir al estudio')+'</button>') +
       (S.visitando
-        ? '<button class="esp-btn-chico" id="espRegalar">🎁 Regalar</button>' +
+        ? (S.comun?'':'<button class="esp-btn-chico" id="espRegalar">🎁 Regalar</button>') +
           '<button class="esp-btn-chico esp-btn-junto" id="espVolver">Volver a mi casa</button>'
-        : '<button class="esp-btn-chico" id="espVisitar">Visitar</button>');
+        : '<button class="esp-btn-chico" id="espVisitar">Visitar</button><button class="esp-btn-chico" id="espCurso">Sala del curso</button>');
+    var bc=cab.querySelector('#espCurso');if(bc)bc.addEventListener('click',function(){irACasa(CATALOGO.idCurso(S.curso));});
     var bv = cab.querySelector('#espVisitar'), bb = cab.querySelector('#espVolver'), br = cab.querySelector('#espRegalar');
     if (bv) bv.addEventListener('click', abrirVisitas);
     if (bb) bb.addEventListener('click', function () { irACasa(S.uid); });
     if (br) br.addEventListener('click', abrirRegalo);
-    cab.querySelector('#espPuerta').addEventListener('click',irPorPuerta);
+    var bp=cab.querySelector('#espPuerta');if(bp)bp.addEventListener('click',irPorPuerta);
   }
 
   function activarHabitacion(h,room,llegada){
@@ -1006,16 +1026,17 @@
     S.host.querySelector('#espPaleta').hidden=true;
     S.host.querySelector('#espMueblesBloque').hidden=S.visitando;
     S.pieza.forEach(function(m){DIRS.forEach(function(d){cargar_(m.id+'_'+d);});});
-    modoDecorar(false);actualizarVista();pintarCabecera();pintarMuebles();botones();dibujar();
+    modoDecorar(false);actualizarVista();pintarCabecera();pintarMuebles();pintarInteracciones();botones();dibujar();
   }
   function observarHabitacion(uid){
-    if(!S.visitando)return;
+    if(!S.visitando||S.comun)return;
     var h=S.habitacion,path=S.base+'/avatar/'+uid+(h==='estudio'?'/habitaciones/estudio':'');
     S.refCasaVisitada=S.db.ref(path+'/casa');S.refPiezaVisitada=S.db.ref(path+'/pieza');
     S.refCasaVisitada.on('value',function(snap){if(S.sala!==uid||S.habitacion!==h)return;S.casa=snap.val()||{tamano:'5x5',piso:'claro',muro:'blanco'};aplicarTamano();if(!haySuelo(Math.round(S.av.col),Math.round(S.av.fila))){if(caminando){cancelAnimationFrame(caminando.id);caminando=null;}S.av=entrada();S.destino=null;}dibujar();});
     S.refPiezaVisitada.on('value',function(snap){if(S.sala!==uid||S.habitacion!==h)return;S.pieza=Array.isArray(snap.val())?snap.val():[];S.pieza.forEach(function(m){DIRS.forEach(function(d){cargar_(m.id+'_'+d);});});dibujar();});
   }
   function irPorPuerta(){
+    if(S.comun){irACasa(S.uid);return;}
     if(!S.housesEnabled||!S.sala||S.cambiando)return;
     var puerta=puertaActual();if(!puerta){avisar('Deja una casilla libre en el borde para la puerta');return;}
     modoDecorar(false);
@@ -1206,8 +1227,8 @@
     return esperarGuardado().then(function(){return api('habitaciones',{sala:uid});}).then(function (d) {
       if(!d||!d.ok)throw new Error(d&&d.error||'No se pudo cargar la casa');
       desconectarSala();
-      S.visitando = !esMia;
-      S.duenoNombre = nombreDueno || '';
+      S.visitando = !esMia;S.comun=d.comun===true;S.juego={};
+      S.duenoNombre = d.nombre || nombreDueno || '';
       if(esMia)S.misHabitaciones=d.habitaciones;
       activarHabitacion(d.actual,d.habitaciones[d.actual],!esMia);
       return conectarSala(uid);
@@ -1281,6 +1302,8 @@
           return '<button type="button" data-gesto="'+g.id+'"><img loading="lazy" src="'+g.imagen+'" alt=""><span>'+esc(g.nombre)+'</span></button>';
         }).join('')+'</div></details>' +
       '<div class="esp-ayuda">Toca el suelo para caminar o una silla para sentarte. La puerta conecta las dos salas. En «Decorar», selecciona y mueve muebles.</div>' +
+      '<div id="espReto" class="esp-reto" hidden aria-live="polite"></div>' +
+      '<details class="esp-kit esp-interacciones" open><summary>Usar muebles</summary><div id="espAccionesMuebles" class="esp-acciones-muebles"></div></details>' +
       '<div class="esp-chat">' +
         '<div class="esp-chat-lista" id="espChatLista"></div>' +
         '<form class="esp-chat-form" id="espChatForm" autocomplete="off">' +
@@ -1381,8 +1404,9 @@
   function botones() {
     var elegido = S.pieza[S.sel];
     var usar = S.host.querySelector('#espUsar');
-    usar.disabled = !S.housesEnabled || !elegido || elegido.pared || (!esSentable(elegido.id) && elegido.id !== 'rgbPartySpeaker');
-    usar.textContent = elegido && elegido.id === 'rgbPartySpeaker' ? (elegido.encendido ? 'Apagar' : 'Encender') : 'Usar';
+    usar.disabled = !S.housesEnabled || !elegido || elegido.pared || !CATALOGO.accion(elegido.id);
+    var accion=elegido&&CATALOGO.accion(elegido.id);
+    usar.textContent = accion&&accion.tipo==='encender' ? (elegido.encendido ? 'Apagar' : 'Encender') : accion?accion.nombre:'Usar';
     S.host.querySelector('#espRotar').disabled = !S.housesEnabled || S.sel < 0;
     S.host.querySelector('#espQuitar').disabled = !S.housesEnabled || S.sel < 0;
     S.host.querySelector('#espSoltar').disabled = !S.housesEnabled || (S.sel < 0 && !S.elegido);
@@ -1411,17 +1435,48 @@
     if (!S.housesEnabled || S.sel < 0) return;
     var m = S.pieza[S.sel];
     if (!m || m.pared) return;
-    if (m.id === 'rgbPartySpeaker') {
-      m.encendido = !m.encendido;
-      S.fxTime = performance.now();
-      botones(); dibujar(); guardar('pieza', S.pieza);
-      avisar(m.encendido ? 'Luces encendidas' : 'Luces apagadas');
-      return;
+    interactuarIndice(S.sel);
+  }
+
+  function pintarInteracciones(){
+    if(!S.host)return;
+    var cont=S.host.querySelector('#espAccionesMuebles');if(!cont)return;
+    cont.innerHTML=S.pieza.map(function(m,i){var a=CATALOGO.accion(m.id);if(!a||m.pared)return '';var disabled=!S.housesEnabled||(S.visitando&&!S.comun&&a.tipo==='encender');return '<button type="button" data-usar="'+i+'"'+(disabled?' disabled':'')+'>'+esc(ficha(m.id).nom)+(m.clave?' · '+esc(m.clave):'')+'<span>'+(a.tipo==='encender'?(m.encendido?'Apagar':'Encender'):a.nombre)+'</span></button>';}).join('')||'<p>No hay muebles con acciones en esta habitación.</p>';
+    cont.querySelectorAll('[data-usar]').forEach(function(b){b.addEventListener('click',function(){interactuarIndice(Number(b.dataset.usar));});});
+    pintarReto();
+  }
+  function pintarReto(){
+    var reto=S.host.querySelector('#espReto');if(!reto)return;reto.hidden=!S.comun;
+    if(S.comun){var now=Date.now(),luces=S.juego&&S.juego.luces||{},n=Object.keys(luces).filter(function(k){return now-Number(luces[k].ts)<60000;}).length;
+      var win=Number(S.juego&&S.juego.completadoHasta)>now;
+      var texto=win?'¡Desafío completado! Tres compañeros encendieron las tres luces.':'Desafío del curso · '+n+'/3 luces. Tres compañeros deben encender una luz distinta en menos de un minuto. Cada persona mantiene una luz.';
+      if(reto.textContent!==texto)reto.textContent=texto;
+      reto.classList.toggle('completo',win);
     }
-    if (!esSentable(m.id)) return;
-    var destino = { col: m.col, fila: m.fila };
-    soltar();
-    caminar(destino);
+  }
+  function interactuarIndice(i){
+    var m=S.pieza[i],a=m&&CATALOGO.accion(m.id);
+    if(!m||!a||!S.housesEnabled||S.cambiando||S.cargandoCasa)return;
+    if(S.visitando&&!S.comun&&a.tipo==='encender'){avisar('Solo el dueño enciende los muebles');return;}
+    var sala=S.sala,h=S.habitacion,destino;
+    if(esSentable(m.id))destino={col:m.col,fila:m.fila};
+    else {
+      var from={col:Math.round(S.av.col),fila:Math.round(S.av.fila)},mejor=null;
+      global.MapasCasa.celdas(ficha(m.id),m).forEach(function(c){[[1,0],[-1,0],[0,1],[0,-1]].forEach(function(d){var p={col:c.col+d[0],fila:c.fila+d[1]},r=ruta(from,p);if(r&&(!mejor||r.length<mejor.r.length))mejor={p:p,r:r};});});
+      if(!mejor){avisar('Deja un espacio libre junto al mueble');return;}destino=mejor.p;
+    }
+    modoDecorar(false);
+    caminar(destino,function(){
+      if(S.sala!==sala||S.habitacion!==h)return;
+      var payload={sala:sala,habitacion:h,indice:i,mueble:m.id,col:m.col,fila:m.fila,encendido:!m.encendido,operacion:global.crypto&&global.crypto.randomUUID?global.crypto.randomUUID():'accion_'+Date.now()+'_'+Math.random().toString(36).slice(2)};
+      esperarGuardado().then(function(){return api('latido',{sala:sala,habitacion:h,col:destino.col,fila:destino.fila});})
+        .then(function(r){if(!r||!r.ok)throw Error('No se pudo confirmar tu posición');return api('interactuar',payload);})
+        .then(function(r){if(!r||!r.ok)throw Error(r&&r.error||'No se pudo confirmar la acción');if(S.sala!==sala||S.habitacion!==h)return;
+          if(a.tipo==='encender'){m.encendido=payload.encendido;if(r.juego)S.juego=r.juego;avisar(m.encendido?'Encendido':'Apagado');}
+          else {S.gesto={id:a.gesto||'',hasta:r.hasta};S.actividad={tipo:r.actividad,hasta:r.hasta};avisar(a.nombre+' · '+ficha(m.id).nom);}
+          pintarInteracciones();botones();dibujar();
+        }).catch(function(e){avisar(e.message||'Sin conexión. Puedes reintentar.');});
+    });
   }
   function moverSeleccion(dc, df) {
     var m = S.pieza[S.sel]; if (!m) return;
@@ -1538,6 +1593,7 @@
     if (chatInput) chatInput.disabled = !S.housesEnabled;
     if (chatButton) chatButton.disabled = !S.housesEnabled;
     botones();
+    pintarInteracciones();
     if (!S.housesEnabled) desconectarSala();
   }
 
@@ -1636,6 +1692,7 @@
       if (S.visitando || !S.decorando) {
         var visitado = muebleEn(p.x, p.y);
         var asientoVisita = visitado >= 0 ? S.pieza[visitado] : null;
+        if(asientoVisita&&CATALOGO.accion(asientoVisita.id)){interactuarIndice(visitado);return;}
         var cv = asientoVisita && esSentable(asientoVisita.id)
           ? { col: asientoVisita.col, fila: asientoVisita.fila } : aCelda(p.x, p.y);
         if (haySuelo(cv.col, cv.fila)) caminar(cv);
@@ -1758,7 +1815,7 @@
   }
 
   function montar(cfg) {
-    S.habitacion='principal';S.decorando=false;S.cambiando=false;S.cargandoCasa=false;
+    S.habitacion='principal';S.decorando=false;S.cambiando=false;S.cargandoCasa=false;S.comun=false;S.juego={};
     S.saveErrors={};
     S.host = cfg.host; S.db = cfg.db; S.auth = cfg.auth; S.base = cfg.base; S.uid = cfg.uid;
     S.curso = cfg.curso || ''; S.miNombre = nombreCorto(cfg.nombre || '');
@@ -1841,6 +1898,7 @@
     global.addEventListener('pagehide', function () { clearInterval(S.stateTimer); clearInterval(S.inventoryTimer); clearInterval(S.fxTimer); desconectarSala(); });
     setTimeout(dibujar, 80);
     S.fxTimer = setInterval(function () {
+      if(S.comun&&Math.floor(Date.now()/1000)!==S.ultimoSegundo){S.ultimoSegundo=Math.floor(Date.now()/1000);pintarReto();}
       if (document.hidden || global.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
       if (S.previewPose && S.previewPose.indexOf('paso')===0 && !S.host.querySelector('[data-panel="personaje"]').classList.contains('oculto')) pintarFigura();
       if (!S.housesEnabled || S.host.querySelector('[data-panel="pieza"]').classList.contains('oculto')) return;

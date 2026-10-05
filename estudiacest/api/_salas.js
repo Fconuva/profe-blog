@@ -486,7 +486,7 @@ async function quien(req, db, auth) {
     ]);
     const est = estSnap.val();
     const esAdmin = adminSnap.val() === true;
-    if (!est && !esAdmin) { const e = new Error('Tu cuenta no está registrada como estudiante.'); e.status = 403; throw e; }
+    if ((!est || est.ocultarDeCasas===true) && !esAdmin) { const e = new Error('Tu cuenta no está registrada como estudiante.'); e.status = 403; throw e; }
     return {
         uid: decoded.uid,
         nombre: est ? String(est.nombre || 'Estudiante') : 'Profe',
@@ -527,15 +527,18 @@ function idHabitacion(req) {
     if(!id){const e=new Error('Habitación no válida.');e.status=400;throw e;}return id;
 }
 function rutaAvatarHabitacion(h){return h==='principal'?'':'/habitaciones/estudio';}
-function rutaSala(sala,h){return `${BASE}/salas/${sala}${h==='principal'?'':'/habitaciones/estudio'}`;}
+function esComun(sala){return String(sala).startsWith('curso_');}
+function rutaSala(sala,h){return esComun(sala)?`${BASE}/salas_comunes/${sala}`:`${BASE}/salas/${sala}${h==='principal'?'':'/habitaciones/estudio'}`;}
 function conHabitacion(av,h,room){return h==='principal'?{...av,...room}:{...av,habitaciones:{...av.habitaciones,estudio:room}};}
 async function accesoSala(db,sala,yo){
+    if(esComun(sala))return !yo.esAdmin && sala===CATALOGO_CASA.idCurso(yo.curso);
     const p=(await db.ref(`${BASE}/estudiantes/${sala}`).once('value')).val();
     return !!(p&&p.ocultarDeCasas!==true&&(yo.esAdmin||p.curso===yo.curso));
 }
 async function habitaciones(req,res,db,yo){
     const sala=idSala(req.body.sala||yo.uid);
     if(!sala||!await accesoSala(db,sala,yo))return res.status(404).json({error:'Casa no disponible.'});
+    if(esComun(sala))return res.status(200).json({ok:true,comun:true,nombre:'Sala de '+yo.curso,actual:'principal',habitaciones:{principal:CATALOGO_CASA.salaCurso(yo.curso)}});
     const av=(await db.ref(`${BASE}/avatar/${sala}`).once('value')).val()||{};
     const rooms=Object.fromEntries(MAPAS_CASA.HABITACIONES.map(h=>[h,MAPAS_CASA.habitacion(av,h)]));
     const presencias=await Promise.all(MAPAS_CASA.HABITACIONES.map(h=>db.ref(`${rutaSala(sala,h)}/presentes/${yo.uid}`).once('value')));
@@ -551,7 +554,7 @@ async function guardarPosicion(req,res,db,yo){
     return res.status(200).json({ok:!!saved&&saved.col===pos.col&&saved.fila===pos.fila,personajeEn:saved});
 }
 async function posicionEnCasa(db, sala, col, fila, h='principal') {
-    const casa = (await db.ref(`${BASE}/avatar/${sala}${rutaAvatarHabitacion(h)}/casa`).once('value')).val() || {};
+    const casa = esComun(sala)?CATALOGO_CASA.salaCurso('').casa:(await db.ref(`${BASE}/avatar/${sala}${rutaAvatarHabitacion(h)}/casa`).once('value')).val() || {};
     const tamano = String(casa.tamano || '5x5');
     const mapa = MAPAS_CASA.obtener(tamano);
     const max = mapa || (tamano === '7x7' ? { cols: 7, filas: 7 } : { cols: 5, filas: 5 });
@@ -599,17 +602,30 @@ async function entrar(req, res, db, yo) {
     const h=idHabitacion(req);
     if (!sala) return res.status(400).json({ error: 'Sala no válida' });
     if (!(await accesoSala(db, sala,yo))) return res.status(404).json({ error: 'Esa casa no existe' });
+    if(esComun(sala)&&h!=='principal')return res.status(400).json({error:'Sala no válida.'});
     // Las visitas acceden a la sala interior a través de la puerta, no por URL.
     if(h!=='principal'&&sala!==yo.uid)return res.status(403).json({error:'Entra por la puerta de la casa.'});
 
-    const vivos = {...await presentesVivos(db,sala,'principal'),...await presentesVivos(db,sala,'estudio')};
+    const vivos = esComun(sala)?await presentesVivos(db,sala):{...await presentesVivos(db,sala,'principal'),...await presentesVivos(db,sala,'estudio')};
+    const tope=esComun(sala)?60:TOPE_SALA;
     const yaEstaba = !!vivos[yo.uid];
-    if (!yaEstaba && Object.keys(vivos).length >= TOPE_SALA) {
+    if (!yaEstaba && Object.keys(vivos).length >= tope) {
         return res.status(200).json({ ok: false, lleno: true, presentes: Object.keys(vivos).length,
-            error: `La casa está llena (${TOPE_SALA} personas). Intenta más tarde.` });
+            error: `La sala está llena (${tope} personas). Intenta más tarde.` });
     }
     const visible = await nombreDe(db, yo);
     const posicion = await posicionEnCasa(db, sala, req.body.col, req.body.fila,h);
+    if(esComun(sala)){
+        const ref=db.ref(rutaSala(sala,h));
+        const result=await ref.transaction(old=>{
+            const v=old||{},ps=Object.fromEntries(Object.entries(v.presentes||{}).filter(([,p])=>p&&Date.now()-Number(p.ts||0)<=VIDA_MS));
+            if(!ps[yo.uid]&&Object.keys(ps).length>=60)return;
+            ps[yo.uid]={nombre:visible,curso:yo.curso,look:limpiaLook(req.body.look),...posicion,ts:Date.now()};
+            return {...v,curso:yo.curso,presentes:ps};
+        },undefined,false);
+        if(!result.committed)return res.status(200).json({ok:false,lleno:true,error:'La sala está llena (60 personas). Intenta más tarde.'});
+        return res.status(200).json({ok:true,yo:visible});
+    }
     await db.ref(`${rutaSala(sala,h)}/presentes/${yo.uid}`).set({
         nombre: visible,
         curso: yo.curso,
@@ -617,13 +633,14 @@ async function entrar(req, res, db, yo) {
         ...posicion,
         ts: Date.now()
     });
-    await db.ref(`${rutaSala(sala,h==='principal'?'estudio':'principal')}/presentes/${yo.uid}`).remove();
+    if(!esComun(sala))await db.ref(`${rutaSala(sala,h==='principal'?'estudio':'principal')}/presentes/${yo.uid}`).remove();
     return res.status(200).json({ ok: true, yo: visible, presentes: Object.keys(vivos).length + (yaEstaba ? 0 : 1) });
 }
 
 async function pasarPuerta(req,res,db,yo){
     const sala=idSala(req.body.sala),desde=idHabitacion(req),hasta=desde==='principal'?'estudio':'principal';
     if(!sala||!await accesoSala(db,sala,yo))return res.status(404).json({error:'Casa no disponible.'});
+    if(esComun(sala))return res.status(400).json({error:'Usa Volver a mi casa.'});
     const av=(await db.ref(`${BASE}/avatar/${sala}`).once('value')).val()||{};
     const room=MAPAS_CASA.habitacion(av,desde),destino=MAPAS_CASA.habitacion(av,hasta);
     const catalogo=Object.fromEntries(CATALOGO_POR_ID),puerta=MAPAS_CASA.puerta(room.casa,room.pieza,catalogo),entrada=MAPAS_CASA.puerta(destino.casa,destino.pieza,catalogo);
@@ -672,12 +689,13 @@ async function lista(req, res, db, yo) {
 
     const casas = uids.map((uid, i) => ({ uid, nombre: visibles[uid] || 'Estudiante', n: cuentas[i] }))
         .sort((a, b) => (b.n - a.n) || a.nombre.localeCompare(b.nombre, 'es'));
-    return res.status(200).json({ ok: true, casas, tope: TOPE_SALA });
+    return res.status(200).json({ ok: true, casas, tope: TOPE_SALA,comun:{uid:CATALOGO_CASA.idCurso(yo.curso),nombre:'Sala de '+yo.curso} });
 }
 
 async function latido(req, res, db, yo) {
     const sala = idSala(req.body.sala);
     if (!sala) return res.status(400).json({ error: 'Sala no válida' });
+    if(!await accesoSala(db,sala,yo))return res.status(403).json({error:'Sala no disponible.'});
     const h=idHabitacion(req),ref = db.ref(`${rutaSala(sala,h)}/presentes/${yo.uid}`);
     const actual = (await ref.once('value')).val();
     if (!actual) return res.status(200).json({ ok: false, fuera: true });
@@ -697,6 +715,7 @@ async function latido(req, res, db, yo) {
 async function salir(req, res, db, yo) {
     const sala = idSala(req.body.sala);
     if (!sala) return res.status(400).json({ error: 'Sala no válida' });
+    if(!await accesoSala(db,sala,yo))return res.status(403).json({error:'Sala no disponible.'});
     await db.ref(`${rutaSala(sala,idHabitacion(req))}/presentes/${yo.uid}`).remove();
     return res.status(200).json({ ok: true });
 }
@@ -704,12 +723,13 @@ async function salir(req, res, db, yo) {
 async function decir(req, res, db, yo) {
     const sala = idSala(req.body.sala);
     if (!sala) return res.status(400).json({ error: 'Sala no válida' });
+    if(!await accesoSala(db,sala,yo))return res.status(403).json({error:'Sala no disponible.'});
     const texto = String(req.body.texto || '').replace(/\s+/g, ' ').trim().slice(0, LARGO_MAX);
     if (!texto) return res.status(400).json({ error: 'Mensaje vacío' });
 
     const path=rutaSala(sala,idHabitacion(req)),refYo = db.ref(`${path}/presentes/${yo.uid}`);
     const presente = (await refYo.once('value')).val();
-    if (!presente) return res.status(403).json({ error: 'Tienes que estar en la casa para hablar.' });
+    if (!presente||Date.now()-Number(presente.ts||0)>VIDA_MS) return res.status(403).json({ error: 'Tienes que estar en la sala para hablar.' });
 
     const ahora = Date.now();
     if (ahora - Number(presente.ultimoMsg || 0) < ENTRE_MENSAJES_MS) {
@@ -846,6 +866,53 @@ async function atender(req, res, db, yo) {
     return res.status(200).json({ ok: true });
 }
 
+async function interactuar(req,res,db,yo) {
+    const sala=idSala(req.body.sala),h=idHabitacion(req),i=req.body.indice;
+    if(!sala||!await accesoSala(db,sala,yo))return res.status(403).json({error:'Sala no disponible.'});
+    if(esComun(sala)&&h!=='principal')return res.status(400).json({error:'Sala no válida.'});
+    const path=rutaSala(sala,h),presRef=db.ref(`${path}/presentes/${yo.uid}`);
+    const p=(await presRef.once('value')).val();
+    if(!p||Date.now()-Number(p.ts||0)>VIDA_MS)return res.status(403).json({error:'Primero entra a la sala.'});
+    const room=esComun(sala)?CATALOGO_CASA.salaCurso(yo.curso):MAPAS_CASA.habitacion((await db.ref(`${BASE}/avatar/${sala}`).once('value')).val()||{},h);
+    const m=Number.isInteger(i)&&i>=0?room.pieza[i]:null,accion=m&&CATALOGO_CASA.accion(m.id);
+    if(!m||!accion||m.pared||m.id!==req.body.mueble||m.col!==req.body.col||m.fila!==req.body.fila)return res.status(409).json({error:'El mueble cambió. Vuelve a seleccionarlo.'});
+    const cerca=MAPAS_CASA.celdas(CATALOGO_POR_ID.get(m.id),m).some(c=>Math.abs(p.col-c.col)+Math.abs(p.fila-c.fila)<=1);
+    if(!cerca)return res.status(409).json({error:'Acércate al mueble para usarlo.'});
+    const ahora=Date.now();
+    if(accion.tipo==='encender') {
+        if(typeof req.body.encendido!=='boolean'||!/^[a-zA-Z0-9_-]{8,80}$/.test(req.body.operacion||''))return res.status(400).json({error:'Acción no válida.'});
+        if(!esComun(sala)&&sala!==yo.uid)return res.status(403).json({error:'Solo el dueño enciende los muebles de su casa.'});
+        if(esComun(sala)) {
+            const ref=db.ref(`${path}/juego`);
+            await ref.transaction(old=>{
+                const v=old||{},items={...v.interacciones},prev=items[i]||{};
+                if(prev.operacion===req.body.operacion)return v;
+                items[i]={encendido:req.body.encendido,operacion:req.body.operacion,ts:ahora};
+                const luces={...v.luces};
+                Object.keys(luces).forEach(k=>{if(ahora-Number(luces[k].ts)>60000||luces[k].uid===yo.uid)delete luces[k];});
+                if(m.clave&&req.body.encendido)luces[m.clave]={uid:yo.uid,ts:ahora};
+                if(m.clave&&!req.body.encendido)delete luces[m.clave];
+                room.pieza.forEach((item,j)=>{if(item.clave)items[j]={...items[j],encendido:!!luces[item.clave]};});
+                const completa=Object.keys(luces).length===3&&new Set(Object.values(luces).map(l=>l.uid)).size===3;
+                return {...v,interacciones:items,luces,completadoHasta:completa?ahora+60000:0};
+            },undefined,false);
+            return res.status(200).json({ok:true,juego:(await ref.once('value')).val()});
+        }
+        const ref=db.ref(`${BASE}/avatar/${yo.uid}${rutaAvatarHabitacion(h)}/pieza`);
+        const result=await ref.transaction(pieza=>{
+            const item=Array.isArray(pieza)&&pieza[i];
+            if(!item||item.id!==m.id||item.col!==m.col||item.fila!==m.fila)return;
+            return pieza.map((item,j)=>j===i?{...item,encendido:req.body.encendido}:item);
+        },undefined,false);
+        if(!result.committed)return res.status(409).json({error:'El mueble cambió. Intenta nuevamente.'});
+        const saved=(await ref.once('value')).val();
+        return res.status(200).json({ok:saved?.[i]?.encendido===req.body.encendido,encendido:saved?.[i]?.encendido});
+    }
+    await presRef.update({actividad:accion.tipo,actividadHasta:ahora+5000,gesto:accion.gesto||'',gestoHasta:ahora+5000,ts:ahora});
+    const saved=(await presRef.once('value')).val();
+    return res.status(200).json({ok:saved?.actividad===accion.tipo,actividad:accion.tipo,hasta:saved?.actividadHasta});
+}
+
 async function configurar(req, res, db, yo) {
     if (!yo.esAdmin) return res.status(403).json({ error: 'Solo el profesor.' });
     const enabled = req.body.enabled === true;
@@ -856,6 +923,8 @@ async function configurar(req, res, db, yo) {
         const update = {};
         Object.keys(salas).forEach((uid) => { update[`${uid}/presentes`] = null;update[`${uid}/habitaciones/estudio/presentes`]=null; });
         if (Object.keys(update).length) await db.ref(`${BASE}/salas`).update(update);
+        const comunes=(await db.ref(`${BASE}/salas_comunes`).once('value')).val()||{};
+        for(const id of Object.keys(comunes))await db.ref(`${BASE}/salas_comunes/${id}/presentes`).remove();
     }
     return res.status(200).json({ ok: true, enabled, updatedAt: config.updatedAt });
 }
@@ -899,6 +968,7 @@ async function manejar(req, res, accion, db, auth) {
         if (accion === 'latido') return await latido(req, res, db, yo);
         if (accion === 'salir') return await salir(req, res, db, yo);
         if (accion === 'decir') return await decir(req, res, db, yo);
+        if (accion === 'interactuar') return await interactuar(req,res,db,yo);
         if (accion === 'guardar-pieza') return await guardarPieza(req, res, db, yo);
         if (accion === 'guardar-casa') return await guardarCasa(req,res,db,yo);
         if (accion === 'atender') return await atender(req, res, db, yo);

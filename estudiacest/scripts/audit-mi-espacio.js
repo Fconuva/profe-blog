@@ -127,7 +127,7 @@ exigir(espacio.includes('alCambiarLook'),
   'El personaje del encabezado debe actualizarse al cambiarlo.');
 exigir(espacio.includes("{ id: '7x7'") && espacio.includes('aplicarTamano()') && espacio.includes('espCentrar'),
   'La habitación ampliada debe ofrecer tamaño variable y controles de cámara.');
-exigir(espacio.includes('rgbPartySpeaker') && espacio.includes('m.encendido = !m.encendido'),
+exigir(catalogo.accion('rgbPartySpeaker').tipo === 'encender' && espacio.includes("api('interactuar',payload)"),
   'El parlante RGB debe permitir encender y apagar sus luces.');
 const gestos = require('../estudiantes/js/personaje-iso.js').GESTOS;
 exigir(gestos.length===10 && ['saludar','aplaudir','bailar'].every(id=>gestos.some(g=>g.id===id)) &&

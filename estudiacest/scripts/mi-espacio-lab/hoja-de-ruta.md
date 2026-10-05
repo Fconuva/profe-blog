@@ -22,10 +22,19 @@ No se incorporan sprites ni código de otros juegos sin permiso de uso. Tiled de
 
 El laboratorio `scripts/mi-espacio-lab/` ya prueba la etapa 1 sin cuentas ni Firebase. Tiled 1.12.2 abrió y reexportó el archivo `sala-en-l.json`; el adaptador volvió a leer ese export con 40 casillas de suelo, tres muebles y entrada en (1,1). En el navegador se hizo clic en un hueco y fue rechazado; otro clic recorrió una ruta de 11 casillas hasta (6,6). Zoom, arrastre y centrado funcionaron a 390, 1200 y 3840 px sin errores de consola, solicitudes fallidas ni desborde horizontal. Ejecutar `node scripts/mi-espacio-lab/probar.js` para repetir la prueba de navegador.
 
-## Avance de la etapa 2 (solo local)
+## Evidencia hist?rica de la etapa 2 (30 de septiembre)
 
 La geometría de Tiled se compiló en `estudiantes/js/mapas-casa.js` y se añadió «Salón en L 7 × 7» a la selección de `Mi casa`. El panel pinta únicamente las 40 baldosas, dibuja muros por borde expuesto, limita rutas/clics/colocación al suelo y rechaza el cambio de forma si algún mueble quedaría fuera; el avatar se recoloca en la entrada cuando corresponde. La API de presencia también valida coordenadas según la casa del dueño. Las visitas observan en tiempo real los cambios de casa y pieza sin leer el perfil escolar.
 
 Prueba automática del panel real con Firebase y API simulados: habitación 5 × 5 conservada, paso a 7 × 7, cambio a L guardado y releído, mueble fuera que bloquea el cambio, hueco que no mueve al avatar ni coloca muebles, recorrido hasta (6,6), y actualización de la geometría al visitar a otro dueño. Capturas e inspección a 390 y 1200 px, sin errores ni desborde; `npm run build` aprobó 407 recursos críticos. **Pendiente antes de publicar:** probar con dos cuentas reales y Firebase autenticado la persistencia, las visitas simultáneas y la reconexión. Los muebles del mapa de laboratorio son solo ejemplos: no se importan a la casa ni evaden los premios.
 
 Límite deliberado del adaptador: solo mapas finitos de 5 a 12 casillas por lado, baldosa 151 × 106, GID 1 para suelo y 0 para hueco, y objetos puntuales `entrada`/`mueble`. Todavía no procesa atlas múltiples, alturas, puertas ni exportaciones comprimidas; cualquiera de ellas requiere prueba y validación propia antes de integrarse.
+
+
+## Continuaci?n del 5 de octubre de 2026
+
+- Interacciones: sentarse/acostarse, encender/apagar luces y aparatos, tocar instrumentos, ejercitar, acariciar mascotas y mirar la pecera. Se llega junto al mueble antes de actuar; las acciones pasan por la API, se confirman y se ven en la sala. Solo el due?o cambia los interruptores privados.
+- Personaje: siete capas transparentes rasterizadas y cacheadas (fondo, piernas, cuerpo, rostro, pelo, expresi?n y accesorios). Conserva las 105 opciones, camisetas, orientaciones y gestos; los cincuenta originales IA permanecen como referencias y previews. No se sustituyen por una figura fija ni se pierde ropa.
+- Sala del curso: un espacio com?n de 11 ? 11, con arte ya existente, acceso exclusivo del mismo curso, hasta sesenta personas, chat filtrado, presencia y reconexi?n. La decoraci?n compartida no entra en ning?n inventario.
+- Desaf?o: tres compa?eros encienden tres luces distintas dentro de un minuto. Una persona mantiene una sola luz. Sin puntajes acad?micos ni regalos de XP. Luces sincronizadas, transacci?n y reintentos idempotentes.
+- Pruebas reproducibles: `node scripts/audit-house-social.js`, `node scripts/preview-house-social.js` y, despu?s de publicar, `node scripts/verify-house-social-production.js`. La prueba p?blica crea exclusivamente cuentas t?cnicas y un curso ficticio aislado, y elimina y relee sus datos al cerrar.

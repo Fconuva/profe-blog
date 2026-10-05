@@ -8,7 +8,7 @@
   if (root) root.CATALOGO_CASA = catalogo;
   if (typeof module === 'object' && module.exports) module.exports = catalogo;
 })(typeof window !== 'undefined' ? window : null, function () {
-return [
+var catalogo = [
   {id:"terracePoolSmall",nom:"Piscina pequeña · 2 × 2",fam:"terraza",xp:9999,motivo:"Premio del profesor",sup:0,apila:false,plano:false,huella:[2,2],efecto:"agua"},
   {id:"terracePoolMedium",nom:"Piscina mediana · 3 × 2",fam:"terraza",xp:9999,motivo:"Premio del profesor",sup:0,apila:false,plano:false,huella:[3,2],efecto:"agua"},
   {id:"terracePoolLarge",nom:"Piscina grande · 4 × 3",fam:"terraza",xp:9999,motivo:"Premio del profesor",sup:0,apila:false,plano:false,huella:[4,3],efecto:"agua"},
@@ -218,4 +218,34 @@ return [
   {id:"kitchenFridgeBuiltIn",nom:"Refrigerador empotrado",fam:"cocina",xp:2200,motivo:"Nivel alto",sup:0,apila:false,plano:false},
   {id:"washerDryerStacked",nom:"Torre de lavado",fam:"cocina",xp:2200,motivo:"Nivel alto",sup:0,apila:false,plano:false}
 ];
+// Un único contrato para las acciones del navegador y del servidor.
+catalogo.accion = function(id) {
+  if (/^(chair|gamerChair|gymBench|terraceRockingChair|loungeChair|loungeSofa|bench|stoolBar)/.test(id)) return {tipo:'sentarse',nombre:'Sentarse'};
+  if (/^(bed|terraceLounger)/.test(id)) return {tipo:'acostarse',nombre:'Acostarse'};
+  if (/^(electricGuitarSet|drumKit|musicKeyboard|uprightPiano|electricBass)$/.test(id)) return {tipo:'tocar',nombre:'Tocar',gesto:'aplaudir'};
+  if (/^(rgbPartySpeaker|speaker|radio|television|tv|monitor|lamp|light)/i.test(id)) return {tipo:'encender',nombre:'Encender'};
+  if (/^gym/.test(id)) return {tipo:'ejercitar',nombre:'Ejercitar',gesto:'celebrar'};
+  if (/^pet[A-Z]/.test(id)) return {tipo:'acariciar',nombre:'Acariciar',gesto:'corazon'};
+  if (id==='aquarium') return {tipo:'mirar',nombre:'Mirar',gesto:'pensar'};
+  return null;
+};
+catalogo.idCurso = function(curso) {
+  return curso && curso!=='admin' ? 'curso_'+Array.from(String(curso)).map(function(c){return c.codePointAt(0).toString(16).padStart(4,'0');}).join('') : null;
+};
+catalogo.salaCurso = function(curso) {
+  return {casa:{tamano:'11x11',piso:'claro',muro:'blanco'},personajeEn:{col:5,fila:7},pieza:[
+    {id:'lampRoundFloor',col:1,fila:1,dir:'SE',clave:'azul'},
+    {id:'lampRoundFloor',col:5,fila:1,dir:'SE',clave:'rosa'},
+    {id:'lampRoundFloor',col:9,fila:1,dir:'SW',clave:'verde'},
+    {id:'electricGuitarSet',col:1,fila:4,dir:'SE'},
+    {id:'drumKit',col:5,fila:4,dir:'SE'},
+    {id:'musicKeyboard',col:9,fila:4,dir:'SW'},
+    {id:'terraceRockingChair',col:1,fila:8,dir:'SE'},
+    {id:'terraceLounger',col:9,fila:8,dir:'SW'},
+    {id:'chairDesk',col:3,fila:8,dir:'SE'},
+    {id:'chairDesk',col:7,fila:8,dir:'SW'},
+    {id:'terracePalm',col:0,fila:0,dir:'SE'},
+    {id:'terracePalm',col:10,fila:0,dir:'SW'}]};
+};
+return catalogo;
 });

@@ -1,5 +1,21 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-05, portada de Termas animada con Higgsfield
+
+- A solicitud de Francisco se integra la portada animada del paseo en `/termas/`. Clip de 5,04 segundos, 1470 × 630, sin audio, generado con Seedance 2.5 en su cuenta de Higgsfield desde la ilustración existente. Se identifica como ilustración referencial animada con IA.
+- Video H.264 de 398620 bytes, botón de pausa/reproducción, imagen de respaldo y carga desactivada con movimiento reducido. Se pausa fuera de pantalla o al ocultar la pestaña. Se conservan exactamente el formulario y su código de inscripciones; no se envían registros de prueba ni se modifican datos.
+- Archivos acotados: `termas/index.html`, `termas/assets/portada-video.js`, `termas/assets/termas-portada.mp4`, manifiesto de publicación y esta bitácora. Se registran los dos nuevos recursos críticos, sin excepciones a las comprobaciones de producción.
+- Auditoría Termas y build integral aprobados: 639 recursos críticos. Navegador local en 390/1440/3840 sin desbordamiento horizontal; video cargado, reproducción, pausa y reanudación comprobadas, consola sin errores. Comprobación de movimiento reducido: no asigna la fuente ni descarga/reproduce el video. SHA-256 del MP4: `d715d7d13c06b95fa5b9f3f03bfdf9cb25cef9b1caf91783e3ec83e9b97778ce`.
+- Código confirmado y sincronizado en `35d3762b`. Publicación y comprobación pública pendientes de cierre mediante `npm run deploy:prod:safe`.
+
+## 2026-10-05, ejemplos resueltos y acceso docente a los informes de 4°A y 4°B TP
+
+- Francisco solicita acceso con su RUN al informe de 4°B TP y una versión completa en ambos informes. Se agrega su hash al permiso docente de Industrial y Automotriz; se conserva el acceso previo de la docente invitada únicamente a Industrial. No se modifican nóminas, cuentas, permisos administrativos ni entregas.
+- Cada vista docente abre un ejemplo didáctico con sus 27 campos completos, autor genérico y etiqueta explícita de modelo, no de entrega. Un botón permite alternar con el formulario vacío de solo lectura. Las respuestas permanecen en el servidor y no se incluyen en archivos públicos del estudiante. Se mantienen todas las acciones de escritura bloqueadas y cero consultas a la base para estos accesos.
+- Los modelos conservan la evidencia BP-04 y V-17: valores medidos, criterios internos, hallazgos y decisiones coherentes. Se distingue alerta de detención por vibración, se calcula el atraso de 70 h y se evita atribuir causas no comprobadas. Las fechas de intervención se identifican como propuestas del ejemplo, no hechos realizados.
+- Auditoría focalizada y build integral aprobados. Prueba local con función real y base simulada: 236 comprobaciones, tres combinaciones de docente/especialidad y anchos 320/390/1440/3840. Se verifican 27 respuestas válidas y visibles, doce páginas, libreta, alternancia completo/vacío, recarga, salida, bloqueo de escrituras y especialidades no autorizadas, consola y recursos sin errores. Dos estudiantes ficticios conservan su formulario editable sin el modelo.
+- Evidencia `%TEMP%/nm4-preview-hyWJ74`: se abren capturas del modelo Industrial, Automotriz móvil y hallazgos. Archivos propios: API, dos páginas de informe, auditoría, prueba focalizada y esta entrada. Se preservan cambios concurrentes ajenos de Termas y su manifiesto; publicación pendiente de la verificación segura del árbol compartido.
+
 ## 2026-10-05, acceso docente al informe de mantenimiento de 4°A TP
 
 - A solicitud de Francisco se habilita una docente invitada para consultar la actividad de mantenimiento de Mecánica Industrial con su RUN. El servidor conserva únicamente su hash y limita el permiso a la versión Industrial de 4°A TP; no se incorpora a la nómina estudiantil ni al registro de administradores.

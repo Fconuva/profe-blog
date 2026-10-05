@@ -1006,7 +1006,7 @@
       (S.visitando
         ? (S.comun?'':'<button class="esp-btn-chico" id="espRegalar">🎁 Regalar</button>') +
           '<button class="esp-btn-chico esp-btn-junto" id="espVolver">Volver a mi casa</button>'
-        : '<button class="esp-btn-chico" id="espVisitar">Visitar</button><button class="esp-btn-chico" id="espCurso">Sala del curso</button>');
+        : '<button class="esp-btn-chico" id="espVisitar">Visitar</button>'+(CATALOGO.idCurso(S.curso)?'<button class="esp-btn-chico" id="espCurso">Sala del curso</button>':''));
     var bc=cab.querySelector('#espCurso');if(bc)bc.addEventListener('click',function(){irACasa(CATALOGO.idCurso(S.curso));});
     var bv = cab.querySelector('#espVisitar'), bb = cab.querySelector('#espVolver'), br = cab.querySelector('#espRegalar');
     if (bv) bv.addEventListener('click', abrirVisitas);
@@ -1448,6 +1448,7 @@
   function pintarReto(){
     var reto=S.host.querySelector('#espReto');if(!reto)return;reto.hidden=!S.comun;
     if(S.comun){var now=Date.now(),luces=S.juego&&S.juego.luces||{},n=Object.keys(luces).filter(function(k){return now-Number(luces[k].ts)<60000;}).length;
+      var changed=false;S.pieza.forEach(function(m,i){if(!m.clave)return;var on=!!luces[m.clave]&&now-Number(luces[m.clave].ts)<60000;if(m.encendido!==on){m.encendido=on;changed=true;var span=S.host.querySelector('[data-usar="'+i+'"] span');if(span)span.textContent=on?'Apagar':'Encender';}});if(changed)dibujar();
       var win=Number(S.juego&&S.juego.completadoHasta)>now;
       var texto=win?'¡Desafío completado! Tres compañeros encendieron las tres luces.':'Desafío del curso · '+n+'/3 luces. Tres compañeros deben encender una luz distinta en menos de un minuto. Cada persona mantiene una luz.';
       if(reto.textContent!==texto)reto.textContent=texto;
@@ -1903,10 +1904,11 @@
       if (S.previewPose && S.previewPose.indexOf('paso')===0 && !S.host.querySelector('[data-panel="personaje"]').classList.contains('oculto')) pintarFigura();
       if (!S.housesEnabled || S.host.querySelector('[data-panel="pieza"]').classList.contains('oculto')) return;
       var gestoActivo = S.gesto && S.gesto.hasta>Date.now() || Object.keys(S.otros).some(function(uid){return Number(S.otros[uid].gestoHasta)>Date.now();});
+      var animacionCambio=!!gestoActivo!==S.animacionActivaAnterior;S.animacionActivaAnterior=!!gestoActivo;
       var efecto = S.pieza.some(function (m) { return esMascota(m.id) || ficha(m.id).efecto || m.id === 'aquarium' || (m.id === 'rgbPartySpeaker' && m.encendido); });
       // El parpadeo solo requiere dos redibujos por ciclo, no un bucle continuo.
       var blink=Math.floor(Date.now()%4800/150)===0;
-      if(!gestoActivo && !efecto && blink===S.blinkAnterior)return;
+      if(!animacionCambio && !gestoActivo && !efecto && blink===S.blinkAnterior)return;
       S.blinkAnterior=blink;
       S.fxTime = performance.now();
       dibujar();

@@ -55,6 +55,8 @@ async function check(){
  assert.equal(rules.salas_comunes['.read'],false);assert.equal(rules.salas_comunes['.write'],false);
  assert.ok(rules.salas_comunes.$sala['.read'].includes("child('curso').val() === data.child('curso').val()"));
  assert.equal(rules.salas_comunes.$sala['.write'],false);
+ assert.ok(rules.estudiantes.$uid['.validate'].includes("newData.child('curso').val() === data.child('curso').val()"));
+ assert.ok(rules.estudiantes.$uid['.validate'].includes("newData.child('ocultarDeCasas').val() === data.child('ocultarDeCasas').val()"));
  console.log('Social: cursos aislados, aforo/reconexión, chat filtrado, proximidad, acciones confirmadas, reintento, reto de tres personas, bloqueo y conservación académica: OK. Avatar: siete capas originales.');
 }
 module.exports={fixture,check};if(require.main===module)check().catch(e=>{console.error(e.stack);process.exitCode=1;});

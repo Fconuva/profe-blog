@@ -1,12 +1,12 @@
 # Bitácora de Estudia CEST
 
-## 2026-10-05, continuaci?n de furnys: acciones, avatar por capas y sala del curso
+## 2026-10-05, continuación de furnys: acciones, avatar por capas y sala del curso
 
-- Francisco solicita terminar la expansi?n pendiente de Mi espacio PAES/SIMCE. Se reutilizan los 208 muebles y los cincuenta recursos de avatar existentes. Nuevas acciones por tipo, recorrido de proximidad, confirmaci?n de servidor, efectos compartidos y controles accesibles; los interruptores privados son del due?o.
-- Avatar organizado en siete capas transparentes originales con cach? acotada; conserva las 105 opciones, seis camisetas, gestos, cuatro orientaciones y movimiento reducido.
-- Sala com?n 11 ? 11 por curso, aforo transaccional de sesenta personas, chat filtrado, presencia y regreso a la casa. Desaf?o cooperativo de tres personas y tres luces en un minuto, con operaci?n idempotente; no concede objetos ni XP y no modifica notas, tareas o perfiles reales.
-- ?nica adici?n de reglas: `salas_comunes`, lectura solo del curso correspondiente o admin, escritura cliente cerrada. Las reglas remotas y la copia hist?rica coincid?an exactamente con el estado anterior antes de preparar esta adici?n. Sitio y reglas se publican por separado.
-- Auditor?a focalizada, regresiones de habitaciones/terraza/avatar y build integral aprobados. Chromium con tres identidades ficticias verifica interruptor privado persistente, luces compartidas, reto, instrumento/chat, regreso sin p?rdidas, 390/1200/3840 y movimiento reducido; cada opci?n del avatar produce su cambio y seis camisetas siguen distintas. La hoja de ruta anterior queda actualizada. Publicaci?n segura y comprobaci?n real se registran al cerrar.
+- Francisco solicita terminar la expansión pendiente de Mi espacio PAES/SIMCE. Se reutilizan los 208 muebles y los cincuenta recursos de avatar existentes. Nuevas acciones por tipo, recorrido de proximidad, confirmación de servidor, efectos compartidos y controles accesibles; los interruptores privados son del dueño.
+- Avatar organizado en siete capas transparentes originales con caché acotada; conserva las 105 opciones, seis camisetas, gestos, cuatro orientaciones y movimiento reducido.
+- Sala común 11 × 11 por curso, aforo transaccional de sesenta personas, chat filtrado, presencia y regreso a la casa. Desafío cooperativo de tres personas y tres luces en un minuto, con operación idempotente; no concede objetos ni XP y no modifica notas, tareas o perfiles reales.
+- Reglas: `salas_comunes`, lectura solo del curso correspondiente o admin, escritura cliente cerrada. Validación puntual de `curso` y `ocultarDeCasas`: el estudiante no puede cambiar su pertenencia o visibilidad; conserva las demás actualizaciones del perfil y la administración docente. Las reglas remotas y la copia histórica coincidían exactamente con el estado anterior antes de preparar esta adición. Sitio y reglas se publican por separado.
+- Auditoría focalizada, regresiones de habitaciones/terraza/avatar y build integral aprobados. Chromium con tres identidades ficticias verifica interruptor privado persistente, luces compartidas, reto, instrumento/chat, regreso sin pérdidas, 390/1200/3840 y movimiento reducido; cada opción del avatar produce su cambio y seis camisetas siguen distintas. La hoja de ruta anterior queda actualizada. Publicación segura y comprobación real se registran al cerrar.
 
 
 ## 2026-10-05, medición del taller y cierre único de entrevista NM2

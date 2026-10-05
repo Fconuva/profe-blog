@@ -1,6 +1,6 @@
 # Mi casa: plan de expansión visual e interactiva
 
-Estado: trabajo local, **no publicar ni asignar a estudiantes todavía**. La casa actual 5 × 5/7 × 7, muebles, premios, chat y guardado siguen siendo la referencia funcional.
+Estado actualizado al 5 de octubre de 2026: las casas ampliadas, mapas en L, terraza, kit de avatar y habitaciones conectadas se publicaron el 1 de octubre. La continuación añade acciones de muebles, salas comunes y un desafío cooperativo. La bitácora registra la publicación y la verificación final; los experimentos siguientes se conservan como evidencia histórica.
 
 ## Decisión técnica
 
@@ -31,10 +31,10 @@ Prueba automática del panel real con Firebase y API simulados: habitación 5 ×
 Límite deliberado del adaptador: solo mapas finitos de 5 a 12 casillas por lado, baldosa 151 × 106, GID 1 para suelo y 0 para hueco, y objetos puntuales `entrada`/`mueble`. Todavía no procesa atlas múltiples, alturas, puertas ni exportaciones comprimidas; cualquiera de ellas requiere prueba y validación propia antes de integrarse.
 
 
-## Continuaci?n del 5 de octubre de 2026
+## Continuación del 5 de octubre de 2026
 
-- Interacciones: sentarse/acostarse, encender/apagar luces y aparatos, tocar instrumentos, ejercitar, acariciar mascotas y mirar la pecera. Se llega junto al mueble antes de actuar; las acciones pasan por la API, se confirman y se ven en la sala. Solo el due?o cambia los interruptores privados.
-- Personaje: siete capas transparentes rasterizadas y cacheadas (fondo, piernas, cuerpo, rostro, pelo, expresi?n y accesorios). Conserva las 105 opciones, camisetas, orientaciones y gestos; los cincuenta originales IA permanecen como referencias y previews. No se sustituyen por una figura fija ni se pierde ropa.
-- Sala del curso: un espacio com?n de 11 ? 11, con arte ya existente, acceso exclusivo del mismo curso, hasta sesenta personas, chat filtrado, presencia y reconexi?n. La decoraci?n compartida no entra en ning?n inventario.
-- Desaf?o: tres compa?eros encienden tres luces distintas dentro de un minuto. Una persona mantiene una sola luz. Sin puntajes acad?micos ni regalos de XP. Luces sincronizadas, transacci?n y reintentos idempotentes.
-- Pruebas reproducibles: `node scripts/audit-house-social.js`, `node scripts/preview-house-social.js` y, despu?s de publicar, `node scripts/verify-house-social-production.js`. La prueba p?blica crea exclusivamente cuentas t?cnicas y un curso ficticio aislado, y elimina y relee sus datos al cerrar.
+- Interacciones: sentarse/acostarse, encender/apagar luces y aparatos, tocar instrumentos, ejercitar, acariciar mascotas y mirar la pecera. Se llega junto al mueble antes de actuar; las acciones pasan por la API, se confirman y se ven en la sala. Solo el dueño cambia los interruptores privados.
+- Personaje: siete capas transparentes rasterizadas y cacheadas (fondo, piernas, cuerpo, rostro, pelo, expresión y accesorios). Conserva las 105 opciones, camisetas, orientaciones y gestos; los cincuenta originales IA permanecen como referencias y previews. No se sustituyen por una figura fija ni se pierde ropa.
+- Sala del curso: un espacio común de 11 × 11, con arte ya existente, acceso exclusivo del mismo curso, hasta sesenta personas, chat filtrado, presencia y reconexión. La decoración compartida no entra en ningún inventario.
+- Desafío: tres compañeros encienden tres luces distintas dentro de un minuto. Una persona mantiene una sola luz. Sin puntajes académicos ni regalos de XP. Luces sincronizadas, transacción y reintentos idempotentes.
+- Pruebas reproducibles: `node scripts/audit-house-social.js`, `node scripts/preview-house-social.js` y, después de publicar, `node scripts/verify-house-social-production.js`. La prueba pública crea exclusivamente cuentas técnicas y un curso ficticio aislado, y elimina y relee sus datos al cerrar.

@@ -15,6 +15,11 @@ async function main(){
    await updatePlatform({['estudiantes/'+a.localId]:{nombre:'CUENTA TÉCNICA SOCIAL '+String.fromCharCode(65+i),curso:i===3?otro:curso,email,activa:true,perfil_completo:true,programa:'simce',createdAt:Date.now()}});
   }
   const call=async(action,body={},u=users[0])=>{const r=await fetch(origin+'/api/estudiantes',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+u.idToken},body:JSON.stringify({action:'salas-'+action,...body})});return {status:r.status,data:await r.json()};};
+  const profileUrl='https://estudiacest-default-rtdb.firebaseio.com/plataforma_estudiantes/estudiantes/'+users[0].uid+'.json?auth='+users[0].idToken;
+  for(const body of [{curso:otro},{ocultarDeCasas:true}]){
+   const r=await fetch(profileUrl,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});assert.equal(r.status,401,'El cliente no puede cambiar curso o visibilidad');
+  }
+  assert.equal((await fetch(profileUrl,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({lastLogin:Date.now()})})).status,200,'El ingreso conserva la actualización del perfil');
   assert.equal((await call('habitaciones',{sala},users[3])).status,404);
   const files=['estudiantes/js/mi-espacio.js','estudiantes/js/personaje-iso.js','estudiantes/js/catalogo-casa.js','estudiantes/css/mi-espacio.css'];
   for(const p of files){const r=await fetch(origin+'/'+p);assert.equal(r.status,200);const actual=Buffer.from(await r.arrayBuffer()).toString('utf8').replace(/\r\n/g,'\n'),expected=fs.readFileSync(path.join(__dirname,'..',p),'utf8').replace(/\r\n/g,'\n');assert.equal(actual,expected,p+' público');}

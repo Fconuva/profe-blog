@@ -1,5 +1,11 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-05, precisión del criterio: seguimiento formativo del trabajo en clases
+
+- Francisco aclara que la revisión de los informes corresponde exclusivamente al trabajo en clases y es formativa: no se sube a Lirmi ni se asienta como evaluación sumativa. Se añade `--class-work` al exportador privado: los intentos con contenido cuentan aunque sean breves o incorrectos; no se descuenta por corrección técnica, ortografía ni falta de entrega. Fecha, especialidad y confirmación no acreditan trabajo; los campos opcionales siguen excluidos de la exigencia.
+- Se regeneran la nómina privada HTML/CSV y sus propuestas sobre la misma extracción verificada, sin nuevas escrituras académicas. Sin avance acreditable queda «Pendiente de observación docente», no un 1,0 automático. El avance guardado es un indicio, no prueba de asistencia, tiempo activo ni de la clase en que se produjo; las propuestas requieren contraste con el trabajo observado en aula.
+- Pruebas ficticias del criterio, regresiones, build integral y navegador real 390/1440 px aprobados. Se conservan los estados de entrega, parejas, fuentes históricas y datos originales; no hay publicación de información personal ni despliegue del sitio. Cierre con rutas explícitas y push; se entrega al docente el enlace corregido.
+
 ## 2026-10-05, continuación de furnys: acciones, avatar por capas y sala del curso
 
 - Francisco solicita terminar la expansión pendiente de Mi espacio PAES/SIMCE. Se reutilizan los 208 muebles y los cincuenta recursos de avatar existentes. Nuevas acciones por tipo, recorrido de proximidad, confirmación de servidor, efectos compartidos y controles accesibles; los interruptores privados son del dueño.

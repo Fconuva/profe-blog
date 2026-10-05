@@ -1,7 +1,7 @@
 'use strict';
 // Pruebas ficticias: no consulta ni modifica Firebase y no imprime identidades.
 const assert = require('node:assert/strict');
-const { measure, buildRows, summary, platformStatus, meaningful, renderHtml, csvCell } = require('./export-nm4-informes-review');
+const { measure, measureClassWork, buildRows, summary, platformStatus, meaningful, renderHtml, csvCell } = require('./export-nm4-informes-review');
 const { ROWS } = require('../api/_roster_nm4_informe');
 const dirs = { industrial:'industrial', automotriz:'automotriz', electrica:'tecnico', electronica:'electronica', mecanica:'mecanica' };
 const fields = version => require(`../nm4/u3-clase6-informe-${dirs[version]}/informe/campos`);
@@ -33,6 +33,19 @@ const header = measure('electronica',{answers:{emision:'2026-10-05',especialidad
 assert.equal(header.hasWork,true);
 assert.equal(header.units,0);
 assert.equal(header.baseGrade,1);
+assert.equal(measureClassWork('electronica',{answers:{emision:'2026-10-05',especialidad:'Electrónica'}}).baseGrade,null);
+assert.equal(measureClassWork('automotriz',null).baseGrade,null);
+const shortAttempt = measureClassWork('electronica',{answers:{h2Recomendacion:'Cambiar'}});
+assert.equal(shortAttempt.units,1);
+assert.equal(shortAttempt.baseGrade,3);
+assert.equal(measureClassWork('industrial',{answers:answers('industrial',20)}).expectedCount,17);
+assert.equal(measureClassWork('electronica',{answers:answers('electronica',17)}).baseGrade,7);
+const classroomRows = buildRows({},null,{classWork:true});
+assert.ok(classroomRows.every(r=>r.grade===null));
+assert.equal(summary(classroomRows).reduce((sum,r)=>sum+r.pending,0),classroomRows.length);
+assert.ok(renderHtml(classroomRows,{fetchedAtLocal:'Prueba ficticia'}).includes('Sin evidencia: pendiente, no 1,0 automático.'));
+assert.ok(!renderHtml(classroomRows,{fetchedAtLocal:'Prueba ficticia'}).includes('null,0'));
+assert.ok(renderHtml(classroomRows,{fetchedAtLocal:'Prueba ficticia'}).includes('Valoración formativa del trabajo en clases · no se sube a Lirmi.'));
 assert.equal(meaningful('0'),true);
 assert.equal(meaningful('...'),false);
 assert.equal(meaningful('pendiente'),false);

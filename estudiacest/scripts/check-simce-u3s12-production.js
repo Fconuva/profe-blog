@@ -68,6 +68,13 @@ async function main() {
     if (!draft.attempt || draft.attempt.submitted || draft.attempt.completada || Object.keys(draft.attempt.answers || {}).length !== 4) {
       throw new Error('El autoguardado no devolvió un borrador canónico de cuatro respuestas.');
     }
+    const incompleteResponse=await fetch(`${origin}/api/estudiantes?action=simce-u3s12-submit`,{
+      method:'POST',headers:{Authorization:`Bearer ${idToken}`,'Content-Type':'application/json'},
+      body:JSON.stringify({answers:Object.fromEntries(Array.from({length:12},(_,i)=>[`q${i+1}`,'A'])),metaResponses:{m1:'Reflexión ficticia desarrollada para la prueba.',m2:'Reflexión ficticia desarrollada para la prueba.',m3:'Reflexión ficticia desarrollada para la prueba.'}})
+    });
+    const incomplete=await incompleteResponse.json();
+    assert.equal(incompleteResponse.status,400,'El servidor debe exigir las nuevas tareas.');
+    assert.ok(incomplete.fields.includes('q13') && incomplete.fields.includes('g1'));
 
     const answers = Object.fromEntries(Array.from({ length:24 }, (_, index) => [`q${index + 1}`, 'A']));
     const metaResponses = {
@@ -81,6 +88,7 @@ async function main() {
     if (!finalState.attempt || finalState.attempt.submitted !== true || finalState.attempt.completada !== true) {
       throw new Error('La relectura pública no confirmó submitted y completada.');
     }
+    Object.entries(metaResponses).forEach(([id,value])=>assert.equal(finalState.attempt.metaResponses[id],value,`Escritura no conservada: ${id}`));
     if (finalState.result !== null) throw new Error('El resultado se publicó antes de la liberación docente.');
 
     const platform = await readPlatform();

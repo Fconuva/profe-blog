@@ -293,6 +293,14 @@ autoriza a rehacer automáticamente materiales o evaluaciones ya publicados.
 
 ### Planificación y presentación de la clase
 
+- Por indicación reiterada de Francisco (5-oct-2026), las clases de lectura
+  SIMCE NM2 no se sostienen en una única lectura breve. Incluir varios textos
+  completos y trabajo de transferencia o comparación con evidencia. Ajustar
+  la cantidad y extensión al objetivo; no presentar un cronograma que suma
+  90 minutos como prueba de duración real. Medir la carga de lectura, decisiones
+  y productos escritos, declarar los supuestos de tiempo y calibrarlos con la
+  aplicación en aula. No llenar el tiempo con espera obligatoria.
+
 - **Inicio:** activación de conocimientos previos, normas y objetivo, en ese
   orden. En la presentación ocupan **tres diapositivas distintas**; no reunirlos
   en una sola pantalla.

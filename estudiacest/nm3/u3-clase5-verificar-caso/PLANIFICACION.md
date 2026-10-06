@@ -8,7 +8,7 @@ El docente solicita todo impreso y una sola diapositiva para explicar la tarea. 
 
 ## Secuencia prevista de 90 minutos
 
-- Inicio, 10 minutos: preguntar qué vuelve creíble un mensaje; recordar trabajo en papel y sin celular; leer el objetivo. Modelar el ejemplo ficticio de la página 1 y distinguir afirmación, evidencia y conclusión. Los estudiantes subrayan cada parte.
+- Inicio, 10 minutos: preguntar qué vuelve creíble un mensaje; recordar trabajo en papel y sin celular; leer el objetivo. Modelar el ejemplo ficticio de la página 2 y distinguir afirmación, evidencia y conclusión. Los estudiantes subrayan cada parte.
 - Desarrollo, 65 minutos: explicar la diapositiva y las páginas; caso 1, 15 minutos; caso 2, 15; caso 3, 15; comparación e informe, 20. Trabajo individual, con contraste de ideas en parejas permitido. Cada estudiante escribe su guía.
 - Cierre, 15 minutos: plenario de conclusiones con fuente y fecha, revisión del procedimiento, reflexión final y entrega de la guía completa. Si el curso requiere más tiempo, el docente ajusta el ritmo observado; no se presenta el cronograma como duración real medida.
 
@@ -16,7 +16,7 @@ Carga diseñada: tres expedientes, diecinueve consignas numeradas (algunas son t
 
 ## Monitoreo y evaluación de proceso
 
-Revisar durante el trabajo: precisión de la afirmación; comparación de detalles de la imagen; separación entre captura, publicación y actualización; competencia de la fuente primaria; cita del código de ficha y un dato; conclusión coherente y límites de lo que se sabe. Retroalimentar preguntando «¿qué documento respalda eso?» y «¿de qué fecha hablas?». No basta una etiqueta sin explicación.
+Revisar durante el trabajo: efecto del perfil, reacciones, reenvíos y enlaces sobre la credibilidad; precisión de la afirmación; comparación de detalles de la imagen; separación entre captura, publicación y actualización; competencia de la fuente primaria; cita del código de ficha y un dato; conclusión coherente y límites de lo que se sabe. Retroalimentar preguntando «¿qué documento respalda eso?» y «¿de qué fecha hablas?». No basta una etiqueta sin explicación.
 
 La guía incluye una revisión de proceso y espacio para observación docente. No se inventa escala numérica, ponderación, nota ni escritura a Lirmi. La calificación, si corresponde, la decide el docente. Las respuestas no se publican junto al material del estudiante.
 
@@ -24,10 +24,16 @@ La guía incluye una revisión de proceso y espacio para observación docente. N
 
 Las publicaciones A y el comentario B son recreaciones didácticas explícitas, no capturas de rumores realmente circulados. Los hechos y los registros documentales son reales y se verificaron con fuentes primarias: NASA Earthdata (imagen capturada el 22-01-2017, publicada el 23-01-2017, página actualizada el 14-05-2025), DIRECTEMAR (cancelación total de 08:50 del 31-07-2025) y Servel (elecciones municipales y regionales de octubre de 2024). Las fuentes y enlaces están impresos en los casos. Los documentos se presentan en paráfrasis, no como comunicados originales ni citas literales. D2 y S2 se identifican como explicaciones de la guía, no fuentes independientes.
 
-Imagen documental: NASA/NOAA Suomi NPP, VIIRS, misma imagen en ambas reproducciones. Se conserva el JPG descargado; el derivado solo cambia a escala de grises. Las dos ilustraciones de acompañamiento se generaron con image_gen y se rotulan como IA; no prueban los casos. Originales, prompts y derivados guardados en assets/.
+Imagen documental: NASA/NOAA Suomi NPP, VIIRS, misma imagen en ambas reproducciones. Se conserva el JPG descargado; el derivado solo cambia a escala de grises. Las dos ilustraciones de acompañamiento se generaron con image_gen y se mantienen como acompañamiento. A solicitud docente no llevan leyendas visibles; no prueban los casos. Originales, prompts y derivados guardados en assets/.
 
 ## Impresión y reproducción
 
-Guía de nueve páginas A4, al 100 %, con membrete completo, dos logos en escala de grises, nombre/curso/fecha al inicio, identificación abreviada en las demás páginas, cuadros, renglones y pie continuo. Funciona sin fondos de impresión. Se recomienda imprimir a doble cara y engrapar; una hoja final puede quedar con reverso blanco. La revisión digital no constituye prueba física de impresora ni aplicación de aula.
+Guía de diez páginas A4, al 100 %, con membrete completo, dos logos en escala de grises, ficha oficial completa al inicio, identificación abreviada en las demás páginas, cuadros, renglones y pie continuo. Funciona sin fondos de impresión. Se recomienda imprimir a doble cara y engrapar.. La revisión digital no constituye prueba física de impresora ni aplicación de aula.
 
 Fuente reproducible: `node scripts/generate-nm3-verificar-caso.js`. Auditoría y prueba: `node scripts/audit-nm3-verificar-caso.js`; para producción, añadir `--public`.
+
+## Formato de los casos y membrete
+
+Corrección solicitada el 6 de octubre: Instagram para la imagen de incendios, WhatsApp para la cadena y X para la elección y su comentario. Los perfiles, contadores y mensajes son inventados y llevan el rótulo breve de recreación; las páginas oficiales son fichas adaptadas con dominio, título y fecha. Se evalúa también cómo el formato influye en la confianza o urgencia, sin convertir reacciones o reenvíos en evidencia.
+
+Se aplica el membrete oficial aprobado desde la guía NM2 SIMCE Clase 2, documentado en REGLAS.md y referencias/formato-institucional/. Logos, contactos, nombre completo y ficha institucional; márgenes A4 de 1 cm vertical y 1,2 cm horizontal. La primera página contiene objetivo, ficha e instrucciones; la segunda, estrategia y modelo. Se conservan 77 renglones de 7 mm.

@@ -333,10 +333,44 @@ autoriza a rehacer automáticamente materiales o evaluaciones ya publicados.
   siguientes llevan una identificación breve para reconocerlas si se separan.
 - Incluir al comienzo el **objetivo** y las **instrucciones**, en cuadros
   separados, antes de la lectura o las actividades.
-- Usar membrete institucional completo y ambos logos, como en las guías
-  aprobadas: colegio, sedes/contactos, ciudad/región/país, departamento,
-  asignatura/nivel, año y docente; conservar lema y numeración en el pie. No
-  reconstruir un membrete abreviado ni inventar datos institucionales.
+- Usar el **formato institucional oficial**, fijado por Francisco el
+  **6-oct-2026**: la referencia visual es
+  `Guia_Clase2_NM2_SIMCE_2026_SOLUCIONARIO.html`, en
+  `C:\Users\franc\OneDrive\Desktop\2026\2026\Lengua y Literatura 2026\NM2 - SIMCE\04 - Guias y Material de Apoyo\`.
+  Su plantilla vacía canónica está en
+  [`referencias/formato-institucional/plantilla-guia.html`](referencias/formato-institucional/plantilla-guia.html).
+  Esta referencia manda sobre las aproximaciones de membrete de las guías NM3
+  y NM4: reutilizar su estructura, distribución, tipografías y ficha; no
+  rediseñar, abreviar ni reconstruir de memoria el encabezado.
+- El membrete oficial tiene una tabla de tres columnas: insignia CEST a la
+  izquierda, nombre del colegio y contactos centrados, logo SDB a la derecha;
+  logos originales de 60 px, celdas laterales de 75 px y línea inferior de
+  2,5 px. Conservar literalmente las dos sedes, teléfonos, web, correo y
+  «TALCA - REGIÓN DEL MAULE - CHILE». La descripción académica se adapta a la
+  asignatura y nivel e identifica a **Prof. Francisco Javier Núñez Valenzuela**.
+  Los logos canónicos de `estudiantes/assets/` coinciden en SHA-256 con los
+  originales de `Lengua y Literatura 2026/FORMATO INSTITUCIONAL/`.
+- Conservar el título centrado y la ficha institucional con sus campos:
+  Nombre/RUT; Profesor/Curso/N° Lista; Asignatura/Guía N°/Revisado;
+  Semestre/Fecha/Puntaje; Objetivo; Habilidades. Adaptar valores y, cuando un
+  campo no corresponda al instrumento, indicarlo sin inventar puntajes,
+  calificaciones, datos personales o fechas. Dejar espacio para escribir;
+  siguen vigentes los mínimos de 8 mm para nombres y 7 mm para renglones.
+- Usar Inter para membrete, identificación y consignas y Merriweather para
+  lecturas, según el modelo. Las fuentes y sus licencias se conservan en
+  `assets/fonts/cest/`, para imprimir sin depender de servicios externos.
+  Mantener A4 con márgenes de referencia de 10 mm
+  arriba/abajo y 12 mm a los lados; revisar el PDF real y ajustar la paginación
+  al contenido. El formato debe conservar su jerarquía, bordes y legibilidad
+  con tinta negra y sin fondos de impresión. Mantener lema y numeración en el
+  pie y las instrucciones en cuadro separado antes de las actividades.
+- El archivo aprobado es un **solucionario**: se reutiliza solo su formato.
+  Sus respuestas, claves, ejemplos de corrección, «PAUTA DE CORRECCIÓN»,
+  «15 / 15» y aviso de uso exclusivo docente no se copian a una guía para
+  estudiantes. La plantilla canónica queda vacía y es una referencia interna,
+  excluida del despliegue. Esta decisión rige las próximas guías y correcciones
+  de formato solicitadas; no autoriza rehacer automáticamente materiales
+  publicados.
 - Ordenar lectura, recursos, vocabulario, consignas y respuestas en cuadros o
   tablas de bordes reales, con jerarquía clara y buena impresión en blanco y
   negro. Tomar como referencia el orden visual de los ensayos PAES y SIMCE,
@@ -344,6 +378,14 @@ autoriza a rehacer automáticamente materiales o evaluaciones ya publicados.
 - Incluir lo que deben **leer** y lo que deben **completar**, junto con imágenes,
   planos y fuentes cuando correspondan. Distinguir ejemplos, borradores y
   producto final para que el estudiante no confunda lo que debe entregar.
+- En casos de comunidades digitales, el formato es parte del análisis:
+  representar los recursos de la plataforma (perfil, fecha, imagen, enlace,
+  comentario, reacciones o reenvíos) e incluir preguntas sobre su efecto en
+  la credibilidad. Identificar las publicaciones inventadas con un rótulo
+  breve de recreación y conservar las fuentes reales en el expediente.
+  Para la guía NM3 de verificación, Francisco solicita retirar las leyendas
+  visibles de las ilustraciones de acompañamiento; sus originales, prompts y
+  procedencia permanecen guardados y no se usan como evidencia documental.
 - Reservar espacio suficiente para la respuesta esperada: renglones de al
   menos **7 mm** y campos de nombres de al menos **8 mm** de alto. Usar bordes
   imprimibles, no fondos rayados ni largas cadenas de guiones bajos. No reducir
@@ -360,6 +402,10 @@ autoriza a rehacer automáticamente materiales o evaluaciones ya publicados.
 
 ### Referencia editable aprobada
 
+- `referencias/formato-institucional/plantilla-guia.html`: patrón oficial de
+  membrete, título y ficha institucional; tiene prioridad para el formato de
+  los documentos imprimibles. Fuente y hashes en
+  `referencias/formato-institucional/PROCEDENCIA.md`.
 - `nm4/u3-clase7-manual-ilustrado/index.html`: secuencia de clase y tres
   diapositivas independientes de inicio.
 - `nm4/u3-clase7-manual-ilustrado/docente.html`: planificación por sesión.

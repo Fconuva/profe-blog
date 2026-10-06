@@ -7,6 +7,22 @@
   if(select)select.replaceChildren(...Object.entries(window.MANUAL_COURSES).map(([code,item])=>{const option=document.createElement('option');option.value=code;option.textContent=item.name;return option;}));
   const all=(selector)=>[...document.querySelectorAll(selector)];
   const fill=(selector,value)=>all(selector).forEach(element=>{element.textContent=value;});
+  const briefCourses=new Set(['4C','4D']);
+  const briefTexts=new Map(all('[data-brief-text]').map(el=>[el,el.dataset.briefText]));
+  all('.guide-intro').forEach(el=>briefTexts.set(el,'Cada grupo trabaja en su guía impresa. Lean las páginas 1 y 2 y completen las tres hojas de respuesta.'));
+  all('[data-monitoring]').forEach(el=>briefTexts.set(el,'Completen la guía en grupo. El docente revisará sus respuestas mientras trabajan. No operen equipos.'));
+  all('[data-worksheet-instructions]').forEach(el=>{el.dataset.briefMinutes='65';});
+  const textDefaults=new Map([...briefTexts.keys()].map(el=>[el,[...el.childNodes].map(node=>node.cloneNode(true))]));
+  const minuteDefaults=new Map(all('[data-brief-minutes]').map(el=>[el,el.dataset.minutes]));
+  let syncDeck=()=>{};
+  function showBriefLayout(){
+    const brief=briefCourses.has(course);
+    document.body.dataset.manualFlow=brief?'brief':'standard';
+    all('[data-extended-only]').forEach(el=>{el.hidden=brief;});
+    all('[data-brief-only]').forEach(el=>{el.hidden=!brief;});
+    for(const [el,nodes] of textDefaults){if(brief)el.textContent=briefTexts.get(el);else el.replaceChildren(...nodes.map(node=>node.cloneNode(true)));}
+    for(const [el,minutes] of minuteDefaults)el.dataset.minutes=brief?el.dataset.briefMinutes:minutes;
+  }
   const guideImage=document.querySelector('[data-guide-preview]');
   let guidePage=Math.max(1,Math.min(5,parseInt(params.get('guia'),10)||1));
   function guideInstructions(item){return [
@@ -73,15 +89,20 @@
     fill('[data-guided-original]',item.guidedOriginal);fill('[data-guided-question]',item.guidedQuestion);fill('[data-guided-answer]',item.guidedAnswer);
     showGuidePage();
     params.set('curso',course);history.replaceState(null,'',location.pathname+'?'+params.toString()+location.hash);
+    showBriefLayout();syncDeck();
   }
   if(select)select.addEventListener('change',()=>{course=validCourse(select.value);showCourse();});
   showCourse();
   all('[data-print]').forEach(button=>button.addEventListener('click',()=>window.print()));
-  const slides=all('.slide');
-  if(!slides.length)return;
-  let current=Math.max(0,Math.min(slides.length-1,(parseInt(params.get('slide'),10)||1)-1));
+  const allSlides=all('.slide');
+  if(!allSlides.length)return;
+  let slides=allSlides.filter(slide=>!slide.hidden);
+  const requestedIndex=Math.max(0,Math.min(allSlides.length-1,(parseInt(params.get('slide'),10)||1)-1));
+  let current=slides.indexOf(allSlides[requestedIndex]);
+  if(current<0)current=Math.max(0,slides.findIndex(slide=>allSlides.indexOf(slide)>requestedIndex));
   const previous=document.getElementById('prev'),next=document.getElementById('next'),counter=document.getElementById('counter');
-  function show(index){current=Math.max(0,Math.min(slides.length-1,index));slides.forEach((slide,position)=>{slide.classList.toggle('active',position===current);slide.setAttribute('aria-hidden',String(position!==current));});previous.disabled=current===0;next.disabled=current===slides.length-1;counter.textContent=`${current+1} / ${slides.length}`;params.set('slide',String(current+1));history.replaceState(null,'',location.pathname+'?'+params.toString());slides[current].scrollTop=0;}
+  function show(index){current=Math.max(0,Math.min(slides.length-1,index));allSlides.forEach(slide=>{const active=slide===slides[current];slide.classList.toggle('active',active);slide.setAttribute('aria-hidden',String(!active));});previous.disabled=current===0;next.disabled=current===slides.length-1;counter.textContent=`${current+1} / ${slides.length}`;params.set('slide',String(allSlides.indexOf(slides[current])+1));history.replaceState(null,'',location.pathname+'?'+params.toString());slides[current].scrollTop=0;}
+  syncDeck=()=>{const active=slides[current];slides=allSlides.filter(slide=>!slide.hidden);const preserved=slides.indexOf(active);show(preserved>=0?preserved:current);};
   previous.addEventListener('click',()=>show(current-1));next.addEventListener('click',()=>show(current+1));
   document.getElementById('fullscreen').addEventListener('click',async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen();}catch{document.getElementById('fullscreen').textContent='Pantalla completa no disponible';}});
   document.addEventListener('keydown',event=>{if(event.defaultPrevented||event.altKey||event.ctrlKey||event.metaKey||/INPUT|TEXTAREA|SELECT|BUTTON/.test(event.target.tagName)||event.target.isContentEditable)return;if(['ArrowRight','PageDown'].includes(event.key)){event.preventDefault();show(current+1);}if(['ArrowLeft','PageUp'].includes(event.key)){event.preventDefault();show(current-1);}if(event.key==='Home')show(0);if(event.key==='End')show(slides.length-1);});

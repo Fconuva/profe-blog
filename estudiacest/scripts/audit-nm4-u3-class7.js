@@ -75,7 +75,7 @@ expect(read('manual.css').includes('.guide-sheet .answer-lines>span{display:bloc
 for(const file of ['index.html','lectura.html','proyecto.html','docente.html'])expect(!/dos (?:hojas|páginas)/.test(read(file)),`${file}: quedó una referencia al borrador antiguo de dos hojas.`);
 expect(read('modelo.html').includes('no formato final')&&read('manual-final.html').includes('Usen cajas y flechas.'),'El modelo debe distinguirse del producto final y enseñar la ruta de consulta.');
 expect(!/firebase|<form|localStorage|sessionStorage/.test(main+read('manual.js')),'No se autorizó un login, formulario o guardado de estudiantes en esta clase.');
-for(const page of ['index.html','lectura.html','plantilla.html','modelo.html','docente.html','proyecto.html','manual-final.html']){
+for(const page of ['index.html','lectura.html','plantilla.html','modelo.html','docente.html','proyecto.html','manual-final.html','guia-cautin-4d.html']){
  const html=read(page);expect(html.includes('<script src="/assets/anotar-pizarra.js" defer></script>'),`${page}: falta el panel táctil.`);
  expect(!/(?:src|href)="[^"?#]+\.svg(?:["?#])/.test(html),`${page}: sigue usando un SVG como imagen de la clase.`);
  for(const match of html.matchAll(/(?:src|href)="([^"?#]+)[^"]*"/g)){
@@ -89,6 +89,12 @@ expect((read('modelo.html').match(/class="sheet"/g)||[]).length===2,'El modelo d
 const finalGuide=read('manual-final.html');
 const institutionalContact=['TÉCNICO PROFESIONAL: 2 SUR 1147 – FONOS (71) 2615416 · 2615410','BÁSICA y LICEO: 11 ORIENTE 1751 – FONOS (71) 2615454 · 2615457','www.salesianostalca.cl – cest@salesianostalca.cl','TALCA - REGIÓN DEL MAULE - CHILE'];
 const institutionalMotto='EDUCAR EVANGELIZANDO Y EVANGELIZAR EDUCANDO, MEDIANTE UNA FORMACIÓN CONTINUA Y DE CALIDAD';
+const cautinGuide=read('guia-cautin-4d.html'),cautinPDF=fs.readFileSync(path.join(base,'assets/guia-cautin-4d.pdf'));
+expect(cautinGuide.includes('El cautín y su estación')&&cautinGuide.includes('Curso: 4°D')&&cautinGuide.includes('Explicar con palabras claras')&&!/\b(?:adecuad[ao]|adaptad[ao]|PIE)\b/i.test(cautinGuide),'La guía individual de 4°D debe mostrar título, curso y objetivo en infinitivo, sin etiquetas de adecuación.');
+expect((cautinGuide.match(/class="identity-name"/g)||[]).length===1&&cautinGuide.includes('Fecha:')&&cautinGuide.includes('height:8mm')&&institutionalContact.every(text=>cautinGuide.includes(text))&&cautinGuide.includes(institutionalMotto),'La guía individual del cautín debe conservar identificación y membrete completo.');
+const cautinTable=(cautinGuide.match(/<table class="parts-table"[\s\S]*?<tbody>([\s\S]*?)<\/tbody>/)||[])[1]||'';
+expect((cautinTable.match(/<tr>/g)||[]).length===6&&(cautinTable.match(/class="answer-line"/g)||[]).length===10&&cautinTable.includes('class="example-answer">Sirve para controlar el calentamiento del cautín.'),'La tabla debe tener seis partes, primera función resuelta y cinco funciones con dos renglones cada una.');
+expect(cautinGuide.includes('src="assets/plano-estacion-ia.webp"')&&cautinGuide.includes('height:7mm')&&cautinGuide.includes('No operen equipos.')&&cautinGuide.includes('size:A4')&&cautinPDF.subarray(0,5).toString()==='%PDF-'&&cautinPDF.length>=50000,'La hoja del cautín debe conservar imagen numerada, escritura amplia, seguridad y PDF A4 propio.');
 for(const [file,pages] of [['plantilla.html',3],['manual-final.html',6]]){
  const html=read(file),headers=[...html.matchAll(/<header class="school-letterhead">([\s\S]*?)<\/header>/g)];
  expect(headers.length===pages&&headers.every(header=>institutionalContact.every(text=>header[1].includes(text))),`${file}: debe conservar completo el membrete del formato institucional del primer semestre.`);
@@ -134,5 +140,12 @@ expect(data['4D'].equipment.includes('Prusa MK4S')&&data['4D'].name==='4°D · G
 expect(data['4D'].parts.map(part=>part.split(':')[0]).join(',')==='Bobina de filamento,Extrusor,Boquilla,Lámina de impresión,Pantalla,Perilla de control','El plano de 4°D debe mantener la correspondencia de sus seis partes.');
 expect(data['4D'].guidedAnswer.includes('seguir calientes')&&data['4D'].sections[3][1].includes('No inventen temperaturas'),'4°D debe conservar las advertencias y los límites de la adaptación.');
 expect(read('manual.js').includes('Object.hasOwn(window.MANUAL_COURSES'),'La selección debe validar los cinco cursos y evitar caer en otro curso.');
+const controller=read('manual.js');
+expect(controller.includes("briefCourses=new Set(['4C','4D'])")&&controller.includes("document.body.dataset.manualFlow=brief?'brief':'standard'"),'La secuencia abreviada debe aplicarse solo a 4°C y 4°D, conservando la de los otros cursos.');
+expect(main.includes('data-model-comparison')&&main.includes('data-extended-only')&&main.includes('¿Cuál entendería una persona que no conoce el equipo?')&&main.includes('Ustedes conocen el equipo; quien lea su manual puede no conocerlo.'),'La comparación breve debe enseñar a redactar para un lector sin conocimientos técnicos.');
+expect(controller.includes("el.dataset.briefMinutes='65'")&&controller.includes('El docente revisará sus respuestas mientras trabajan.')&&main.includes('Una persona por grupo leerá sus respuestas cuando el docente lo indique.'),'El tiempo liberado debe quedar para la guía impresa y monitoreo, con una lectura por grupo al cerrar.');
+expect(controller.includes('node.cloneNode(true)')&&controller.includes('allSlides.filter(slide=>!slide.hidden)')&&controller.includes('allSlides.indexOf(slides[current])+1'),'El cambio de curso debe restaurar contenido y conservar las URL lógicas, sin mostrar pasos omitidos.');
+expect(teacher.includes('No es necesario abrir el detalle del modelo.')&&teacher.includes('Sin intercambio entre grupos ni tarea adicional en el cuaderno.')&&teacher.includes('según el horario de esta clase')&&!/11[.:]15/.test(main+teacher+controller),'La planificación debe coincidir con el trabajo observado sin copiar la hora de 4°E a los otros cursos.');
+expect(project.includes('Sigan la explicación de la guía con flechas')&&project.includes('Una persona por grupo leerá sus respuestas cuando el docente lo indique.'),'La etapa 1 del proyecto debe conservar la guía impresa, monitoreo y lectura por grupo en la variante breve.');
 if(failures.length){console.error(failures.join('\n'));process.exit(1);}
-console.log(`Manual ilustrado NM4 auditado: proyecto de 4 sesiones de 90 minutos, 9 pantallas con portada, inicio separado, ACTIVIDAD y tres hojas en una pantalla, 5 cursos, borrador de 3 páginas y manual final de 6, ${files.length} recursos y todos los informes conservados.`);
+console.log(`Manual ilustrado NM4 auditado: proyecto de 4 sesiones de 90 minutos, 9 pantallas de base y 8 para 4C/4D con comparación breve, guía impresa y lectura por grupo, 5 cursos, borrador de 3 páginas y manual final de 6, ${files.length} recursos y todos los informes conservados.`);

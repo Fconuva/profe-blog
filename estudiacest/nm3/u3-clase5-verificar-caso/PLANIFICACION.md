@@ -28,7 +28,7 @@ Imagen documental: NASA/NOAA Suomi NPP, VIIRS, misma imagen en ambas reproduccio
 
 ## Impresión y reproducción
 
-Guía de diez páginas A4, al 100 %, con membrete completo, dos logos en escala de grises, ficha oficial completa al inicio, identificación abreviada en las demás páginas, cuadros, renglones y pie continuo. Funciona sin fondos de impresión. Se recomienda imprimir a doble cara y engrapar.. La revisión digital no constituye prueba física de impresora ni aplicación de aula.
+Guía de diez páginas A4, al 100 %, con membrete completo, dos logos en escala de grises, ficha oficial completa al inicio, identificación abreviada en las demás páginas, cuadros, renglones y pie continuo. Funciona sin fondos de impresión. Se recomienda imprimir a doble cara y engrapar. La revisión digital no constituye prueba física de impresora ni aplicación de aula.
 
 Fuente reproducible: `node scripts/generate-nm3-verificar-caso.js`. Auditoría y prueba: `node scripts/audit-nm3-verificar-caso.js`; para producción, añadir `--public`.
 

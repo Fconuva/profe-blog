@@ -1,6 +1,6 @@
 # Clase 5 · Verificar un caso real
 
-Aplicación prevista: viernes 9 de octubre de 2026. Nivel: 3° medio, NM3, cursos 3°A, 3°B y 3°D. Clase individual en papel, con conversación breve en parejas permitida. La web contiene una sola diapositiva, por instrucción del docente.
+Aplicación prevista: viernes 9 de octubre de 2026. Nivel: 3° medio, NM3, cursos 3°A, 3°B y 3°D. Clase individual en papel, con conversación breve en parejas permitida. La presentación web es un espejo de la guía aprobada: proyecta sus casos, imágenes, fuentes y preguntas, sin agregar respuestas escritas ni modificar el PDF.
 
 ## Objetivo y alcance
 
@@ -64,6 +64,8 @@ El plenario permite observar cómo justifican sus conclusiones. No permite certi
 
 ## Guía, fuentes y reproducción
 
+La presentación tiene 21 pantallas navegables con flechas, teclado y selector; permite pantalla completa, anotación en pizarra y ampliación de las dos imágenes satelitales. Cada pantalla identifica la página de la guía. Las primeras cuatro corresponden a activación, indicaciones, objetivo y explicación oral; las pantallas 5–9 al caso 1, 10–14 al caso 2 y 15–19 al caso 3. La 20 proyecta las preguntas 16 y 17; la 21 reserva la pregunta 15 para el plenario final. Mantiene los tiempos de 10/50/20/10 minutos. El contenido de los casos y las 17 consignas se extrae directamente de `guia.html`; la auditoría compara sus textos y páginas. Los conceptos y la demostración inicial reflejan el inicio oral previsto aquí.
+
 Nueve A4: portada; caso 1 en 2/3/4, caso 2 en 5/6, caso 3 en 7/8, procedimiento y plenario en 9. Diecisiete consignas: dieciséis escritas y una oral. Sesenta y un renglones de 8 mm: cuatro en la 6 y seis en 16 y 17. La 15 se apoya en lo ya escrito y no exige una nueva respuesta en papel. Se retira completa la última página por indicación docente.
 
 Los hechos y documentos son reales; publicaciones, perfiles y contadores sociales son recreaciones rotuladas. NASA Earthdata registra una imagen capturada el 22-01-2017, publicada el 23-01-2017 y una página actualizada el 14-05-2025. DIRECTEMAR registra la cancelación total de las 08:50 del 31-07-2025. Servel aporta información del proceso electoral de octubre de 2024. Las fichas son paráfrasis con enlaces, no capturas de buscador ni comunicados literales. D1 y S1 presentan el contenido documental con formato recreado de X y perfiles institucionales Armada de Chile (@Armada_Chile) y Servel (@ServelChile), con insignia de verificación visible en negro. No se atribuyen texto literal, hora de publicación ni contadores a un tuit real. La evidencia sigue siendo el registro oficial enlazado. WhatsApp muestra cuatro respuestas en «Vecinos Talca Norte», incluida una petición de fuente; X muestra cuatro respuestas adicionales y mantiene claramente identificado el comentario B. Las reacciones y el verificado se analizan como elementos del formato; no sustituyen el contraste con datos.
@@ -72,4 +74,4 @@ El caso 1 permite contrastar dos diferencias: imagen alterada y fecha atribuida.
 
 Contenido en Times New Roman de 12 puntos, títulos de 14. Membrete y pie conservan sus medidas y fuente institucionales exactas: Inter, nombre del colegio 14 px, contactos 8,5 px, descripción 10,5 px, logos 60 px; pie 8 px, borde 1 px, separación 12 px y espacio superior 5 px. Ficha oficial completa al inicio e identificación breve en las demás páginas. Márgenes A4 de 10 mm vertical y 12 mm lateral; impresión al 100 %, posible doble cara en cinco hojas. La revisión digital no constituye prueba física de impresora.
 
-Generador: `node scripts/generate-nm3-verificar-caso.js`. Auditoría local: `node scripts/audit-nm3-verificar-caso.js`; pública: añadir `--public`.
+Generador de guía: `node scripts/generate-nm3-verificar-caso.js`. Para sincronizar solo la presentación desde la guía aprobada, sin regenerar su PDF: `node scripts/generate-nm3-verificar-slides.js`. Auditoría local: `node scripts/audit-nm3-verificar-caso.js`; pública: añadir `--public`.

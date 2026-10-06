@@ -1,5 +1,12 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-06, NM3: presentación espejo de la guía aprobada
+
+- Por instrucción de Francisco, la presentación proyecta los mismos casos, imágenes, publicaciones, fuentes y consignas de la guía aprobada. Veintiuna pantallas, página de referencia en cada una, textos extraídos de guia.html; se separan lecturas y preguntas para legibilidad. Activación, indicaciones y objetivo en pantallas independientes; explicación y demostración oral previstas en la planificación. Preguntas 16–17 antes del plenario 15, sin informe ni nuevas tareas escritas. Se mantienen 10/50/20/10 minutos propuestos.
+- Navegación con flechas, teclado, selector y enlaces a pantalla; pantalla completa, panel global de anotación y ampliación de ambas imágenes. Fuentes abren en otra pestaña. Nuevo generador específico sincroniza la presentación sin regenerar el PDF; el generador de guía lo invoca en futuras regeneraciones. CSS y JS incorporados al manifiesto: 713 recursos críticos.
+- Build integral aprobado. Auditoría local: 357 comprobaciones, cero errores, textos de las 17 preguntas, publicaciones y registros idénticos; navegación, zoom, pantalla completa y pizarra; anchos 320/390/1440/3840, sin desborde horizontal ni desplazamiento interno en proyección. Evidencia: %TEMP%/nm3-verificar-qa-EaMbJV. Abiertas capturas de los formatos sociales, ambas imágenes y preguntas.
+- Guía aprobada intacta por SHA-256: HTML bad6121908fc27d457c8e2cab07b8fc596d629e997066c8b8fcf2d953d6af2ab; CSS 25df00bcaec01fdf7b8a00007a52c7a9aa9b94cd8899a6e50b68d36f26688a34; PDF 2eaee15b80935e198ded4606480ef1b66e3ddb1276c65b81d4f4eb2b1956536c, nueve A4 y 61 renglones de 8 mm. Publicación y comprobación pública pendientes de registrar al concluir.
+
 ## 2026-10-06, NM3: guía abreviada publicada y verificada
 
 - El retiro del informe está confirmado en `ce3f4d1f`, enviado a origin/main. El build integral pasó tras concluir el ajuste de la auditoría SIMCE U3S12 en el trabajo paralelo. El intento propio de `deploy:prod:safe` terminó con código 1 por archivos académicos SIMCE que aún no tenían commit; se preservaron y no se omitieron controles. Cuando ese trabajo quedó confirmado, se observó una publicación segura ya en curso y se evitó duplicarla.

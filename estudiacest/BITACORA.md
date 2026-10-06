@@ -1,5 +1,11 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-06, NM3: mejoras publicadas y verificadas
+
+- Publicado el commit `1f49dae2045ad22594200e4729a8740324963c82`, enviado a origin/main, mediante `deploy:prod:safe`: `dpl_6YW7FGV73Z2CXgjpKXQWcX44jLAy`, proceso terminado con código 0, alias READY, proyecto y SHA comprobados. Primer intento detenido antes de publicar por errores de red `fetch failed`; cuatro recursos afectados respondieron 200 al comprobar la conexión y se repitió el despliegue completo con todas las guardas.
+- Auditoría pública final: 181 comprobaciones, cero errores, cuatro anchos, diez A4 con y sin fondos, 80 renglones de 8 mm, preguntas y cierre oral sincronizados; `%TEMP%/nm3-verificar-qa-aNgoDr`. Los 21 recursos coinciden por SHA-256 y ocho portales responden 200; `%TEMP%/nm3-formatos-public-vNiIjP`. PDF de 1.493.241 bytes, SHA-256 `e0cfcc634f787852426a0d3a460fdf9dd512d87d41c8a41b99b8de6260f5b1d7`.
+- Comparación pública del membrete con el HTML oficial: cero diferencias; `%TEMP%/nm3-membrete-exacto-gGQHme`. Abiertas capturas públicas de la diapositiva, membrete y pie. Se entregan enlaces a PDF y diapositiva; imprimir A4 al 100 %. Se mantienen 90 minutos previstos, sin afirmar prueba física ni aplicación de aula.
+
 ## 2026-10-06, NM3: aplicar mejoras de claridad, carga y espacios
 
 - Francisco autoriza aplicar las mejoras propuestas tras evaluar la clase. Se aclaran preguntas 4, 6, 7, 12, 16 y 18, distinguiendo decisión sobre el mensaje, zonas afectadas, hora de cancelación y aquello que la evidencia no permite asegurar. La 16 solicita evaluar recursos del formato sin anticipar la conclusión. La 19 añade qué comprobar antes de compartir un mensaje, como reflexión e intención, sin afirmar hábitos observados.

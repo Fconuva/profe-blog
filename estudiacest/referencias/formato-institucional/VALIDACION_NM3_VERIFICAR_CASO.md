@@ -12,7 +12,7 @@ Una respuesta permite observar cómo el estudiante verifica un mensaje **con un 
 
 El núcleo evaluado es reconocer una afirmación comprobable, contrastarla con evidencia pertinente, considerar la competencia de la fuente y sus fechas, y justificar una conclusión con límites. Los formatos Instagram, WhatsApp y X aportan información sobre credibilidad, urgencia y alcance; sus perfiles, contadores y mensajes están identificados como recreaciones.
 
-Las ilustraciones de acompañamiento no se usan para resolver los casos. La imagen NASA conserva el contenido documental y solo cambia a grises. Las fichas son paráfrasis de fuentes primarias, identificadas con código y enlace; no son capturas originales de páginas ni resultados de buscador.
+Las ilustraciones de acompañamiento no se usan para resolver los casos. N1 conserva la fotografía NASA documental y su derivado solo cambia a grises. Por solicitud docente, la publicación recreada A usa una copia editada con nubes añadidas; su procedencia y prompt se guardan aparte. Esa copia forma parte del mensaje que se debe verificar y no se presenta como registro NASA. Las fichas son paráfrasis de fuentes primarias, identificadas con código y enlace; no son capturas originales de páginas ni resultados de buscador.
 
 La lectura y la escritura son necesarias para expresar la verificación. Sin embargo, velocidad, caligrafía, cantidad de palabras o presentación de la respuesta no deben sustituir el juicio sobre evidencias. El informe de 80 a 110 palabras organiza la síntesis; su extensión por sí sola no demuestra ni invalida la habilidad.
 
@@ -20,7 +20,7 @@ La lectura y la escritura son necesarias para expresar la verificación. Sin emb
 
 | Evidencia buscada | Consignas | Correspondencia |
 |---|---|---|
-| Afirmación, detalles de imagen y fechas de captura/publicación/actualización | 1–5 | NASA permite contrastar el «hoy» de una publicación de 2024 con una captura de 2017. |
+| Afirmación, manipulación de imagen y fechas de captura/publicación/actualización | 1–5 | A usa una copia con más nubes y fecha atribuida de 2024; N1 conserva la imagen de 2017. La 2 pide dos detalles que se mantienen y una diferencia en las nubes; la 3 contrasta fechas y la 4 integra la decisión. |
 | Fecha, hora, alcance y fuente competente de una cadena | 6–10 | El mensaje del 30 de julio se contrasta con la cancelación total registrada el 31 de julio de 2025. |
 | Respaldo de datos y límite de una generalización | 11–14 | S1 respalda el proceso electoral de octubre de 2024; no demuestra que todas las próximas elecciones tengan el mismo calendario. |
 | Transferencia, influencia del formato y procedimiento | 15–17 | La 15 compara conclusiones oralmente en el plenario; 16 y 17 analizan recursos sociales y explican tres pasos por escrito. |
@@ -33,7 +33,7 @@ La cobertura es suficiente para estos tres procedimientos guiados. Es limitada p
 No existe una escala numérica autorizada. Para retroalimentar de manera consistente, revisar en cada caso cuatro aspectos: precisión de la afirmación; pertinencia del dato citado; relación entre fuente, fecha y alcance; coherencia de la conclusión y sus límites. Registrar el aspecto que necesita mejora con una observación concreta.
 
 - Una casilla elegida sin justificación no basta. Aceptar etiquetas distintas cuando la explicación distingue correctamente la autenticidad de la imagen y el contexto del mensaje.
-- En el caso 1, aceptar la captura de 2017 como fecha decisiva. La publicación de 2017 también puede servir si el estudiante explica por qué contradice «hoy» en 2024. La actualización de 2025 no convierte la captura en una imagen nueva.
+- En el caso 1, valorar que se reconozcan detalles de la costa o relieve compartidos y una diferencia concreta en la extensión o ubicación de las nubes. No basta decir «es distinta». Una diferencia visual es indicio de edición; en este ejercicio la docente conoce la copia generada y conserva la procedencia. No se infiere intención personal de una imagen distinta. Aceptar la captura de 2017 como fecha decisiva. La publicación de 2017 también puede servir si el estudiante explica por qué contradice «hoy» en 2024. La actualización de 2025 no convierte la captura en una imagen nueva.
 - En el caso 2, reconocer que algunos datos de la cadena tienen respaldo, pero la fecha del mensaje no corresponde a la cancelación total registrada. Pedir el contraste exacto, sin exigir que el estudiante conozca datos externos al expediente.
 - En el caso 3, valorar A y B por separado. El respaldo de A para octubre de 2024 no justifica B para todas las próximas elecciones. Distinguir «no demostrado por esta fuente» de una afirmación universal de falsedad.
 - En 17, los tres pasos deben indicar qué comprobaría el estudiante. Admitir secuencias razonables que incluyan imagen o afirmación, fuente original y fecha/contexto; no exigir una fórmula literal.
@@ -72,3 +72,6 @@ Corrección de formato del 6 de octubre: el membrete conserva Inter, nombre inst
 Se aclararon las preguntas 4, 6, 7, 12, 16 y 18: decisión sobre el mensaje, zonas afectadas, hora del hecho, justificación de la decisión y límite expresado como aquello que no se puede asegurar. La 16 pregunta por el valor probatorio de los recursos sin anticipar la respuesta. La 6 dispone de cuatro renglones. La 15 es oral, apoyada en respuestas previas; no cuenta como omisión escrita. La 19 tiene cuatro renglones y recoge qué comprobar antes de compartir. Esa respuesta muestra reflexión e intención, no hábitos observados.
 
 La planificación explicita contenidos conceptual, procedimental y actitudinal, una activación oral de cuatro conceptos y criterios de seguimiento. El plenario considera tres intervenciones breves, una por caso; no se califica por hablar en público. El tiempo sigue siendo una hipótesis pendiente de aplicación. Se conserva el expediente impreso, el objetivo y el formato institucional, sin reintroducir la página explicativa ni las tablas retiradas.
+
+
+Actualización de formatos (6 de octubre): «Vecinos Talca Norte» incluye alivio, preocupación y pregunta por la fuente; la publicación electoral conserva B e incorpora cuatro respuestas de creencia, duda y opinión. D1 y S1 se presentan como «Fuente oficial · Recreación» de X con perfiles institucionales e insignias. Son paráfrasis de documentos enlazados, no tuits comprobados. La 14 y la 16 permiten examinar perfil, enlace, insignia y reacciones sin tratarlos como prueba suficiente. La fuente y sus fechas conservan el papel de evidencia. No se amplía la carga de respuestas ni el tiempo previsto.

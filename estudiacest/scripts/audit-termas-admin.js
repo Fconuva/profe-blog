@@ -78,6 +78,49 @@ const baseB = {
 };
 
 (async () => {
+  // Reloj y base ficticios: probar el límite y una transacción que lo cruza,
+  // sin escribir inscripciones de prueba en Firebase.
+  const cierre = Date.parse('2026-10-24T00:00:00-03:00');
+  assert.strictEqual(new Intl.DateTimeFormat('sv-SE', { timeZone: 'America/Santiago', dateStyle: 'short', timeStyle: 'medium' }).format(cierre), '2026-10-24 00:00:00');
+  const relojReal = Date.now;
+  let ahora = cierre - 1000;
+  Date.now = () => ahora;
+  try {
+    const publico = mockDb();
+    const abierta = termas.estadoPublico({});
+    assert.strictEqual(abierta.cierreInscripcion, cierre);
+    assert.strictEqual(abierta.inscripcionAbierta, true);
+    const inscrita = await call(publico, 'inscribir', baseA, false);
+    assert.strictEqual(inscrita.code, 200, 'Debe aceptar inscripciones al final del 23 de octubre.');
+    const llave = inscrita.payload.llave;
+    const antes = clone(publico.state);
+    ahora = cierre;
+    assert.strictEqual(termas.estadoPublico({}).inscripcionAbierta, false);
+    for (const datos of [baseB, { ...baseA, llave }, {}]) {
+      const cerrada = await call(publico, 'inscribir', datos, false);
+      assert.strictEqual(cerrada.code, 403, 'El cierre bloquea altas y modificaciones públicas en el instante exacto.');
+      assert.strictEqual(cerrada.payload.codigo, 'cerrada');
+      assert.deepStrictEqual(publico.state, antes, 'El rechazo no puede cambiar inscripciones existentes.');
+    }
+    const propia = await call(publico, 'mia', { correo: baseA.correo, llave }, false);
+    assert.strictEqual(propia.code, 200, 'El pase confirmado sigue disponible después del cierre.');
+    ahora = cierre + 86400000;
+    assert.strictEqual((await call(publico, 'inscribir', baseB, false)).code, 403);
+    assert.strictEqual((await call(publico, 'admin-guardar', baseB)).code, 200, 'El admin conserva la gestión de la lista cerrada.');
+    const tardia = mockDb();
+    const refOriginal = tardia.ref.bind(tardia);
+    tardia.ref = route => {
+      const ref = refOriginal(route);
+      const transaction = ref.transaction;
+      ref.transaction = async update => { ahora = cierre; return transaction(update); };
+      return ref;
+    };
+    ahora = cierre - 1;
+    const estadoAntes = clone(tardia.state);
+    assert.strictEqual((await call(tardia, 'inscribir', baseA, false)).code, 403, 'También se comprueba el plazo dentro de la transacción.');
+    assert.deepStrictEqual(tardia.state, estadoAntes);
+  } finally { Date.now = relojReal; }
+
   const db = mockDb();
 
   const sinSesion = await call(db, 'admin-lista', null, false);
@@ -143,6 +186,12 @@ const baseB = {
   assert.ok(!html.includes('Nómina oficial'), 'El panel no debe anunciar una restricción por nómina.');
 
   const api = fs.readFileSync(path.join(ROOT, 'api', '_termas.js'), 'utf8');
+  const pagina = fs.readFileSync(path.join(ROOT, 'termas', 'index.html'), 'utf8');
+  const plazoCliente = pagina.match(/const CIERRE_INSCRIPCION = Date.parse\('([^']+)'\)/);
+  assert.ok(plazoCliente, 'La página debe tener un plazo de respaldo.');
+  assert.strictEqual(Date.parse(plazoCliente[1]), cierre, 'Cliente y servidor deben compartir el mismo cierre.');
+  const scriptsPublicos = [...pagina.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)].map(match => match[1]).filter(script => script.trim());
+  scriptsPublicos.forEach(script => new vm.Script(script, { filename: 'termas/index.html' }));
   for (const marcador of ['HUELLAS_NOMINA', 'estaEnNomina', 'nómina vigente']) {
     assert.ok(!api.includes(marcador), `La API todavía conserva la restricción: ${marcador}`);
   }
@@ -152,7 +201,7 @@ const baseB = {
   const vercelIgnore = fs.readFileSync(path.join(ROOT, '.vercelignore'), 'utf8');
   assert.ok(vercelIgnore.includes('!scripts/audit-termas-admin.js'), 'Vercel excluiría la auditoría del prebuild.');
 
-  console.log('Termas admin: autenticación, inscripción libre, alta, edición, conflictos, papelera, restauración y panel verificados.');
+  console.log('Termas: plazo de Santiago, cierre exacto, rechazo sin escrituras, transacción tardía, pase conservado y gestión administrativa verificados; autenticación, edición, conflictos, papelera y restauración correctos.');
 })().catch(error => {
   console.error(error.stack || error.message);
   process.exit(1);

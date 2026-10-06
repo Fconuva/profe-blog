@@ -1,5 +1,12 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-06, Termas: cuenta regresiva y cierre automático de inscripción
+
+- Por instrucción de Francisco se incorpora un contador de días, horas, minutos y segundos en la portada de `/termas/`. Se incluye todo el viernes 23 de octubre de 2026: cierre el 24 a las 00:00 de America/Santiago, equivalente a 03:00 UTC. Fecha y hora visibles junto al contador.
+- El servidor comunica el plazo y su estado y rechaza altas y cambios públicos con 403/cerrada después del límite, también dentro de la transacción. La página se cierra aunque permanezca abierta, recupera el reloj correcto desde el servidor y conserva la consulta de pases confirmados. La gestión autenticada de la lista continúa disponible para el administrador.
+- Archivos: `termas/index.html`, `api/_termas.js`, `scripts/audit-termas-admin.js` y `scripts/check-termas-deadline.js`. Auditoría focalizada aprobada: instante anterior/exacto/posterior, modificación, pase, administración, rechazo sin mutación y transacción que cruza el límite. Build integral aprobado: 713 recursos críticos.
+- Navegador real con datos ficticios aislados: 320/390/1440/3840 px, reloj del dispositivo adelantado corregido, contador, cierre sin recargar, envío bloqueado, recarga y pase conservado; sin desbordes, errores ni solicitudes fallidas. Capturas locales abiertas; evidencia `%TEMP%/termas-plazo-ucbUV7`. Ninguna inscripción de prueba ni modificación de registros reales. Publicación segura y comprobación pública se registran al concluir.
+
 ## 2026-10-06, NM3: presentación espejo de la guía aprobada
 
 - Por instrucción de Francisco, la presentación proyecta los mismos casos, imágenes, publicaciones, fuentes y consignas de la guía aprobada. Veintiuna pantallas, página de referencia en cada una, textos extraídos de guia.html; se separan lecturas y preguntas para legibilidad. Activación, indicaciones y objetivo en pantallas independientes; explicación y demostración oral previstas en la planificación. Preguntas 16–17 antes del plenario 15, sin informe ni nuevas tareas escritas. Se mantienen 10/50/20/10 minutos propuestos.

@@ -35,6 +35,9 @@ const INSCRIPCIONES = `${BASE}/inscripciones`;
 const PAPELERA = `${BASE}/papelera`;
 const CAPACIDAD = 45;
 const TOPE_INSCRIPCIONES = 300;
+// Incluye todo el 23 de octubre, hora de Santiago (UTC-3 en esta fecha).
+const CIERRE_INSCRIPCION = Date.parse('2026-10-24T00:00:00-03:00');
+const MENSAJE_CIERRE = 'Las inscripciones cerraron el 23 de octubre de 2026. Para consultas, contacta a Francisco Núñez.';
 // Sin # $ [ ] / en el correo: es la clave en Firebase.
 const RE_CORREO = /^[a-z0-9][a-z0-9._%+-]{0,63}@[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)*\.[a-z]{2,}$/;
 const RE_NOMBRE = /^\p{L}[\p{L}'’.\- ]{0,79}$/u;
@@ -76,6 +79,7 @@ function nombreCorto(ins) { return `${primeraPalabra(ins.nombre)} ${primeraPalab
 function vaEnBus(ins) { return ins && ins.asiste === 'si' && ins.transporte === 'bus' && Number(ins.asiento) >= 1; }
 
 function estadoPublico(inscripciones) {
+    const ahora = Date.now();
     const lista = Object.values(inscripciones || {});
     const asisten = lista.filter(i => i.asiste === 'si');
     const asientos = {};
@@ -90,7 +94,9 @@ function estadoPublico(inscripciones) {
             personal: asisten.filter(i => i.transporte === 'personal').length,
             libres: CAPACIDAD - Object.keys(asientos).length
         },
-        actualizado: Date.now()
+        cierreInscripcion: CIERRE_INSCRIPCION,
+        inscripcionAbierta: ahora < CIERRE_INSCRIPCION,
+        actualizado: ahora
     };
 }
 
@@ -163,6 +169,7 @@ async function mia(req, res, db) {
 }
 
 async function inscribir(req, res, db) {
+    if (Date.now() >= CIERRE_INSCRIPCION) throw fallo(403, MENSAJE_CIERRE, { codigo: 'cerrada', cierreInscripcion: CIERRE_INSCRIPCION });
     const body = cuerpo(req);
     const { nombre, apellido, correo, telefono, emergenciaNombre, emergenciaTelefono, asiste, transporte, asiento, comida } = validarDatosInscripcion(body);
 
@@ -175,6 +182,7 @@ async function inscribir(req, res, db) {
     const resultado = await db.ref(INSCRIPCIONES).transaction(actual => {
         motivo = '';
         llaveEntregada = '';
+        if (Date.now() >= CIERRE_INSCRIPCION) { motivo = 'cerrada'; return; }
         const todas = actual || {};
         const previa = todas[clave];
         if (previa && !llaveValida(previa.llave, llaveRecibida)) { motivo = 'ajena'; return; }
@@ -204,6 +212,7 @@ async function inscribir(req, res, db) {
     });
 
     if (!resultado.committed) {
+        if (motivo === 'cerrada') throw fallo(403, MENSAJE_CIERRE, { codigo: 'cerrada', cierreInscripcion: CIERRE_INSCRIPCION });
         const snap = await db.ref(INSCRIPCIONES).once('value');
         const mapa = estadoPublico(snap.val());
         if (motivo === 'ocupado') throw fallo(409, 'Alguien acaba de tomar ese asiento. Elige otro.', { codigo: 'ocupado', estado: mapa });

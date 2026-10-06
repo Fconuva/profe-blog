@@ -402,6 +402,13 @@
       .dato-clave strong { font-size: 15px; }
       .resumen span { display: none; }
     }
+    .plazo { margin: 22px 0; max-width: 520px; padding: 22px; border: 1px solid var(--termal); border-radius: var(--radio); background: var(--termal-claro); text-align: center; }
+    .plazo h2 { margin: 0 0 6px; font-size: 21px; color: var(--pino); }
+    .hero-in .plazo p { margin: 0; font-size: 14px; color: var(--tinta); }
+    .cuenta-regresiva { display: flex; justify-content: center; gap: 10px; margin: 18px 0; }
+    .cuenta-regresiva span { display: grid; gap: 2px; min-width: 52px; padding: 9px 6px; border-radius: 10px; background: var(--papel); }
+    .cuenta-regresiva b { font-size: clamp(22px, 5vw, 32px); line-height: 1.2; font-variant-numeric: tabular-nums; color: var(--pino); }
+    .cuenta-regresiva small { font-size: 11px; color: var(--gris); }
     @media (prefers-reduced-motion: reduce) {
       html { scroll-behavior: auto; }
       *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
@@ -423,6 +430,17 @@
       <h1>Termas de <em>Panimávida</em></h1>
       <p class="hero-invitacion">Un día para desconectarnos.</p>
       <p class="lead">Confirma si vas, cómo llegas y elige una de 3 opciones: con desayuno, con once o solo almuerzo. Si te subes al bus, también eliges tu asiento.</p>
+      <section class="plazo" aria-labelledby="plazoTitulo">
+        <h2 id="plazoTitulo" aria-live="polite">Inscríbete hasta el 23 de octubre</h2>
+        <p id="plazoFecha">El plazo termina el <time datetime="2026-10-23T23:59:59-03:00">23 de octubre de 2026 a las 23:59</time>, hora de Chile.</p>
+        <div class="cuenta-regresiva" id="cuentaRegresiva" role="timer" aria-live="off" aria-label="Tiempo restante para inscribirse">
+          <span><b id="plazoDias">—</b><small>días</small></span>
+          <span><b id="plazoHoras">—</b><small>horas</small></span>
+          <span><b id="plazoMinutos">—</b><small>minutos</small></span>
+          <span><b id="plazoSegundos">—</b><small>segundos</small></span>
+        </div>
+        <p id="plazoNota">Después de esa fecha, las inscripciones se cierran automáticamente.</p>
+      </section>
       <a class="hero-cta" href="#contenido">Ir a la inscripción</a>
       <p class="hero-credito">Ilustración referencial animada con IA</p>
     </div>
@@ -624,10 +642,41 @@
     const RE_CORREO = /^[a-z0-9][a-z0-9._%+-]{0,63}@[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)*\.[a-z]{2,}$/;
     const telefonoValido = t => /^\+?[0-9 ()-]{8,20}$/.test(t) && t.replace(/\D/g, '').length >= 8 && t.replace(/\D/g, '').length <= 15;
     const CADA_MS = 5000;
+    const CIERRE_INSCRIPCION = Date.parse('2026-10-24T00:00:00-03:00');
 
     const $ = id => document.getElementById(id);
     const form = $('flujo');
-    const estado = { mapa: null, mia: null, local: null, asiento: null, enviando: false, primera: true, previos: {} };
+    const estado = { mapa: null, mia: null, local: null, asiento: null, enviando: false, primera: true, previos: {}, cerrada: false, desfase: 0 };
+
+    function actualizarPlazo() {
+      const cierre = estado.mapa && estado.mapa.cierreInscripcion || CIERRE_INSCRIPCION;
+      const restante = Math.max(0, Math.ceil((cierre - (Date.now() + estado.desfase)) / 1000));
+      const valores = [Math.floor(restante / 86400), Math.floor(restante / 3600) % 24, Math.floor(restante / 60) % 60, restante % 60];
+      ['plazoDias', 'plazoHoras', 'plazoMinutos', 'plazoSegundos'].forEach((id, i) => { $(id).textContent = String(valores[i]).padStart(2, '0'); });
+      if (restante === 0 || estado.mapa && estado.mapa.inscripcionAbierta === false) estado.cerrada = true;
+      if (estado.cerrada) {
+        if ($('plazoTitulo').textContent !== 'Inscripciones cerradas') $('plazoTitulo').textContent = 'Inscripciones cerradas';
+        $('plazoFecha').firstChild.textContent = 'El plazo terminó el ';
+        $('plazoNota').textContent = 'El plazo terminó. Para consultas, contacta a Francisco Núñez.';
+        $('cuentaRegresiva').classList.add('oculto');
+        form.classList.add('oculto');
+        $('btnModificar').classList.add('oculto');
+        $('btnVerBus').classList.add('oculto');
+        const enlace = document.querySelector('.hero-cta');
+        enlace.textContent = 'Inscripciones cerradas';
+      } else if ($('plazoTitulo').textContent === 'Inscripciones cerradas') {
+        // El reloj del servidor corrige también un reloj adelantado del dispositivo.
+        $('plazoTitulo').textContent = 'Inscríbete hasta el 23 de octubre';
+        $('plazoFecha').firstChild.textContent = 'El plazo termina el ';
+        $('plazoNota').textContent = 'Después de esa fecha, las inscripciones se cierran automáticamente.';
+        $('cuentaRegresiva').classList.remove('oculto');
+        if (!estado.mia) form.classList.remove('oculto');
+        $('btnModificar').classList.remove('oculto');
+        $('btnVerBus').classList.toggle('oculto', !(estado.mia && estado.mia.transporte === 'bus'));
+        document.querySelector('.hero-cta').textContent = 'Ir a la inscripción';
+      }
+      $('btnConfirmar').disabled = estado.cerrada || estado.enviando;
+    }
 
     function leerLocal() { try { return JSON.parse(localStorage.getItem(LLAVE_LOCAL) || 'null'); } catch (_) { return null; } }
     function guardarLocal(v) { try { localStorage.setItem(LLAVE_LOCAL, JSON.stringify(v)); } catch (_) {} }
@@ -753,6 +802,9 @@
 
     function aplicarMapa(mapa) {
       estado.mapa = mapa;
+      estado.cerrada = mapa.inscripcionAbierta === false;
+      if (Number.isFinite(mapa.actualizado)) estado.desfase = mapa.actualizado - Date.now();
+      actualizarPlazo();
       const t = mapa.totales || {};
       $('chipAsisten').textContent = t.asisten != null ? t.asisten : '…';
       $('chipLibres').textContent = t.libres != null ? t.libres : '…';
@@ -782,6 +834,8 @@
     }
     setInterval(() => { if (document.visibilityState === 'visible') refrescar(); }, CADA_MS);
     document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') refrescar(); });
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') actualizarPlazo(); });
+    setInterval(actualizarPlazo, 1000);
 
     // ---------- flujo ----------
     function numerarPasos() {
@@ -848,6 +902,8 @@
 
     form.addEventListener('submit', async e => {
       e.preventDefault();
+      actualizarPlazo();
+      if (estado.cerrada) return;
       if (estado.enviando) return;
       const v = validar();
       if (v.error) { mensaje(v.error, 'error'); if (v.foco) v.foco.scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
@@ -866,9 +922,10 @@
         estado.enviando = false;
         if (err.datos && err.datos.estado) aplicarMapa(err.datos.estado);
         if (err.datos && err.datos.codigo === 'ocupado') { estado.asiento = null; pintarBus(); }
+        if (err.datos && err.datos.codigo === 'cerrada') { estado.cerrada = true; actualizarPlazo(); }
         mensaje(err.message, 'error');
       } finally {
-        estado.enviando = false; $('btnConfirmar').disabled = false; actualizarResumen();
+        estado.enviando = false; actualizarPlazo(); actualizarResumen();
       }
     });
 
@@ -898,10 +955,13 @@
       $('btnVerBus').classList.toggle('oculto', m.transporte !== 'bus');
       $('pase').classList.remove('oculto');
       form.classList.add('oculto');
+      actualizarPlazo();
       if (desplazar) { window.scrollTo({ top: 0, behavior: 'smooth' }); $('pase').focus({ preventScroll: true }); }
     }
 
     function abrirFormulario(irAlBus) {
+      actualizarPlazo();
+      if (estado.cerrada) return;
       form.classList.remove('oculto');
       $('pase').classList.add('oculto');
       mostrarPasos(); pintarBus();
@@ -934,6 +994,7 @@
 
     // ---------- inicio ----------
     async function iniciar() {
+      actualizarPlazo();
       pintarComidas(); numerarPasos(); actualizarResumen();
       estado.local = leerLocal();
       const pedidos = [api('estado').then(m => { aplicarMapa(m); enVivo(true); }).catch(() => enVivo(false))];

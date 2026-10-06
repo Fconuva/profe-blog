@@ -1,5 +1,11 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-06, NM3: retirar la página del informe final
+
+- Por instrucción de Francisco se elimina completa la última página, incluido informe 18 de 80–110 palabras, reflexión 19, cuadro «Revisa tus respuestas» y campos de revisión docente. La guía termina en la 17: nueve A4, dieciséis consignas escritas y una oral, 61 renglones de 8 mm. Se conserva el membrete/pie exacto, letra 12/14 y todos los casos, imágenes y respuestas sociales. La numeración pasa a «de 9».
+- Diapositiva, planificación y revisión interna sincronizadas: sin requisito del informe ni de la 19; el bloque de 20 minutos se dedica a 16–17 y revisión de justificaciones. Cierre oral 15, síntesis y entrega. No se reintroduce la página retirada ni otro producto escrito.
+- Generador aprobado: nueve A4 con y sin fondos, sin cortes. PDF real abierto en su nueva última página. Auditoría local: 186 comprobaciones, cero errores, cuatro anchos, membrete/pie y renglones; `%TEMP%/nm3-verificar-qa-EZG7X8`. PDF 1.653.279 bytes, SHA-256 `2eaee15b80935e198ded4606480ef1b66e3ddb1276c65b81d4f4eb2b1956536c`. El build general detectó cambios SIMCE U3S12 ajenos aún no alineados con su auditoría; se preservan y no se omiten controles. Publicación y comprobación pública pendientes de cierre.
+
 ## 2026-10-06, NM3: publicación de imágenes y conversaciones verificada
 
 - Publicado el commit `ed3d67c004e33aad084250d29a0618d5b7298d6c` mediante `deploy:prod:safe`, con todas las guardas y 711 recursos: `dpl_De3GgYKyMSbwNMmDkE9ATUEmftop`, proceso terminado con código 0. Alias `www.estudiacest.com` READY, proyecto `prj_v2yUaXflcSoBgunqmn1rAEfh0KMR` y SHA exacto comprobados por API. El primer proceso terminó inesperadamente con `-1073740791`, sin diagnóstico ni subida; se verificó ausencia de procesos de despliegue y alias anterior antes de reintentar el flujo completo.

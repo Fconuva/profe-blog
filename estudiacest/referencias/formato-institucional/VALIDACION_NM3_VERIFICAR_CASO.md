@@ -1,6 +1,6 @@
 # Revisión del instrumento: NM3 · Verificar un caso real
 
-Fecha: 6 de octubre de 2026. Instrumento revisado: guía individual impresa de diez A4, tres expedientes documentales, diecinueve consignas: dieciocho escritas, incluido un informe breve, y una oral. Población prevista: 3° medio, cursos NM3 de Estudia CEST. Uso: evaluación de proceso y retroalimentación durante una clase de 90 minutos propuestos. Esta revisión aplica la skill assessment-validity-checker al diseño; no constituye pilotaje, aprobación institucional ni validación psicométrica.
+Fecha: 6 de octubre de 2026. Instrumento revisado: guía individual impresa de nueve A4, tres expedientes documentales, diecisiete consignas: dieciséis escritas y una oral. Población prevista: 3° medio, cursos NM3 de Estudia CEST. Uso: evaluación de proceso y retroalimentación durante una clase de 90 minutos propuestos. Esta revisión aplica la skill assessment-validity-checker al diseño; no constituye pilotaje, aprobación institucional ni validación psicométrica.
 
 ## Propósito e inferencia permitida
 
@@ -14,7 +14,7 @@ El núcleo evaluado es reconocer una afirmación comprobable, contrastarla con e
 
 Las ilustraciones de acompañamiento no se usan para resolver los casos. N1 conserva la fotografía NASA documental y su derivado solo cambia a grises. Por solicitud docente, la publicación recreada A usa una copia editada con nubes añadidas; su procedencia y prompt se guardan aparte. Esa copia forma parte del mensaje que se debe verificar y no se presenta como registro NASA. Las fichas son paráfrasis de fuentes primarias, identificadas con código y enlace; no son capturas originales de páginas ni resultados de buscador.
 
-La lectura y la escritura son necesarias para expresar la verificación. Sin embargo, velocidad, caligrafía, cantidad de palabras o presentación de la respuesta no deben sustituir el juicio sobre evidencias. El informe de 80 a 110 palabras organiza la síntesis; su extensión por sí sola no demuestra ni invalida la habilidad.
+La lectura y la escritura son necesarias para expresar la verificación. Sin embargo, velocidad, caligrafía, cantidad de palabras o presentación de la respuesta no deben sustituir el juicio sobre evidencias.
 
 ## Validez de contenido
 
@@ -24,7 +24,6 @@ La lectura y la escritura son necesarias para expresar la verificación. Sin emb
 | Fecha, hora, alcance y fuente competente de una cadena | 6–10 | El mensaje del 30 de julio se contrasta con la cancelación total registrada el 31 de julio de 2025. |
 | Respaldo de datos y límite de una generalización | 11–14 | S1 respalda el proceso electoral de octubre de 2024; no demuestra que todas las próximas elecciones tengan el mismo calendario. |
 | Transferencia, influencia del formato y procedimiento | 15–17 | La 15 compara conclusiones oralmente en el plenario; 16 y 17 analizan recursos sociales y explican tres pasos por escrito. |
-| Informe con evidencia y reflexión | 18–19 | Se integra afirmación, dos datos con fuente, conclusión y límite; se identifica una evidencia y se explica qué comprobar antes de compartir otro mensaje. |
 
 La cobertura es suficiente para estos tres procedimientos guiados. Es limitada para inferir una competencia general de verificación: los expedientes ya están seleccionados y no se evalúan búsqueda autónoma, autenticación de video ni contraste entre múltiples fuentes independientes.
 
@@ -37,7 +36,6 @@ No existe una escala numérica autorizada. Para retroalimentar de manera consist
 - En el caso 2, reconocer que algunos datos de la cadena tienen respaldo, pero la fecha del mensaje no corresponde a la cancelación total registrada. Pedir el contraste exacto, sin exigir que el estudiante conozca datos externos al expediente.
 - En el caso 3, valorar A y B por separado. El respaldo de A para octubre de 2024 no justifica B para todas las próximas elecciones. Distinguir «no demostrado por esta fuente» de una afirmación universal de falsedad.
 - En 17, los tres pasos deben indicar qué comprobaría el estudiante. Admitir secuencias razonables que incluyan imagen o afirmación, fuente original y fecha/contexto; no exigir una fórmula literal.
-- En 18, valorar los datos y su fuente, la conclusión y el límite. No reemplazar estos criterios por el conteo de palabras.
 
 La consistencia entre correctores y entre cursos no está medida. Antes de usar la guía para una decisión sumativa, revisar una muestra de respuestas con estos criterios y acordar cómo resolver conclusiones alternativas bien fundamentadas. La decisión sobre nota o ponderación corresponde al docente.
 
@@ -45,7 +43,7 @@ La consistencia entre correctores y entre cursos no está medida. Antes de usar 
 
 El expediente completo permite trabajar sin celular, cuenta ni conectividad. El contenido en Times New Roman de 12 puntos, títulos de 14 y renglones de 8 mm reducen barreras de legibilidad y escritura. Las dos imágenes satelitales superan 175 × 85 mm y se reproducen completas. Bordes, textos e identificación funcionan con tinta negra y sin fondos de impresión.
 
-Las dieciocho consignas escritas y el plenario pueden demandar más tiempo a algunos estudiantes. La distribución se ajustó a inicio 10, casos 50, procedimiento e informe 20 y cierre 10 minutos, con la pregunta 15 oral para reducir escritura repetida. Los 90 minutos son un supuesto de planificación, no una duración medida. Observar el ritmo real y conceder tiempo o apoyo lector cuando corresponda, manteniendo la exigencia de justificar. No interpretar una guía incompleta por falta de tiempo como ausencia automática de la habilidad.
+Las dieciséis consignas escritas y el plenario pueden demandar más tiempo a algunos estudiantes. La distribución se ajustó a inicio 10, casos 50, procedimiento y revisión 20 y cierre 10 minutos, con la pregunta 15 oral para reducir escritura repetida. Los 90 minutos son un supuesto de planificación, no una duración medida. Observar el ritmo real y conceder tiempo o apoyo lector cuando corresponda, manteniendo la exigencia de justificar. No interpretar una guía incompleta por falta de tiempo como ausencia automática de la habilidad.
 
 ## Autenticidad de la tarea
 
@@ -55,7 +53,7 @@ La actividad aproxima decisiones reales antes de compartir un mensaje: revisar u
 
 Se simplificaron consignas extensas, se unificó el tratamiento individual y se eliminó texto interpretativo de las fichas que adelantaba las conclusiones. Se conservaron hechos, fechas, origen y enlaces. Se retiraron las tablas de contraste y la página de estrategia solicitadas por el docente, sin sustituirlas por nuevas respuestas modelo.
 
-La ficha inicial conserva el objetivo y las instrucciones breves. Cada caso ofrece datos suficientes para responder sin recursos externos. Las preguntas de selección exigen justificar con dos datos; las abiertas escritas reservan entre tres y seis renglones, y el informe dispone de quince. El PDF tiene 80 renglones de 8 mm, sin reducir la letra para ajustar la paginación.
+La ficha inicial conserva el objetivo y las instrucciones breves. Cada caso ofrece datos suficientes para responder sin recursos externos. Las preguntas de selección exigen justificar con dos datos; las abiertas escritas reservan entre tres y seis renglones. El PDF tiene 61 renglones de 8 mm, sin reducir la letra para ajustar la paginación.
 
 Persisten dos límites principales: expediente previamente seleccionado y falta de pilotaje de tiempo/corrección. Se recomienda contrastar, después de la aplicación, las respuestas omitidas y las consignas que requirieron explicación adicional. Esta revisión no inventa resultados de aula.
 
@@ -69,9 +67,12 @@ Corrección de formato del 6 de octubre: el membrete conserva Inter, nombre inst
 
 ## Mejoras aplicadas tras evaluación docente del diseño
 
-Se aclararon las preguntas 4, 6, 7, 12, 16 y 18: decisión sobre el mensaje, zonas afectadas, hora del hecho, justificación de la decisión y límite expresado como aquello que no se puede asegurar. La 16 pregunta por el valor probatorio de los recursos sin anticipar la respuesta. La 6 dispone de cuatro renglones. La 15 es oral, apoyada en respuestas previas; no cuenta como omisión escrita. La 19 tiene cuatro renglones y recoge qué comprobar antes de compartir. Esa respuesta muestra reflexión e intención, no hábitos observados.
+Se aclararon las preguntas 4, 6, 7, 12 y 16: decisión sobre el mensaje, zonas afectadas, hora del hecho, justificación de la decisión y límite expresado como aquello que no se puede asegurar. La 16 pregunta por el valor probatorio de los recursos sin anticipar la respuesta. La 6 dispone de cuatro renglones. La 15 es oral, apoyada en respuestas previas; no cuenta como omisión escrita.
 
 La planificación explicita contenidos conceptual, procedimental y actitudinal, una activación oral de cuatro conceptos y criterios de seguimiento. El plenario considera tres intervenciones breves, una por caso; no se califica por hablar en público. El tiempo sigue siendo una hipótesis pendiente de aplicación. Se conserva el expediente impreso, el objetivo y el formato institucional, sin reintroducir la página explicativa ni las tablas retiradas.
 
 
 Actualización de formatos (6 de octubre): «Vecinos Talca Norte» incluye alivio, preocupación y pregunta por la fuente; la publicación electoral conserva B e incorpora cuatro respuestas de creencia, duda y opinión. D1 y S1 se presentan como «Fuente oficial · Recreación» de X con perfiles institucionales e insignias. Son paráfrasis de documentos enlazados, no tuits comprobados. La 14 y la 16 permiten examinar perfil, enlace, insignia y reacciones sin tratarlos como prueba suficiente. La fuente y sus fechas conservan el papel de evidencia. No se amplía la carga de respuestas ni el tiempo previsto.
+
+
+Por indicación docente se retira completa la última página: preguntas 18 y 19, informe, cuadro de revisión y observación docente. La síntesis permanece en las justificaciones de casos y el plenario, sin exigir otro producto. Guía vigente de nueve A4 y 61 renglones, con dieciséis consignas escritas y una oral.

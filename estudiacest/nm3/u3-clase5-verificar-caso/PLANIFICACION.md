@@ -12,7 +12,7 @@ El docente solicita todo impreso y una sola diapositiva para explicar la tarea. 
 - Desarrollo, 65 minutos: explicar la diapositiva y las páginas; caso 1, 15 minutos; caso 2, 15; caso 3, 15; comparación e informe, 20. Trabajo individual, con contraste de ideas en parejas permitido. Cada estudiante escribe su guía.
 - Cierre, 15 minutos: plenario de conclusiones con fuente y fecha, revisión del procedimiento, reflexión final y entrega de la guía completa. Si el curso requiere más tiempo, el docente ajusta el ritmo observado; no se presenta el cronograma como duración real medida.
 
-Carga diseñada: tres expedientes, diecinueve consignas numeradas (preguntas abiertas o selección con justificación), 83 renglones de al menos 7 mm, incluida la comparación escrita. Informe de 80 a 110 palabras. Los tiempos son hipótesis didácticas pendientes de aplicación; no hay espera obligatoria ni temporizador. Para quienes terminan, revisar si alguna conclusión excede el alcance de su fuente y mejorar el informe.
+Carga diseñada: tres expedientes, diecinueve consignas numeradas (preguntas abiertas o selección con justificación), 81 renglones de 8 mm, incluida la comparación escrita. Informe de 80 a 110 palabras. Los tiempos son hipótesis didácticas pendientes de aplicación; no hay espera obligatoria ni temporizador. Para quienes terminan, revisar si alguna conclusión excede el alcance de su fuente y mejorar el informe.
 
 ## Monitoreo y evaluación de proceso
 
@@ -22,7 +22,7 @@ La guía incluye una revisión de proceso y espacio para observación docente. N
 
 ## Fuentes y estatus de los casos
 
-Las publicaciones A y el comentario B son recreaciones didácticas explícitas, no capturas de rumores realmente circulados. Los hechos y los registros documentales son reales y se verificaron con fuentes primarias: NASA Earthdata (imagen capturada el 22-01-2017, publicada el 23-01-2017, página actualizada el 14-05-2025), DIRECTEMAR (cancelación total de 08:50 del 31-07-2025) y Servel (elecciones municipales y regionales de octubre de 2024). Las fuentes y enlaces están impresos en los casos. Los documentos se presentan en paráfrasis, no como comunicados originales ni citas literales. D2 se identifica como explicación de la guía, no fuente independiente.
+Las publicaciones A y el comentario B son recreaciones didácticas explícitas, no capturas de rumores realmente circulados. Los hechos y los registros documentales son reales y se verificaron con fuentes primarias: NASA Earthdata (imagen capturada el 22-01-2017, publicada el 23-01-2017, página actualizada el 14-05-2025), DIRECTEMAR (cancelación total de 08:50 del 31-07-2025) y Servel (elecciones municipales y regionales de octubre de 2024). Las fuentes y enlaces están impresos en los casos. Los documentos se presentan en paráfrasis, no como comunicados originales ni citas literales. La explicación «Quién registra el hecho» describe la competencia institucional; no es una fuente adicional ni anticipa la conclusión.
 
 Imagen documental: NASA/NOAA Suomi NPP, VIIRS, misma imagen en ambas reproducciones. Se conserva el JPG descargado; el derivado solo cambia a escala de grises. Las dos ilustraciones de acompañamiento se generaron con image_gen y se mantienen como acompañamiento. A solicitud docente no llevan leyendas visibles; no prueban los casos. Originales, prompts y derivados guardados en assets/.
 
@@ -36,14 +36,20 @@ Fuente reproducible: `node scripts/generate-nm3-verificar-caso.js`. Auditoría y
 
 Corrección solicitada el 6 de octubre: Instagram para la imagen de incendios, WhatsApp para la cadena y X para la elección y su comentario. Los perfiles, contadores y mensajes son inventados y llevan el rótulo breve de recreación; las páginas oficiales son fichas adaptadas con dominio, título y fecha. Se evalúa también cómo el formato influye en la confianza o urgencia, sin convertir reacciones o reenvíos en evidencia.
 
-Se aplica el membrete oficial aprobado desde la guía NM2 SIMCE Clase 2, documentado en REGLAS.md y referencias/formato-institucional/. Logos, contactos, nombre completo y ficha institucional; márgenes A4 de 1 cm vertical y 1,2 cm horizontal. La primera página contiene objetivo, ficha e instrucciones; los casos comienzan en la segunda. Se conservan 83 renglones de 7 mm.
+Se aplica el membrete oficial aprobado desde la guía NM2 SIMCE Clase 2, documentado en REGLAS.md y referencias/formato-institucional/. Logos, contactos, nombre completo y ficha institucional; márgenes A4 de 1 cm vertical y 1,2 cm horizontal. La primera página contiene objetivo, ficha e instrucciones; los casos comienzan en la segunda. Se conservan 81 renglones de 8 mm.
 
 ## Ampliación de las imágenes satelitales
 
-A solicitud docente del 6 de octubre, la publicación del caso 1 ocupa la página 2 y el expediente NASA la página 3. Cada imagen completa se presenta a casi todo el ancho útil del A4 (más de 175 mm), sin recortes, deformación ni cambios en el archivo. Las respuestas van en la página 4; los casos 2 y 3 en 5/6 y 7/8; comparación e informe en 9/10. Se mantienen 83 renglones y el membrete. La guía consta de diez páginas; impresión a doble cara en cinco hojas.
+A solicitud docente del 6 de octubre, la publicación del caso 1 ocupa la página 2 y el expediente NASA la página 3. Cada imagen completa se presenta a casi todo el ancho útil del A4 (más de 175 mm), sin recortes, deformación ni cambios en el archivo. Las respuestas van en la página 4; los casos 2 y 3 en 5/6 y 7/8; comparación e informe en 9/10. Se mantienen 81 renglones y el membrete. La guía consta de diez páginas; impresión a doble cara en cinco hojas.
 
-Francisco solicita quitar todas las tablas de contraste: se elimina S2 y la tabla final de la consigna 15. Esa consigna queda como pregunta abierta con seis renglones. Se conservan las fuentes, la ficha institucional y los conceptos; 83 renglones en total.
+Francisco solicita quitar todas las tablas de contraste: se elimina S2 y la tabla final de la consigna 15. Esa consigna queda como pregunta abierta con seis renglones. Se conservan las fuentes, la ficha institucional y el registro primario NASA; 81 renglones en total.
 
 ## Simplificación de la apertura
 
 Por solicitud explícita de Francisco se retiran el cuadro «Qué entregan» y toda la página «Cómo verificar un mensaje», con su tabla de pistas, procedimiento y ejemplo resuelto. Las imágenes grandes, fuentes y consignas permanecen. No se recrean esos bloques en otra parte de la guía. Diapositiva y referencias de página se sincronizan con las diez páginas finales.
+
+## Tipografía, espacio y revisión del instrumento
+
+Por indicación de Francisco, toda la guía utiliza Times New Roman de 12 puntos y títulos de 14, manteniendo el membrete y la ficha oficiales. El PDF incrusta Times New Roman; no se redistribuyen los archivos de fuente del sistema. Los 81 renglones tienen 8 mm de alto. Se simplifican consignas, se unifica el tratamiento individual y se retiran comentarios de las fichas que anticipaban respuestas. Se mantiene la diapositiva con letra apropiada para proyección.
+
+La revisión de diseño del instrumento está documentada en `referencias/formato-institucional/VALIDACION_NM3_VERIFICAR_CASO.md`, fuera de la publicación del estudiante. Evalúa verificación guiada de expedientes impresos; no acredita ejecución autónoma de búsqueda inversa en internet. Se valoran afirmación precisa, evidencia pertinente, uso de fuente y fecha, y conclusión con límites. Las etiquetas sin justificación, la caligrafía y el conteo de palabras por sí solos no acreditan la habilidad. Es una revisión de diseño, sin pilotaje ni validación psicométrica.

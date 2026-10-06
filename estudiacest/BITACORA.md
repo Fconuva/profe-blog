@@ -1,5 +1,12 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-06, NM3: Times New Roman 12/14, espacio y revisión del instrumento
+
+- Francisco solicita Times New Roman de 12 puntos, títulos de 14, uso adecuado de los espacios e indicaciones simples bajo revisión del instrumento. Se aplica a toda la guía, incluidos encabezados, fichas, fuentes y pies; el PDF incrusta la fuente. Se conserva el membrete y la ficha oficiales, diez A4, imágenes completas mayores de 175 × 85 mm y formatos Instagram/WhatsApp/X. La diapositiva conserva tamaños para proyección.
+- Se simplifican consignas, se unifica el tratamiento individual y se retiran comentarios de las fuentes que anticipaban conclusiones. La guía tiene 81 renglones de 8 mm, espacios de identificación y diecinueve consignas. Se mantienen los retiros solicitados: sin cuadro «Qué entregan», página «Cómo verificar un mensaje», tablas de contraste ni leyendas visibles de IA.
+- Revisión documentada con assessment-validity-checker en `referencias/formato-institucional/VALIDACION_NM3_VERIFICAR_CASO.md`, interna y excluida del despliegue. Examina constructo, cobertura, criterios de revisión, acceso, autenticidad y límites. El uso sustentado es evaluación formativa de verificación guiada con expediente impreso; no ejecución autónoma de búsqueda inversa. Sin pilotaje, validación psicométrica, notas o ponderaciones inventadas.
+- Generador aprobado: diez A4 con y sin fondos, sin desbordes y 81 renglones de 8 mm. PDF real renderizado y páginas abiertas; se corrigió el quiebre de la etiqueta Habilidades sin reducir letra. `pdffonts` confirma Times New Roman regular, negrita y cursiva incrustadas. Auditoría local final: 169 comprobaciones, cero errores, cuatro anchos, tamaños computados 12/14 puntos, ficha sin cortes, imágenes, descarga y diez A4. Evidencias `%TEMP%/nm3-times-12-final` y `%TEMP%/nm3-verificar-qa-AHMJPe`. Build integral aprobado con 708 recursos. Planificación sincronizada. Publicación y prueba pública se registran al concluir.
+
 ## 2026-10-06, NM3: retiro de «Qué entregan» y de la página de estrategia
 
 - Francisco solicita eliminar el cuadro «Qué entregan» de la portada y toda la página «Cómo verificar un mensaje», incluidos pistas, procedimiento, ejemplo ficticio y modelo de justificación. Se retiran ambos bloques sin reubicarlos. El encabezado copiado por el docente forma parte de esa página eliminada; el membrete oficial de las hojas restantes se conserva.

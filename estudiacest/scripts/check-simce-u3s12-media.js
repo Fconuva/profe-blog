@@ -15,7 +15,9 @@ const files = [
   'estudiantes/simce-u3-clase12-entrevista/docente.html',
   'estudiantes/simce-u3-clase12-entrevista/guia-imprimible.pdf',
   'estudiantes/assets/u3s12/modelo-entrevista-para.mp4',
-  'estudiantes/assets/u3s12/modelo-entrevista-para.vtt'
+  'estudiantes/assets/u3s12/modelo-entrevista-para.vtt',
+  'estudiantes/js/simce-u3s12.js',
+  'estudiantes/simce-u3-clase12-entrevista/guia-imprimible.html'
 ];
 async function main() {
   const probe = JSON.parse(execFileSync('ffprobe',['-v','quiet','-show_streams','-of','json',path.join(root,files[4])],{encoding:'utf8'}));
@@ -47,8 +49,8 @@ async function main() {
       const errors = [];
       page.on('pageerror', error => errors.push(error.message));
       await page.goto(`${origin}/estudiantes/simce-u3-clase12-entrevista/`, { waitUntil:'networkidle' });
-      assert.equal(await page.locator('.slide').count(), 21);
-      for (let slide = 0; slide < 21; slide++) {
+      assert.equal(await page.locator('.slide').count(), 15);
+      for (let slide = 0; slide < 15; slide++) {
         assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, `Desborde ${width}, pantalla ${slide+1}`);
         if (slide === 5) {
           const video = page.locator('video');
@@ -73,28 +75,38 @@ async function main() {
           assert.equal(result.playing, true);
           assert.ok(result.current > 0);
         }
-        if (slide < 20) await page.locator('#next').click();
+        if (slide < 14) await page.locator('#next').click();
       }
       assert.deepEqual(errors, []);
-      console.log(`Presentación pública ${width}px: 21 pantallas, sin desborde ni errores, video reproducible.`);
+      console.log(`Presentación ${width}px: 15 pantallas, sin desborde ni errores, video reproducible.`);
       if(server) {
         await page.goto(`${origin}/estudiantes/guia-u3-s12-entrevista.html?preview=1`,{waitUntil:'networkidle'});
         assert.equal(await page.locator('[data-reading]').count(),3);
         assert.equal(await page.locator('[data-question]').count(),24);
-        assert.equal(await page.locator('textarea').count(),7);
+        assert.equal(await page.locator('textarea').count(),1);
         assert.equal(await page.locator('#cierre textarea').count(),1);
         assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+        fs.mkdirSync(path.join(root,'test-results'),{recursive:true});
+        await page.locator('#aprender').screenshot({path:path.join(root,'test-results',`simce-u3s12-contenido-${width}.png`)});
+        await page.locator('[data-question="q1"]').screenshot({path:path.join(root,'test-results',`simce-u3s12-pregunta-${width}.png`)});
         for(let n=1;n<=24;n++)await page.locator(`[data-question="q${n}"] .option`).first().click();
-        for(const id of ['g1','g2','a1','a2','a3','a4','m1'])await page.locator(`#${id}`).fill('Respuesta ficticia para verificar la interfaz y su validación: relaciona la cita y explica sus límites con detalle suficiente.');
+        for(const [index,range] of [[1,[1,12]],[2,[13,18]],[3,[19,24]]]) {
+          const group=page.locator(`[data-reading="texto${index}"]`);
+          const actual=await group.locator('[data-question]').evaluateAll(nodes=>nodes.map(node=>Number(node.dataset.question.slice(1))));
+          assert.deepEqual(actual,Array.from({length:range[1]-range[0]+1},(_,i)=>i+range[0]));
+          assert.equal(await group.locator('.reading').evaluate(el=>el.nextElementSibling?.classList.contains('reading-questions')),true);
+        }
+        await page.locator('#m1').fill('Respuesta ficticia para verificar la interfaz y su validación: relaciona la cita y explica sus límites con detalle suficiente.');
         await page.locator('#submit').click();
         assert.match(await page.locator('#saveState').innerText(),/validación está correcta/);
-        assert.match(await page.locator('#progressText').innerText(),/24\/24.*6\/6.*1\/1/);
+        assert.match(await page.locator('#progressText').innerText(),/24\/24.*1\/1/);
+        assert.equal(await page.locator('#progressFill').evaluate(el=>el.style.width),'100%');
         assert.deepEqual(errors,[]);
-        console.log(`Guía local ${width}px: tres lecturas, 24 ítems, seis tareas y un cierre, validación completa.`);
+        console.log(`Guía local ${width}px: tres lecturas con sus preguntas, 24 ítems y un cierre, validación completa.`);
       }
       await page.close();
     }
   } finally { await browser.close(); }
-  console.log('Seis recursos públicos coinciden en SHA-256; MP4 con audio AAC y 14 subtítulos sincronizados.');
+  console.log('Ocho recursos coinciden en SHA-256; MP4 con audio AAC y 14 subtítulos sincronizados.');
 }
 main().catch(error => { console.error(error); process.exitCode = 1; }).finally(()=>{if(server)server.close();});

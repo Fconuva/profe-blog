@@ -12,8 +12,7 @@
   const SESSION_ID = 'sesion-u3-12';
   const QUESTION_IDS = Array.from({ length:24 }, (_, index) => `q${index + 1}`);
   const QUESTIONS = QUESTION_IDS;
-  const WORK_IDS = ['g1', 'g2', 'a1', 'a2', 'a3', 'a4'];
-  const META_IDS = [...WORK_IDS, 'm1'];
+  const META_IDS = ['m1'];
   const META_MIN = 25;
   const LOCAL_PREVIEW = ['localhost', '127.0.0.1'].includes(location.hostname) && new URLSearchParams(location.search).get('preview') === '1';
   const LOGIN_URL = `/lecturas/?next=${encodeURIComponent('/estudiantes/guia-u3-s12-entrevista.html')}`;
@@ -53,10 +52,9 @@
 
   function updateUi() {
     const answered = QUESTION_IDS.filter((id) => answers[id]).length;
-    const workReady = WORK_IDS.filter((id) => $(id).value.trim().length >= 80).length;
     const metaReady = $('m1').value.trim().length >= META_MIN ? 1 : 0;
-    $('progressText').textContent = `${answered}/24 preguntas · ${workReady}/6 tareas · ${metaReady}/1 cierre`;
-    $('progressFill').style.width = `${Math.round(((answered + workReady + metaReady) / 31) * 100)}%`;
+    $('progressText').textContent = `${answered}/24 preguntas · ${metaReady}/1 cierre`;
+    $('progressFill').style.width = `${Math.round(((answered + metaReady) / 25) * 100)}%`;
     META_IDS.forEach((id) => { $(`count-${id}`).textContent = $(id).value.length; });
   }
 
@@ -153,11 +151,11 @@
 
   function validate() {
     const missing = QUESTION_IDS.filter((id) => !answers[id]);
-    const shortMeta = META_IDS.filter((id) => $(id).value.trim().length < (WORK_IDS.includes(id) ? 80 : META_MIN));
+    const shortMeta = META_IDS.filter((id) => $(id).value.trim().length < META_MIN);
     const fields = [...missing, ...shortMeta];
     markMissing(fields);
     if (!fields.length) return true;
-    setMessage(`Faltan ${missing.length} alternativas y ${shortMeta.length} respuestas escritas (taller o cierre) por completar.`);
+    setMessage(`Faltan ${missing.length} alternativas y ${shortMeta.length} respuesta de cierre por completar.`);
     return false;
   }
 
@@ -168,7 +166,7 @@
       return;
     }
     if (!user) return;
-    if (!window.confirm('¿Confirmas tus 24 respuestas, seis tareas escritas y una respuesta de cierre? Después no podrás modificarlos.')) return;
+    if (!window.confirm('¿Confirmas tus 24 respuestas y tu respuesta de cierre? Después no podrás modificarlas.')) return;
     submitting = true;
     $('submit').disabled = true;
     $('submit').textContent = 'Confirmando…';

@@ -1,5 +1,13 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-06, SIMCE U3S12: contenido disciplinar y preguntas junto a cada texto
+
+- Por pedido de Francisco se retiran las cuatro tarjetas de ruta, los bloques Conceptual/Procedimental/Actitudinal y PARA. Se enseña entrevista no literaria y dialogada, propósito y audiencia, participantes, presentación/cuerpo/cierre, preguntas abiertas/cerradas, repregunta, sesgo, opinión y evidencia. Fuente curricular primaria revisada: LE2M OA10 (propósitos, evidencia y efectos del lenguaje) y OA19 para el video; los conceptos elegidos no se atribuyen como lista literal del OA.
+- Las tres entrevistas quedan seguidas de sus preguntas 1–12, 13–18 y 19–24. Se conservan íntegros los textos, identificadores, alternativas y pauta privada 5/12/7. Por nueva indicación se elimina el taller de seis tareas: cliente y servidor solo requieren 24 alternativas y m1. Autoguardado y entrega conservan g1/g2/a1–a4/m2/m3 históricos, incluyendo textos de más de 700 caracteres; no se modifican notas ni datos de estudiantes.
+- Presentación sincronizada: 15 pantallas, conceptos reales y actividad sin instrucciones a campos eliminados. Planificación registra contenido y convivencia dentro de la secuencia; tiempos previstos, no pilotados. PDF regenerado: 15 A4 reales, preguntas junto a cada lectura, taller retirado y cierre conservado. Abiertas las páginas de contenido y cierre sin cortes.
+- Regla prospectiva incorporada a REGLAS.md, sección 13: siempre enseñar contenido disciplinar; habilidades y actitudes integradas, no separadas como etiquetas; preguntas inmediatamente después de su texto y requisitos de entrega coherentes con la actividad vigente. No se reescriben otras clases ni la ruta personal.
+- Pruebas locales: auditoría focal y contrato de 51 entregas; cinco pruebas aisladas de entrega, conservación histórica y permisos; navegador 390/1440/3840 px con 24 respuestas + cierre, progreso 100 %, sin desborde ni errores, video reproducible. Build integral aprobado y 711 recursos críticos verificados. Publicación y comprobación pública pendientes de registrar al cierre.
+
 ## 2026-10-06, NM3: retirar la página del informe final
 
 - Por instrucción de Francisco se elimina completa la última página, incluido informe 18 de 80–110 palabras, reflexión 19, cuadro «Revisa tus respuestas» y campos de revisión docente. La guía termina en la 17: nueve A4, dieciséis consignas escritas y una oral, 61 renglones de 8 mm. Se conserva el membrete/pie exacto, letra 12/14 y todos los casos, imágenes y respuestas sociales. La numeración pasa a «de 9».

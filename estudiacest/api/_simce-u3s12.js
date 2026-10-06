@@ -74,9 +74,9 @@ function scoreAnswers(answers) {
 
 function validateFinal(payload) {
     const unanswered = Object.keys(ANSWER_KEY).filter((id) => !payload.answers[id]);
-    const shortMeta = [...WORK_IDS, 'm1'].filter((id) => payload.metaResponses[id].length < (WORK_IDS.includes(id) ? 80 : META_MIN));
+    const shortMeta = ['m1'].filter((id) => payload.metaResponses[id].length < META_MIN);
     if (unanswered.length || shortMeta.length) {
-        const error = new Error('Completa las 24 preguntas, las seis tareas escritas y la pregunta de cierre antes de confirmar.');
+        const error = new Error('Completa las 24 preguntas y la pregunta de cierre antes de confirmar.');
         error.status = 400;
         error.fields = [...unanswered, ...shortMeta];
         throw error;
@@ -151,9 +151,9 @@ async function manejar(req, res, action, db, auth) {
         const request = bodyOf(req);
         const payload = { answers:cleanAnswers(request.answers), metaResponses:cleanMeta(request.metaResponses) };
         // Conservar evidencia histórica retirada de la interfaz, sin exigirla de nuevo.
-        for (const id of ['m2','m3']) {
+        for (const id of [...WORK_IDS, 'm2','m3']) {
             if (!Object.prototype.hasOwnProperty.call(request.metaResponses || {}, id)) {
-                payload.metaResponses[id] = cleanText(current?.metaResponses?.[id]);
+                payload.metaResponses[id] = cleanText(current?.metaResponses?.[id], WORK_IDS.includes(id) ? 1200 : 700);
             }
         }
         const now = Date.now();
@@ -171,7 +171,7 @@ async function manejar(req, res, action, db, auth) {
                 last_save:now,
                 score:null,
                 total:24,
-                version:'entrevista-tres-textos-v2',
+                version:'entrevista-texto-preguntas-v3',
                 formativa:true
             });
             return res.status(200).json({ ok:true, updatedAt:now });

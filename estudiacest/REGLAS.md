@@ -293,6 +293,26 @@ autoriza a rehacer automáticamente materiales o evaluaciones ya publicados.
 
 ### Planificación y presentación de la clase
 
+- Por decisión de Francisco (6-oct-2026), toda clase incluye **contenido
+  disciplinar enseñado**: conceptos, definiciones, partes o relaciones que
+  permiten comprender el tema, con ejemplos breves y organización visual
+  pertinente. Un objetivo, una ruta de pasos o una lista de «qué aprenderás»
+  no reemplazan ese contenido. Seleccionarlo desde el currículo chileno del
+  nivel y los OA trabajados; no confundir un concepto didáctico elegido con
+  una exigencia literal del OA.
+- Integrar lo procedimental en el modelamiento y las acciones de la actividad,
+  y lo actitudinal en las normas, la interacción y el uso responsable de la
+  información. **No mostrarlos como bloques separados «Conceptual»,
+  «Procedimental» y «Actitudinal»**, ni duplicar el objetivo con tarjetas de
+  promesas. La planificación deja trazable qué se enseña y qué observa el
+  docente dentro de la secuencia.
+- En guías de lectura con varios textos, ubicar las preguntas de cada texto
+  **inmediatamente después de su lectura**, antes de comenzar la siguiente.
+  Conservar numeración, identificadores y guardado al reordenar. Si Francisco
+  retira una actividad, quitar también su requisito de entrega sin borrar
+  respuestas históricas. En SIMCE U3S12 se mantienen tres entrevistas,
+  24 alternativas y un cierre; no se exige el taller de seis productos retirado.
+
 - Por indicación reiterada de Francisco (5-oct-2026), las clases de lectura
   SIMCE NM2 no se sostienen en una única lectura breve. Incluir varios textos
   completos y trabajo de transferencia o comparación con evidencia. Ajustar

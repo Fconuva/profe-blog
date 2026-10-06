@@ -3,7 +3,7 @@
 const crypto = require('crypto');
 const assert = require('node:assert/strict');
 const { chromium } = require('playwright');
-const { closeFirebase, readPlatform, updatePlatform } = require('./firebase-maintenance-db');
+const { BASE_PATH, closeFirebase, getAccessToken, requestJson, updatePlatform } = require('./firebase-maintenance-db');
 
 const API_KEY = 'AIzaSyCuDQ_iHDHmTd8bPeqUbsXQqdxw2SObt8w';
 const SESSION_ID = 'sesion-u3-12';
@@ -60,12 +60,13 @@ async function main() {
       assert.equal(await page.locator('[data-question]').count(), 24);
       assert.equal(await page.locator('[data-reading]').count(), 3);
       assert.equal(await page.locator('#cierre textarea').count(), 1);
-      assert.equal(await page.locator('textarea').count(), 7);
-      console.log('Panel público: Clase 12 visible, tres textos, 24 preguntas y seis productos escritos en celular.');
+      assert.equal(await page.locator('textarea').count(), 1);
+      console.log('Panel público: Clase 12 visible, tres textos con sus preguntas y un cierre en celular.');
     } finally { await browser.close(); }
 
     const draftAnswers = { q1:'A', q2:'A', q3:'A', q4:'A' };
-    await callClass(origin, idToken, 'simce-u3s12-save', 'POST', { answers:draftAnswers, metaResponses:{ m1:'', m2:'Evidencia histórica ficticia que debe conservarse.', m3:'Reflexión histórica ficticia que debe conservarse.' }, startedAt:Date.now() });
+    const historicalWork = Object.fromEntries(['g1','g2','a1','a2','a3','a4'].map(id=>[id, 'Respuesta histórica ficticia de prueba ' + id + ': ' + 'evidencia previa que debe conservarse. '.repeat(24)]));
+    await callClass(origin, idToken, 'simce-u3s12-save', 'POST', { answers:draftAnswers, metaResponses:{ ...historicalWork, m1:'', m2:'Evidencia histórica ficticia que debe conservarse.', m3:'Reflexión histórica ficticia que debe conservarse.' }, startedAt:Date.now() });
     await callClass(origin, idToken, 'simce-u3s12-save', 'POST', { answers:draftAnswers, metaResponses:{ m1:'' } });
     const draft = await callClass(origin, idToken, 'simce-u3s12-state');
     if (!draft.attempt || draft.attempt.submitted || draft.attempt.completada || Object.keys(draft.attempt.answers || {}).length !== 4) {
@@ -76,12 +77,11 @@ async function main() {
       body:JSON.stringify({answers:Object.fromEntries(Array.from({length:12},(_,i)=>[`q${i+1}`,'A'])),metaResponses:{m1:'Reflexión ficticia desarrollada para la prueba.',m2:'Reflexión ficticia desarrollada para la prueba.',m3:'Reflexión ficticia desarrollada para la prueba.'}})
     });
     const incomplete=await incompleteResponse.json();
-    assert.equal(incompleteResponse.status,400,'El servidor debe exigir las nuevas tareas.');
-    assert.ok(incomplete.fields.includes('q13') && incomplete.fields.includes('g1'));
+    assert.equal(incompleteResponse.status,400,'El servidor debe exigir las 24 alternativas.');
+    assert.ok(incomplete.fields.includes('q13') && !incomplete.fields.includes('g1'));
 
     const answers = Object.fromEntries(Array.from({ length:24 }, (_, index) => [`q${index + 1}`, 'A']));
     const metaResponses = {
-      ...Object.fromEntries(['g1','g2','a1','a2','a3','a4'].map(id=>[id, 'Respuesta ficticia de verificación técnica: cita el fragmento, explica la relación y reconoce los límites de la evidencia del texto.'])),
       m1:'La pregunta delimita el aspecto que la respuesta debe desarrollar.'
     };
     await callClass(origin, idToken, 'simce-u3s12-submit', 'POST', { answers, metaResponses, startedAt:Date.now() - 120000 });
@@ -90,13 +90,16 @@ async function main() {
       throw new Error('La relectura pública no confirmó submitted y completada.');
     }
     Object.entries(metaResponses).forEach(([id,value])=>assert.equal(finalState.attempt.metaResponses[id],value,`Escritura no conservada: ${id}`));
+    Object.entries(historicalWork).forEach(([id,value])=>assert.equal(finalState.attempt.metaResponses[id],value,`Evidencia histórica no conservada: ${id}`));
     assert.equal(finalState.attempt.metaResponses.m2,'Evidencia histórica ficticia que debe conservarse.');
     assert.equal(finalState.attempt.metaResponses.m3,'Reflexión histórica ficticia que debe conservarse.');
     if (finalState.result !== null) throw new Error('El resultado se publicó antes de la liberación docente.');
 
-    const platform = await readPlatform();
-    const storedResponse = platform.respuestas?.[SESSION_ID]?.[uid];
-    const storedResult = platform.resultados?.[SESSION_ID]?.[uid];
+    const accessToken = getAccessToken();
+    const [storedResponse, storedResult] = await Promise.all([
+      requestJson('GET', `${BASE_PATH}/respuestas/${SESSION_ID}/${uid}`, accessToken),
+      requestJson('GET', `${BASE_PATH}/resultados/${SESSION_ID}/${uid}`, accessToken)
+    ]);
     if (!storedResponse?.submitted || !storedResponse?.completada || storedResult?.total !== 24 || storedResult?.score !== 6 || !storedResult?.ticket?.comparacion_entrevistas) {
       throw new Error('La verificación administrativa no coincide con la entrega controlada.');
     }

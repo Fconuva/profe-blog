@@ -1,5 +1,11 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-06, NM3: publicación de imágenes y conversaciones verificada
+
+- Publicado el commit `ed3d67c004e33aad084250d29a0618d5b7298d6c` mediante `deploy:prod:safe`, con todas las guardas y 711 recursos: `dpl_De3GgYKyMSbwNMmDkE9ATUEmftop`, proceso terminado con código 0. Alias `www.estudiacest.com` READY, proyecto `prj_v2yUaXflcSoBgunqmn1rAEfh0KMR` y SHA exacto comprobados por API. El primer proceso terminó inesperadamente con `-1073740791`, sin diagnóstico ni subida; se verificó ausencia de procesos de despliegue y alias anterior antes de reintentar el flujo completo.
+- Auditoría pública: 193 comprobaciones, cero errores, cuatro anchos, diez A4 con y sin fondos y 80 renglones de 8 mm; `%TEMP%/nm3-verificar-qa-BHOfUG`. Nueve recursos públicos responden 200 y coinciden exactamente por SHA-256, incluidas ambas fotografías NASA intactas y los tres assets nuevos. PDF 1.683.259 bytes, SHA-256 `45ec61b16d3114dcf4fb3b09c0c811283237b239c063a61684d6285384f1db46`.
+- Abiertas capturas públicas de páginas 2/3/5/7 (`%TEMP%/nm3-public-final-*.png`): nubes y fechas contrastables, «Vecinos Talca Norte» con respuestas, B identificado y perfiles Armada/Servel con insignia legible. PDF real abierto antes de publicar, sin cortes; membrete/pie conservados. Se entregan PDF y diapositiva públicos; impresión A4 al 100 %. Cierre documental sin otro despliegue; ajenos preservados.
+
 ## 2026-10-06, NM3: imágenes contrastables y respuestas de redes
 
 - Francisco solicita mayor diferencia entre Instagram y NASA y autoriza añadir nubes solo a la copia de la publicación recreada. Se edita con imagegen integrado; se conservan PNG original generado, JPG optimizado en grises y prompt/procedencia en `assets/imagen-publicacion-alterada.json`. NASA permanece intacto: original SHA-256 `bf12c6220a6689f25c2dddbad55b46685f742f72972f548275f50ea1a42b280a`, derivado gris `5168ecbe7935730a8a76a55bf824ff2c829961271535917f2a039226853d3988`. A muestra más nubes y afirma 3-02-2024; N1 muestra captura 22-01-2017. Fechas junto a las imágenes, preguntas 2/3/4 ajustadas a detalles conservados, nubes, fecha y conclusión; diapositiva y planificación sincronizadas.

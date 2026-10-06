@@ -1,5 +1,11 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-06, NM3: retiro de «Qué entregan» y de la página de estrategia
+
+- Francisco solicita eliminar el cuadro «Qué entregan» de la portada y toda la página «Cómo verificar un mensaje», incluidos pistas, procedimiento, ejemplo ficticio y modelo de justificación. Se retiran ambos bloques sin reubicarlos. El encabezado copiado por el docente forma parte de esa página eliminada; el membrete oficial de las hojas restantes se conserva.
+- Guía reducida a diez A4: portada con identificación, objetivo, instrucciones e ilustración; caso 1 en 2/3/4, caso 2 en 5/6, caso 3 en 7/8, comparación en 9 e informe en 10. Se sincronizan instrucciones, referencias, pies, diapositiva única y planificación. Permanecen las imágenes completas mayores de 175 × 85 mm, las fuentes reales, diecinueve consignas y 83 renglones de 7 mm. No regresan las tablas de contraste ni las leyendas de IA.
+- Generador aprobado con y sin fondos, diez A4 sin cortes. PDF real renderizado y abiertas portada y primer caso; evidencia `%TEMP%/nm3-apertura-simple`. Auditoría local final: 165 comprobaciones, cero errores, cuatro anchos, ausencia de bloques y referencias retirados, descarga exacta, imágenes grandes, tipografías e impresión; evidencia `%TEMP%/nm3-verificar-qa-zvFTyO`. Build integral aprobado con 708 recursos. Sin cambios de estudiantes, notas, cuentas, Firebase ni Lirmi. Publicación y pruebas públicas se registran al concluir.
+
 ## 2026-10-06, NM3: imágenes satelitales grandes y retiro de tablas de contraste
 
 - Francisco observa que las imágenes satelitales son demasiado pequeñas. El caso 1 se distribuye en dos páginas de lectura: Instagram en la 3 y expediente NASA en la 4, con dos reproducciones completas a más de 175 mm de ancho y 85 mm de alto. Se elimina la duplicación de miniaturas; no se recortan, deforman ni modifican los archivos de imagen. Se conserva el formato social y el membrete oficial.

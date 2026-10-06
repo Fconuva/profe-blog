@@ -12,9 +12,10 @@ async function main(){
  check(html.includes('Reenviado muchas veces')&&html.includes('1.248 Me gusta')&&html.includes('8.400 visualizaciones'),'Recursos del formato visibles');
  check(html.includes('Francisco Javier Núñez Valenzuela'),'Nombre institucional completo');
  check(!html.includes('S2.')&&!html.includes('class="summary"')&&!html.includes('Tabla de contraste'),'Sin tablas de contraste');
+ check(!/Qué entregan|Cómo verificar un mensaje|Tres pistas para verificar|El formato también comunica|Ejemplo resuelto|Lean el ejemplo/i.test(html+slide),'Bloques y referencias retirados');
  check(html.includes('No se permite el uso de celular'),'Trabajo sin celular');
  check(!/firebase|textarea|contenteditable/i.test(html+slide),'Sin respuestas digitales ni escritura de datos');
- check((html.match(/class="sheet"/g)||[]).length===11,'Once páginas');
+ check((html.match(/class="sheet"/g)||[]).length===10,'Diez páginas');
  check((slide.match(/class="slide"/g)||[]).length===1,'Una diapositiva');
  check(html.includes('22 de enero de 2017')&&html.includes('23 de enero de 2017')&&html.includes('14 de mayo de 2025'),'Tres fechas NASA separadas');
  check(html.includes('08:50 del 31 de julio')&&html.includes('30 de julio de 2025'),'Fecha del caso contrastable');
@@ -25,7 +26,7 @@ async function main(){
  browser=await chromium.launch({headless:true});const errors=[];
  for(const width of [320,390,1440,3840]){const page=await browser.newPage({viewport:{width,height:width>=2200?2160:width>=1000?900:844}});page.on('pageerror',e=>errors.push(e.message));page.on('requestfailed',r=>errors.push(r.url()+': '+r.failure()?.errorText));page.on('response',r=>{if(r.status()>=400)errors.push(r.url()+': '+r.status())});
   for(const file of ['','guia.html']){await page.goto(`${origin}/${base}/${file}`,{waitUntil:'networkidle'});await page.waitForFunction(()=>[...document.images].every(i=>i.complete&&i.naturalWidth));
-   const layout=await page.evaluate(()=>({overflow:document.documentElement.scrollWidth>innerWidth+1,images:[...document.images].every(i=>i.naturalWidth>0),pages:document.querySelectorAll('.sheet').length,slide:document.querySelectorAll('.slide').length,forms:document.querySelectorAll('textarea,input,form').length}));check(!layout.overflow,`${file} ${width}: ancho`);check(layout.images,`${file} ${width}: imágenes`);check(layout.forms===0,`${file} ${width}: trabajo en papel`);check(file?layout.pages===11:layout.slide===1,`${file} ${width}: estructura`);
+   const layout=await page.evaluate(()=>({overflow:document.documentElement.scrollWidth>innerWidth+1,images:[...document.images].every(i=>i.naturalWidth>0),pages:document.querySelectorAll('.sheet').length,slide:document.querySelectorAll('.slide').length,forms:document.querySelectorAll('textarea,input,form').length}));check(!layout.overflow,`${file} ${width}: ancho`);check(layout.images,`${file} ${width}: imágenes`);check(layout.forms===0,`${file} ${width}: trabajo en papel`);check(file?layout.pages===10:layout.slide===1,`${file} ${width}: estructura`);
    await page.screenshot({path:path.join(evidence,`${file?'guia':'diapositiva'}-${width}.png`),fullPage:file?false:true});
    if(!file){const pdfHref=await page.locator('a[download]').getAttribute('href');const response=await page.request.get(`${origin}/${base}/${pdfHref}`);check(response.ok(),`PDF ${width}: descarga`);const data=await response.body();check(crypto.createHash('sha256').update(data).digest('hex')===crypto.createHash('sha256').update(fs.readFileSync(path.join(root,base,'assets/guia-verificar-caso-nm3.pdf'))).digest('hex'),`PDF ${width}: bytes exactos`);}
   }
@@ -34,7 +35,7 @@ async function main(){
   check(satellites.length===2&&satellites.every(i=>i.width>=175&&i.height>=85&&Math.abs(i.ratio-i.naturalRatio)<.04&&i.fit==='contain'),`Imágenes completas y grandes ${width}: ${JSON.stringify(satellites)}`);
   const geometry=await page.evaluate(()=>[...document.querySelectorAll('.sheet')].map(s=>({id:s.dataset.page,overflow:s.scrollHeight>s.clientHeight+1,footer:s.querySelector('.footer').getBoundingClientRect().bottom<=s.getBoundingClientRect().bottom,lines:[...s.querySelectorAll('.answer-lines span')].every(x=>x.getBoundingClientRect().height>=26.4),logos:s.querySelectorAll('.membrete-banner img').length===2,identity:s.dataset.page==='1'?s.querySelectorAll('.info-table tr').length===6&&[...s.querySelectorAll('.write-in')].every(x=>x.getBoundingClientRect().height>=30.2):!!s.querySelector('.continuation')})));
   for(const g of geometry){check(!g.overflow&&g.footer,`Hoja ${g.id} ${width}: no cortes`);check(g.lines&&g.logos&&g.identity,`Hoja ${g.id} ${width}: renglones, logos e identificación`);}
-  for(const backgrounds of [false,true]){const pdf=await page.pdf({format:'A4',preferCSSPageSize:true,printBackground:backgrounds});const doc=await PDFDocument.load(pdf);check(doc.getPageCount()===11,`Impresión ${width} fondos=${backgrounds}: once páginas`);check(doc.getPages().every(p=>Math.abs(p.getWidth()-595.28)<1&&Math.abs(p.getHeight()-841.89)<1),'A4');}
+  for(const backgrounds of [false,true]){const pdf=await page.pdf({format:'A4',preferCSSPageSize:true,printBackground:backgrounds});const doc=await PDFDocument.load(pdf);check(doc.getPageCount()===10,`Impresión ${width} fondos=${backgrounds}: diez páginas`);check(doc.getPages().every(p=>Math.abs(p.getWidth()-595.28)<1&&Math.abs(p.getHeight()-841.89)<1),'A4');}
   await page.close();
  }
  const p=await browser.newPage();await p.goto(`${origin}/nm3/`,{waitUntil:'networkidle'});check(await p.locator('a[href="/nm3/u3-clase5-verificar-caso/"]').count()===1,'Acceso en portada');check((await p.locator('.u3-card').filter({hasText:'Verificar un caso real'}).innerText()).includes('Viernes 9 de octubre'),'Fecha portada');

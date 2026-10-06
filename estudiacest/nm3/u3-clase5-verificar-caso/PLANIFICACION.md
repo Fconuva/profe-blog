@@ -1,57 +1,75 @@
 # Clase 5 · Verificar un caso real
 
-Fecha de aplicación prevista: viernes 9 de octubre de 2026. NM3: 3°A, 3°B y 3°D. OA 4, análisis crítico de géneros de comunidades digitales y calidad de sus evidencias. Referencia curricular primaria: https://www.curriculumnacional.cl/curriculum/3o-4o-medio/lengua-literatura-3o-medio/3-medio-fg/fg-leli-3m-oac-04
+Aplicación prevista: viernes 9 de octubre de 2026. Nivel: 3° medio, NM3, cursos 3°A, 3°B y 3°D. Clase individual en papel, con conversación breve en parejas permitida. La web contiene una sola diapositiva, por instrucción del docente.
 
-Objetivo: Verificar afirmaciones sobre casos chilenos, contrastando imágenes, fuentes primarias y fechas, para fundamentar una conclusión responsable.
+## Objetivo y alcance
 
-El docente solicita todo impreso y una sola diapositiva para explicar la tarea. Por esta instrucción explícita la web presenta una única pantalla; la apertura y el cierre se conducen oralmente, y el trabajo se realiza en la guía. No se exige celular, cuenta, búsqueda en línea ni entrega digital. La búsqueda inversa se trabaja mediante comparación de una imagen auténtica y su expediente documental impreso; no se afirma que los estudiantes realizaron una búsqueda real ni que la ficha sea captura de un buscador.
+Verificar afirmaciones sobre casos chilenos, contrastando imágenes, fuentes primarias y fechas, para fundamentar una conclusión responsable.
+
+Se vincula con el OA 4, especialmente análisis de mensajes de comunidades digitales, modos de razonamiento y calidad de la evidencia. Referencia: https://www.curriculumnacional.cl/curriculum/3o-4o-medio/lengua-literatura-3o-medio/3-medio-fg/fg-leli-3m-oac-04
+
+Se evalúa verificación guiada con un expediente impreso. La comparación de imágenes y el archivo NASA aproxima el procedimiento de búsqueda inversa; no acredita que el estudiante ejecutó una búsqueda en internet ni seleccionó fuentes por sí mismo. El logro se determina revisando respuestas; esta planificación no afirma resultados de aula.
+
+## Contenidos y habilidades
+
+| Dimensión | Contenido y evidencia de trabajo |
+|---|---|
+| Conceptual | Afirmación, evidencia, fuente primaria, credibilidad, contexto y distinción entre fecha de captura, publicación y actualización. Se recuperan oralmente al inicio y se aplican a los casos. |
+| Procedimental | Identificar afirmaciones, comparar imágenes y documentos, contrastar fechas, citar datos, distinguir un hecho de una generalización y redactar una conclusión con límites. Consignas 1–18, con 15 oral. |
+| Actitudinal | Revisar antes de compartir, modificar una primera impresión ante evidencia y reconocer lo que no se puede asegurar. La 19 recoge una decisión razonada para futuras situaciones; no demuestra un hábito real de difusión. |
+
+Habilidad principal: evaluar críticamente información y fundamentar conclusiones. Habilidades de apoyo: localizar datos, comparar, interpretar, reconocer generalizaciones y sintetizar por escrito.
 
 ## Secuencia prevista de 90 minutos
 
-- Inicio, 10 minutos: preguntar qué vuelve creíble un mensaje; recordar trabajo en papel y sin celular; leer el objetivo. Explicar oralmente las consignas y cómo registrar afirmación, evidencia y conclusión, usando la publicación del primer caso. No se incluye una página de estrategia ni ejemplo resuelto en la guía.
-- Desarrollo, 65 minutos: explicar la diapositiva y las páginas; caso 1, 15 minutos; caso 2, 15; caso 3, 15; comparación e informe, 20. Trabajo individual, con contraste de ideas en parejas permitido. Cada estudiante escribe su guía.
-- Cierre, 15 minutos: plenario de conclusiones con fuente y fecha, revisión del procedimiento, reflexión final y entrega de la guía completa. Si el curso requiere más tiempo, el docente ajusta el ritmo observado; no se presenta el cronograma como duración real medida.
+| Momento | Tiempo | Acción y producto |
+|---|---:|---|
+| Inicio | 10 min | Activación, norma y objetivo; explicación oral de cuatro conceptos y demostración breve de una justificación. |
+| Caso 1 | 17 min | Leer páginas 2–3 y responder 1–5 en la 4. |
+| Caso 2 | 16 min | Leer página 5 y responder 6–10 en la 6. |
+| Caso 3 | 17 min | Leer página 7 y responder 11–14 en la 8, distinguiendo A y B. |
+| Procedimiento e informe | 20 min | Escribir 16–17 en la 9 e informe 18 en la 10. Reservar alrededor de 10 minutos para el informe. |
+| Cierre | 10 min | Plenario oral 15, reflexión escrita 19, síntesis y entrega presencial. |
 
-Carga diseñada: tres expedientes, diecinueve consignas numeradas (preguntas abiertas o selección con justificación), 81 renglones de 8 mm, incluida la comparación escrita. Informe de 80 a 110 palabras. Los tiempos son hipótesis didácticas pendientes de aplicación; no hay espera obligatoria ni temporizador. Para quienes terminan, revisar si alguna conclusión excede el alcance de su fuente y mejorar el informe.
+Son tiempos propuestos, pendientes de aplicación. No hay espera obligatoria ni temporizador. A los diez minutos de cada caso, comprobar si el curso identificó la afirmación y encontró evidencia; ayudar con la consigna cuando haga falta. Si la carga supera el tiempo observado, ampliar la sesión o permitir terminar el informe después; no convertir la velocidad de escritura en indicador de logro. Quienes terminan revisan si su conclusión excede lo que permite su fuente.
 
-## Monitoreo y evaluación de proceso
+### Inicio: activación conceptual oral
 
-Revisar durante el trabajo: efecto del perfil, reacciones, reenvíos y enlaces sobre la credibilidad; precisión de la afirmación; comparación de detalles de la imagen; separación entre captura, publicación y actualización; competencia de la fuente primaria; cita del código de ficha y un dato; conclusión coherente y límites de lo que se sabe. Retroalimentar preguntando «¿qué documento respalda eso?» y «¿de qué fecha hablas?». No basta una etiqueta sin explicación.
+Distribución orientativa: activación, 2 minutos; norma y objetivo, 1; conceptos, 3; demostración oral breve, 4. Preguntar qué hace creíble un mensaje y recoger dos respuestas. Recordar trabajo en papel y sin celular. Leer el objetivo.
 
-La guía incluye una revisión de proceso y espacio para observación docente. No se inventa escala numérica, ponderación, nota ni escritura a Lirmi. La calificación, si corresponde, la decide el docente. Las respuestas no se publican junto al material del estudiante.
+Explicar con palabras simples:
 
-## Fuentes y estatus de los casos
+- Afirmación: algo que el mensaje asegura y podemos comprobar.
+- Evidencia: un dato o registro que ayuda a comprobar una afirmación.
+- Fuente primaria: el registro original o quien produjo el dato; revisar si es competente para ese asunto.
+- Conclusión: lo que podemos afirmar después de comparar el mensaje con las evidencias.
 
-Las publicaciones A y el comentario B son recreaciones didácticas explícitas, no capturas de rumores realmente circulados. Los hechos y los registros documentales son reales y se verificaron con fuentes primarias: NASA Earthdata (imagen capturada el 22-01-2017, publicada el 23-01-2017, página actualizada el 14-05-2025), DIRECTEMAR (cancelación total de 08:50 del 31-07-2025) y Servel (elecciones municipales y regionales de octubre de 2024). Las fuentes y enlaces están impresos en los casos. Los documentos se presentan en paráfrasis, no como comunicados originales ni citas literales. La explicación «Quién registra el hecho» describe la competencia institucional; no es una fuente adicional ni anticipa la conclusión.
+Demostrar oralmente cómo unir dato y conclusión en un ejemplo distinto de los tres casos: una noticia escolar dice «hoy», pero la ficha de la foto corresponde a otro año. Pedir qué dato permite comprobarlo y expresar una conclusión breve con su límite. No resolver las preguntas de la evaluación ni recuperar en la guía la página explicativa retirada.
 
-Imagen documental: NASA/NOAA Suomi NPP, VIIRS, misma imagen en ambas reproducciones. Se conserva el JPG descargado; el derivado solo cambia a escala de grises. Las dos ilustraciones de acompañamiento se generaron con image_gen y se mantienen como acompañamiento. A solicitud docente no llevan leyendas visibles; no prueban los casos. Originales, prompts y derivados guardados en assets/.
+### Monitoreo del desarrollo
 
-## Impresión y reproducción
+Circular mientras responden. Usar preguntas breves: «¿qué afirma?», «¿qué dato lo comprueba?», «¿de qué fecha hablas?» y «¿qué no puedes asegurar?». Para estudiantes que requieren apoyo lector, leer o parafrasear la consigna sin anticipar su respuesta. Se puede conversar en parejas; cada estudiante redacta su propia guía.
 
-Guía de diez páginas A4, al 100 %, con membrete completo, dos logos en escala de grises, ficha oficial completa al inicio, identificación abreviada en las demás páginas, cuadros, renglones y pie continuo. Funciona sin fondos de impresión. Se recomienda imprimir a doble cara y engrapar. La revisión digital no constituye prueba física de impresora ni aplicación de aula.
+### Cierre
 
-Fuente reproducible: `node scripts/generate-nm3-verificar-caso.js`. Auditoría y prueba: `node scripts/audit-nm3-verificar-caso.js`; para producción, añadir `--public`.
+Destinar aproximadamente 4 minutos al plenario 15: tres intervenciones breves, una por caso, con conclusión y dato decisivo; en el caso 3 distinguir A y B. El docente registra evidencia de las intervenciones, sin exigir que todos repitan la misma conclusión ni convertir la participación oral en una nota adicional. Los demás contrastan con sus respuestas.
 
-## Formato de los casos y membrete
+Destinar 3 minutos a la 19, 2 a sintetizar el procedimiento y 1 a recoger las guías. Sistematizar: identificar la afirmación, comprobar fuente y fecha, y concluir solo hasta donde permite la evidencia. Preguntar qué comprobarían antes de compartir un mensaje.
 
-Corrección solicitada el 6 de octubre: Instagram para la imagen de incendios, WhatsApp para la cadena y X para la elección y su comentario. Los perfiles, contadores y mensajes son inventados y llevan el rótulo breve de recreación; las páginas oficiales son fichas adaptadas con dominio, título y fecha. Se evalúa también cómo el formato influye en la confianza o urgencia, sin convertir reacciones o reenvíos en evidencia.
+## Evaluación de proceso
 
-Se aplica el membrete oficial aprobado desde la guía NM2 SIMCE Clase 2, documentado en REGLAS.md y referencias/formato-institucional/. Logos, contactos, nombre completo y ficha institucional; márgenes A4 de 1 cm vertical y 1,2 cm horizontal. La primera página contiene objetivo, ficha e instrucciones; los casos comienzan en la segunda. Se conservan 81 renglones de 8 mm.
+Revisar cuatro criterios observables: afirmación precisa; evidencia pertinente; relación entre fuente, fecha y contexto; conclusión coherente con límites. Una etiqueta marcada sin explicación no acredita la habilidad. Admitir conclusiones alternativas bien justificadas que distingan autenticidad de la imagen, contexto del mensaje y alcance de una fuente.
 
-## Ampliación de las imágenes satelitales
+La 19 recoge reflexión e intención responsable. No permite certificar hábitos futuros. No se inventan escala, ponderación, nota ni escrituras a Lirmi. La observación docente se registra en la guía. La revisión del diseño está en `referencias/formato-institucional/VALIDACION_NM3_VERIFICAR_CASO.md`, interna y excluida del despliegue; no es pilotaje ni validación psicométrica.
 
-A solicitud docente del 6 de octubre, la publicación del caso 1 ocupa la página 2 y el expediente NASA la página 3. Cada imagen completa se presenta a casi todo el ancho útil del A4 (más de 175 mm), sin recortes, deformación ni cambios en el archivo. Las respuestas van en la página 4; los casos 2 y 3 en 5/6 y 7/8; comparación e informe en 9/10. Se mantienen 81 renglones y el membrete. La guía consta de diez páginas; impresión a doble cara en cinco hojas.
+## Guía, fuentes y reproducción
 
-Francisco solicita quitar todas las tablas de contraste: se elimina S2 y la tabla final de la consigna 15. Esa consigna queda como pregunta abierta con seis renglones. Se conservan las fuentes, la ficha institucional y el registro primario NASA; 81 renglones en total.
+Diez A4: portada; caso 1 en 2/3/4, caso 2 en 5/6, caso 3 en 7/8, procedimiento y plenario en 9, informe y reflexión en 10. Diecinueve consignas: dieciocho escritas, incluido informe de 80–110 palabras, y una oral. Ochenta renglones de 8 mm: cuatro en la 6, seis en 16 y 17, quince en 18 y cuatro en 19. La 15 se apoya en lo ya escrito y no exige una nueva respuesta en papel.
 
-## Simplificación de la apertura
+Los hechos y documentos son reales; publicaciones, perfiles y contadores sociales son recreaciones rotuladas. NASA Earthdata registra una imagen capturada el 22-01-2017, publicada el 23-01-2017 y una página actualizada el 14-05-2025. DIRECTEMAR registra la cancelación total de las 08:50 del 31-07-2025. Servel aporta información del proceso electoral de octubre de 2024. Las fichas son paráfrasis con enlaces, no capturas de buscador ni comunicados literales.
 
-Por solicitud explícita de Francisco se retiran el cuadro «Qué entregan» y toda la página «Cómo verificar un mensaje», con su tabla de pistas, procedimiento y ejemplo resuelto. Las imágenes grandes, fuentes y consignas permanecen. No se recrean esos bloques en otra parte de la guía. Diapositiva y referencias de página se sincronizan con las diez páginas finales.
+La imagen documental NASA se reproduce completa dos veces, mayor de 175 × 85 mm; su derivado cambia solo a grises. Las ilustraciones de acompañamiento conservan originales, prompts y procedencia; por instrucción docente no llevan leyendas visibles y no se usan para probar casos. Permanecen retirados el cuadro «Qué entregan», la página «Cómo verificar un mensaje» y todas las tablas de contraste.
 
-## Tipografía, espacio y revisión del instrumento
+Contenido en Times New Roman de 12 puntos, títulos de 14. Membrete y pie conservan sus medidas y fuente institucionales exactas: Inter, nombre del colegio 14 px, contactos 8,5 px, descripción 10,5 px, logos 60 px; pie 8 px, borde 1 px, separación 12 px y espacio superior 5 px. Ficha oficial completa al inicio e identificación breve en las demás páginas. Márgenes A4 de 10 mm vertical y 12 mm lateral; impresión al 100 %, posible doble cara en cinco hojas. La revisión digital no constituye prueba física de impresora.
 
-Por indicación de Francisco, el contenido utiliza Times New Roman de 12 puntos y títulos de 14, manteniendo el membrete y el pie con sus medidas y tipografía institucionales. El PDF incrusta Times New Roman; no se redistribuyen los archivos de fuente del sistema. Los 81 renglones tienen 8 mm de alto. Se simplifican consignas, se unifica el tratamiento individual y se retiran comentarios de las fichas que anticipaban respuestas. Se mantiene la diapositiva con letra apropiada para proyección.
-
-La revisión de diseño del instrumento está documentada en `referencias/formato-institucional/VALIDACION_NM3_VERIFICAR_CASO.md`, fuera de la publicación del estudiante. Evalúa verificación guiada de expedientes impresos; no acredita ejecución autónoma de búsqueda inversa en internet. Se valoran afirmación precisa, evidencia pertinente, uso de fuente y fecha, y conclusión con límites. Las etiquetas sin justificación, la caligrafía y el conteo de palabras por sí solos no acreditan la habilidad. Es una revisión de diseño, sin pilotaje ni validación psicométrica.
-
-Corrección de formato del 6 de octubre: el membrete conserva Inter, nombre institucional de 14 px, contactos de 8,5 px, descripción de 10,5 px y logos de 60 px. El pie conserva Inter de 8 px, separación de 12 px y borde de 1 px según la plantilla interna. La instrucción 12/14 puntos corresponde únicamente al contenido.
+Generador: `node scripts/generate-nm3-verificar-caso.js`. Auditoría local: `node scripts/audit-nm3-verificar-caso.js`; pública: añadir `--public`.

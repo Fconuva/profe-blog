@@ -37,7 +37,7 @@ const whatsapp=`<article class="social whatsapp" aria-label="Cadena recreada de 
 const xpost=`<article class="social xpost" aria-label="Publicación recreada de X"><div class="platform">X <span>Publicación recreada</span></div>${socialHeader('Datos para votar','@datosvotar_aula','DV')}<div class="post-body"><p>En estas elecciones puedes elegir un solo día para votar: sábado 26 o domingo 27 de octubre de 2024. Se utiliza lápiz pasta azul. Revisa tu mesa y local en <span class="post-link">consulta.servel.cl</span>.</p><div class="link-preview"><strong>consulta.servel.cl</strong><span>Consulta de datos electorales</span></div><p class="social-date">10:15 · 25 oct. 2024 · 8.400 visualizaciones</p><div class="post-actions"><span>◯ 18</span><span>⇄ 64</span><span>♡ 210</span><span>↗</span></div><div class="reply">${socialHeader('Comentario B','@lector_aula','B')}<p>Entonces queda demostrado que todas las próximas elecciones en Chile serán siempre sábado y domingo.</p></div></div></article>`;
 const pages=[];
 pages.push(sheet(1,'Verificar antes de compartir',
- box('Instrucciones',`<ol><li>Lee cada caso y su fuente impresa.</li><li>Responde en los renglones. Usa datos de la imagen, la fuente o la fecha.</li><li>Justifica tus conclusiones y cita la ficha: N1, D1 o S1.</li><li>Completa la guía y entrégala al docente.</li></ol><p><strong>Trabajo individual en papel. Sin celular.</strong></p>`,'instructions')+
+ box('Instrucciones',`<ol><li>Lee cada caso y su fuente impresa.</li><li>Responde en los renglones y usa datos del caso. La pregunta 15 se comenta oralmente al cierre.</li><li>Justifica tus conclusiones y cita la ficha: N1, D1 o S1.</li><li>Completa la guía y entrégala al docente.</li></ol><p><strong>Trabajo individual en papel. Sin celular.</strong></p>`,'instructions')+
  `<figure><img class="illustration opening-art" src="assets/estudiantes-verificando-gris.webp" alt="Dos estudiantes comparan una imagen con documentos impresos"></figure>`));
 pages.push(sheet(2,'Caso 1 · La imagen de los incendios',
  `<h2 class="case-label">A. Observa la publicación</h2>`+instagram+
@@ -50,7 +50,7 @@ pages.push(sheet(4,'Caso 1 · Escribe tu verificación',
  question('1','Escribe qué lugar y fecha afirma la publicación. Luego explica si los «Me gusta» bastan para creerle.',3)+
  question('2','Compara las dos imágenes. Describe dos detalles que permiten reconocer si son la misma fotografía.',3)+
  question('3','¿Qué fecha de N1 permite comprobar la palabra «hoy»? Explica por qué eliges esa fecha.',3)+
- box('4. Decisión fundamentada',verdict+`<p>Justifica con <strong>dos datos de N1</strong>. Evalúa la imagen y el mensaje por separado.</p>`+lines(4))+
+ box('4. Decisión sobre el mensaje A',verdict+`<p>Justifica con <strong>dos datos de N1</strong>. Explica si la fotografía corresponde al lugar y la fecha que afirma A.</p>`+lines(4))+
  question('5','Reescribe la publicación con la fecha correcta y el nombre de la fuente.',3)));
 pages.push(sheet(5,'Caso 2 · Un mensaje sobre un tsunami',
  `<h2 class="case-label">A. Observa la cadena</h2>`+whatsapp+
@@ -58,10 +58,10 @@ pages.push(sheet(5,'Caso 2 · Un mensaje sobre un tsunami',
  box('Quién registra el hecho',`<p>El SHOA evalúa la amenaza mediante el Sistema Nacional de Alarma de Maremotos (SNAM). DIRECTEMAR, de la Armada de Chile, publica D1.</p>`)+
  source('D1','DIRECTEMAR, registro oficial de 31-07-2025',urls.armada)));
 pages.push(sheet(6,'Caso 2 · Escribe tu verificación',
- question('6','Escribe dos afirmaciones verificables de A: una sobre la fecha y otra sobre el alcance.',2)+
- question('7','Compara la fecha y hora de A con las de D1. Escribe qué coincide y qué cambia.',3)+
+ question('6','Escribe qué fecha de cancelación afirma A y a qué zonas de Chile dice que afecta.',4)+
+ question('7','Compara la fecha y hora de la cancelación mencionada en A con las registradas en D1. Escribe qué coincide y qué cambia.',3)+
  question('8','¿El aviso «Reenviado muchas veces» identifica la fuente original? Explica por qué consultarías D1.',3)+
- box('9. Decisión fundamentada',verdict+`<p>Justifica con <strong>dos datos de D1</strong>. Señala qué parte tiene respaldo y cuál no.</p>`+lines(4))+
+ box('9. Decisión sobre el mensaje A',verdict+`<p>Justifica con <strong>dos datos de D1</strong>. Señala qué parte tiene respaldo y cuál no.</p>`+lines(4))+
  question('10','Responde en dos o tres oraciones: corrige la cadena y cita la fuente.',3)));
 pages.push(sheet(7,'Caso 3 · Información sobre una elección',
  `<h2 class="case-label">A. Observa la publicación y el comentario B</h2>`+xpost+
@@ -70,18 +70,18 @@ pages.push(sheet(7,'Caso 3 · Información sobre una elección',
  source('S1','Servel, información del proceso municipal y regional de 2024',urls.servel)));
 pages.push(sheet(8,'Caso 3 · Escribe tu verificación',
  question('11','Escribe tres datos de A y la evidencia de S1 que respalda o contradice cada uno.',5)+
- box('12. Decisión sobre A',verdict+`<p>Justifica A con <strong>dos datos de S1</strong>. Indica a qué elección se refiere.</p>`+lines(4))+
+ box('12. Decisión sobre A',verdict+`<p>Justifica tu decisión con <strong>dos datos de S1</strong>. Indica a qué elección se refiere.</p>`+lines(4))+
  question('13','¿S1 demuestra lo que afirma el comentario B? Explica qué permite concluir y qué información falta.',4)+
  question('14','¿El perfil y el enlace bastan para confiar en A? Indica qué fuente y qué fecha revisarías para otra elección.',3)+
  ``));
 pages.push(sheet(9,'Compara y explica el procedimiento',
- question('15','Resume la conclusión de cada caso y cita un dato decisivo. En el caso 3, distingue A y B.',6)+
- question('16','Elige dos recursos del formato que generen confianza o urgencia. Explica por qué no prueban que el mensaje sea correcto.',5)+
- question('17','Escribe tres pasos para verificar una noticia. Indica qué comprobarías en cada uno.',5)+
+ box('15. Plenario oral · Al cierre',`<p>Comenta la conclusión de cada caso y un dato que la apoye. En el caso 3, distingue A y B.</p><p><strong>Respuesta oral.</strong> Apóyate en tus respuestas anteriores.</p>`,'oral-task')+
+ question('16','Elige dos elementos del formato que generen confianza o urgencia. ¿Demuestran que el mensaje es correcto? Justifica.',6)+
+ question('17','Escribe tres pasos para verificar una noticia. Indica qué comprobarías en cada uno.',6)+
  ``));
 pages.push(sheet(10,'Informe final · De la duda a la evidencia',
- question('18','Elige un caso y escribe un informe de 80 a 110 palabras. Incluye la afirmación, dos datos con su fuente, tu conclusión y un límite de la evidencia.',15)+
- question('19','¿Cambió tu primera impresión? Explica qué evidencia influyó más en tu conclusión.',3)+
+ question('18','Elige un caso y escribe un informe de 80 a 110 palabras. Incluye la afirmación, dos datos con su fuente y tu conclusión. Indica también qué no puedes asegurar con la información disponible.',15)+
+ question('19','¿Cambió tu primera impresión? Nombra una evidencia y explica qué comprobarás antes de compartir un mensaje.',4)+
  box('Revisa tus respuestas',`<p>Comprueba que incluyas afirmación, evidencia, fuente y conclusión.</p>`)+
  `<div class="feedback">Revisión docente: <span class="field"></span> Observación: <span class="field" style="flex:1"></span></div>`));
 async function main(){

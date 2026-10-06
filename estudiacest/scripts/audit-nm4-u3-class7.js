@@ -49,7 +49,20 @@ for(const file of ['docente.html','plantilla.html','manual-final.html']){
 }
 expect((project.match(/class="lesson-result"/g)||[]).length===4&&(project.match(/<ol class="steps">/g)||[]).length===5,'La consigna abreviada debe conservar cuatro listas de acciones, un resultado por clase y las seis páginas.');
 expect(teacher.includes('w3-article-91149.html')&&teacher.includes('w3-article-91150.html')&&teacher.includes('formación general'),'La planificación debe identificar OA 5 y OA 6 de Lengua y Literatura de 4° medio.');
-expect(main.includes('Completen la guía: hojas 1, 2 y 3')&&main.includes('Anoten una duda.')&&main.includes('Anoten la fuente.'),'Debe explicitarse dónde escribir en las tres hojas, la duda y la fuente.');
+expect(main.includes('Completen la guía: hojas 1, 2 y 3')&&read('manual.js').includes('Anoten una duda')&&read('manual.js').includes('Registren la fuente'),'Debe explicitarse dónde escribir en las tres hojas, la duda y la fuente.');
+expect(main.includes('src="guia-vistas.js"')&&main.includes('data-guide-preview')&&[...main.matchAll(/data-guide-page="([1-5])"/g)].map(x=>x[1]).join(',')==='1,2,3,4,5'&&main.includes('data-guide-markers'),'La misma diapositiva debe mostrar la guía real, sus cinco páginas y flechas numeradas.');
+const previewContext={window:{}};vm.runInNewContext(read('guia-vistas.js'),previewContext);const previews=previewContext.window.MANUAL_GUIDE_PREVIEWS;
+expect(previews?.generator==='pdftoppm + sharp'&&Object.keys(previews?.courses||{}).length===5,'Las vistas deben provenir de los PDF reales de los cinco cursos.');
+for(const course of ['4A','4B','4C','4D','4E']){
+ const item=previews?.courses[course];
+ expect(item?.pages.length===5&&item.pdfSha256===crypto.createHash('sha256').update(fs.readFileSync(path.join(base,item.pdf))).digest('hex'),`${course}: la vista previa debe corresponder al PDF completo vigente.`);
+ for(const [index,page] of (item?.pages||[]).entries()){
+  const bytes=fs.readFileSync(path.join(base,page.file));
+  expect(page.page===index+1&&page.file===`assets/guia-${course.toLowerCase()}-vista-${index+1}.webp`&&page.width===1200&&page.height>=1690&&page.height<=1700&&bytes.subarray(8,12).toString()==='WEBP'&&page.sha256===crypto.createHash('sha256').update(bytes).digest('hex'),`${course}/${index+1}: vista de página inválida o desactualizada.`);
+  expect(page.markers.length===(index===0?4:3)&&page.markers.every((marker,number)=>marker.id===number+1&&marker.anchor&&marker.x>0&&marker.x<=94&&marker.y>0&&marker.y<100),`${course}/${index+1}: flechas fuera de la guía o sin sección de destino.`);
+ }
+}
+expect(read('manual.js').includes('Lean y comprendan')&&read('manual.js').includes('Redacten las funciones')&&read('manual.js').includes('De dónde: ')&&read('manual.js').includes('No inventen un número.')&&read('manual.css').includes('.guide-pin::before'),'Debe distinguirse leer/comprender/redactar y explicar la fuente de cada respuesta mediante flechas.');
 expect(read('plantilla.html').includes('Muestren el borrador al docente y guárdenlo')&&!read('plantilla.html').includes('Entreguen estas dos páginas'),'El borrador se muestra y conserva; no es la entrega final.');
 const guide=read('plantilla.html');
 expect((guide.match(/class="school-letterhead"/g)||[]).length===3,'Las tres hojas del borrador deben llevar membrete institucional.');

@@ -7,6 +7,49 @@
   if(select)select.replaceChildren(...Object.entries(window.MANUAL_COURSES).map(([code,item])=>{const option=document.createElement('option');option.value=code;option.textContent=item.name;return option;}));
   const all=(selector)=>[...document.querySelectorAll(selector)];
   const fill=(selector,value)=>all(selector).forEach(element=>{element.textContent=value;});
+  const guideImage=document.querySelector('[data-guide-preview]');
+  let guidePage=Math.max(1,Math.min(5,parseInt(params.get('guia'),10)||1));
+  function guideInstructions(item){return [
+    {title:'Página 1 · Lean y comprendan',steps:[
+      ['Completen la identificación','Escriban nombres, curso, fecha y grupo.','Datos de sus integrantes.'],
+      ['Lean el objetivo y las instrucciones','Reconozcan qué harán y cómo trabajarán.','Cuadros «Objetivo» e «Instrucciones» de esta página.'],
+      ['Lean y comprendan el texto','Identifiquen para qué sirve el equipo, sus acciones y riesgos.','Cuatro secciones del texto de esta página.'],
+      ['Reconozcan la fuente','Identifiquen fabricante, manual y páginas o secciones.','Referencia al final de esta página.']
+    ]},
+    {title:'Página 2 · Observen y consulten',steps:[
+      ['Observen el plano','Relacionen cada número con el nombre de la parte.','Plano y leyenda de esta página.'],
+      ['Comprendan el vocabulario','Consulten las palabras que no conocen antes de redactar.','Cuadro «Vocabulario de apoyo».'],
+      ['Comparen las imágenes','Distingan el equipo completo (A) de su detalle (B).','Cuadro «Imágenes para explicar».']
+    ]},
+    {title:'Hoja 1 · Redacten con palabras propias',steps:[
+      ['Redacten la función','Escriban dos frases: qué hace el equipo y para qué sirve.','Página 1: «'+item.sections[0][0]+'».'],
+      ['Reescriban cuatro indicaciones','Elijan acciones del texto, ordénenlas y comiencen con un verbo. No inventen acciones.','Texto de la página 1: preparación, advertencias y cuidado.'],
+      ['Anoten una duda','Escriban qué no comprendieron o necesitan comprobar.','La dificultad que encontraron al leer.']
+    ]},
+    {title:'Hoja 2 · Identifiquen y expliquen',steps:[
+      ['Observen las seis partes','Ubiquen cada número en el plano.','Plano de la página 2 y de esta hoja.'],
+      ['Escriban los nombres','Relacionen cada número con su parte.','Leyenda del plano en la página 2.'],
+      ['Redacten las funciones','Expliquen qué hace cada parte, con palabras propias.','Lectura de la página 1 y leyenda de la página 2.']
+    ]},
+    {title:'Hoja 3 · Seguridad, imágenes y fuente',steps:[
+      ['Redacten los apartados 4, 5 y 6','Escriban dos advertencias, un cuidado y cuándo pedir ayuda.','Página 1: «'+item.sections[2][0]+'» y límites de la lectura.'],
+      ['Expliquen las imágenes','Digan qué muestra A. Relacionen B con una indicación y expliquen por qué la aclara.','Imágenes de la página 2 e indicaciones de su hoja 1.'],
+      ['Registren la fuente','Anoten la página o sección realmente consultada. No inventen un número.','Referencia de la página 1; si abren el manual, usen su página o sección real.']
+    ]}
+  ];}
+  function showGuidePage(number=guidePage){
+    if(!guideImage||!window.MANUAL_GUIDE_PREVIEWS?.courses[course])return;
+    guidePage=Math.max(1,Math.min(5,Number(number)||1));
+    const item=window.MANUAL_COURSES[course],preview=window.MANUAL_GUIDE_PREVIEWS.courses[course].pages[guidePage-1],help=guideInstructions(item)[guidePage-1];
+    guideImage.src=preview.file;guideImage.alt=`Página ${guidePage} de la guía de ${item.name}; los números y flechas señalan las secciones explicadas`;
+    fill('[data-guide-caption]',`Guía real · página ${guidePage} de 5 · ${item.name}`);fill('[data-guide-title]',help.title);
+    all('[data-guide-open]').forEach(link=>{link.href=preview.file;});
+    all('[data-guide-page]').forEach(button=>button.setAttribute('aria-pressed',String(Number(button.dataset.guidePage)===guidePage)));
+    all('[data-guide-markers]').forEach(container=>{container.replaceChildren(...preview.markers.map(marker=>{const pin=document.createElement('span');pin.className='guide-pin';pin.textContent=String(marker.id);pin.style.left=marker.x+'%';pin.style.top=marker.y+'%';pin.dataset.guideMarker=String(marker.id);return pin;}));});
+    all('[data-guide-callouts]').forEach(container=>{container.replaceChildren(...help.steps.map(([action,task,source],index)=>{const li=document.createElement('li'),heading=document.createElement('strong'),instruction=document.createElement('p'),from=document.createElement('p'),label=document.createElement('strong');li.dataset.guideCallout=String(index+1);heading.textContent=action;instruction.textContent=task;from.className='guide-source';label.textContent='De dónde: ';from.append(label,document.createTextNode(source));li.append(heading,instruction,from);return li;}));});
+    params.set('guia',String(guidePage));history.replaceState(null,'',location.pathname+'?'+params.toString()+location.hash);
+  }
+  all('[data-guide-page]').forEach(button=>button.addEventListener('click',()=>showGuidePage(button.dataset.guidePage)));
   function showCourse(){
     const item=window.MANUAL_COURSES[course];
     if(select)select.value=course;
@@ -28,6 +71,7 @@
     all('[data-parts]').forEach(container=>{container.replaceChildren();item.parts.forEach(content=>{const li=document.createElement('li');li.textContent=content;container.append(li);});});
     all('[data-vocabulary]').forEach(container=>{container.replaceChildren();item.vocabulary.forEach(([word,definition])=>{const p=document.createElement('p');const strong=document.createElement('strong');strong.textContent=word+': ';p.append(strong,document.createTextNode(definition));container.append(p);});});
     fill('[data-guided-original]',item.guidedOriginal);fill('[data-guided-question]',item.guidedQuestion);fill('[data-guided-answer]',item.guidedAnswer);
+    showGuidePage();
     params.set('curso',course);history.replaceState(null,'',location.pathname+'?'+params.toString()+location.hash);
   }
   if(select)select.addEventListener('change',()=>{course=validCourse(select.value);showCourse();});

@@ -3,6 +3,11 @@ const http=require('node:http'),fs=require('node:fs'),path=require('node:path'),
 const {chromium}=require('playwright');const {PDFDocument}=require('pdf-lib');
 const root=path.resolve(__dirname,'..'),prefix='/nm4/u3-clase7-manual-ilustrado/';
 const courses=['4A','4B','4C','4D','4E'];
+const requestedCourse=process.argv.find(value=>value.startsWith('--course='))?.slice(9);
+const selectedCourses=requestedCourse?[requestedCourse]:courses;
+const requestedWidth=process.argv.find(value=>value.startsWith('--width='))?.slice(8);
+const widths=requestedWidth?[Number(requestedWidth)]:[320,390,1440,3840];
+if(selectedCourses.some(course=>!courses.includes(course))||widths.some(width=>![320,390,1440,3840].includes(width)))throw new Error('Curso o ancho de prueba no válido.');
 const diagrams={'4A':'plano-taladro-ia.webp','4B':'plano-gato-ia.webp','4C':'plano-multimetro-ia.webp','4D':'plano-impresora3d-ia.webp','4E':'plano-estacion-ia.webp'};
 const originals={'4A':'taladro.png','4B':'gato-dimensiones.png','4C':'multimetro.jpg','4D':'impresora3d.jpg','4E':'estacion-soldadura.jpg'};
 const output=fs.mkdtempSync(path.join(os.tmpdir(),'nm4-manual-qa-'));
@@ -13,10 +18,10 @@ async function main(){
  if(!origin){server=http.createServer((req,res)=>{const pathname=decodeURIComponent(new URL(req.url,'http://localhost').pathname);let target=path.resolve(root,'.'+pathname);if(!target.startsWith(root+path.sep)&&target!==root){res.writeHead(403);return res.end();}if(fs.existsSync(target)&&fs.statSync(target).isDirectory())target=path.join(target,'index.html');if(!fs.existsSync(target)){res.writeHead(404);return res.end();}res.writeHead(200,{'Content-Type':mime[path.extname(target)]||'application/octet-stream'});fs.createReadStream(target).pipe(res);});await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));origin=`http://127.0.0.1:${server.address().port}`;}
  const browser=await chromium.launch({headless:true});const failures=[];let checks=0;
  try{
-  for(const width of [320,390,1440,3840]){
+  for(const width of widths){
    const page=await browser.newPage({viewport:{width,height:width===3840?2160:width===1440?900:844},acceptDownloads:true});const errors=[];
    page.on('pageerror',error=>errors.push(error.message));page.on('response',response=>{if(response.url().startsWith(origin)&&response.status()>=400)errors.push(`HTTP ${response.status()} ${new URL(response.url()).pathname}`);});
-   for(const course of courses){
+   for(const course of selectedCourses){
     await page.goto(`${origin}${prefix}?curso=${course}`,{waitUntil:'networkidle'});
     if(await page.locator('#course').inputValue()!==course)throw new Error('Curso inicial incorrecto');
     if(await page.locator('#course option').count()!==5)failures.push('No están los cinco cursos en el selector.');
@@ -41,6 +46,25 @@ async function main(){
      await page.waitForFunction(()=>[...document.querySelectorAll('.slide.active img')].every(img=>img.complete&&img.naturalWidth>0),{},{timeout:10000});
      const layout=await page.evaluate(()=>({overflow:document.documentElement.scrollWidth>innerWidth+1,images:[...document.querySelectorAll('.slide.active img')].every(img=>img.complete&&img.naturalWidth>0),counter:document.querySelector('#counter').textContent}));
      if(layout.overflow||!layout.images||layout.counter!==`${slide+1} / ${flow.length}`)failures.push(`${width}/${course}/pantalla ${slide+1}: ${JSON.stringify(layout)}`);
+     if(slide===7){
+      for(let guidePage=1;guidePage<=5;guidePage++){
+       await page.locator(`[data-guide-page="${guidePage}"]`).click();
+       await page.waitForFunction(()=>{const img=document.querySelector('[data-guide-preview]');return img.complete&&img.naturalWidth===1200;});
+       const guide=await page.evaluate(()=>{
+        const image=document.querySelector('[data-guide-preview]'),paper=document.querySelector('.guide-paper').getBoundingClientRect(),active=document.querySelector('.slide.active'),markers=[...document.querySelectorAll('[data-guide-marker]')];
+        return {file:new URL(image.src).pathname,counter:document.querySelector('#counter').textContent,selected:[...document.querySelectorAll('[data-guide-page][aria-pressed="true"]')].map(el=>el.dataset.guidePage),parameter:new URL(location.href).searchParams.get('guia'),markers:markers.length,callouts:document.querySelectorAll('[data-guide-callout]').length,sources:[...document.querySelectorAll('.guide-source')].every(el=>el.textContent.startsWith('De dónde: ')),inside:markers.every(el=>{const r=el.getBoundingClientRect();return r.left>=paper.left&&r.right<=paper.right&&r.top>=paper.top&&r.bottom<=paper.bottom;}),arrows:markers.every(el=>getComputedStyle(el,'::before').borderRightStyle==='solid'),open:new URL(document.querySelector('[data-guide-open]').href).pathname,pdf:new URL(document.querySelector('[data-course-pdf="completa"]').href).pathname,overflow:document.documentElement.scrollWidth>innerWidth+1,fit:active.scrollHeight<=active.clientHeight+2&&active.querySelector('[data-monitoring]').getBoundingClientRect().bottom<=document.querySelector('.nav-bar').getBoundingClientRect().top};
+       });
+       const expected=`${prefix}assets/guia-${course.toLowerCase()}-vista-${guidePage}.webp`;
+       if(guide.file!==expected||guide.open!==expected||!guide.pdf.endsWith(`guia-${course.toLowerCase()}-completa.pdf`)||guide.counter!=='8 / 9'||guide.selected.join(',')!==String(guidePage)||guide.parameter!==String(guidePage)||guide.markers!==(guidePage===1?4:3)||guide.callouts!==guide.markers||!guide.sources||!guide.inside||!guide.arrows||guide.overflow||(width>=1440&&!guide.fit))failures.push(`${width}/${course}/guía ${guidePage}: ${JSON.stringify(guide)}`);checks++;
+       if(course==='4E'&&[390,1440,3840].includes(width))await page.screenshot({path:path.join(output,`${course}-${width}-guia-${guidePage}.png`),fullPage:true});
+      }
+      await page.reload({waitUntil:'networkidle'});
+      if(await page.locator('#counter').textContent()!=='8 / 9'||await page.locator('[data-guide-page="5"]').getAttribute('aria-pressed')!=='true')failures.push(`${width}/${course}: no persiste la guía dentro de la diapositiva`);checks++;
+      const neighbor=courses[(courses.indexOf(course)+1)%courses.length];await page.locator('#course').selectOption(neighbor);
+      if(!(await page.locator('[data-guide-preview]').getAttribute('src')).endsWith(`guia-${neighbor.toLowerCase()}-vista-5.webp`)||await page.locator('[data-guide-page="5"]').getAttribute('aria-pressed')!=='true')failures.push(`${width}/${course}: el cambio de curso perdió la página de la guía`);checks++;
+      await page.locator('#course').selectOption(course);await page.locator('[data-guide-page="1"]').click();
+      await page.waitForFunction(()=>{const img=document.querySelector('[data-guide-preview]');return img.complete&&img.naturalWidth===1200;});
+     }
      if(slide===7&&width>=1440){
       const fit=await page.locator('.slide.active').evaluate(el=>({scroll:el.scrollHeight,height:el.clientHeight,bottom:el.querySelector('[data-monitoring]').getBoundingClientRect().bottom,nav:document.querySelector('.nav-bar').getBoundingClientRect().top}));
       if(fit.scroll>fit.height+2||fit.bottom>fit.nav)failures.push(`${width}/${course}: las instrucciones no caben completas ${JSON.stringify(fit)}`);checks++;
@@ -123,7 +147,7 @@ async function main(){
   }
   const page=await browser.newPage();await page.goto(`${origin}/nm4/`,{waitUntil:'networkidle'});for(const course of courses)if(await page.locator(`a[href="${prefix}?curso=${course}"]`).count()!==1)failures.push(`Portada: acceso ausente ${course}`);await page.close();
  }finally{await browser.close();if(server)await new Promise(resolve=>server.close(resolve));}
- const result={origin,mode:presentationOnly?'presentation':'full',checks,output,failures};
+ const result={origin,mode:presentationOnly?'presentation':'full',courses:selectedCourses,widths,checks,output,failures};
  fs.writeFileSync(path.join(output,'resultado.json'),JSON.stringify(result,null,2));
  console.log(JSON.stringify(result,null,2));if(failures.length)process.exitCode=1;
 }

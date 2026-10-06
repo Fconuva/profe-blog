@@ -5,24 +5,39 @@ const failures=[];const expect=(condition,message)=>{if(!condition)failures.push
 const read=(file)=>fs.readFileSync(path.join(base,file),'utf8');
 const main=read('index.html'),home=fs.readFileSync(path.join(root,'nm4/index.html'),'utf8');
 const durations=[...main.matchAll(/data-minutes="(\d+)"/g)].map(x=>Number(x[1]));
-expect(durations.length===10&&durations.reduce((a,b)=>a+b,0)===90,'La presentación debe tener diez pantallas y sumar 90 minutos.');
-expect(main.includes('1 / 10'),'Contador de diez pantallas ausente.');
-expect(main.includes('Esta página no recibe archivos ni registra entregas.'),'La modalidad de entrega presencial debe estar explícita.');
-expect(main.includes('cuatro sesiones de 90 minutos')&&main.includes('primer borrador'),'El encargo es un proyecto extendido, no una entrega de una clase.');
+expect(durations.length===9&&durations.reduce((a,b)=>a+b,0)===90,'La presentación debe tener nueve pantallas y sumar 90 minutos.');
+expect(main.includes('1 / 9'),'Contador de nueve pantallas ausente.');
+expect(main.includes('Trabajen en la guía impresa; no operen equipos.'),'La modalidad de trabajo presencial debe estar explícita.');
 const project=read('proyecto.html'),teacher=read('docente.html');
 expect((project.match(/id="sesion-[1-4]"/g)||[]).length===4,'Deben estar operativas las cuatro etapas del proyecto.');
 expect((teacher.match(/data-project-session="[1-4]" data-total-minutes="90"/g)||[]).length===4,'Deben existir cuatro sesiones de 90 minutos planificadas.');
 const stages=[...main.matchAll(/data-stage="([a-z]+)"/g)].map(x=>x[1]);
-expect(stages.join(',')==='inicio,inicio,inicio,desarrollo,desarrollo,desarrollo,desarrollo,desarrollo,desarrollo,cierre'&&durations.slice(0,3).join(',')==='5,2,3'&&durations[9]===10,'Inicio en tres pantallas, modelado/práctica y cierre deben estar visibles y sumar 10/70/10 minutos.');
-const presentationSlides=[...main.matchAll(/<section class="slide(?: active)?"([^>]*)>([\s\S]*?)<\/section>/g)];
-expect(presentationSlides.slice(0,3).map(slide=>(slide[1].match(/data-opening="([a-z]+)"/)||[])[1]).join(',')==='activation,norms,objective'&&presentationSlides.slice(3).every(slide=>!slide[0].includes('data-opening=')),'Activación, normas y objetivo deben ocupar tres diapositivas distintas, en ese orden.');
-expect(presentationSlides[1]?.[2].includes('<li>No se permite el uso de celular.</li>')&&!main.includes('No operen equipos: hoy trabajamos con textos e imágenes.'),'La diapositiva de normas debe mostrar la prohibición de celular solicitada.');
+expect(stages.join(',')==='inicio,inicio,inicio,inicio,desarrollo,desarrollo,desarrollo,desarrollo,cierre'&&durations.join(',')==='0,5,2,3,0,5,10,55,10','Portada y separador sin tiempo adicional, inicio/modelado/actividad/cierre deben sumar 10/70/10 minutos.');
+const presentationSlides=[...main.matchAll(/<section class="slide(?: [^"]*)?"([^>]*)>([\s\S]*?)<\/section>/g)];
+const visibleText=html=>html.replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim();
+expect(presentationSlides.length===9&&visibleText(presentationSlides[0]?.[2]||'')==='Manual ilustrado para un principiante','La primera diapositiva debe mostrar solamente el título de la clase.');
+expect(presentationSlides.slice(1,4).map(slide=>(slide[1].match(/data-opening="([a-z]+)"/)||[])[1]).join(',')==='activation,norms,objective'&&presentationSlides.slice(4).every(slide=>!slide[0].includes('data-opening=')),'Después de la portada, pregunta inicial, normas y objetivo deben ocupar tres diapositivas distintas.');
+expect(!visibleText(presentationSlides[1]?.[2]||'').includes('Activación')&&presentationSlides[1]?.[2].includes('¿Qué la hace entendible o fácil de comprender?')&&!main.includes('¿Qué la hace clara?'),'La segunda pantalla debe plantear la pregunta entendible sin el rótulo Activación.');
+const phoneNorm='No se permite el uso de celular para juegos o redes sociales. Solo se permite para la actividad.';
+expect(presentationSlides[2]?.[2].includes(`<li>${phoneNorm}</li>`)&&!main.includes('No operen equipos: hoy trabajamos con textos e imágenes.'),'La norma debe permitir el celular solamente para la actividad, no para juegos ni redes sociales.');
+expect(!main.includes('Hoy harán el primer borrador')&&!main.includes('Formen tríos')&&!main.includes('Proyecto: cuatro sesiones de 90 minutos'),'Deben retirarse las instrucciones adicionales del objetivo.');
+expect(visibleText(presentationSlides[4]?.[2]||'')==='ACTIVIDAD'&&presentationSlides[4]?.[1].includes('data-development="start"'),'El desarrollo debe comenzar con una diapositiva que diga solamente ACTIVIDAD.');
+expect((main.match(/data-worksheet-instructions/g)||[]).length===1&&[...main.matchAll(/data-worksheet-page="([1-3])"/g)].map(x=>x[1]).join(',')==='1,2,3'&&presentationSlides[7]?.[2].includes('El docente entrega las tres hojas.'),'Las instrucciones de las hojas 1, 2 y 3 deben estar reunidas en una sola diapositiva.');
+expect(!main.includes('Revisen con otro grupo')&&!main.includes('Intercambien los borradores'),'Debe retirarse la diapositiva de revisión entre grupos.');
+const expectedClosure=[
+ 'Revisión o plenario: compartan una frase corregida. Comprueben que conserva la información y orienta al principiante.',
+ 'Sistematización: leer → identificar acción y riesgo → reescribir → comprobar.',
+ 'Metacognición: cada integrante escriba en su cuaderno qué frase cambió, por qué y cómo comprobó su sentido.',
+ 'Muestren las tres páginas y su duda al docente. Guarden el borrador para la clase 2.'
+];
+const closure=presentationSlides[8]?.[2]||'';
+expect(visibleText(closure)==='Revisión y metacognición '+expectedClosure.join(' ')&&(closure.match(/<li(?:\s[^>]*)?>/g)||[]).length===4&&!/<details|<a\b|<p\b/.test(closure),'El cierre debe conservar solamente el título y las cuatro instrucciones solicitadas.');
 for(const session of [...teacher.matchAll(/<section class="reading" data-project-session="([1-4])" data-total-minutes="90">([\s\S]*?)<\/section>/g)]){
  const phases=[...session[2].matchAll(/data-phase="([a-z]+)" data-minutes="(\d+)"/g)];
  expect(phases.map(x=>x[1]).join(',')==='inicio,desarrollo,cierre'&&phases.map(x=>Number(x[2])).join(',')==='10,70,10',`Clase ${session[1]}: faltan las tres fases de 90 minutos.`);
  expect(session[2].includes('Objetivo:')&&session[2].includes('Comprobación:'),`Clase ${session[1]}: falta objetivo o comprobación.`);
  expect([...session[2].matchAll(/data-opening="([a-z]+)"/g)].map(x=>x[1]).join(',')==='activation,norms,objective',`Clase ${session[1]}: el inicio debe seguir activación, normas y objetivo.`);
- expect((session[2].match(/<li data-opening="norms">([\s\S]*?)<\/li>/)||[])[1]?.includes('No se permite el uso de celular.'),`Clase ${session[1]}: falta la norma de uso de celular.`);
+ expect((session[2].match(/<li data-opening="norms">([\s\S]*?)<\/li>/)||[])[1]?.includes(session[1]==='1'?phoneNorm:'No se permite el uso de celular.'),`Clase ${session[1]}: falta la norma de uso de celular correspondiente.`);
  expect(session[2].includes('Modelamiento')&&session[2].includes('monitoreo')&&session[2].includes('data-closing="review"')&&session[2].includes('data-closing="synthesis"'),`Clase ${session[1]}: deben explicitarse modelamiento, monitoreo, revisión y sistematización/metacognición.`);
 }
 expect([...main.matchAll(/data-opening="([a-z]+)"/g)].map(x=>x[1]).join(',')==='activation,norms,objective'&&main.includes('data-monitoring')&&['review','synthesis','metacognition'].every(key=>main.includes(`data-closing="${key}"`)),'La presentación debe conservar la estructura didáctica acordada.');
@@ -34,7 +49,7 @@ for(const file of ['docente.html','plantilla.html','manual-final.html']){
 }
 expect((project.match(/class="lesson-result"/g)||[]).length===4&&(project.match(/<ol class="steps">/g)||[]).length===5,'La consigna abreviada debe conservar cuatro listas de acciones, un resultado por clase y las seis páginas.');
 expect(teacher.includes('w3-article-91149.html')&&teacher.includes('w3-article-91150.html')&&teacher.includes('formación general'),'La planificación debe identificar OA 5 y OA 6 de Lengua y Literatura de 4° medio.');
-expect(main.includes('Completen las hojas 1 y 2')&&main.includes('Completen la hoja 3')&&main.includes('Ejemplo de respuesta individual'),'Debe explicitarse dónde escribir en las tres hojas y un ejemplo de reflexión.');
+expect(main.includes('Completen la guía: hojas 1, 2 y 3')&&main.includes('Anoten una duda.')&&main.includes('Anoten la fuente.'),'Debe explicitarse dónde escribir en las tres hojas, la duda y la fuente.');
 expect(read('plantilla.html').includes('Muestren el borrador al docente y guárdenlo')&&!read('plantilla.html').includes('Entreguen estas dos páginas'),'El borrador se muestra y conserva; no es la entrega final.');
 const guide=read('plantilla.html');
 expect((guide.match(/class="school-letterhead"/g)||[]).length===3,'Las tres hojas del borrador deben llevar membrete institucional.');
@@ -107,4 +122,4 @@ expect(data['4D'].parts.map(part=>part.split(':')[0]).join(',')==='Bobina de fil
 expect(data['4D'].guidedAnswer.includes('seguir calientes')&&data['4D'].sections[3][1].includes('No inventen temperaturas'),'4°D debe conservar las advertencias y los límites de la adaptación.');
 expect(read('manual.js').includes('Object.hasOwn(window.MANUAL_COURSES'),'La selección debe validar los cinco cursos y evitar caer en otro curso.');
 if(failures.length){console.error(failures.join('\n'));process.exit(1);}
-console.log(`Manual ilustrado NM4 auditado: proyecto de 4 sesiones de 90 minutos, 10 pantallas con activación/normas/objetivo separados, 5 cursos, borrador de 3 páginas y manual final de 6, ${files.length} recursos y todos los informes conservados.`);
+console.log(`Manual ilustrado NM4 auditado: proyecto de 4 sesiones de 90 minutos, 9 pantallas con portada, inicio separado, ACTIVIDAD y tres hojas en una pantalla, 5 cursos, borrador de 3 páginas y manual final de 6, ${files.length} recursos y todos los informes conservados.`);

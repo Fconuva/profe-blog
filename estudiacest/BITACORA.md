@@ -1,5 +1,13 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-06, presentación abreviada del manual ilustrado NM4
+
+- A solicitud docente se reorganiza la presentación común de 4°A/B/C/D/E en nueve diapositivas: título; pregunta inicial sin rótulo «Activación»; normas; objetivo en infinitivo; separador «ACTIVIDAD»; modelamiento; práctica guiada; explicación conjunta de las hojas 1, 2 y 3; cierre. Se conserva el modelamiento y se retiran el intercambio entre grupos, las instrucciones adicionales del objetivo y los elementos extra del cierre. Los cuatro puntos finales se mantienen exactamente como los indicó el docente.
+- La pregunta pasa a «¿Qué la hace entendible o fácil de comprender?». Para esta clase, el celular se permite solo para la actividad, no para juegos ni redes sociales; se sincroniza la planificación de la clase 1 sin cambiar la regla general ni las otras sesiones. La actividad con monitoreo reúne 55 minutos; se conserva la distribución 10/70/10 y el proyecto de cuatro clases de 90 minutos.
+- No se alteran lecturas, imágenes, fuentes, objetivo curricular, guías HTML ni los quince PDF por especialidad. Sin cambios de cuentas, entregas, calificaciones o Firebase. Estilos nuevos acotados a portada, separador e instrucciones; auditoría, prueba de navegador y marca del manifiesto actualizadas al contrato solicitado. Build integral aprobado con 662 recursos críticos; publicación y pruebas finales se registran al concluir.
+- Prueba local completa: 825 comprobaciones, cero fallas, cinco cursos en 320/390/1440/3840 px. Estructura exacta, nueve pantallas, imágenes, navegación/recarga/curso, textos solicitados y tres hojas visibles en proyección; descargas con bytes exactos y guías A4 de 3/5/6 páginas, membretes y renglones reales conservados. Capturas de título, pregunta, separador, instrucciones y cierre abiertas e inspeccionadas. Evidencia `%TEMP%/nm4-manual-qa-pWQgvv`; no se afirma prueba física de impresora.
+- Ajuste final de proyección: instrucciones ampliadas solo desde 2200 px, sin afectar documentos imprimibles. Build integral final aprobado y nueva prueba de presentación: 290 comprobaciones, cero fallas en los cinco cursos y cuatro anchos; evidencia `%TEMP%/nm4-manual-qa-0vwTEI`, con resultado JSON guardado. Vista final de las tres hojas en 4K abierta e inspeccionada.
+
 ## 2026-10-05, respaldo privado de la cotización de Termas
 
 - Por solicitud docente se conserva el documento original en `backups/termas/cotizacion-original.docx`, sin cambiarlo y manteniendo también la copia de Descargas. Copia de 825132 bytes comprobada mediante SHA-256 idéntico al original: `04731e99910ecbc9fdf9f280f917b93efec71c1f45f0fb9e160a8cfc615fc6e0`.

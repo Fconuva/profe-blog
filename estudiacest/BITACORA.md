@@ -1,5 +1,11 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-06, NM3: imágenes satelitales grandes y retiro de tablas de contraste
+
+- Francisco observa que las imágenes satelitales son demasiado pequeñas. El caso 1 se distribuye en dos páginas de lectura: Instagram en la 3 y expediente NASA en la 4, con dos reproducciones completas a más de 175 mm de ancho y 85 mm de alto. Se elimina la duplicación de miniaturas; no se recortan, deforman ni modifican los archivos de imagen. Se conserva el formato social y el membrete oficial.
+- Durante la corrección solicita retirar todas las tablas de contraste. Se elimina S2 del caso electoral y se sustituye la tabla final de la consigna 15 por una pregunta abierta con seis renglones. Las tablas de identificación, conceptos y registro primario NASA permanecen porque no son tablas de contraste. Se conservan las fuentes y las diecinueve consignas, con 83 renglones de 7 mm en total.
+- Guía final de once A4, con comparación e informe en 10/11; diapositiva y planificación sincronizadas. Generador aprueba once páginas con y sin fondos, sin cortes ni desbordes. PDF real renderizado y abiertas las páginas con imágenes grandes, caso electoral sin S2 y comparación escrita; evidencia `%TEMP%/nm3-satelites-grandes`. Auditoría local final: 172 comprobaciones, cero errores, cuatro anchos; comprueba también tamaño físico, proporción y presentación completa de ambas imágenes, ausencia de tablas de contraste y descarga exacta. Evidencia `%TEMP%/nm3-verificar-qa-5dc4yl`. Build integral aprobado con 708 recursos. Sin cambios de respuestas, notas, cuentas, Firebase ni Lirmi. Publicación y prueba pública se registran al concluir.
+
 ## 2026-10-06, NM3: formatos sociales y membrete oficial fijado como regla
 
 - Francisco identifica como formato institucional oficial el solucionario NM2 SIMCE Clase 2 de OneDrive. Se lee sin modificar, se comprueba el SHA-256 del HTML y la identidad de ambos logos y se conserva una plantilla vacía interna en `referencias/formato-institucional/`. REGLAS.md, sección 13, establece estructura, contactos, profesor con nombre completo, ficha, tipografías y márgenes; la plantilla queda excluida de Vercel y no contiene respuestas del solucionario. No se rehacen automáticamente otras guías publicadas.

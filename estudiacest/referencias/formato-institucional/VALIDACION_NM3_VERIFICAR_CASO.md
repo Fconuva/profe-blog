@@ -43,7 +43,7 @@ La consistencia entre correctores y entre cursos no está medida. Antes de usar 
 
 ## Validez de consecuencias y acceso
 
-El expediente completo permite trabajar sin celular, cuenta ni conectividad. Times New Roman de 12 puntos, títulos de 14 y renglones de 8 mm reducen barreras de legibilidad y escritura. Las dos imágenes satelitales superan 175 × 85 mm y se reproducen completas. Bordes, textos e identificación funcionan con tinta negra y sin fondos de impresión.
+El expediente completo permite trabajar sin celular, cuenta ni conectividad. El contenido en Times New Roman de 12 puntos, títulos de 14 y renglones de 8 mm reducen barreras de legibilidad y escritura. Las dos imágenes satelitales superan 175 × 85 mm y se reproducen completas. Bordes, textos e identificación funcionan con tinta negra y sin fondos de impresión.
 
 Diecinueve consignas y un informe pueden demandar más tiempo a algunos estudiantes. Los 90 minutos son un supuesto de planificación, no una duración medida. Observar el ritmo real y conceder tiempo o apoyo lector cuando corresponda, manteniendo la exigencia de justificar. No interpretar una guía incompleta por falta de tiempo como ausencia automática de la habilidad.
 
@@ -64,3 +64,5 @@ Persisten dos límites principales: expediente previamente seleccionado y falta 
 El diseño permite una **evaluación formativa de verificación guiada de casos impresos**, con las limitaciones descritas. Las consignas solicitan evidencias observables y admiten conclusiones razonadas. No permite certificar búsqueda inversa autónoma ni una competencia general de verificación digital. No hay datos para afirmar fiabilidad empírica o validación psicométrica.
 
 La comprobación técnica del PDF, las fuentes incrustadas, la paginación y los enlaces se registra aparte en BITACORA.md. No equivale a prueba física de impresora ni aplicación del instrumento en aula.
+
+Corrección de formato del 6 de octubre: el membrete conserva Inter, nombre institucional de 14 px, contactos de 8,5 px, descripción de 10,5 px y logos de 60 px. El pie conserva Inter de 8 px, separación de 12 px y borde de 1 px según la plantilla interna. La instrucción 12/14 puntos corresponde únicamente al contenido.

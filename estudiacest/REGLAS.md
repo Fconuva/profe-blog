@@ -342,6 +342,11 @@ autoriza a rehacer automáticamente materiales o evaluaciones ya publicados.
   Esta referencia manda sobre las aproximaciones de membrete de las guías NM3
   y NM4: reutilizar su estructura, distribución, tipografías y ficha; no
   rediseñar, abreviar ni reconstruir de memoria el encabezado.
+- El membrete y el pie conservan su formato institucional exacto, incluso
+  cuando el docente pide otra letra o tamaño para el contenido. No aplicar
+  reglas globales de tipografía, interlineado o espaciado a esos bloques.
+  Verificar sus medidas y fuentes contra la referencia; la adaptación
+  académica y la numeración no autorizan rediseñar su distribución.
 - El membrete oficial tiene una tabla de tres columnas: insignia CEST a la
   izquierda, nombre del colegio y contactos centrados, logo SDB a la derecha;
   logos originales de 60 px, celdas laterales de 75 px y línea inferior de

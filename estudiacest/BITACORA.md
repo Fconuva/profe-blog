@@ -1,5 +1,12 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-06, NM3: restaurar formato exacto del membrete y pie
+
+- Francisco corrige que el cambio a Times New Roman también alteró el membrete y el pie. Se limita 12/14 puntos al contenido y se recupera el membrete directamente del HTML oficial indicado por el docente, adaptando únicamente nivel/asignatura y rutas de logos. Se conserva su estructura, texto, espacios, fuente Inter, tamaños de 14/8,5/10,5 px, pesos, interlineados, colores, línea inferior y logos de 60 px. Los logos siguen en grises por la instrucción de impresión anterior.
+- El pie recupera la distribución compacta de la plantilla institucional interna: Inter de 8 px, borde superior de 1 px, espacio superior de 5 px y separación de 12 px; numeración continua de diez hojas. REGLAS.md explicita que membrete y pie quedan fuera de los cambios de letra del contenido. No se alteran casos, consignas, imágenes ni 81 renglones de 8 mm.
+- Comparación del membrete contra el HTML oficial en navegador real: doce selectores, diecisiete propiedades de estilo y cuatro medidas relativas por selector, sin diferencias; evidencia `%TEMP%/nm3-membrete-exacto-4k5hCm`. El original permanece intacto, SHA-256 `340a3190fd3f8016a42159ca7c00288c5fc21ce572d48fa04ec8505d9b39d806`. No se considera diferencia el paso de logos a grises previamente autorizado.
+- PDF regenerado: diez A4 con y sin fondos, sin cortes; Times New Roman en el contenido e Inter en membrete y pie, ambas incrustadas. PDF real renderizado, abiertas páginas 1/4/10 y recortes comparativos; evidencia `%TEMP%/nm3-membrete-pdf-final`. Auditoría focalizada local: 173 comprobaciones, cero errores, cuatro anchos, contenido 12/14 puntos y verificación específica de membrete/pie en todas las hojas; evidencia `%TEMP%/nm3-verificar-qa-fXf0GS`. Build integral aprobado con 708 recursos. Planificación y revisión del instrumento corregidas para delimitar el formato. Publicación y prueba pública se registran al concluir.
+
 ## 2026-10-06, NM3: Times New Roman 12/14, espacio y revisión del instrumento
 
 - Francisco solicita Times New Roman de 12 puntos, títulos de 14, uso adecuado de los espacios e indicaciones simples bajo revisión del instrumento. Se aplica a toda la guía, incluidos encabezados, fichas, fuentes y pies; el PDF incrusta la fuente. Se conserva el membrete y la ficha oficiales, diez A4, imágenes completas mayores de 175 × 85 mm y formatos Instagram/WhatsApp/X. La diapositiva conserva tamaños para proyección.

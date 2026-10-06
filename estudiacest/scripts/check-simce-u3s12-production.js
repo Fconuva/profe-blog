@@ -65,7 +65,7 @@ async function main() {
     } finally { await browser.close(); }
 
     const draftAnswers = { q1:'A', q2:'A', q3:'A', q4:'A' };
-    const historicalWork = Object.fromEntries(['g1','g2','a1','a2','a3','a4'].map(id=>[id, 'Respuesta histórica ficticia de prueba ' + id + ': ' + 'evidencia previa que debe conservarse. '.repeat(24)]));
+    const historicalWork = Object.fromEntries(['g1','g2','a1','a2','a3','a4'].map(id=>[id, ('Respuesta histórica ficticia de prueba ' + id + ': ' + 'evidencia previa que debe conservarse. '.repeat(24)).trim()]));
     await callClass(origin, idToken, 'simce-u3s12-save', 'POST', { answers:draftAnswers, metaResponses:{ ...historicalWork, m1:'', m2:'Evidencia histórica ficticia que debe conservarse.', m3:'Reflexión histórica ficticia que debe conservarse.' }, startedAt:Date.now() });
     await callClass(origin, idToken, 'simce-u3s12-save', 'POST', { answers:draftAnswers, metaResponses:{ m1:'' } });
     const draft = await callClass(origin, idToken, 'simce-u3s12-state');

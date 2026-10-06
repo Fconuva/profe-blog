@@ -1,5 +1,11 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-06, NM3: guía abreviada publicada y verificada
+
+- El retiro del informe está confirmado en `ce3f4d1f`, enviado a origin/main. El build integral pasó tras concluir el ajuste de la auditoría SIMCE U3S12 en el trabajo paralelo. El intento propio de `deploy:prod:safe` terminó con código 1 por archivos académicos SIMCE que aún no tenían commit; se preservaron y no se omitieron controles. Cuando ese trabajo quedó confirmado, se observó una publicación segura ya en curso y se evitó duplicarla.
+- Publicación compartida `dpl_3ckEitgC4rp7vfpxkgAkv4rEBDmg`, alias READY del proyecto correcto, commit `7b86a9d6f9df002bf0c0d9804c96d300e83b0f79`, que contiene el retiro NM3 por ascendencia Git. Proceso de publicación observado ya inactivo. La espera de cola del servidor finalizó antes de las comprobaciones públicas.
+- Auditoría pública NM3: 186 comprobaciones, cero errores, cuatro anchos, nueve A4 con y sin fondos, 61 renglones de 8 mm y membrete/pie oficiales; `%TEMP%/nm3-verificar-qa-ozYTKx`. HTML, diapositiva y PDF responden 200 y coinciden por SHA-256 con los archivos locales. Ocho portadas protegidas responden 200. PDF de 1.653.279 bytes, SHA-256 `2eaee15b80935e198ded4606480ef1b66e3ddb1276c65b81d4f4eb2b1956536c`. Abierta la última página pública: termina en la 17 y numera «Página 9 de 9», sin informe, 18/19 ni revisión docente. Se entrega el enlace público actualizado. Cierre documental sin nuevo despliegue.
+
 ## 2026-10-06, SIMCE U3S12: contenido disciplinar y preguntas junto a cada texto
 
 - Por pedido de Francisco se retiran las cuatro tarjetas de ruta, los bloques Conceptual/Procedimental/Actitudinal y PARA. Se enseña entrevista no literaria y dialogada, propósito y audiencia, participantes, presentación/cuerpo/cierre, preguntas abiertas/cerradas, repregunta, sesgo, opinión y evidencia. Fuente curricular primaria revisada: LE2M OA10 (propósitos, evidencia y efectos del lenguaje) y OA19 para el video; los conceptos elegidos no se atribuyen como lista literal del OA.

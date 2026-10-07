@@ -197,6 +197,11 @@ Antes de editar y nuevamente antes de publicar:
 
 ## 8. Administración y datos
 
+- En Termas, la cantidad de inscritos y las cifras de asistencia, transporte y
+  cupos son privadas: solo se entregan al administrador autenticado y autorizado.
+  Ninguna consulta, confirmación ni error público incluye esos totales. La página
+  no muestra contadores ni listados de pasajeros; el mapa conserva únicamente la
+  disponibilidad necesaria para escoger asiento, sin nombres de otras personas.
 - Todo panel con información de estudiantes requiere autenticación y autorización
   verificadas en servidor; una URL difícil de adivinar no protege datos.
 - El admin debe permitir filtrar por curso y sesión, revisar evidencia, habilitar

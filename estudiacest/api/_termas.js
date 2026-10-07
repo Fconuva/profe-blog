@@ -9,9 +9,8 @@
 // Los datos viven en `eventos_docentes/termas_2026`, fuera de
 // `plataforma_estudiantes`. La raíz de firebase-rules.json niega lectura y
 // escritura, así que ningún navegador llega a ese nodo: todo pasa por aquí con
-// credenciales de servidor. Hacia afuera solo sale el nombre corto de quien
-// ocupa cada asiento y los totales; correo, teléfono y contacto de emergencia
-// los ve únicamente el admin.
+// credenciales de servidor. La vista pública recibe solo disponibilidad de
+// asientos y plazo. Los nombres de otras personas y los totales son del admin.
 //
 // Reglas de la inscripción:
 //  - Nombres, apellidos, correo (cualquier dominio), teléfono y contacto de
@@ -81,11 +80,24 @@ function vaEnBus(ins) { return ins && ins.asiste === 'si' && ins.transporte === 
 function estadoPublico(inscripciones) {
     const ahora = Date.now();
     const lista = Object.values(inscripciones || {});
+    const asientos = {};
+    lista.filter(vaEnBus).forEach(i => { asientos[String(i.asiento)] = { ocupado: true }; });
+    return {
+        capacidad: CAPACIDAD,
+        asientos,
+        cierreInscripcion: CIERRE_INSCRIPCION,
+        inscripcionAbierta: ahora < CIERRE_INSCRIPCION,
+        actualizado: ahora
+    };
+}
+
+function estadoAdmin(inscripciones) {
+    const lista = Object.values(inscripciones || {});
     const asisten = lista.filter(i => i.asiste === 'si');
     const asientos = {};
     asisten.filter(vaEnBus).forEach(i => { asientos[String(i.asiento)] = { nombre: nombreCorto(i) }; });
     return {
-        capacidad: CAPACIDAD,
+        ...estadoPublico(inscripciones),
         asientos,
         totales: {
             asisten: asisten.length,
@@ -93,10 +105,7 @@ function estadoPublico(inscripciones) {
             bus: Object.keys(asientos).length,
             personal: asisten.filter(i => i.transporte === 'personal').length,
             libres: CAPACIDAD - Object.keys(asientos).length
-        },
-        cierreInscripcion: CIERRE_INSCRIPCION,
-        inscripcionAbierta: ahora < CIERRE_INSCRIPCION,
-        actualizado: ahora
+        }
     };
 }
 
@@ -252,7 +261,7 @@ async function adminLista(req, res, db, auth) {
         .map(([id, i]) => ({ id, ...inscripcionPropia(i), eliminado: i.eliminado || null }))
         .sort((a, b) => Number(b.eliminado || 0) - Number(a.eliminado || 0))
         .slice(0, 30);
-    return res.status(200).json({ ok: true, filas, eliminadas, ...estadoPublico(todas) });
+    return res.status(200).json({ ok: true, filas, eliminadas, ...estadoAdmin(todas) });
 }
 
 async function adminQuitar(req, res, db, auth) {
@@ -278,7 +287,7 @@ async function adminQuitar(req, res, db, auth) {
     }, undefined, false);
     if (!resultado.committed || motivo === 'no-encontrada') throw fallo(404, 'La inscripción ya no existe. Actualiza la lista.');
     const base = resultado.snapshot.val() || {};
-    return res.status(200).json({ ok: true, papeleraId: idPapelera, ...estadoPublico(base.inscripciones) });
+    return res.status(200).json({ ok: true, papeleraId: idPapelera, ...estadoAdmin(base.inscripciones) });
 }
 
 async function adminGuardar(req, res, db, auth) {
@@ -320,7 +329,7 @@ async function adminGuardar(req, res, db, auth) {
         throw fallo(500, 'No se pudo guardar la inscripción.');
     }
     const todas = resultado.snapshot.val() || {};
-    return res.status(200).json({ ok: true, inscripcion: inscripcionPropia(todas[claveNueva]), ...estadoPublico(todas) });
+    return res.status(200).json({ ok: true, inscripcion: inscripcionPropia(todas[claveNueva]), ...estadoAdmin(todas) });
 }
 
 async function adminRestaurar(req, res, db, auth) {
@@ -361,10 +370,11 @@ async function adminRestaurar(req, res, db, auth) {
         throw fallo(500, 'No se pudo restaurar la inscripción.');
     }
     const base = resultado.snapshot.val() || {};
-    return res.status(200).json({ ok: true, ...estadoPublico(base.inscripciones) });
+    return res.status(200).json({ ok: true, ...estadoAdmin(base.inscripciones) });
 }
 
 async function manejar(req, res, accion, db, auth) {
+    if (accion.startsWith('admin-')) res.setHeader('Cache-Control', 'no-store');
     try {
         if (accion === 'estado' && req.method === 'GET') return await estado(req, res, db);
         if (accion === 'admin-lista' && req.method === 'GET') return await adminLista(req, res, db, auth);

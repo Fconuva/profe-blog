@@ -365,7 +365,7 @@
       .hero-arte img, .hero-video { object-position: center center; }
       .hero h1 { font-size: 68px; }
       .estado-paseo { padding: 0 32px; }
-      .estado-in { grid-template-columns: 1.35fr .85fr .8fr 1fr; }
+      .estado-in { grid-template-columns: 1.5fr 1fr; }
       .dato-clave { padding: 17px 18px; border-right: 1px solid var(--linea); border-bottom: 0; }
       .dato-clave:nth-child(2n) { border-right: 1px solid var(--linea); }
       .dato-clave:last-child { border-right: 0; }
@@ -451,8 +451,6 @@
     <div class="estado-in" aria-live="polite">
       <div class="dato-clave"><span>Día del paseo</span><strong>Sábado 14 de noviembre de 2026</strong></div>
       <div class="dato-clave vivo-clave"><span>Estado</span><strong><span class="punto" id="puntoVivo"></span><span id="estadoVivo">Conectando…</span></strong></div>
-      <div class="dato-clave"><span>Asistentes</span><strong><span id="chipAsisten">…</span> confirmados</strong></div>
-      <div class="dato-clave"><span>Bus</span><strong><span id="chipLibres">…</span> asientos libres</strong></div>
     </div>
   </section>
 
@@ -487,7 +485,7 @@
           <div class="campo"><label for="emergenciaNombre">Nombre y parentesco</label><input id="emergenciaNombre" name="emergenciaNombre" autocomplete="off" placeholder="Ej.: Ana Pérez, esposa" maxlength="80" required></div>
           <div class="campo"><label for="emergenciaTelefono">Teléfono de emergencia</label><input id="emergenciaTelefono" name="emergenciaTelefono" type="tel" inputmode="tel" autocomplete="off" placeholder="+56 9 1234 5678" maxlength="20" required></div>
         </div>
-        <p class="nota">En el bus se ve tu primer nombre y primer apellido. Correo, teléfono y contacto de emergencia solo los ve la organización.</p>
+        <p class="nota">Tus datos solo los ve la organización. En el mapa del bus se muestra si cada asiento está disponible.</p>
       </section>
 
       <section class="tarjeta" data-paso aria-labelledby="t-asiste">
@@ -561,14 +559,9 @@
             <div class="eleccion" id="eleccion" aria-live="polite">
               <small>Tu elección</small>
               <strong id="eleccionTitulo">Toca un asiento libre</strong>
-              <span id="eleccionDetalle">Los asientos oscuros ya están tomados. Tócalos para ver quién va ahí.</span>
+              <span id="eleccionDetalle">Los asientos oscuros ya están reservados.</span>
             </div>
             <span class="vivo"><span class="punto" id="puntoBus"></span><span id="vivoBus">Mapa en vivo</span></span>
-            <div class="pasajeros">
-              <h3>Quién va en el bus <span id="cuentaBus"></span></h3>
-              <ul id="listaBus"></ul>
-              <p class="vacio" id="listaVacia">Todavía nadie ha tomado asiento. ¡Elige el tuyo!</p>
-            </div>
           </div>
         </div>
       </section>
@@ -733,8 +726,6 @@
       for (let k = 0; k < nAtras; k++) atras.appendChild(crear(n++, k === 0 ? 'izq' : k === nAtras - 1 ? 'der' : ''));
     }
 
-    function iniciales(nombre) { return String(nombre || '').split(' ').filter(Boolean).slice(0, 2).map(p => p[0]).join('').toUpperCase(); }
-
     function pintarBus() {
       const mapa = estado.mapa; if (!mapa) return;
       dibujarBus(mapa.capacidad);
@@ -748,9 +739,9 @@
         b.classList.toggle('elegido', elegido);
         b.setAttribute('aria-pressed', elegido ? 'true' : 'false');
         if (ajeno) {
-          b.textContent = iniciales(ocupante.nombre) || n;
-          b.dataset.nombre = 'Asiento ' + n + ' · ' + ocupante.nombre;
-          b.setAttribute('aria-label', 'Asiento ' + n + ', ocupado por ' + ocupante.nombre);
+          b.textContent = n;
+          b.dataset.nombre = 'Asiento ' + n + ' · Reservado';
+          b.setAttribute('aria-label', 'Asiento ' + n + ', reservado');
           if (!estado.primera && !estado.previos[n]) { b.classList.remove('recien'); void b.offsetWidth; b.classList.add('recien'); }
         } else {
           b.textContent = esMio ? 'TÚ' : n;
@@ -759,29 +750,13 @@
         }
       });
       estado.previos = Object.assign({}, mapa.asientos);
-      pintarLista();
       pintarEleccion();
-    }
-
-    function pintarLista() {
-      const mapa = estado.mapa; const lista = $('listaBus');
-      const mio = estado.mia && estado.mia.asiento ? String(estado.mia.asiento) : '';
-      const filas = Object.keys(mapa.asientos).map(Number).sort((a, b) => a - b);
-      lista.innerHTML = '';
-      filas.forEach(n => {
-        const li = document.createElement('li'); if (String(n) === mio) li.className = 'mio';
-        const b = document.createElement('b'); b.textContent = n;
-        const s = document.createElement('span'); s.textContent = mapa.asientos[n].nombre + (String(n) === mio ? ' (tú)' : '');
-        li.append(b, s); lista.appendChild(li);
-      });
-      $('cuentaBus').textContent = filas.length ? '(' + filas.length + ' de ' + mapa.capacidad + ')' : '';
-      $('listaVacia').classList.toggle('oculto', filas.length > 0);
     }
 
     function pintarEleccion() {
       const n = estado.asiento; const mio = estado.mia && estado.mia.asiento;
       if (n) { $('eleccionTitulo').textContent = 'Asiento ' + n; $('eleccionDetalle').textContent = ubicacion(n) + (n === mio ? '. Es tu asiento actual.' : '. Confirma abajo para reservarlo.'); }
-      else { $('eleccionTitulo').textContent = 'Toca un asiento libre'; $('eleccionDetalle').textContent = 'Los asientos oscuros ya están tomados. Tócalos para ver quién va ahí.'; }
+      else { $('eleccionTitulo').textContent = 'Toca un asiento libre'; $('eleccionDetalle').textContent = 'Los asientos oscuros ya están reservados.'; }
     }
 
     let temporizadorBurbuja = 0;
@@ -805,13 +780,9 @@
       estado.cerrada = mapa.inscripcionAbierta === false;
       if (Number.isFinite(mapa.actualizado)) estado.desfase = mapa.actualizado - Date.now();
       actualizarPlazo();
-      const t = mapa.totales || {};
-      $('chipAsisten').textContent = t.asisten != null ? t.asisten : '…';
-      $('chipLibres').textContent = t.libres != null ? t.libres : '…';
       const mio = estado.mia && estado.mia.asiento;
       if (estado.asiento && estado.asiento !== mio && mapa.asientos[String(estado.asiento)]) {
-        const quien = mapa.asientos[String(estado.asiento)].nombre;
-        mensaje('El asiento ' + estado.asiento + ' lo acaba de tomar ' + quien + '. Elige otro.', 'error');
+        mensaje('El asiento ' + estado.asiento + ' acaba de ser reservado. Elige otro.', 'error');
         estado.asiento = null; actualizarResumen();
       }
       pintarBus();

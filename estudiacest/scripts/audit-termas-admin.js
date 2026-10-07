@@ -72,13 +72,13 @@ async function call(db, action, body, authenticated = true) {
   });
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   try {
-    const method = action === 'admin-lista' ? 'GET' : 'POST';
+    const method = ['estado', 'admin-lista'].includes(action) ? 'GET' : 'POST';
     const result = await fetch(`http://127.0.0.1:${server.address().port}/api/estudiantes?action=termas-${action}`, {
       method,
       headers: { 'Content-Type': 'application/json', Connection: 'close', ...(authenticated ? { authorization: 'Bearer token-ficticio' } : {}) },
       ...(method === 'POST' ? { body: JSON.stringify(body || {}) } : {})
     });
-    return { code: result.status, payload: await result.json() };
+    return { code: result.status, payload: await result.json(), cacheControl: result.headers.get('cache-control') };
   } finally { await new Promise(resolve => server.close(resolve)); }
 }
 
@@ -136,6 +136,35 @@ const baseB = {
     assert.strictEqual((await call(tardia, 'inscribir', baseA, false)).code, 403, 'También se comprueba el plazo dentro de la transacción.');
     assert.deepStrictEqual(tardia.state, estadoAntes);
   } finally { Date.now = relojReal; }
+
+  function comprobarEstadoPrivado(publico) {
+    assert.deepStrictEqual(Object.keys(publico).sort(), ['actualizado', 'asientos', 'capacidad', 'cierreInscripcion', 'inscripcionAbierta']);
+    Object.values(publico.asientos).forEach(asiento => assert.deepStrictEqual(asiento, { ocupado: true }));
+  }
+  const privacidad = mockDb();
+  const altaPublica = await call(privacidad, 'inscribir', baseA, false);
+  assert.strictEqual(altaPublica.code, 200);
+  comprobarEstadoPrivado(altaPublica.payload.estado);
+  const consultaPublica = await call(privacidad, 'estado', null, false);
+  assert.strictEqual(consultaPublica.code, 200);
+  const { ok, ...estadoConsulta } = consultaPublica.payload;
+  comprobarEstadoPrivado(estadoConsulta);
+  assert.deepStrictEqual(estadoConsulta.asientos, { '7': { ocupado: true } });
+  for (const datos of [{ ...baseB, asiento: baseA.asiento }, baseA]) {
+    const conflictoPublico = await call(privacidad, 'inscribir', datos, false);
+    assert.strictEqual(conflictoPublico.code, 409);
+    comprobarEstadoPrivado(conflictoPublico.payload.estado);
+  }
+  const privado = await call(privacidad, 'admin-lista');
+  assert.strictEqual(privado.code, 200);
+  assert.strictEqual(privado.cacheControl, 'no-store', 'Las respuestas del administrador no deben almacenarse en cachés compartidas.');
+  assert.strictEqual(privado.payload.totales.asisten, 1, 'Los totales siguen disponibles únicamente al administrador.');
+  assert.strictEqual(privado.payload.asientos['7'].nombre, 'Prueba Docente');
+  assert.strictEqual((await call(privacidad, 'admin-lista', null, false)).code, 401);
+  privacidad.state.plataforma_estudiantes.admins['admin-1'] = false;
+  const noAdmin = await call(privacidad, 'admin-lista');
+  assert.strictEqual(noAdmin.code, 403);
+  assert.strictEqual(noAdmin.payload.totales, undefined);
 
   const fria = mockDb(true);
   const ruta = 'eventos_docentes/termas_2026';
@@ -236,6 +265,9 @@ const baseB = {
 
   const api = fs.readFileSync(path.join(ROOT, 'api', '_termas.js'), 'utf8');
   const pagina = fs.readFileSync(path.join(ROOT, 'termas', 'index.html'), 'utf8');
+  for (const marcador of ['chipAsisten', 'chipLibres', 'cuentaBus', 'listaBus', 'mapa.totales', 'ocupante.nombre']) {
+    assert.ok(!pagina.includes(marcador), `La página pública todavía expone cifras o pasajeros: ${marcador}`);
+  }
   const plazoCliente = pagina.match(/const CIERRE_INSCRIPCION = Date.parse\('([^']+)'\)/);
   assert.ok(plazoCliente, 'La página debe tener un plazo de respaldo.');
   assert.strictEqual(Date.parse(plazoCliente[1]), cierre, 'Cliente y servidor deben compartir el mismo cierre.');
@@ -250,7 +282,7 @@ const baseB = {
   const vercelIgnore = fs.readFileSync(path.join(ROOT, '.vercelignore'), 'utf8');
   assert.ok(vercelIgnore.includes('!scripts/audit-termas-admin.js'), 'Vercel excluiría la auditoría del prebuild.');
 
-  console.log('Termas: plazo de Santiago, cierre exacto, rechazo sin escrituras, transacción tardía y pase conservado; autenticación, edición, conflictos, papelera y restauración correctos, también con caché fría.');
+  console.log('Termas: totales y pasajeros exclusivos del administrador, consultas/confirmaciones/conflictos públicos mínimos; plazo de Santiago, rechazo sin escrituras, pase conservado, edición, papelera y restauración correctos, también con caché fría.');
 })().catch(error => {
   console.error(error.stack || error.message);
   process.exit(1);

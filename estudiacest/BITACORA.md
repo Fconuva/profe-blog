@@ -1,5 +1,13 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-07, NM4: casos impresos y correo formal para el martes 13
+
+- Francisco informa que el manual ya se realizó completo y pide otra actividad con casos y guía impresa. Se prepara «Del WhatsApp al correo formal», clase 8, martes 13 de octubre, 4°D, 90 minutos: comparar mensajes, distinguir hechos de juicios y redactar una solicitud fundamentada para un destinatario.
+- Guía autosuficiente de seis páginas A4: pedido incompleto, horarios contradictorios y afiche con fecha errónea; documentos y conversaciones ficticios, preguntas 1–10, primera versión, revisión en pareja y versión corregida. 55 renglones de 8 mm; Times New Roman 12 pt y títulos 14 pt. Membrete, ambos logos, ficha y pie extraídos de la plantilla oficial y comparados por propiedades visuales en las seis páginas. PDF generado y seis páginas renderizadas e inspeccionadas; no se afirma impresión física.
+- Presentación espejo de 17 pantallas con casos, preguntas, página de la guía, tiempos, navegación, pantalla completa y pizarra. Objetivo y casos proceden de la misma fuente que la guía. Portada NM4 enlaza la clase y el PDF; conserva los accesos anteriores. El control cronológico de la portada reconoce la clase autorizada del 13 y mantiene pendiente el 19.
+- Planificación: inicio 10, lectura/modelamiento 20, casos/escritura 35, revisión 15 y cierre 10 minutos. OA 5 y 6; conceptos hecho, juicio, petición y registro; escritura y revisión individuales. Evaluación formativa con cuatro criterios observables y pauta interna, sin notas ni escrituras de producción. Revisión de diseño con assessment-validity-checker; tiempos no pilotados. Planificación y pauta excluidas del sitio público.
+- Verificación local: 244 comprobaciones aprobadas, sin errores de JavaScript/HTTP; seis hojas A4 con y sin fondos, 55 renglones, fuentes y formato oficial, igualdad guía/presentación y conservación de enlaces. Navegador a 320, 390, 1366, 1440 y 3840 CSS px, proyección sin cortes y capturas inspeccionadas. Build completo aprobado con 745 recursos críticos. PDF SHA-256: `d64a3cf65fc7fc843cbdc2c1031846282cbd03987a3c93abd194c8a28d6a4703`. Publicación y comprobación pública pendientes de cierre.
+
 ## 2026-10-07, PAES cartas: acceso individual para revisión del propietario
 
 - Francisco identifica su cuenta y pide dejarla disponible para revisar. Consulta privada al proyecto `estudiacest`: una única cuenta activa en un curso fuera del acceso estudiantil PAES de cartas. Se prepara un permiso individual por UID, conservando perfil, curso, contraseña, notas e intentos; no se publica el identificador ni se concede administración.

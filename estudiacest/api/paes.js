@@ -10,6 +10,7 @@ const G20 = require('./_paes-g20');
 const G21 = require('./_paes-g21');
 const FOUNDATIONS = require('./_paes-foundations');
 const PREMIOS_PAES = require('./_premios-paes');
+const CARTAS = require('./_paes-cartas');
 Object.assign(GUIDED_GUIDE_KEYS, FOUNDATIONS.GUIDED_KEYS);
 Object.assign(GUIDED_GUIDE_FEEDBACK, FOUNDATIONS.GUIDED_FEEDBACK);
 
@@ -1109,6 +1110,7 @@ module.exports = async (req, res) => {
         }
 
         // Public actions
+        if (['cards-preview', 'cards-state', 'cards-save', 'cards-submit'].includes(action) || String(action).startsWith('cards-room-')) return await CARTAS.handle(action, req, res, { db, auth });
         if (action === 'submit') return await handleSubmit(req, res);
         if (action === 'submit-guia') return await handleSubmitGuia(req, res);
         if (action === 'track-download') return await handleTrackDownload(req, res);
@@ -1133,6 +1135,7 @@ module.exports = async (req, res) => {
 
         // Admin actions (Token verification required)
         const decoded = await verifyAdmin(req);
+        if (String(action).startsWith('admin-cards-')) return await CARTAS.handle(action, req, res, { db, auth, adminUid: decoded.uid });
 
         if (action === 'admin-get-foundation') {
             const id = String(req.query.guiaId || '');

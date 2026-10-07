@@ -1,30 +1,21 @@
-# Pauta formativa interna · Clase 8 NM4
+﻿# Pauta docente interna · Cuatro casos y correo de intervención
 
-No se distribuye como parte de la guía. No es una clave de redacción única ni una escala de notas.
+Uso formativo. No existe una redacción única ni una nota automática. Los cuatro casos son ficticios; no evaluar experiencias propias ni decisiones legales. La hoja Gmail tiene un solo correo que se revisa y corrige en el mismo espacio.
 
-## Preguntas y evidencia
+## Evidencia pertinente de cada caso
 
-1. Faltan seis cuadernos. Pedido P-214: 24; recepción: 18. Debe distinguir cantidad pedida y recibida; no exigir operaciones decorativas si identifica bien la diferencia.
-2. C describe el pedido, cantidades y petición. A contiene juicios no documentados; B es respetuoso pero omite datos necesarios. La cortesía por sí sola no basta: valorar justificación con contenido.
-3. «Siempre hacen lo mismo» y «Son irresponsables» no están respaldados por este caso. Aceptar una descripción como «Recibimos 18 de los 24 cuadernos pedidos»; no validar atribuir intenciones o reincidencia.
-4. Correo de coordinación: 09:00; WhatsApp de supervisión: 09:30. Falta confirmar la hora vigente de la reunión del 14 de octubre. El lugar y el registro de materiales coinciden.
-5. La hora de recepción más reciente es un indicio temporal, pero ninguno declara un cambio ni que reemplaza al otro. No se puede asegurar automáticamente la hora final. Debe relacionar su explicación con esta falta de confirmación.
-6. Petición cortés que explicite 09:00/09:30 y solicite confirmación. No exigir una frase exacta ni acusación al emisor.
-7. Borrador: viernes 16 de octubre; encargo E-031: sábado 17. El encargo respalda corregir la fecha; no exigir interpretación técnica del afiche.
-8. «Nadie revisa nada» o «está mal otra vez» generalizan sin evidencia de comportamiento previo. Aceptar descripción neutral del error de fecha; no declarar que la impresión se ejecutó.
-9. Falta la aprobación de coordinación indicada en el encargo antes de imprimir. Petición de revisar y confirmar aprobación del borrador corregido. El mensaje de imprimir inmediatamente no demuestra que la aprobación ya ocurrió.
-10. Caso 2: coordinación/supervisión, confirmar hora, no asegurar cuál es final. Caso 3: coordinación de la muestra, confirmar aprobación de fecha corregida antes de impresión, no asegurar causas o responsables del error ni autorización ya obtenida.
+1. Inés puede informar insultos y ambos empujones el 13 de octubre a las 10:15, mesa de preparación; caja caída, intervención de Sandra y preocupación por seguridad y revisión del pedido P-318 antes de las 12:00. No observó puñetazos ni sabe si hubo lesiones. Solicitud a Laura Vega: intervenir y revisar hechos, escuchar a involucrados y establecer medidas para evitar otra agresión. No pedir a Inés que medie entre quienes la presionan.
+2. Nicolás presenció insulto y cuaderno quitado el 8, mochila escondida y paso bloqueado el 9; vio publicación burlona el 12. No sabe quién tomó la foto ni todo lo vivido por Benjamín. Solicitud a Alejandra Ortiz: intervención, apoyo a Benjamín, conversación privada y resguardo del denunciante frente a represalias. No confundir reserva de identidad con correo sin remitente, cuenta falsa o anonimato garantizado.
+3. Emilia escuchó las respuestas del 6 y 12 y observó insulto general y hoja rota el 8; el profesor ficticio es Sergio Mora, de Comunicación Técnica. Puede explicar que tres compañeros manifestaron no querer preguntar, atribuyendo esa información. No presenció hechos de otros cursos. Solicitud al director Ricardo León: reunión, revisión de hechos, orientación sobre pasos y resguardo. No exigir que todos compartan exactamente la misma percepción ni tratar una sanción como ya decidida.
+4. Alex vivió tocamientos sin permiso el 9 a las 13:10 y el 12 a las 10:25; indicó que no quería ese contacto, evita al compañero y solicita ayuda. No sabe cuánto vieron terceros. Solicitud a María Salas: conversación privada, apoyo y protección frente a nuevos contactos. No exigir detalles íntimos, pruebas, enfrentar al compañero ni interpretar su risa inicial como consentimiento. Puede comunicar lo necesario de forma no gráfica.
 
-## Correos admisibles
+## Criterios observables
 
-Caso 2: asunto específico sobre hora de reunión; saludo; comunica que el correo del 13 señala 09:00 y el mensaje 09:30 para el 14; solicita confirmar la hora vigente y, opcionalmente, quién enviará la confirmación. Cierre respetuoso y firma. No afirmar retraso, incompetencia ni cambio oficial.
+- Hechos: al menos dos datos pertinentes y correctos; fechas/lugares y distinción entre hechos observados y desconocidos. No exigir citas jurídicas ni fuentes ajenas a la guía.
+- Petición: intervención concreta y pertinente a la persona indicada; explica preocupación y apoyo o resguardo cuando corresponde. Admitir acciones equivalentes bien justificadas.
+- Organización: Para y Asunto claros; saludo, cuerpo, agradecimiento/despedida y firma ficticia coherentes. De aparece preimpreso; Cc/Cco no se exigen ni suman mérito.
+- Lenguaje y revisión: claridad, trato respetuoso y corrección de datos o petición. Informar palabras agresivas relevantes como cita breve no equivale a insultar al destinatario. No exigir reproducir todas las groserías.
 
-Caso 3: asunto sobre revisión del afiche; saludo; explica que E-031 fija sábado 17 a las 10:00 y el borrador muestra viernes 16; propone corregir, solicita revisión/aprobación antes de imprimir conforme al encargo. Cierre respetuoso y firma. No afirmar que ya corrigió o envió un archivo real si está proponiendo la solución en esta actividad; tampoco atribuir culpa.
+Usar presente/por precisar/ausente y una observación concreta, sin convertirlos en puntos. Si falta un dato, preguntar qué fragmento del caso permite precisarlo. Si aparece una culpa o intención inventada, separar hecho e inferencia. Si la petición es vaga, solicitar la acción esperada. No valorar morbo, dramatización, dureza de sanción, caligrafía decorativa ni uso de tecnicismos.
 
-Datos admisibles adicionales: lugar de reunión, registro que deben llevar; nombre Muestra TP, salón multiuso, hora 10:00, estado de borrador. Deben aportar pertinencia y no sustituir explicar el problema.
-
-## Retroalimentación consistente
-
-Revisar cuatro criterios de la planificación, con descriptores «presente», «por precisar» y «ausente», sin convertirlos en puntajes. Señalar el fragmento que justifica la observación. Si una frase mezcla hecho y suposición, pedir conservar el hecho y convertir lo incierto en una pregunta. Si la petición es vaga, pedir especificar qué acción se espera y de quién. Si el registro es brusco, proponer una reformulación que mantenga el problema.
-
-Comparar versiones: cambio pertinente y conservación de datos. No castigar un correo correcto por rechazar una observación equivocada del compañero, siempre que pueda explicarlo. La revisión en pareja no decide una nota. La evaluación de fiabilidad requeriría que docentes revisaran muestras comunes; aquí solo se revisa el diseño.
+La retroalimentación sobre un texto ficticio no reemplaza apoyo ante una situación real. Si aparece un relato real, no marcarlo como error de escritura ni exponerlo al curso; seguir el protocolo del establecimiento y la conducción indicada en la planificación. El correo escolar no sustituye pedir ayuda inmediata a un adulto de confianza.

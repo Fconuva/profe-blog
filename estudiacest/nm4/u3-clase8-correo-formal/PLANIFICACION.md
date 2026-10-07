@@ -1,56 +1,50 @@
-# Clase 8 · Del WhatsApp al correo formal
+﻿# Clase 8 NM4 · Un correo para pedir intervención
 
-Aplicación solicitada: martes 13 de octubre de 2026, NM4, 4°D por su horario. Sesión de 90 minutos previstos. Francisco informa que realizaron todas las partes de la clase del manual y pide una actividad distinta. Esta clase es independiente: conserva los materiales y registros anteriores y no prolonga el manual.
+Aplicación del martes 13 de octubre de 2026; material disponible para NM4. Francisco pide cuatro situaciones específicas y cuatro guías diferentes para aproximadamente 225 estudiantes. Cada estudiante recibe una versión de dos páginas: caso e indicaciones, y hoja con formato de composición Gmail. No recibe los cuatro casos impresos.
 
-## Objetivo y currículo
+## Objetivo y aprendizaje
 
-Redactar una solicitud clara y fundamentada, adecuando el lenguaje al destinatario.
+Redactar un correo formal para informar una situación y solicitar intervención, usando hechos y un lenguaje adecuado al destinatario.
 
-Lengua y Literatura, 4° medio: OA 5 (proceso de escritura, coherencia, género y audiencia) y OA 6 (recursos del lenguaje, posición frente al asunto y relación con el destinatario). Selección didáctica local del correo formal; el OA no prescribe este género ni estos tres casos. Fuente primaria: [Programa de Estudio, Mineduc](https://www.curriculumnacional.cl/614/articles-140135_programa.pdf).
+Lengua y Literatura, 4° medio, OA 5 y OA 6: escritura coherente, proceso de revisión, audiencia y recursos del lenguaje. El correo de solicitud es una selección didáctica local. Fuente: [Programa Mineduc](https://www.curriculumnacional.cl/614/articles-140135_programa.pdf).
 
-Se enseñan hecho, juicio, petición y registro; asunto, saludo, cuerpo y cierre. Las acciones son comparar versiones, distinguir datos de suposiciones, fundamentar una petición, escribir y revisar. El trato respetuoso se observa en elecciones de palabras y peticiones; no se infieren hábitos futuros ni competencia técnica.
+Contenido enseñado en la presentación: hecho, juicio, petición y registro; destinatario, asunto, saludo, cuerpo, despedida y firma. Cc/Cco son opciones de copia, no mecanismos que garanticen anonimato; no se solicitan copias para estos casos. Las acciones son seleccionar hechos, ordenarlos, distinguir lo observado de lo no confirmado, redactar y corregir. El trato respetuoso y la reserva de información se observan en las decisiones de escritura.
 
-## Materiales y trabajo
+## Versiones y papel
 
-Una guía individual de seis páginas A4, lápiz y presentación de 17 pantallas. El estudiante escribe exclusivamente en la guía; revisión breve en pareja con producto individual. No se requiere celular, cuenta, envío de correo real ni investigación externa. Tres casos y documentos ficticios: pedido incompleto, horarios contradictorios y afiche enviado a revisión. Todas las evidencias necesarias están impresas.
+1. Inés observa insultos y empujones entre Diego y Mauricio, y pide intervención a su jefa directa, Laura Vega.
+2. Nicolás ha presenciado hostigamiento reiterado hacia Benjamín; informa a la profesora jefe Alejandra Ortiz y solicita reserva de su identidad y protección frente a represalias.
+3. Emilia informa al director Ricardo León hechos presenciados sobre el trato del profesor ficticio Sergio Mora. Separa los hechos de rumores y solicita revisión y reunión.
+4. Alex relata tocamientos sin permiso y solicita apoyo y protección a María Salas, encargada de convivencia. La descripción es breve y no gráfica; no se atribuye el problema a la identidad, orientación ni apariencia de nadie.
 
-Las preguntas siguen inmediatamente a su caso. El caso 1 permite comparar tres mensajes; el 2 exige reconocer que la última hora recibida no demuestra una modificación; el 3 permite corregir una fecha y solicitar aprobación. Cada estudiante elige 2 o 3 para el correo, lo que exige transferir la estructura del ejemplo sin copiar el mensaje C. El ejemplo de la constancia es independiente de los casos.
+Todos los personajes, hechos, establecimientos y direcciones de correo son ficticios. Las direcciones usan el dominio reservado .example. No son personas de CEST ni correos operativos. El formato Gmail es una simulación impresa, no un formulario ni un envío real.
+
+Distribución orientativa para 225 estudiantes: 57 copias del caso 1 y 56 de cada uno de los otros tres; 450 caras impresas. A doble cara: 225 hojas. A una cara: 450 hojas. Las cantidades se ajustan a la elección del curso; no fijan quién debe trabajar cada tema. La versión disponible puede cambiarse. Los archivos guia-caso-1-nm4.pdf a guia-caso-4-nm4.pdf tienen dos páginas cada uno. El PDF maestro contiene las cuatro versiones, ocho páginas; no se reparte completo a cada estudiante.
 
 ## Secuencia de 90 minutos
 
-| Momento | Minutos | Trabajo y monitoreo |
+| Momento | Minutos | Acción |
 |---|---:|---|
-| Inicio | 10 | Activación oral: qué necesita saber alguien para ayudarnos. Normas, trabajo individual en papel y objetivo en pantallas separadas. |
-| Lectura y modelamiento | 20 | Explicar los cuatro conceptos y partes. Mostrar el ejemplo de constancia: pensar en voz alta cómo los datos apoyan la petición y cómo el lenguaje se dirige a una persona. Comparar los mensajes A/B/C del caso 1 y responder 1–3. |
-| Casos y escritura | 35 | Leer 2 y 3; responder 4–9 (18 min orientativos), elegir y planificar en 10 (3 min), primera versión del correo (14 min). Circular y preguntar: ¿qué dato respalda esa frase?, ¿qué no puedes asegurar?, ¿qué debe hacer el destinatario? |
-| Revisión | 15 | Lectura en pareja, lista de cuatro criterios y una mejora concreta (5 min); reescritura individual (10 min). Verificar que el cambio conserva los datos y aclara la solicitud. |
-| Cierre | 10 | Compartir dos cambios con su motivo; sistematizar hechos → destinatario → petición → revisión y recoger las guías. Preguntar qué información necesita el lector para responder. |
+| Inicio | 10 | Activación general sobre información necesaria para pedir intervención; normas sin relatos personales; objetivo. Tres pantallas separadas. |
+| Modelamiento | 20 | Enseñar conceptos y estructura; analizar el ejemplo independiente de constancia. Mostrar cómo un hecho sostiene una petición y cómo se organiza el correo en Gmail. |
+| Elección y escritura | 35 | Presentar brevemente los cuatro temas, sin leer todas las narraciones al grupo. Cada estudiante elige y lee su guía (15 min orientativos), organiza y escribe el correo (20 min). Circular: qué presenciaste, qué no sabes, qué debe hacer el destinatario. |
+| Revisión | 15 | Revisar datos, orden, petición, lenguaje y resguardo. Corregir en la misma hoja, sin una nueva copia completa. Revisión privada docente disponible; intercambio voluntario del texto ficticio. |
+| Cierre | 10 | Compartir cambios de escritura, sin leer denuncias ni dramatizar agresiones. Sistematizar hechos, destinatario, petición y revisión. Recoger las dos páginas. |
 
-Tiempos propuestos, no pilotados. Diez respuestas breves y un correo con reescritura: carga estimada de 300–450 palabras manuscritas, según desarrollo, no extensión obligatoria ni criterio de velocidad. Si el curso requiere más tiempo, permitir terminar la revisión después; no sumar tareas para quienes terminan ni convertir la escritura rápida en logro. Apoyo lector mediante lectura oral y aclaración de vocabulario, conservando decisiones y producto individual.
+Tiempos propuestos, no pilotados. Conteo del PDF: 603–629 palabras por versión, incluidos ambos membretes, ficha e indicaciones; se escribe un correo y se corrige. No se impone extensión en palabras ni se evalúa velocidad. La hoja de respuesta tiene 16 renglones de 8 mm más campos Para/Asunto de 8 mm; el texto puede corregirse con lápiz en ese espacio. Apoyo lector mediante lectura privada/oral y aclaración de vocabulario, conservando decisiones y producto individual.
 
-## Evaluación formativa
+## Evaluación y revisión del instrumento
 
-Evidencia principal: correo individual y cambios entre primera versión y versión revisada. Las respuestas breves apoyan el diagnóstico y permiten identificar uso de datos. Cuatro criterios observables:
+Revisión de diseño con assessment-validity-checker: objetivo de escritura, 4° medio, uso formativo. Evidencia: correo individual y correcciones en la misma hoja. Cuatro criterios: precisión de al menos dos hechos del caso; petición pertinente al destinatario; organización del correo; lenguaje claro y respetuoso, con resguardo cuando corresponde. No se evalúa conocimiento legal, capacidad de investigar, exposición personal, intensidad emocional ni una decisión disciplinaria. No hay puntos, notas, ponderación ni escritura en Lirmi. No hay validación psicométrica, pilotaje ni fiabilidad entre correctores acreditada.
 
-1. Usa dos datos correctos, vinculados al documento o mensaje, y conserva la incertidumbre cuando falta confirmación.
-2. Explica el problema y pide una acción concreta a un destinatario pertinente.
-3. Organiza asunto, saludo, cuerpo y cierre de manera coherente.
-4. Elige palabras claras y respetuosas, y corrige a partir de una observación pertinente.
+## Conducción de los temas sensibles
 
-La casilla marcada por un compañero no acredita por sí sola el aprendizaje. El docente verifica el texto. Se admiten formulaciones distintas y peticiones equivalentes bien fundamentadas. No se asignan puntos, ponderaciones, nota ni escritura en Lirmi. No se evalúan conocimientos técnicos, exactitud de nombres comerciales, decoración o caligrafía, salvo legibilidad funcional.
+La elección es libre; permitir cambiar de caso sin pedir una explicación personal. No solicitar experiencias propias ni detalles gráficos, representar empujones/tocamientos o leer el relato al curso. La revisión de textos puede ser privada. No culpabilizar a la persona afectada ni exigir que obtenga pruebas o confronte al presunto agresor. Una solicitud de ayuda no depende de la calidad del correo.
 
-## Revisión del instrumento y límites
+Si surge una revelación real, detener su evaluación como ejercicio ficticio, escuchar sin interrogar y derivar a los responsables según el protocolo vigente del establecimiento; no investigar en la clase ni prometer secreto absoluto. La petición de reserva no implica divulgar información al grupo. Referencias consultadas: [orientaciones Mineduc](https://bibliotecadigital.mineduc.cl/handle/20.500.12365/2020) y [Ley General de Educación, BCN](https://www.bcn.cl/leychile/Navegar?idNorma=1014974&idParte=8940682). Estas referencias orientan la conducción docente; no se presentan como reglamento local CEST ni se evalúan como contenido jurídico. La consulta web de la cartilla fue restringida por el servidor; no se afirma lectura completa de ella.
 
-Revisión de diseño con assessment-validity-checker: propósito formativo, 4° medio, escritura de una solicitud para una audiencia con hechos y registro pertinentes. La transferencia a 2/3 reduce copia del modelo; documentos autosuficientes evitan depender de conocimiento del taller o acceso digital. Primera versión, observación y versión revisada permiten revisar el proceso. La pauta describe decisiones admisibles y errores observables; no presenta una única redacción obligatoria. No hay pilotaje, estudio de fiabilidad entre correctores, validación psicométrica ni aplicación de aula acreditada.
+## Formato y reproducción
 
-Formato institucional extraído de la plantilla canónica: ambos logos, contactos, ficha completa, profesor y pie. Contenido a 12 pt Times New Roman y títulos 14 pt, siguiendo la preferencia de impresión expresada por Francisco; membrete y pie mantienen Inter y sus medidas oficiales. Identificación inicial de 8 mm y breve en las demás páginas, 55 renglones de 8 mm. PDF A4 al 100 %, posible doble cara en tres hojas; revisión digital sin afirmar prueba física.
+Membrete, logos, ficha y pie extraídos de la plantilla institucional canónica. Contenido Times New Roman 12 pt y títulos 14 pt; membrete y pie mantienen sus fuentes/medidas exactas. A4 al 100 %, con y sin fondos. La revisión digital no acredita una prueba física.
 
-## Reproducción
-
-- Fuente compartida: scripts/generate-nm4-correo-guia.js.
-- Estilos de generación: scripts/nm4-correo-guia.css y scripts/nm4-correo-presentacion.css.
-- Generar: node scripts/generate-nm4-correo-guia.js.
-- Revisar: node scripts/audit-nm4-correo-guia.js; en producción, añadir --public.
-- Guía: guia.html y assets/guia-correo-formal-nm4.pdf.
-- Presentación: index.html, misma información y preguntas, sin respuestas digitales.
-- Pauta: PAUTA_DOCENTE.md, interna, excluida del sitio.
+Generar: node scripts/generate-nm4-correo-guia.js. Fuente: generate-nm4-correo-variants.js, nm4-correo-casos.js y estilos propios. Revisar: node scripts/audit-nm4-correo-guia.js; añadir --public para verificar publicación. Planificación y pauta son internas, excluidas del sitio.

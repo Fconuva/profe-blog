@@ -1,5 +1,11 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-07, Termas: corregir el 404 al quitar inscripciones
+
+- El panel mostraba 404 «La inscripción ya no existe» al intentar quitar un registro todavía presente. Lectura autenticada actualizada: sigue en el listado y la papelera está vacía; no se elimina ninguna inscripción real como prueba.
+- Causa reproducida con fixtures: Firebase puede iniciar la transacción con `null` por caché fría; abortar con `undefined` impedía leer y reintentar con los datos del servidor. `api/_termas.js` permite ese reintento en eliminación, edición y restauración, sin aplicar estados provisionales localmente; mantiene el 404 cuando el registro realmente falta, conflictos y autenticación.
+- `scripts/audit-termas-admin.js` reproduce primero el 404 anterior y verifica la función real mediante HTTP local con base e identidad ficticias: eliminación con caché fría, archivo único completo, otros registros intactos, segundo intento sin cambios, restauración, edición conservando llave/fecha y rechazo de asiento ocupado o registro inexistente. Auditoría aprobada; build general del checkout compartido aprobado. Publicación aislada y comprobación pública pendientes de registrar al concluir; trabajo ajeno preservado.
+
 ## 2026-10-07, Termas: teléfonos preparados para grupo de avisos
 
 - Francisco solicita extraer y preparar WhatsApp y crear un grupo donde solo el administrador envíe mensajes. Confirma nombre «Paseo Termas CEST 2026», solo asistentes y él como único administrador.

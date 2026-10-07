@@ -263,6 +263,9 @@ async function adminQuitar(req, res, db, auth) {
     let motivo = '';
     const resultado = await db.ref(BASE).transaction(actual => {
         motivo = '';
+        // Con caché fría Firebase entrega null antes de leer el servidor.
+        // Mantenerlo permite comparar y reintentar; undefined abortaría antes.
+        if (actual === null) { motivo = 'no-encontrada'; return null; }
         const base = actual || {};
         const todas = base.inscripciones || {};
         const previa = todas[clave];
@@ -272,7 +275,7 @@ async function adminQuitar(req, res, db, auth) {
         delete todas[clave];
         base.inscripciones = todas;
         return base;
-    });
+    }, undefined, false);
     if (!resultado.committed || motivo === 'no-encontrada') throw fallo(404, 'La inscripción ya no existe. Actualiza la lista.');
     const base = resultado.snapshot.val() || {};
     return res.status(200).json({ ok: true, papeleraId: idPapelera, ...estadoPublico(base.inscripciones) });
@@ -288,6 +291,7 @@ async function adminGuardar(req, res, db, auth) {
     let motivo = '';
     const resultado = await db.ref(INSCRIPCIONES).transaction(actual => {
         motivo = '';
+        if (actual === null && claveOriginal) { motivo = 'no-encontrada'; return null; }
         const todas = actual || {};
         const previa = claveOriginal ? todas[claveOriginal] : null;
         if (claveOriginal && !previa) { motivo = 'no-encontrada'; return; }
@@ -307,8 +311,8 @@ async function adminGuardar(req, res, db, auth) {
             gestionAdmin: true
         };
         return todas;
-    });
-    if (!resultado.committed) {
+    }, undefined, false);
+    if (!resultado.committed || motivo) {
         if (motivo === 'no-encontrada') throw fallo(404, 'La inscripción que intentabas editar ya no existe. Actualiza la lista.');
         if (motivo === 'correo') throw fallo(409, 'Ya existe una inscripción con ese correo.');
         if (motivo === 'ocupado') throw fallo(409, 'Ese asiento acaba de ser ocupado. Elige otro.');
@@ -331,6 +335,7 @@ async function adminRestaurar(req, res, db, auth) {
     let motivo = '';
     const resultado = await db.ref(BASE).transaction(actual => {
         motivo = '';
+        if (actual === null) { motivo = 'no-encontrada'; return null; }
         const base = actual || {};
         const archivada = base.papelera && base.papelera[id];
         if (!archivada) { motivo = 'no-encontrada'; return; }
@@ -347,8 +352,8 @@ async function adminRestaurar(req, res, db, auth) {
         delete base.papelera[id];
         base.inscripciones = todas;
         return base;
-    });
-    if (!resultado.committed) {
+    }, undefined, false);
+    if (!resultado.committed || motivo) {
         if (motivo === 'no-encontrada') throw fallo(404, 'Ese registro ya no está en la papelera.');
         if (motivo === 'tope') throw fallo(409, 'La inscripción alcanzó su tope.');
         if (motivo === 'correo') throw fallo(409, 'Ya existe una inscripción con ese correo.');

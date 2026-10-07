@@ -4,6 +4,7 @@ const assert = require('assert');
 const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
+const http = require('http');
 const termas = require('../api/_termas.js');
 
 const ROOT = path.resolve(__dirname, '..');
@@ -17,6 +18,7 @@ function getAt(state, route) {
 }
 
 function setAt(state, route, value) {
+  if (value == null && getAt(state, route) == null) return;
   const parts = route.split('/').filter(Boolean);
   let node = state;
   for (let i = 0; i < parts.length - 1; i += 1) node = node[parts[i]] = node[parts[i]] || {};
@@ -28,7 +30,7 @@ function snapshot(value) {
   return { val: () => clone(value) };
 }
 
-function mockDb() {
+function mockDb(coldTransactions = false) {
   const state = { plataforma_estudiantes: { admins: { 'admin-1': true } } };
   return {
     state,
@@ -36,7 +38,12 @@ function mockDb() {
       return {
         async once() { return snapshot(getAt(state, route)); },
         async transaction(update) {
-          const current = clone(getAt(state, route));
+          const current = clone(getAt(state, route)) ?? null;
+          // Firebase inicia con null si no tiene caché. Devolver undefined
+          // aborta antes de consultar el servidor; un valor permite el reintento.
+          if (coldTransactions && current !== null && typeof update(null) === 'undefined') {
+            return { committed: false, snapshot: snapshot(current) };
+          }
           const next = update(current);
           if (typeof next === 'undefined') return { committed: false, snapshot: snapshot(current) };
           setAt(state, route, next);
@@ -47,23 +54,32 @@ function mockDb() {
   };
 }
 
-function response() {
-  return {
-    code: null,
-    payload: null,
-    headers: {},
-    setHeader(name, value) { this.headers[name] = value; },
-    status(code) { this.code = code; return this; },
-    json(payload) { this.payload = payload; return this; }
-  };
-}
-
 async function call(db, action, body, authenticated = true) {
-  const res = response();
-  const req = { method: action === 'admin-lista' ? 'GET' : 'POST', body: body || {}, headers: authenticated ? { authorization: 'Bearer token-ficticio' } : {} };
   const auth = { async verifyIdToken() { return { uid: 'admin-1' }; } };
-  await termas.manejar(req, res, action, db, auth);
-  return res;
+  // Servir la función real por HTTP; Firebase y la identidad son ficticios.
+  const server = http.createServer(async (req, outgoing) => {
+    let raw = '';
+    for await (const chunk of req) raw += chunk;
+    req.body = raw ? JSON.parse(raw) : {};
+    const res = {
+      code: 200,
+      setHeader(name, value) { outgoing.setHeader(name, value); },
+      status(code) { this.code = code; return this; },
+      json(payload) { outgoing.writeHead(this.code, { 'Content-Type': 'application/json' }); outgoing.end(JSON.stringify(payload)); }
+    };
+    const accion = new URL(req.url, 'http://localhost').searchParams.get('action').replace(/^termas-/, '');
+    await termas.manejar(req, res, accion, db, auth);
+  });
+  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+  try {
+    const method = action === 'admin-lista' ? 'GET' : 'POST';
+    const result = await fetch(`http://127.0.0.1:${server.address().port}/api/estudiantes?action=termas-${action}`, {
+      method,
+      headers: { 'Content-Type': 'application/json', Connection: 'close', ...(authenticated ? { authorization: 'Bearer token-ficticio' } : {}) },
+      ...(method === 'POST' ? { body: JSON.stringify(body || {}) } : {})
+    });
+    return { code: result.status, payload: await result.json() };
+  } finally { await new Promise(resolve => server.close(resolve)); }
 }
 
 const baseA = {
@@ -120,6 +136,39 @@ const baseB = {
     assert.strictEqual((await call(tardia, 'inscribir', baseA, false)).code, 403, 'También se comprueba el plazo dentro de la transacción.');
     assert.deepStrictEqual(tardia.state, estadoAntes);
   } finally { Date.now = relojReal; }
+
+  const fria = mockDb(true);
+  const ruta = 'eventos_docentes/termas_2026';
+  assert.strictEqual((await call(fria, 'admin-guardar', baseA)).code, 200);
+  assert.strictEqual((await call(fria, 'admin-guardar', baseB)).code, 200);
+  const original = clone(getAt(fria.state, `${ruta}/inscripciones/uno@example,test`));
+  const otra = clone(getAt(fria.state, `${ruta}/inscripciones/dos@example,test`));
+  const quitadaFria = await call(fria, 'admin-quitar', { correo: baseA.correo });
+  assert.strictEqual(quitadaFria.code, 200, 'Una transacción sin caché debe eliminar la inscripción que existe en el servidor.');
+  assert.strictEqual(getAt(fria.state, `${ruta}/inscripciones/uno@example,test`), undefined);
+  assert.deepStrictEqual(getAt(fria.state, `${ruta}/inscripciones/dos@example,test`), otra);
+  const archivo = getAt(fria.state, `${ruta}/papelera`);
+  assert.strictEqual(Object.keys(archivo).length, 1, 'Los reintentos archivan una sola vez.');
+  assert.deepStrictEqual({ ...archivo[quitadaFria.payload.papeleraId], eliminado: undefined }, { ...original, eliminado: undefined });
+  const despuesQuitar = clone(fria.state);
+  assert.strictEqual((await call(fria, 'admin-quitar', { correo: baseA.correo })).code, 404);
+  assert.deepStrictEqual(fria.state, despuesQuitar, 'Repetir la eliminación no altera la papelera.');
+  assert.strictEqual((await call(fria, 'admin-restaurar', { id: quitadaFria.payload.papeleraId })).code, 200, 'Restaurar debe funcionar sin caché.');
+  assert.strictEqual(Object.keys(getAt(fria.state, `${ruta}/papelera`)).length, 0);
+  assert.strictEqual((await call(fria, 'admin-guardar', { ...baseA, originalCorreo: baseA.correo, comida: 'once' })).code, 200, 'Editar debe funcionar sin caché.');
+  const editadaFria = getAt(fria.state, `${ruta}/inscripciones/uno@example,test`);
+  assert.strictEqual(editadaFria.llave, original.llave);
+  assert.strictEqual(editadaFria.creado, original.creado);
+  assert.strictEqual(editadaFria.comida, 'once');
+  assert.deepStrictEqual(getAt(fria.state, `${ruta}/inscripciones/dos@example,test`), otra);
+  const antesConflicto = clone(fria.state);
+  assert.strictEqual((await call(fria, 'admin-guardar', { ...baseA, originalCorreo: baseA.correo, asiento: baseB.asiento })).code, 409);
+  assert.deepStrictEqual(fria.state, antesConflicto, 'Sin caché se sigue rechazando un asiento ocupado sin escrituras.');
+  const vacia = mockDb(true);
+  const antesVacia = clone(vacia.state);
+  assert.strictEqual((await call(vacia, 'admin-quitar', { correo: baseA.correo })).code, 404);
+  assert.strictEqual((await call(vacia, 'admin-guardar', { ...baseA, originalCorreo: baseA.correo })).code, 404);
+  assert.deepStrictEqual(vacia.state, antesVacia, 'Una inscripción inexistente no genera datos nuevos.');
 
   const db = mockDb();
 
@@ -201,7 +250,7 @@ const baseB = {
   const vercelIgnore = fs.readFileSync(path.join(ROOT, '.vercelignore'), 'utf8');
   assert.ok(vercelIgnore.includes('!scripts/audit-termas-admin.js'), 'Vercel excluiría la auditoría del prebuild.');
 
-  console.log('Termas: plazo de Santiago, cierre exacto, rechazo sin escrituras, transacción tardía, pase conservado y gestión administrativa verificados; autenticación, edición, conflictos, papelera y restauración correctos.');
+  console.log('Termas: plazo de Santiago, cierre exacto, rechazo sin escrituras, transacción tardía y pase conservado; autenticación, edición, conflictos, papelera y restauración correctos, también con caché fría.');
 })().catch(error => {
   console.error(error.stack || error.message);
   process.exit(1);

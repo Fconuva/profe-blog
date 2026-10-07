@@ -74,6 +74,7 @@ Never force-push, hard-reset, restore an older copy over current work, delete an
 - If no writing is stored, report that a retroactive combined grade is not honest without external input.
 
 ## Admin Audit Checklist
+- SIMCE Results: `Reabrir` preserves responses and archives the previous delivery through `simce-admin-reopen`, with server-side course scope, atomic update, idempotent request and readback. It grants individual access even when the class is closed. The prior labor grade remains pending review until publication; reopening does not assign a new grade.
 - Open admin gate and check that only the configured owner email is accepted.
 - Verify section switching: overview, students, lecturas, reports, planilla.
 - Test create student, bulk add, edit student, and direct access link generation.

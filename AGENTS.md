@@ -87,6 +87,8 @@ Está prohibido usar `git push --force`, `git reset --hard`, restaurar versiones
 
 ## Audit Expectations
 
+- SIMCE: Results offers `Reabrir` per student. Use the authenticated `simce-admin-reopen` API; preserve answers and archive the prior response/result/grade together before clearing submission flags. Grant only the student's exception, mark the prior labor grade pending review, and verify readback. Never use a full reset to allow corrections.
+
 - Audits must check browser behavior and console output, not only code inspection.
 - For admin audits, verify login gate, section navigation, create/edit flows, direct-access link generation, review actions, and report/export actions.
 

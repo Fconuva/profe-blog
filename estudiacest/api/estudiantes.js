@@ -396,7 +396,7 @@ async function handleU3S8(req, res, action) {
         ]);
         const session = sessionSnap.val() || {};
         const access = {
-            active:session.activa !== false || exceptionSnap.val() === true,
+            active:(session.activa !== false && session.respuestas_bloqueadas !== true) || exceptionSnap.val() === true,
             released:session.resultados_visibles === true,
             title:session.titulo || 'Unidad 3 · Clase 8 — Ensayo parcial SIMCE'
         };
@@ -631,7 +631,8 @@ async function handlePersonalGuided(req, res, action) {
         const responseRef = db.ref(`${BASE}/respuestas/${session.id}/${uid}`);
         const resultRef = db.ref(`${BASE}/resultados/${session.id}/${uid}`);
         const access = {
-            active:storedSession.activa !== false && storedSession.respuestas_bloqueadas !== true,
+            active:(storedSession.activa !== false && storedSession.respuestas_bloqueadas !== true)
+                || storedSession.excepciones_desbloqueo?.[uid] === true,
             released:storedSession.resultados_visibles === true,
             title:storedSession.titulo || `Ruta personal · Sesión ${number}`
         };
@@ -969,6 +970,7 @@ const PERFILES = require('./_perfiles-publicos.js');
 // motivo que SALAS: no quedan funciones libres en el plan.
 const TERMAS = require('./_termas.js');
 const SIMCE_U3S12 = require('./_simce-u3s12.js');
+const SIMCE_ADMIN_ATTEMPTS = require('./_simce-admin-attempts.js');
 
 module.exports = async (req, res) => {
     res.setHeader('Access-Control-Allow-Origin', resolveAllowedOrigin(req));
@@ -982,6 +984,7 @@ module.exports = async (req, res) => {
     try {
         const action = String(req.query.action || (req.body && req.body.action) || '');
 
+        if (action.startsWith('simce-admin-')) return await SIMCE_ADMIN_ATTEMPTS.manejar(req, res, action.slice('simce-admin-'.length), db, auth);
         if (action.startsWith('simce-u3s7-')) return await handleU3S7(req, res, action);
         if (action.startsWith('simce-u3s8-')) return await handleU3S8(req, res, action);
         if (action.startsWith('simce-u3s12-')) return await SIMCE_U3S12.manejar(req, res, action, db, auth);

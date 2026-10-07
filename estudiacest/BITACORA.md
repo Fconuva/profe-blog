@@ -1,5 +1,13 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-07, SIMCE: reabrir una entrega desde Resultados
+
+- Francisco solicita un botón por estudiante para corregir guías ya enviadas. Resultados incorpora «Reabrir», confirmación explícita y estado «Reabierta para corregir»; la fila permanece visible mientras vuelve a trabajar. La acción conserva las respuestas y permite entregar de nuevo, incluso con el curso cerrado, mediante una excepción individual.
+- API autenticada `estudiantes?action=simce-admin-reopen`: autorización docente y curso comprobados en servidor, transacción con respaldo del intento, resultado, ranking y nota anteriores; solo se retira el resultado vigente del estudiante elegido. Reintentos idempotentes, revalidación de permisos ante concurrencia y rechazo de cuentas con RUN duplicado. El respaldo queda privado en Firebase, sin nuevas reglas de acceso cliente.
+- La nota de laboriosidad conserva su valor histórico y queda pendiente de revisión docente, excluida del promedio mientras no se publique otra vez. Dashboard distingue ese estado. Las guías antiguas dejan de restaurar una entrega cerrada desde la caché local; la reconciliación ignora confirmaciones anteriores a la reapertura. Clases 8 y 12 y acceso personal respetan la excepción aun con sesión inactiva.
+- Auditoría nueva con funciones reales por HTTP y datos ficticios: permisos, ámbito, respaldo atómico, caché fría, concurrencia, repetición, conservación de respuestas, nota pendiente, nueva edición/entrega y relectura. Navegador local: cancelar sin cambio, reabrir, corregir alternativa y escritura, entregar, recargar y comprobar «Entrega confirmada». Admin revisado en escritorio y marcos reales de 390/3840 CSS px sin desborde de página. No se reabre ninguna entrega real para probar.
+- Se incorpora `audit:simce-reopen` al build y se exceptúa su script en `.vercelignore`. Documentación y checklist canónicos actualizados. Publicación mediante checkout aislado limpio y `deploy:prod:safe`; comprobación pública y cierre se registran al terminar.
+
 ## 2026-10-07, PAES cartas: planificar la colección antes de crear
 
 - Francisco solicita todas las cartas, efectos, sobres aleatorios y rarezas por color; luego indica planificar todo antes de comenzar la creación y consulta el máximo de repeticiones y cartas únicas. Se detiene la generación iniciada; los borradores locales no se integran al motor ni se publican. La versión pública conserva las 16 cartas originales.

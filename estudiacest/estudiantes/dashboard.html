@@ -1268,6 +1268,7 @@
                 submitted: { symbol:'✓', label:'Entregada', css:'submitted' },
                 not_submitted: { symbol:'○', label:'Sin entrega', css:'not-submitted' },
                 draft: { symbol:'◐', label:'Borrador', css:'draft' },
+                revision_pending: { symbol:'↻', label:'En revisión', css:'draft' },
                 submission_inconsistent: { symbol:'!', label:'Por revisar', css:'adjusted' },
                 writing_incomplete: { symbol:'△', label:'Escritura incompleta', css:'incomplete' },
                 similarity_adjusted: { symbol:'!', label:'Nota ajustada', css:'adjusted' }
@@ -1303,14 +1304,14 @@
                 return;
             }
 
-            const gradedEntries = entries.filter(item => item.grade !== null && item.grade !== undefined && item.grade !== '' && Number.isFinite(Number(item.grade)));
+            const gradedEntries = entries.filter(item => item.needsReview !== true && item.grade !== null && item.grade !== undefined && item.grade !== '' && Number.isFinite(Number(item.grade)));
             const total = gradedEntries.reduce((sum, item) => sum + Number(item.grade), 0);
             document.getElementById('laborAverage').textContent = gradedEntries.length ? formatSchoolGrade(total / gradedEntries.length) : '-';
             body.innerHTML = entries.map(item => {
                 const meta = laborStatusMeta(item.status);
                 return `<tr>
                     <td>Clase ${Number(item.classNumber || 0)}</td>
-                    <td><span class="labor-grade-value">${item.grade === null || item.grade === undefined || item.grade === '' ? 'Pendiente' : formatSchoolGrade(item.grade)}</span></td>
+                    <td><span class="labor-grade-value">${item.needsReview === true ? 'Pendiente de revisión' : item.grade === null || item.grade === undefined || item.grade === '' ? 'Pendiente' : formatSchoolGrade(item.grade)}</span></td>
                     <td><span class="labor-status ${meta.css}"><span class="labor-status-symbol">${meta.symbol}</span>${meta.label}</span></td>
                     <td class="labor-reason">${escapeDashboardHtml(item.statusLabel || '')}</td>
                 </tr>`;
@@ -1326,7 +1327,8 @@
             const hasResults = ses.resultados_visibles && myResult;
             const sessionTarget = ses.prefer_guia && ses.link_guia ? ses.link_guia : `sesion.html?id=${ses.id}`;
                 const noteValue = Number(myLaborGrade && myLaborGrade.grade);
-                const noteBadge = Number.isFinite(noteValue)
+                const noteBadge = myLaborGrade?.needsReview === true
+                    ? ' <span class="badge badge-grade">Nota pendiente de revisión</span>' : Number.isFinite(noteValue)
                     ? ' <span class="badge badge-grade">Nota ' + formatSchoolGrade(noteValue) + '</span>'
                     : '';
 

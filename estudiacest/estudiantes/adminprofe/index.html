@@ -1169,6 +1169,7 @@ async function loadAllData(){
     renderOverview();
     renderStudents();
     populateLiveDropdown();
+    if(document.getElementById('resultSession').value)loadResults();
 }
 
 /* ============ CHAT DE CASAS ============ */
@@ -3291,6 +3292,45 @@ async function resetSessionResults(sesId){
     }catch(e){toast('Error: '+e.message,'err')}
 }
 
+const simceReopenBusy=new Set();
+const simceReopenRequests=new Map();
+async function reopenSimceStudent(uid,sesId){
+    const est=students[uid], ses=sessions[sesId];
+    if(!est||!ses||!isMiCurso(est.curso)||!studentCanSeeSession(uid,est,ses))return;
+    const pair=sesId+'/'+uid;
+    if(simceReopenBusy.has(pair))return;
+    if(!confirm('¿Reabrir "'+(ses.titulo||sesId)+'" para '+est.nombre+'?\n\nConservará sus respuestas para corregirlas y volver a entregar.\nSe respaldará la entrega anterior. La nota anterior quedará pendiente de revisión.\nLa habilitación será solo para este estudiante, aunque la clase esté cerrada.'))return;
+    simceReopenBusy.add(pair);
+    loadResults();
+    try{
+        if(!simceReopenRequests.has(pair))simceReopenRequests.set(pair,crypto.randomUUID());
+        const token=await auth.currentUser.getIdToken();
+        const response=await fetch('/api/estudiantes?action=simce-admin-reopen',{
+            method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+            body:JSON.stringify({studentUid:uid,sessionId:sesId,requestId:simceReopenRequests.get(pair)})
+        });
+        const result=await response.json();
+        if(!response.ok)throw new Error(result.error||'No fue posible reabrir.');
+        const [respSnap,resSnap,sesSnap]=await Promise.all([
+            db.ref(BASE+'/respuestas/'+sesId+'/'+uid).once('value'),
+            db.ref(BASE+'/resultados/'+sesId+'/'+uid).once('value'),
+            db.ref(BASE+'/sesiones/'+sesId).once('value')
+        ]);
+        if(!allResponses[sesId])allResponses[sesId]={};
+        allResponses[sesId][uid]=respSnap.val();
+        if(!allResults[sesId])allResults[sesId]={};
+        if(resSnap.exists())allResults[sesId][uid]=resSnap.val();else delete allResults[sesId][uid];
+        sessions[sesId]={...ses,...sesSnap.val()};
+        if(result.reopened&&(respSnap.val()?.completada===true||respSnap.val()?.submitted===true)){
+            toast('El estudiante ya volvió a entregar. Se actualizó el panel.','ok');
+        }else toast(result.reopened?'Reabierta. El estudiante debe recargar la guía, corregir y volver a entregar.':'La solicitud ya fue procesada y el estudiante volvió a entregar.','ok');
+        simceReopenRequests.delete(pair);
+        updateUnlockUI(sesId);
+        if(typeof renderLiveProgress==='function')renderLiveProgress();
+    }catch(e){toast(e.message,'err')}
+    finally{simceReopenBusy.delete(pair);loadResults()}
+}
+
 async function softResetStudent(uid,sesId,nombre){
     if(!confirm('🔓 Reabrir / desbloquear a '+nombre+'?\n\nSe limpian strikes, bloqueos y la marca de "entregada".\nSus respuestas se MANTIENEN (sigue donde quedó).'))return;
     try{
@@ -3944,12 +3984,13 @@ function loadResults(){
     const responses=allResponses[sesId]||{};
     const isFormativeWriting=sessions[sesId]?.formativa===true||sessions[sesId]?.formato_panel==='evidencia-dos-textos';
     let items=[];
-    for(const[uid,r]of Object.entries(results)){
+    const reopened=Object.fromEntries(Object.entries(responses).filter(([,r])=>r?.reopenedAt&&r.submitted!==true&&r.completada!==true).map(([uid])=>[uid,{}]));
+    for(const[uid,r]of Object.entries({...reopened,...results})){
         const est=students[uid];
         if(!est) continue;
         if(!isMiCurso(est.curso)) continue;
         if(courseF && est.curso!==courseF) continue;
-        const flags=r.suspicious_flags||[];
+        const flags=[...(r.suspicious_flags||[])];
         const resp=responses[uid]||{};
         const copyAttempts=resp.copy_attempts?Object.keys(resp.copy_attempts).length:0;
         const focusLogs=resp.focus_log?Object.keys(resp.focus_log).length:0;
@@ -3957,15 +3998,15 @@ function loadResults(){
         if(copyAttempts>0) flags.push('copy_x'+copyAttempts);
         if(focusLogs>2) flags.push('foco_perdido_x'+focusLogs);
         if(esCopia) flags.unshift('🚫 COPIA');
-        items.push({uid,nombre:est.nombre,curso:est.curso,puntaje:r.puntaje||0,total:r.total||0,porcentaje:r.porcentaje||0,timestamp:r.timestamp||0,tiempo:r.tiempo_transcurrido||0,tiempo_min:r.tiempo_min||0,flags,esCopia,nota:r.nota||0,notas_pct:r.notas_pct||0,combinado:r.puntaje_combinado||0});
+        items.push({uid,nombre:est.nombre,curso:est.curso,reopened:!!reopened[uid],puntaje:r.puntaje||r.score||0,total:r.total||0,porcentaje:r.porcentaje||0,timestamp:r.timestamp||0,tiempo:r.tiempo_transcurrido||0,tiempo_min:r.tiempo_min||0,flags,esCopia,nota:r.nota||0,notas_pct:r.notas_pct||0,combinado:r.puntaje_combinado||0});
     }
     items.sort((a,b)=>b.porcentaje-a.porcentaje);
 
     // Level distribution
     const levels={Insuficiente:0,Elemental:0,Adecuado:0,Destacado:0};
-    items.forEach(i=>levels[getLevel(i.porcentaje)]++);
+    items.filter(i=>!i.reopened).forEach(i=>levels[getLevel(i.porcentaje)]++);
     document.getElementById('levelCards').innerHTML=isFormativeWriting
-      ? `<div class="level-card lv-adeq"><div class="lv-label">Productos escritos entregados</div><div class="lv-val">${items.length}</div></div><div class="level-card lv-dest"><div class="lv-label">Modalidad</div><div style="font-weight:800;margin-top:8px">Formativa · sin nota automática</div></div>`
+      ? `<div class="level-card lv-adeq"><div class="lv-label">Productos escritos entregados</div><div class="lv-val">${items.filter(i=>!i.reopened).length}</div></div><div class="level-card lv-dest"><div class="lv-label">Modalidad</div><div style="font-weight:800;margin-top:8px">Formativa · sin nota automática</div></div>`
       : `<div class="level-card lv-insuf"><div class="lv-label">Insuficiente (&lt;40%)</div><div class="lv-val">${levels.Insuficiente}</div></div>
         <div class="level-card lv-elem"><div class="lv-label">Elemental (40-59%)</div><div class="lv-val">${levels.Elemental}</div></div>
         <div class="level-card lv-adeq"><div class="lv-label">Adecuado (60-79%)</div><div class="lv-val">${levels.Adecuado}</div></div>
@@ -3981,18 +4022,21 @@ function loadResults(){
         const copiaBtn=r.esCopia?
             `<button class="btn btn-sm btn-success" style="font-size:10px" onclick="desmarcarCopia('${r.uid}','${sesId}','${r.nombre}')">✅ Quitar</button>`:
             `<button class="btn btn-sm btn-danger" style="font-size:10px" onclick="marcarCopia('${r.uid}','${sesId}','${r.nombre}')">🚫 Copia</button>`;
+        const reopenBtn=progFromCurso(r.curso)==='simce'
+            ? `<button class="btn btn-sm" style="background:#0ea5e9;color:#fff;min-height:36px" title="Conservar respuestas y habilitar una nueva entrega solo para este estudiante" onclick="reopenSimceStudent('${r.uid}','${sesId}')" ${r.reopened||simceReopenBusy.has(sesId+'/'+r.uid)?'disabled':''}>${simceReopenBusy.has(sesId+'/'+r.uid)?'Reabriendo…':r.reopened?'🔓 Reabierta':'🔓 Reabrir'}</button>`
+            : `<button class="btn btn-sm" style="background:#0ea5e9;color:#fff" title="Desbloquear strikes (mantiene respuestas)" onclick="softResetStudent('${r.uid}','${sesId}','${r.nombre}')">🔓</button>`;
         return `<tr${rowBg}>
             <td><strong>${r.nombre}</strong>${flagHtml}</td>
             <td><span class="badge ${cBadge(r.curso)}">${cursoLabel}</span></td>
-            <td>${isFormativeWriting?r.total+' '+(Number(r.total)===1?'producto':'productos'):r.puntaje+'/'+r.total}</td>
-            <td>${isFormativeWriting?'<strong style="color:#16a34a">Entregada</strong>':`<strong style="color:${r.porcentaje>=60?'#16a34a':'#dc2626'}">${r.porcentaje}%</strong>${r.notas_pct>0?`<br><span style="font-size:10px;color:#64748b">Notas:${r.notas_pct}%</span>`:''}`}</td>
+            <td>${r.reopened?'—':isFormativeWriting?r.total+' '+(Number(r.total)===1?'producto':'productos'):r.puntaje+'/'+r.total}</td>
+            <td>${r.reopened?'<strong style="color:#b45309">Reabierta para corregir</strong>':isFormativeWriting?'<strong style="color:#16a34a">Entregada</strong>':`<strong style="color:${r.porcentaje>=60?'#16a34a':'#dc2626'}">${r.porcentaje}%</strong>${r.notas_pct>0?`<br><span style="font-size:10px;color:#64748b">Notas:${r.notas_pct}%</span>`:''}`}</td>
             <td><strong style="color:${notaColor};font-size:18px">${isFormativeWriting?'—':(r.nota>0?r.nota.toFixed(1):'—')}</strong></td>
-            <td>${isFormativeWriting?'<span class="badge badge-blue">Formativa</span>':getLevelBadge(r.porcentaje)}</td>
+            <td>${r.reopened?'<span class="badge badge-amber">Pendiente de entrega</span>':isFormativeWriting?'<span class="badge badge-blue">Formativa</span>':getLevelBadge(r.porcentaje)}</td>
             <td style="font-size:12px;color:#64748b">${mins>0?mins+' min':'—'}</td>
             <td>
                 <button class="btn btn-sm btn-secondary" onclick="viewStudentDetail('${r.uid}')">👤</button>
                 <button class="btn btn-sm" style="background:#8b5cf6;color:#fff" onclick="viewStudentResponses('${r.uid}','${sesId}')">📝</button>
-                <button class="btn btn-sm" style="background:#0ea5e9;color:#fff" title="Desbloquear strikes (mantiene respuestas)" onclick="softResetStudent('${r.uid}','${sesId}','${r.nombre}')">🔓</button>
+                ${reopenBtn}
                 <button class="btn btn-sm btn-warn" title="Reset completo (borra todo)" onclick="hardResetStudent('${r.uid}','${sesId}','${r.nombre}')">🔄</button>
                 ${copiaBtn}
             </td>

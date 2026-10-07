@@ -60,6 +60,8 @@ Force pushes, hard resets, stale deployments, and deletion or rollback of anothe
 
 ## Audit Workflow
 
+For SIMCE individual reopening, test `Resultados > Reabrir` with fixtures: cancel confirmation, conserve written/alternative answers, archive the prior delivery, grant only the selected student's exception, refresh the reopened row, edit and resubmit, and preserve other students and the course closure. Cover authentication, teacher course scope, duplicate requests, cold transaction cache, and pending labor grades. Do not reopen a real student's work as a deployment test.
+
 1. Open the public root and confirm it reaches the shared login.
 2. Test at least one student login and confirm automatic redirection.
 3. Inspect console output during login, dashboard load, and any write action.

@@ -1,5 +1,7 @@
 # Estudia CEST
 
+En SIMCE, `Admin > Resultados > Reabrir` habilita la corrección individual de una entrega. Conserva respuestas, respalda la entrega anterior y permite volver a entregar aunque la clase esté cerrada para el curso. La nota de laboriosidad anterior queda pendiente de revisión y se excluye del promedio hasta una nueva publicación docente. El estudiante debe recargar la guía tras la reapertura.
+
 Proyecto aislado para mover las rutas `/estudiantes`, `/lecturas`, `/nm4` y `/np` al dominio `estudiacest.com` usando Vercel y Firebase Realtime Database.
 
 ## Entrada operativa única

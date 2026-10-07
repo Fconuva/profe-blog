@@ -31,7 +31,8 @@ function supportingTimestamp(response, result, telemetry, recordedAt) {
 }
 
 function hasConfirmedSubmissionTelemetry(response, telemetry) {
-  return Boolean(response) && response.submitted !== true && response.completada !== true &&
+    return Boolean(response) && response.submitted !== true && response.completada !== true &&
+    Number(telemetry && telemetry.submissionConfirmedAt || 0) > Number(response.reopenedAt || 0) &&
     Number(telemetry && telemetry.submissionConfirmationCount || 0) > 0 &&
     firstPositiveNumber([telemetry && telemetry.submittedAt]) !== null &&
     firstPositiveNumber([telemetry && telemetry.submissionConfirmedAt]) !== null;

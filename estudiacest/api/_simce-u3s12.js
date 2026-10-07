@@ -103,7 +103,7 @@ async function verifyStudent(req, db, auth) {
 
 function publicSession(session, exception) {
     return {
-        active: session.activa !== false && (session.respuestas_bloqueadas !== true || exception === true),
+        active: (session.activa !== false && session.respuestas_bloqueadas !== true) || exception === true,
         released: session.resultados_visibles === true,
         title: session.titulo || 'Unidad 3 · Clase 12 — La entrevista'
     };

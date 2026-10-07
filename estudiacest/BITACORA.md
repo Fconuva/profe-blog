@@ -6,6 +6,9 @@
 - `api/_termas.js` separa el estado público mínimo del estado administrativo: consulta, confirmación y conflictos públicos no contienen totales ni nombres ajenos; administración mantiene cifras y datos privados sin caché compartida. Regla incorporada en `REGLAS.md`, sección 8.
 - Auditoría con funciones reales por HTTP y datos ficticios: campos públicos permitidos, conflictos, cifras exclusivas del admin y rechazo de acceso sin permisos; sin escrituras de prueba en producción. Navegador local: selección, confirmación de un pase ficticio y relectura tras recargar, móvil y escritorio hasta 4K, sin errores ni desbordes. Build general aprobado; publicación y comprobación pública pendientes de registrar.
 - Se retiran cifras reales de las entradas de Termas de esta versión de la bitácora. El repositorio es público; los commits históricos conservan sus versiones anteriores. No se reescribe ni fuerza el historial compartido.
+- Publicado `4f6b0a5b90c50871a10e11d3dcbac70f0828d7cb`, enviado a origin/main, mediante `deploy:prod:safe` desde un checkout aislado limpio que conserva la fuente vigente: `dpl_EKb9MzReN5aZXVpB3mEd4RzYnaD7`, proceso terminado con código 0. Build aislado y remoto aprobados. Alias www.estudiacest.com READY, proyecto y SHA exactos comprobados por API.
+- Verificación real: la API pública solo incluye disponibilidad anónima, capacidad física, plazo y reloj; sin totales ni nombres ajenos. Página conectada, sin contadores ni lista de pasajeros, móvil/escritorio/4K sin desbordes ni errores; selección, confirmación y relectura probadas previamente con fixtures locales. Estadísticas sin sesión rechazadas con 401; panel anterior cerrado y la nueva pestaña no tiene sesión, por lo que la conservación de cifras administrativas se acredita con el contrato HTTP de fixtures, sin afirmar una relectura autenticada real. Diez rutas académicas/públicas responden 200. Ninguna inscripción real modificada; plazo conservado.
+- Se solicita autorización separada para hacer privado el repositorio completo y restringir su historial; cambio pendiente de decisión, sin alterar visibilidad ni reescribir commits. Cierre documental sin otro despliegue; Francisco recibe el enlace y la confirmación de que las cifras actuales quedan en administración.
 
 ## 2026-10-07, Termas: corregir el 404 al quitar inscripciones
 
@@ -529,7 +532,7 @@
 - La fecha se presenta como «Día del paseo: Sábado 14 de noviembre de 2026» tanto en el encabezado como en el pase. Alimentación ahora exige exactamente una de tres tarjetas: **Con desayuno**, **Con once** o **Solo almuerzo**; las tres explicitan que incluyen almuerzo. Se retiraron «Me da lo mismo» y el carácter opcional.
 - La validación existe en cliente y servidor; el panel y su CSV usan los mismos nombres. Los valores históricos se siguen mostrando como anteriores, pero una inscripción nueva o modificada debe escoger una de las tres opciones vigentes.
 - Build integral aprobado con 589 recursos críticos. Navegador real local y público a 320, 390, 1440 y 3840 px: botón visible, tres opciones exactas, validación sin elección, cambio de resumen al escoger y 0 desborde.
-- Publicado el cambio `77d15945` dentro de la fuente sincronizada `f2b1a391` mediante `npm run deploy:prod:safe`: `dpl_AfrAUV53APVAwvwEw5Pj8HUKxt9z` READY y alias `www.estudiacest.com` confirmado. `termas/index.html` y `termas/admin.html` coinciden byte por byte con producción. El estado público real se releyó sin escribir: 1 asistente y 44 asientos libres; no se enviaron inscripciones de prueba. El trabajo concurrente de NM3 y los cambios ajenos del repositorio padre quedaron preservados.
+- Publicado el cambio `77d15945` dentro de la fuente sincronizada `f2b1a391` mediante `npm run deploy:prod:safe`: `dpl_AfrAUV53APVAwvwEw5Pj8HUKxt9z` READY y alias `www.estudiacest.com` confirmado. `termas/index.html` y `termas/admin.html` coinciden byte por byte con producción. El estado público real se releyó sin escribir: cifra privada de asistencia y cifra privada de cupos; no se enviaron inscripciones de prueba. El trabajo concurrente de NM3 y los cambios ajenos del repositorio padre quedaron preservados.
 - Ajuste posterior por verificación visual: al desplegar transporte y alimentación, el cierre quedaba a más de 2.600 px en móvil. El commit `4d642fd8` convierte el bloque de confirmación en una barra fija inferior durante todo el formulario y anuncia las tres alternativas también en el encabezado. Publicado con `npm run deploy:prod:safe`: `dpl_26qMoSAN3F7kwnsZRHHo2A6KsCTs` READY. HTML público idéntico a la fuente; botón completamente visible y 0 desborde en 320, 390, 1440 y 3840 px, sin enviar formularios de prueba.
 
 ---
@@ -1236,7 +1239,7 @@ Clase 11, que se trabaja hoy. La Clase 11 y su versión personal no se tocaron.
 - En producción, el HTML y los cinco recursos nuevos coinciden en bytes y
   SHA-256 con la fuente local. `/termas` conserva `noindex, nofollow`; portada,
   PAES, NM4, estudiantes y el admin de termas responden 200. La lectura real
-  mostró 0 asistentes y 45 asientos libres. No se escribió ningún dato.
+  mostró cifra privada de asistencia y cifra privada de cupos. No se escribió ningún dato.
 
 ---
 
@@ -1258,7 +1261,7 @@ Clase 11, que se trabaja hoy. La Clase 11 y su versión personal no se tocaron.
   nómina que habían quedado pendientes en `9c096e9f`.
 - En producción, el HTML y los tres WebP coinciden byte a byte y por SHA-256 con
   la fuente local; `/termas` conserva `noindex, nofollow`. La lectura real mostró
-  0 asistentes y 45 asientos libres. No se escribió ni creó ningún dato de prueba.
+  cifra privada de asistencia y cifra privada de cupos. No se escribió ni creó ningún dato de prueba.
 
 ---
 

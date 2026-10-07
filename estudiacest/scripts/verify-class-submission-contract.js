@@ -110,7 +110,7 @@ for (const entry of registry.files || []) {
   if (entry.atomicResult === true && !/db\.ref\(BASE\)\.update\(/.test(source)) {
     failures.push(`${relativePath}: respuesta y resultado no se escriben en una actualización atómica.`);
   }
-  if (storage === 'api' && (!/(?:get-guia-state|personal-guided-state|simce-u3s12-state|cards-state)/.test(source) || !/attempt\.completada\s*!==\s*true/.test(source))) {
+  if (storage === 'api' && (!/(?:get-guia-state|personal-guided-state|simce-u3s12-state|cards-state|mini-state)/.test(source) || !/attempt\.completada\s*!==\s*true/.test(source))) {
     failures.push(`${relativePath}: falta la lectura final de confirmación mediante API.`);
   }
   if (relativePath.startsWith('estudiantes/guia-') && !/work-telemetry\.js["'][^>]*data-session=["'][^"']+["']/.test(source)) {

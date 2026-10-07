@@ -1,5 +1,11 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-07, PAES cartas: planificar la colección antes de crear
+
+- Francisco solicita todas las cartas, efectos, sobres aleatorios y rarezas por color; luego indica planificar todo antes de comenzar la creación y consulta el máximo de repeticiones y cartas únicas. Se detiene la generación iniciada; los borradores locales no se integran al motor ni se publican. La versión pública conserva las 16 cartas originales.
+- Propuesta completa en `paes/cartas/produccion/PLAN_COLECCION_2.md`: 60 cartas, familias, colores, dos copias normales y una por legendaria, un héroe por mazo, cinco cartas por sobre, distribución por posición, oro/esencia, fabricación, validación de mazos, ranking, efectos, ruta guiada y controles de balance. Las cifras son decisiones propuestas, no pruebas de equilibrio ni funciones operativas.
+- Documento releído, tablas y probabilidades calculadas; cierre solo documental con commit acotado y push, sin despliegue ni registros ficticios en Firebase. La implementación continúa después de cerrar el diseño con Francisco.
+
 ## 2026-10-07, SIMCE 2°A HC: revisión de toda la Unidad 3 tras reclamos de reenvío
 
 - Francisco informa que estudiantes volvieron a responder distintas guías y seguían viendo la nota anterior; amplía el encargo a toda la Unidad 3 de 2°A HC. Lectura autenticada del proyecto `estudiacest`: 43 estudiantes vigentes y 344 registros de las ocho clases que llevan nota de laboriosidad; además se revisan estados de las clases 8, 9, 11 y 12 y del Ensayo N.º 3.

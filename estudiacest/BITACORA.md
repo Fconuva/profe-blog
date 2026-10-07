@@ -1,5 +1,14 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-07, SIMCE 2°A HC: revisión de toda la Unidad 3 tras reclamos de reenvío
+
+- Francisco informa que estudiantes volvieron a responder distintas guías y seguían viendo la nota anterior; amplía el encargo a toda la Unidad 3 de 2°A HC. Lectura autenticada del proyecto `estudiacest`: 43 estudiantes vigentes y 344 registros de las ocho clases que llevan nota de laboriosidad; además se revisan estados de las clases 8, 9, 11 y 12 y del Ensayo N.º 3.
+- Causa comprobada: respuestas y resultados de la guía se actualizan al entregar, mientras el dashboard muestra `calificaciones_clase`, una publicación independiente que no recalifica automáticamente. Cuatro entregas canónicas posteriores a esa publicación justifican aumentos con el mismo modelo vigente: una en la Clase 5 y tres en la Clase 10. No se cambia el criterio ni se recalifica otro curso.
+- Exportación y simulación con el modelo aprobado `laboriosidad-u3-c1-c10-2026-10-05-r5`; identidad por UID, curso y sesión, sin RUN duplicado, ambas marcas y timestamps presentes y evidencia sin cambios antes de aplicar. Actualización atómica limitada a cuatro calificaciones, respaldo privado previo y relectura exacta de cuatro registros; respuestas intactas y cero cambios en otras notas. No se convierten borradores en entregas.
+- La revisión más reciente encuentra cinco avances sin nueva entrega confirmada en las clases 1, 2 y 7; quedan en el informe privado para completar el trabajo y pulsar Entregar. Cero diferencias de nota en entregas confirmadas tras la corrección; no se crean notas de las clases sin evaluar, informativas o formativas. No se cierra ni se reabre ninguna actividad.
+- Informe docente completo, cambios y pendientes con identidad, matriz de trece actividades y respaldos en `backups/simce-2ahc-revision-20261007/`, ignorado por Git y excluido de Vercel. Sin datos personales ni notas individuales en este registro. Auditoría de notas SIMCE y build integral aprobados, 738 recursos críticos. Corrección de datos ya vigente en Firebase: no requiere desplegar el sitio ni afirma una comprobación visual de cuenta estudiantil.
+- Cierre documental con commit acotado y push desde checkout limpio basado en el remoto vigente, conservando el trabajo concurrente. Se entrega a Francisco el informe local y la indicación de recargar el panel para ver las cuatro notas corregidas; los futuros reenvíos siguen sujetos a revisión y publicación docente.
+
 ## 2026-10-07, PAES: Crónicas del Umbral, duelo entre estudiantes
 
 - Francisco cancela la aventura 2D y elige continuar con cartas en modalidad de duelo entre dos estudiantes. El proyecto cancelado permanece local y queda excluido del despliegue. Nueva ruta `/paes/cartas/`, acceso desde el portal PAES y planificación docente de 90 minutos en `/paes/cartas/docente.html`.

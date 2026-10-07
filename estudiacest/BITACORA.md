@@ -1,5 +1,13 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-07, PAES cartas: especificación completa antes de construir
+
+- Francisco exige detallar todo el diseño antes de crear. Se cierra D0 en `paes/cartas/produccion/PLAN_COLECCION_2_COMPLETO.md`: 22 secciones y anexos normativos, más de 20.000 palabras, 60 fichas con costes/atributos/efectos/objetivos/respuestas, seis mazos iniciales exactos, ocho adversariales y datos de diseño versionados. El plan anterior queda marcado como sustituido; no se reanuda generación ni se integra el borrador antiguo.
+- Reglas fijadas: mazo 18, máximo dos copias normales/una legendaria, dos legendarias/un héroe por mazo, 116 copias útiles totales; cinco rarezas por color/símbolo. Sobres de cinco con quinta rara o superior y pesos exactos, compra/apertura separadas, recibo idempotente, excedentes/esencia/fabricación. Economía sin dinero real ni oro por ganar. Ranking por curso con préstamo igual de las 60 cartas, Elo/límites diarios y evaluación lectora independiente.
+- Se especifican combate, topes, orden de inicio/disparadores/descarte, Custodia, vínculo, congelación/Deshielo, héroes, tutorial de seis ejercicios, pantallas, arte/efectos, permisos/transacciones, versiones antiguas, cambio de curso y recuperación. Clase de 90 minutos con conceptos, productos, validez formativa, mediación y contingencias; no convertir victoria ni formato de cita en evidencia suficiente de comprensión.
+- Auditoría realmente ejecutada: 509 comprobaciones de catálogo/cifras/mazos iniciales, ocho adversariales válidos y nueve enlaces locales existentes. Visor independiente `plan-v2/PLAN_COMPLETO.html`, con documentos completos, filtros y calculadora, verificado en Chrome, búsqueda con/sin tildes, anexo JSON incluido y anchos observados 390/3840 CSS px sin desborde ni errores de consola. CSV de 60 cartas y 480 requisitos; captura local y `VERIFICACION_VISOR.json` separan evidencia de exigencias futuras.
+- Las 480 pruebas de cartas del futuro motor, 240.000 simulaciones de balance, millón de sobres de fixture y pilotaje humano son criterios exigidos para construcción, no resultados ya obtenidos. Cierre documental con build en checkout aislado y commit/push acotados; sin despliegue ni escrituras de prueba en Firebase. Los archivos de planificación siguen excluidos de Vercel; el juego público conserva su versión anterior.
+
 ## 2026-10-07, SIMCE: reabrir una entrega desde Resultados
 
 - Francisco solicita un botón por estudiante para corregir guías ya enviadas. Resultados incorpora «Reabrir», confirmación explícita y estado «Reabierta para corregir»; la fila permanece visible mientras vuelve a trabajar. La acción conserva las respuestas y permite entregar de nuevo, incluso con el curso cerrado, mediante una excepción individual.

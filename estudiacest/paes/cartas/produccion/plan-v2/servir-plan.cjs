@@ -1,0 +1,8 @@
+'use strict';
+// Visor exclusivamente local del plan; no conecta Auth, Firebase ni API del juego.
+const http=require('http'),fs=require('fs'),path=require('path');
+http.createServer(async(req,res)=>{try{const u=new URL(req.url,'http://127.0.0.1');if(u.pathname==='/captura'){
+ if(req.method==='POST'){let body='';for await(const part of req){body+=part;if(body.length>8000000)throw Error('Captura demasiado grande');}const form=new URLSearchParams(body),name=form.get('name');if(!/^[a-z-]{3,30}$/.test(name))throw Error('Etiqueta inválida');const bytes=Buffer.from(form.get('image')||'','base64');if(bytes[0]!==255||bytes[1]!==216)throw Error('Se requiere JPEG');fs.writeFileSync(path.join(__dirname,'captura-'+name+'.jpg'),bytes);res.setHeader('Content-Type','text/html; charset=utf-8');return res.end('<h1>Captura guardada</h1><p>'+name+'</p>');}
+ res.setHeader('Content-Type','text/html; charset=utf-8');return res.end('<html lang="es"><h1>Guardar evidencia local del plan</h1><form method="POST"><label>Etiqueta<input name="name" required></label><label>JPEG en base64<textarea name="image" required></textarea></label><button type="submit">Guardar captura</button></form></html>');
+ }if(req.method!=='GET'){res.statusCode=405;return res.end('Solo lectura');}if(!['/','/PLAN_COMPLETO.html'].includes(u.pathname)){res.statusCode=404;return res.end('No disponible en visor');}res.setHeader('Content-Type','text/html; charset=utf-8');res.setHeader('Cache-Control','no-store');fs.createReadStream(path.join(__dirname,'PLAN_COMPLETO.html')).pipe(res);
+ }catch(e){res.statusCode=400;res.end(e.message);}}).listen(Number(process.env.CARTAS_PLAN_PORT||8772),'127.0.0.1',()=>console.log('Visor de planificación en http://127.0.0.1:8772/'));

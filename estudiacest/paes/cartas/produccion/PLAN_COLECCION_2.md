@@ -1,5 +1,7 @@
 # Crónicas del Umbral: plan de colección y duelos
 
+**Sustituido el 7-oct-2026 por [la especificación completa](PLAN_COLECCION_2_COMPLETO.md).** Este archivo conserva el primer borrador histórico; sus cifras divergentes no se usan para construir. La autoridad de diseño es el plan completo y sus anexos.
+
 Estado: propuesta de diseño para revisión, 7 de octubre de 2026. Francisco indica planificar todo antes de continuar la creación. No representa funciones publicadas ni cartas balanceadas mediante pilotaje. La versión pública conserva sus 16 cartas y tres mazos originales.
 
 ## 1. Objetivo y alcance

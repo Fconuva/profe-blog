@@ -1,5 +1,12 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-07, NM3: tarjeta del carrete literario de Siddhartha
+
+- Francisco solicita dejar el material preparado como una tarjeta para mostrarlo en la página. Se añade una tarjeta visible de Plan lector antes de la Unidad 3 en `/nm3/`, con imagen de IA y enlace a `/nm3/siddhartha-carrete/`. Conserva todos los enlaces anteriores.
+- La página ofrece tutorial local de 203,68 s, pantalla completa, pizarra común y tres PDF: guía de seis páginas, plantillas y pauta. Desplegables explican los 16 fotogramas individuales, las preguntas de los doce capítulos, la evidencia y los cuatro pasos de armado con cinco imágenes de Higgsfield. Se mantienen cursos 3.º A/B/D, fechas por definir, trabajo en papel y ponderación 90/10. Los PDF y el MP4 se copian sin alterar el material aprobado; no se crean entregas ni notas digitales.
+- Trece recursos nuevos protegidos por el manifiesto. Auditorías de recursos y pizarra aprobadas. Chrome local: 46 comprobaciones, anchos 320/390/1440/3840, doce capítulos, cinco imágenes, enlaces anteriores conservados, reproducción y búsqueda final del video, pantalla completa y hashes de las nueve descargas coincidentes; sin errores JavaScript, HTTP ni desbordes. Las interrupciones de carga de video al navegar se reconocen como `ERR_ABORTED`, no como recursos ausentes. Capturas de tarjeta, página y armado abiertas; evidencia temporal `siddhartha-web-qa-YW3YaC`.
+- Se publica desde un checkout limpio basado en el main vigente, preservando el trabajo paralelo. Build integral, despliegue seguro y comprobación pública se registran al concluir. Sin cambios en autenticación, datos personales, Firebase ni Lirmi.
+
 ## 2026-10-07, NM4: cuatro casos a elección, una página de caso y otra de Gmail
 
 - Francisco reemplaza los casos iniciales por cuatro situaciones: insultos y empujones entre colegas con solicitud a jefatura; acoso a un compañero con solicitud de reserva al profesor jefe; malos tratos de un profesor informados al director; tocamientos sin permiso con solicitud de apoyo a convivencia. Son personajes, establecimientos y direcciones completamente ficticios; no se describen hechos de CEST ni se solicitan experiencias personales.

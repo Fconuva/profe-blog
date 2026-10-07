@@ -15,9 +15,13 @@ async function identity(req, db, auth) {
   let decoded;
   try { decoded = await auth.verifyIdToken(token); } catch (_) { throw error(401, 'Vuelve a ingresar con tu cuenta.'); }
   const profile = (await db.ref(`plataforma_estudiantes/estudiantes/${decoded.uid}`).once('value')).val();
-  if (!profile || !COURSES.has(clean(profile.curso)) || profile.activo === false) throw error(403, 'Esta cuenta no tiene acceso a la actividad PAES.');
+  if (!profile || profile.activo === false) throw error(403, 'Esta cuenta no tiene acceso a la actividad PAES.');
+  const course = clean(profile.curso);
+  const grant = (await db.ref(`${CONFIG}/revisores/${decoded.uid}`).once('value')).val();
+  const reviewer = grant?.enabled === true && clean(grant.curso) === course && /^[1-4][A-Z]HC$/.test(course);
+  if (!COURSES.has(course) && !reviewer) throw error(403, 'Esta cuenta no tiene acceso a la actividad PAES.');
   const guided = clean(profile.rut) === '229327739';
-  return { uid: decoded.uid, curso: clean(profile.curso).replace(/^(\d)([A-Z])HC$/, '$1$2-HC'), nombre: String(profile.nombre || profile.name || '').slice(0,120), guided, sessionId: CATALOG.SESSION + (guided ? '-guiada' : '') };
+  return { uid: decoded.uid, curso: course.replace(/^(\d)([A-Z])HC$/, '$1$2-HC'), nombre: String(profile.nombre || profile.name || '').slice(0,120), reviewer, guided, sessionId: CATALOG.SESSION + (guided ? '-guiada' : '') };
 }
 function validate(input, guided, final) {
   if (!input || typeof input !== 'object' || Array.isArray(input)) throw error(400, 'Datos no válidos.');
@@ -106,7 +110,7 @@ async function handle(action, req, res, { db, auth, adminUid }) {
       if (requested !== ident.guided) return res.status(200).json({ success:true, redirect:ident.guided ? '/paes/cartas/guiada.html' : '/paes/cartas/' });
       const raw = (await ref.once('value')).val();
       const attempt = raw?.resetAt ? null : await publicAttempt(db,raw,ident);
-      return res.status(200).json({ success:true, identity:{uid:ident.uid,curso:ident.curso,nombre:ident.nombre}, activity:CATALOG.publicActivity(ident.guided), resetAt:raw?.resetAt || raw?.resetAtAcknowledged || null, attempt });
+      return res.status(200).json({ success:true, identity:{uid:ident.uid,curso:ident.curso,nombre:ident.nombre,reviewer:ident.reviewer}, activity:CATALOG.publicActivity(ident.guided), resetAt:raw?.resetAt || raw?.resetAtAcknowledged || null, attempt });
     }
     if (!['cards-save','cards-submit'].includes(action)) throw error(400, 'Acción no válida.');
     if (req.method !== 'POST') throw error(405, 'Usa POST para guardar.');

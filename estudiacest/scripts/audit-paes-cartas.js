@@ -18,6 +18,16 @@ function full(guided=false){return {version:C.VERSION,answers:Object.fromEntries
 async function audit(){let checks=0;const check=value=>{assert.ok(value);checks++;};const db=database();
  db.state.plataforma_estudiantes.estudiantes.alumno.ocultarDeCasas=true;check((await call(db,'cards-state','alumno')).status===200);let r=await call(db,'cards-preview');check(r.status===200&&r.body.activity.questions.length===18);check(!/"(?:key|reason|failures)"/.test(JSON.stringify(r.body)));
  check((await call(db,'cards-state')).status===401);check((await call(db,'cards-state','falso')).status===401);check((await call(db,'cards-state','otro')).status===403);
+ await db.ref(B.CONFIG+'/revisores/otro').set({enabled:true,curso:'2A-HC'});
+ r=await call(db,'cards-state','otro');check(r.status===200&&r.body.identity.reviewer===true&&r.body.identity.curso==='2A-HC');check(r.body.activity.questions.length===18&&r.body.attempt===null);check(!/"(?:key|reason|failures)"/.test(JSON.stringify(r.body)));
+ check((await call(db,'admin-cards-list','otro')).status===403);
+ check((await call(db,'cards-state','otro',null,'guided')).body.redirect==='/paes/cartas/');
+ db.state.plataforma_estudiantes.estudiantes.otro.activo=false;check((await call(db,'cards-state','otro')).status===403);delete db.state.plataforma_estudiantes.estudiantes.otro.activo;
+ await db.ref(B.CONFIG+'/revisores/otro').set({enabled:true,curso:'3A-HC'});check((await call(db,'cards-state','otro')).status===403);
+ await db.ref(B.CONFIG+'/revisores/otro').set({enabled:false,curso:'2A-HC'});check((await call(db,'cards-state','otro')).status===403);
+ check((await call(db,'cards-save','otro',{...full(),reviewer:true,curso:'3A-HC'})).status===403);
+ await db.ref(B.CONFIG+'/revisores/otro').set({enabled:true,curso:'2A-HC'});r=await call(db,'cards-save','otro',{...full(),reviewer:false,curso:'3A-HC'});check(r.status===200&&db.state.plataforma_paes.cartas_intentos[C.SESSION].otro.curso==='2A-HC'&&db.state.plataforma_paes.cartas_intentos[C.SESSION].otro.reviewer===true);check(!('result'in r.body.attempt));
+ await db.ref(B.CONFIG+'/revisores/otro').set(null);check((await call(db,'cards-state','otro')).status===403);
  r=await call(db,'cards-state','apoyo');check(r.body.redirect==='/paes/cartas/guiada.html');r=await call(db,'cards-state','apoyo',null,'guided');check(r.body.activity.questions.length===6);
  check((await call(db,'cards-state','alumno',null,'guided')).body.redirect==='/paes/cartas/');
  check((await call(db,'cards-save','alumno',{version:C.VERSION,answers:{q99:'A'}})).status===400);check((await call(db,'cards-save','alumno',{version:C.VERSION,answers:{q1:'E'}})).status===400);check((await call(db,'cards-submit','alumno',{version:C.VERSION,answers:{}})).status===400);
@@ -64,7 +74,8 @@ async function audit(){let checks=0;const check=value=>{assert.ok(value);checks+
  for(const q of [...C.questionsFor(false),...C.questionsFor(true)]){check(q.options.length===4&&'ABCD'.includes(q.key)&&q.reason.length>20);check(q.failures.filter(Boolean).length===3&&q.failures[q.key.charCodeAt(0)-65]==='');check(q.options[q.key.charCodeAt(0)-65].length<=Math.max(...q.options.filter((_,i)=>i!==q.key.charCodeAt(0)-65).map(v=>v.length))*1.15);}
  check(new Set(Object.values(E.CARDS).map(c=>c.art)).size===16);for(const card of Object.values(E.CARDS))check(fs.existsSync(path.join(__dirname,'../paes/cartas/assets',card.art+'.webp')));
  for(const q of C.questionsFor(true))check(C.missions.find(m=>m.id===q.mission).guided.join(' ').includes(q.evidence));
- for(const name of ['juego.js','docente.js','portal.js'])new Function(fs.readFileSync(path.join(__dirname,'../paes/cartas',name),'utf8'));
+ for(const name of ['juego.js','docente.js','portal.js','sesion.js'])new Function(fs.readFileSync(path.join(__dirname,'../paes/cartas',name),'utf8'));
+ for(const name of ['index.html','guiada.html'])check(fs.readFileSync(path.join(__dirname,'../paes/cartas',name),'utf8').includes('<script src="sesion.js"></script>'));
  const rules=JSON.parse(fs.readFileSync(path.join(__dirname,'../firebase-rules.json'))).rules;check(rules['.read']===false&&rules['.write']===false&&!rules.plataforma_paes);
  console.log(`Cartas: ${checks} comprobaciones superadas. Turnos, manos privadas, concurrencia, combate, identidad, entrega y resultados. Solo fixtures.`);return checks;
 }

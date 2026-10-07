@@ -1,7 +1,8 @@
 // Funciones reales con base y perfiles ficticios; nunca usa Firebase real.
 const http=require('http'),fs=require('fs'),path=require('path');const root=path.resolve(__dirname,'../../..');
 const {database,auth}=require('../../../scripts/audit-paes-cartas'),B=require('../../../api/_paes-cartas');const db=database();
-const stub=`window.PaesStudentSession={restore:async()=>({user:{getIdToken:async()=>document.body.classList.contains('guided')?'apoyo':location.search.includes('pareja')?'pareja':'alumno'}}),signIn:async()=>({user:{getIdToken:async()=>document.body.classList.contains('guided')?'apoyo':location.search.includes('pareja')?'pareja':'alumno'}}),errorMessage:e=>e.message,client:async()=>({auth:{currentUser:{getIdToken:async()=>'profesor'},signInWithEmailAndPassword:async()=>{}}})};`;
+db.ref(B.CONFIG+'/revisores/otro').set({enabled:true,curso:'2A-HC'});
+const stub=`const fixtureUser={getIdToken:async()=>location.pathname.includes('docente.html')?'profesor':document.body.classList.contains('guided')?'apoyo':location.search.includes('revisor')?'otro':location.search.includes('pareja')?'pareja':'alumno'};window.PaesStudentSession={errorMessage:e=>e.message,client:async()=>({auth:{currentUser:location.search.includes('login')?null:fixtureUser,signInWithEmailAndPassword:async()=>({user:fixtureUser})}})};`;
 http.createServer(async(req,res)=>{
  try{const u=new URL(req.url,'http://localhost');
  if(u.pathname==='/__evidencia'){
@@ -22,4 +23,4 @@ http.createServer(async(req,res)=>{
  if(!fs.existsSync(target)||target.includes(path.sep+'api'+path.sep)||target.includes(path.sep+'produccion'+path.sep)||target.includes(path.sep+'originales'+path.sep)){res.statusCode=404;return res.end('No encontrado');}
  const types={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.png':'image/png','.webp':'image/webp','.ttf':'font/ttf'};res.setHeader('Content-Type',types[path.extname(target)]||'application/octet-stream');res.setHeader('Cache-Control','no-store');fs.createReadStream(target).pipe(res);
  }catch(e){res.statusCode=500;res.end(e.message);}
-}).listen(Number(process.env.CARTAS_TEST_PORT||8770),'127.0.0.1',()=>console.log('Cartas: servidor de funciones con fixtures en 127.0.0.1:8770'));
+}).listen(Number(process.env.CARTAS_TEST_PORT||8770),'127.0.0.1',()=>console.log('Cartas: servidor local de funciones con fixtures disponible.'));

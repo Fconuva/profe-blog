@@ -1,5 +1,12 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-07, PAES cartas: acceso individual para revisión del propietario
+
+- Francisco identifica su cuenta y pide dejarla disponible para revisar. Consulta privada al proyecto `estudiacest`: una única cuenta activa en un curso fuera del acceso estudiantil PAES de cartas. Se prepara un permiso individual por UID, conservando perfil, curso, contraseña, notas e intentos; no se publica el identificador ni se concede administración.
+- La identidad de cartas valida el permiso privado y su curso frente al perfil autenticado. `sesion.js` reutiliza Firebase Auth del cliente común y deja la autorización al servidor de cartas, sin depender del roster/habilitación de Mi espacio. Se incorpora en ambas rutas regular/personal, manifiesto de recursos y documentación `paes/cartas/produccion/ACCESO_REVISION.md`. La interfaz distingue «Revisión docente».
+- 174 comprobaciones focalizadas aprobadas: permiso activo/inactivo/revocado/curso divergente, rechazo de otro estudiante y de administración, imposibilidad de fingir el permiso desde el cuerpo y conservación de claves privadas. Navegador y API locales con perfiles ficticios: ingreso restaurado, lecturas, borrador guardado y recuperado tras recarga, colección, 390/3840 CSS px sin desborde ni errores de consola. Ninguna respuesta ficticia se escribe en producción.
+- Publicación mediante checkout limpio y `deploy:prod:safe`; activación del único permiso, relectura privada y verificación pública se registran al cerrar. La colección ampliada sigue en diseño; esta modificación no construye las 60 cartas ni cambia el modelo de evaluación.
+
 ## 2026-10-07, PAES cartas: especificación completa antes de construir
 
 - Francisco exige detallar todo el diseño antes de crear. Se cierra D0 en `paes/cartas/produccion/PLAN_COLECCION_2_COMPLETO.md`: 22 secciones y anexos normativos, más de 20.000 palabras, 60 fichas con costes/atributos/efectos/objetivos/respuestas, seis mazos iniciales exactos, ocho adversariales y datos de diseño versionados. El plan anterior queda marcado como sustituido; no se reanuda generación ni se integra el borrador antiguo.

@@ -4449,3 +4449,9 @@ la fecha, así que la deuda es visible:
 ## Historial anterior
 
 El trabajo entre el 22 y el 27 de julio quedó registrado en el `BITACORA.md` del repo `Fconuva/estudiacest-2026`, que se congeló el 22-jul. Ahí están la auditoría de bugs en vivo del 14-jul, la reconciliación de contenidos del 19 al 21 de julio y el detalle de las clases de la Unidad 3.
+
+## 2026-10-07, Neuromapa e instrucciones vigentes de los bots
+
+Por encargo de Francisco se añade la regla documental de mapas de consulta y fuente canónica. Las entradas del workspace 2026 y sus instrucciones automáticas apuntan a este checkout y a la skill del repositorio; se retiran referencias operativas a la copia antigua de OneDrive y condiciones históricas de rutas. Los bots deben leer archivos actuales y releer los afectados si cambian; un mapa no prueba estado de producción ni recarga el contexto de una sesión abierta.
+
+Validación proporcional: rutas y fuentes existentes, mapa actualizado con cobertura y enlaces estructurales en cero, trece pruebas del mantenimiento local y revisión real en Chrome. Cambio exclusivamente documental: sin despliegue, pruebas de inscripción ni escritura de datos reales. Cierre con commit acotado y push en checkout aislado, preservando cambios concurrentes.

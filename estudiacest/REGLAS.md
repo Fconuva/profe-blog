@@ -439,3 +439,15 @@ autoriza a rehacer automáticamente materiales o evaluaciones ya publicados.
   distribución de las guías completas.
 - `nm4/u3-clase7-manual-ilustrado/assets/guia-4*-completa.pdf`: muestra aprobada
   de lectura y respuestas por curso; reutilizar su estilo, no sus contenidos.
+
+## 14. Mapas de memoria y vigencia de instrucciones
+
+- Neuromapa y los puntos de entrada de otros workspaces ayudan a localizar
+  estas reglas, los contratos y las skills canónicas. Una nota histórica no
+  sustituye la fuente actual ni demuestra el estado de producción.
+- Las entradas de agentes remiten a `.github/skills/estudiacest-platform` del
+  repositorio raíz y a las reglas de este subárbol. No mantener recetas
+  paralelas de login, cursos, entrega o despliegue en una memoria antigua.
+- Reparar enlaces contra archivos existentes y el árbol vigente, conservando
+  la historia y marcando instrucciones sustituidas. Una reorganización del
+  mapa no autoriza recalcular notas, escribir datos ni desplegar.

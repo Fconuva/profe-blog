@@ -1,5 +1,12 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-07, Termas: teléfonos preparados para grupo de avisos
+
+- Francisco solicita extraer y preparar WhatsApp y crear un grupo donde solo el administrador envíe mensajes. Confirma nombre «Paseo Termas CEST 2026», solo asistentes y él como único administrador.
+- Panel autenticado vigente: 63 inscripciones, 62 asistentes. Exportación CSV del propio panel y preparación local de 61 participantes, excluido el organizador. Los 62 teléfonos cumplen estructura móvil chilena; 14 formatos normalizados al prefijo internacional, sin números inventados, duplicados ni registros reales modificados. Validez de formato no equivale a comprobar una cuenta activa de WhatsApp.
+- Archivos locales privados en `lecturas/adminprofe/reportes/termas-whatsapp-20261007-102306/`: asistentes normalizados, CSV de participantes, vCard de 61 contactos, números y resumen. CSV y vCard releídos y contados; carpeta ignorada por Git y excluida de Vercel. No se guardan datos personales en este registro ni en el commit.
+- Grupo pendiente: WhatsApp Web muestra vinculación por QR y no hay una sesión autenticada en ese navegador. Se deja la pestaña para vincularla y se solicita a Francisco hacerlo; el conector disponible no ofrece creación/configuración de grupos. No se creó ningún grupo, no se añadieron participantes ni se enviaron mensajes. Al continuar: verificar la cuenta del organizador, revisar que no exista ya el grupo, actualizar asistentes desde el panel, comprobar números en WhatsApp, crear una sola vez y verificar envío reservado a administradores.
+
 ## 2026-10-06, Termas: cuenta regresiva y cierre automático de inscripción
 
 - Por instrucción de Francisco se incorpora un contador de días, horas, minutos y segundos en la portada de `/termas/`. Se incluye todo el viernes 23 de octubre de 2026: cierre el 24 a las 00:00 de America/Santiago, equivalente a 03:00 UTC. Fecha y hora visibles junto al contador.

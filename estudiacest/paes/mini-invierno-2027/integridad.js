@@ -2,6 +2,15 @@
    una incidencia por salida y tres strikes. No modifica evaluaciones anteriores. */
 (function(root){
  'use strict';
+ function protectSelection(workspace){
+  const editable=node=>(node?.nodeType===3?node.parentElement:node)?.closest?.('input,textarea,select,[contenteditable="true"]');
+  const inside=node=>Boolean(node&&workspace.contains(node));
+  const start=e=>{if(!editable(e.target))e.preventDefault();};
+  const clear=()=>{const selection=window.getSelection();if(selection&&!selection.isCollapsed&&(inside(selection.anchorNode)||inside(selection.focusNode))&&!editable(selection.anchorNode)&&!editable(document.activeElement))selection.removeAllRanges();};
+  const keys=e=>{if(!workspace.hidden&&(e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='a'&&!editable(e.target)){e.preventDefault();clear();}};
+  workspace.addEventListener('selectstart',start);document.addEventListener('selectionchange',clear);document.addEventListener('keydown',keys);
+  return ()=>{workspace.removeEventListener('selectstart',start);document.removeEventListener('selectionchange',clear);document.removeEventListener('keydown',keys);};
+ }
  function geometry(s){
   if(s.mobile)return s.baselineWidth>0&&s.width<s.baselineWidth*.70;
   const ratio=s.width/Math.max(1,s.screenWidth),height=s.height/Math.max(1,s.screenHeight);
@@ -33,5 +42,5 @@
   const keys=e=>{if(active()&&(e.ctrlKey||e.metaKey)&&['c','v','x','p','s','u'].includes(e.key.toLowerCase()))e.preventDefault();};document.addEventListener('keydown',keys);
   return {check,suspend(ms=700){suspendedUntil=Date.now()+ms;clearTimeout(timer);timer=null;},resetBaseline(){baselineWidth=innerWidth*(window.visualViewport?.scale||1);},destroy(){clearInterval(poll);clearTimeout(timer);events.forEach(([el,event])=>el.removeEventListener(event,check));['copy','cut','paste','contextmenu','dragstart','drop'].forEach(event=>document.removeEventListener(event,blocked));document.removeEventListener('keydown',keys);window.removeEventListener('orientationchange',rotate);onBlock(false,null);}};
  }
- const api={geometry,create};if(typeof module==='object')module.exports=api;else root.MiniIntegrity=api;
+ const api={geometry,create,protectSelection};if(typeof module==='object')module.exports=api;else root.MiniIntegrity=api;
 })(typeof window==='object'?window:globalThis);

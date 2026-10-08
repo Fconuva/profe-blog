@@ -2,11 +2,21 @@
 const C=require('./_paes-mini-invierno-catalog');
 const V1=require('./_paes-mini-invierno-catalog-v1');
 const catalogFor=r=>r&&!r.resetAt&&r.version===V1.VERSION?V1:C;
-// Nodo sin permisos RTDB cliente: ni puntaje ni claves antes de publicación.
+// Nodo sin permisos RTDB cliente: resumen propio al entregar; claves solo tras publicación.
 const BASE='plataforma_paes/mini_invierno_intentos',CONFIG='plataforma_paes/mini_invierno_2027_config';
 const clean=v=>String(v||'').replace(/[^0-9A-Z]/gi,'').toUpperCase();
 const error=(status,message)=>Object.assign(new Error(message),{status});
 const delivered=r=>r?.submitted===true&&r?.completada===true;
+const SCORE_SOURCE='https://portaldemre.demre.cl/paes/factores-seleccion/tabla-transformacion-puntajes-paes-invierno-p2027-competencia-lectora';
+// Tabla primaria DEMRE, consultada 08-10-2026. Índice: 0 a 60 correctas.
+const SCORE_TABLE=Object.freeze([100,149,172,193,214,234,253,269,284,298,313,330,347,361,373,383,393,404,417,432,447,461,472,480,487,495,504,516,531,546,560,571,580,587,594,603,614,629,644,659,671,680,689,699,711,725,741,758,772,786,799,814,832,852,871,892,913,936,963,991,1000]);
+function estimate(correct,total){
+ if(!Number.isInteger(correct)||!Number.isInteger(total)||total<=0||correct<0||correct>total)throw new RangeError('Aciertos no válidos.');
+ // Normalización proporcional CEST; no equiparación ni fórmula oficial DEMRE.
+ const equivalentCorrect=Math.round(correct/total*60);
+ return {points:SCORE_TABLE[equivalentCorrect],equivalentCorrect,referenceTotal:60,source:SCORE_SOURCE,method:'cest-proportion-round-60-v1'};
+}
+function performance(r,g){if(!r||r.resetAt||!delivered(r))return null;const {correct,total}=catalogFor(r).grade(r.answers||{},g);return {correct,total,percentage:Math.round(correct/total*1000)/10,paesEstimate:estimate(correct,total)};}
 const courses=new Set(['3AHC','3BHC','4AHC','4BHC']);
 async function identity(req,db,auth){
  const token=String(req.headers?.authorization||'').replace(/^Bearer\s+/i,'').trim();if(!token)throw error(401,'Ingresa con tu cuenta de Estudia CEST.');
@@ -31,6 +41,7 @@ function validate(input,g,c=C){
 function form(uid,version=C.VERSION){let seed=2166136261;for(const c of uid+version)seed=Math.imul(seed^c.charCodeAt(0),16777619)>>>0;const map={};for(const q of C.questionsFor(false)){let a=['A','B','C','D'];for(let i=3;i>0;i--){seed=(Math.imul(seed,1664525)+1013904223)>>>0;const j=seed%(i+1);[a[i],a[j]]=[a[j],a[i]];}map[q.id]=a;}return map;}
 async function publicAttempt(db,r,i){if(!r||r.resetAt)return null;const {answers,reflection,startedAt,updatedAt,submittedAt,completadaAt,sessionId,strikes,incidents,endedBy}=r;
  const out={answers:answers||{},reflection:reflection||{},startedAt,updatedAt,submittedAt,completadaAt,sessionId,strikes:strikes||0,incidents:incidents||{},endedBy:endedBy||null,submitted:r.submitted===true,completada:r.completada===true};
+ if(delivered(r))out.performance=performance(r,i.guided);
  const pub=(await db.ref(CONFIG+'/publicacion').once('value')).val()||{};
  if(delivered(r)&&(pub.cursos?.[i.curso]===true||pub.estudiantes?.[i.uid]===true)){const c=catalogFor(r);out.result=c.grade(answers||{},i.guided);out.review=c.questionsFor(i.guided);}
  return out;
@@ -40,7 +51,7 @@ async function handle(action,req,res,{db,auth,adminUid}){
  try{
   if(action.startsWith('admin-mini-')){
    if(!adminUid)throw error(403,'No autorizado.');
-   if(action==='admin-mini-list'){const rows=[];for(const sid of [C.SESSION,C.SESSION+'-guiada']){const records=(await db.ref(BASE+'/'+sid).once('value')).val()||{};for(const [uid,r]of Object.entries(records))rows.push({...r,uid,sessionId:sid,review:catalogFor(r).questionsFor(sid.endsWith('-guiada'))});}return res.status(200).json({success:true,rows,publication:(await db.ref(CONFIG+'/publicacion').once('value')).val()||{},keys:{regular:C.questionsFor(false),guided:C.questionsFor(true)}});}
+   if(action==='admin-mini-list'){const rows=[];for(const sid of [C.SESSION,C.SESSION+'-guiada']){const records=(await db.ref(BASE+'/'+sid).once('value')).val()||{};for(const [uid,r]of Object.entries(records))rows.push({...r,uid,sessionId:sid,performance:performance(r,sid.endsWith('-guiada')),review:catalogFor(r).questionsFor(sid.endsWith('-guiada'))});}return res.status(200).json({success:true,rows,publication:(await db.ref(CONFIG+'/publicacion').once('value')).val()||{},keys:{regular:C.questionsFor(false),guided:C.questionsFor(true)}});}
    if(req.method!=='POST')throw error(405,'Usa POST.');
    const b=req.body||{};
    if(action==='admin-mini-release'){if(!['4A-HC','4B-HC','3A-HC','3B-HC'].includes(b.curso)||typeof b.published!=='boolean')throw error(400,'Curso no válido.');await db.ref(CONFIG+'/publicacion/cursos/'+b.curso).set(b.published);return res.status(200).json({success:true});}
@@ -82,4 +93,4 @@ async function handle(action,req,res,{db,auth,adminUid}){
   return res.status(200).json({success:true,attempt});
  }catch(e){return res.status(e.status||500).json({error:e.status?e.message:'No se pudo guardar. Tu avance se conserva.'});}
 }
-module.exports={handle,BASE,CONFIG,identity,validate,form};
+module.exports={handle,BASE,CONFIG,identity,validate,form,estimate,performance};

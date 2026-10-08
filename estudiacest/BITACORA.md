@@ -1,5 +1,12 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-08, Guía 22: selección bloqueada y puntaje PAES referencial al entregar
+
+- Francisco solicita impedir la selección del contenido por su uso con Google Lens y mostrar puntaje según tabla DEMRE al finalizar. CSS y eventos bloquean selección, arrastre y Ctrl/Cmd+A en el contenido; los campos editables conservan selección y escritura. No agrega strikes por seleccionar. Una web no puede impedir capturas ni fotografías; desactivar Lens integrado requiere administración del navegador, fuera de esta modificación.
+- Resumen propio al entregar: aciertos, porcentaje y puntaje PAES referencial calculados en servidor. Tabla primaria de Competencia Lectora, Invierno, Admisión 2027, consultada el 08-10-2026; proyección CEST `round(aciertos/total × 60)`, luego consulta de tabla (9/18 → 30/60 → 560). Se identifica como estimación de práctica, sin equiparación, puntaje oficial ni predicción. El recorrido de seis preguntas declara su alcance y no se compara con el regular.
+- Visible en confirmación, entrega recuperada y panel docente. Las claves, habilidades y fundamentos siguen bajo publicación docente. Resumen derivado de la pauta histórica que corresponde al intento; sin cambiar versiones, respuestas, notas existentes ni hacer escrituras masivas. Reapertura mantiene archivo y quita el resumen vigente hasta nueva entrega. Regla 7 y especificaciones actualizadas por esta autorización explícita.
+- Pruebas de servidor: 198 comprobaciones, con tabla, denominadores, omisiones, manipulación cliente, drafts sin resumen, versiones previas, publicación, reapertura y cierre por strikes. QA real de navegador con base ficticia: selección por ratón/teclado/eventos, edición, puntaje inmediato y privacidad de pauta, ambos recorridos, móvil y consola. Publicación y verificación pública pendientes de cierre debajo.
+
 ## 2026-10-08, PAES 3.º B HC: revisión de un estudiante y reapertura individual de G20 y G21
 
 - Francisco pide revisar las tareas PAES de un estudiante de 3.º B HC, informar notas y pendientes y dejarle todo habilitado para volver a responder. Identidad resuelta por RUN normalizado: un único perfil en el curso y registros coincidentes. Consulta de solo lectura a perfil, entregas, libro y configuración.

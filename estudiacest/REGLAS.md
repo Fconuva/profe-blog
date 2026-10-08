@@ -178,6 +178,11 @@ Antes de editar y nuevamente antes de publicar:
   `score`, `correct` o `total` enviados por el navegador.
 - PAES no muestra puntaje, respuestas ni retroalimentación hasta que el docente
   los publique desde el admin para el curso o estudiante correspondiente.
+  Excepción autorizada por Francisco el 08-10-2026: la Guía 22 muestra al entregar
+  únicamente los aciertos, porcentaje y puntaje PAES referencial propios, calculados
+  en servidor. La proyección CEST usa la tabla DEMRE de Admisión 2027, sin atribuir
+  equiparación, puntaje oficial ni predicción. Claves, habilidades y fundamentos
+  siguen sujetos a publicación docente. No altera otras guías ni registros previos.
 - Un intento enviado es inmutable hasta que el docente lo restablezca.
 - Al recalcular notas, identificar primero la sesión y la ubicación real de la
   evidencia. La escritura puede vivir en `notes`, `ticket`,

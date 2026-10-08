@@ -7,6 +7,15 @@ const BASE='plataforma_paes/mini_invierno_intentos',CONFIG='plataforma_paes/mini
 const clean=v=>String(v||'').replace(/[^0-9A-Z]/gi,'').toUpperCase();
 const error=(status,message)=>Object.assign(new Error(message),{status});
 const delivered=r=>r?.submitted===true&&r?.completada===true;
+const TIME_LIMIT_MS=75*60*1000;
+const timedActivity=(c,g)=>({...c.publicActivity(g),suggestedMinutes:75,timeLimitMinutes:75});
+const expired=(r,now)=>Boolean(r&&!r.resetAt&&!delivered(r)&&Number.isFinite(r.expiresAt)&&r.expiresAt<=now);
+function finishExpired(r,now,g){return {...r,submitted:true,completada:true,submittedAt:now,completadaAt:now,updatedAt:now,endedBy:'time',...catalogFor(r).grade(r.answers||{},g)};}
+async function closeExpired(ref,r,g,now=Date.now()){
+ if(!expired(r,now))return r;
+ const tx=await ref.transaction(current=>expired(current,now)?finishExpired(current,now,g):undefined,undefined,false);
+ return tx.snapshot.val();
+}
 const SCORE_SOURCE='https://portaldemre.demre.cl/paes/factores-seleccion/tabla-transformacion-puntajes-paes-invierno-p2027-competencia-lectora';
 // Tabla primaria DEMRE, consultada 08-10-2026. Índice: 0 a 60 correctas.
 const SCORE_TABLE=Object.freeze([100,149,172,193,214,234,253,269,284,298,313,330,347,361,373,383,393,404,417,432,447,461,472,480,487,495,504,516,531,546,560,571,580,587,594,603,614,629,644,659,671,680,689,699,711,725,741,758,772,786,799,814,832,852,871,892,913,936,963,991,1000]);
@@ -39,8 +48,8 @@ function validate(input,g,c=C){
  return {answers,reflection};
 }
 function form(uid,version=C.VERSION){let seed=2166136261;for(const c of uid+version)seed=Math.imul(seed^c.charCodeAt(0),16777619)>>>0;const map={};for(const q of C.questionsFor(false)){let a=['A','B','C','D'];for(let i=3;i>0;i--){seed=(Math.imul(seed,1664525)+1013904223)>>>0;const j=seed%(i+1);[a[i],a[j]]=[a[j],a[i]];}map[q.id]=a;}return map;}
-async function publicAttempt(db,r,i){if(!r||r.resetAt)return null;const {answers,reflection,startedAt,updatedAt,submittedAt,completadaAt,sessionId,strikes,incidents,endedBy}=r;
- const out={answers:answers||{},reflection:reflection||{},startedAt,updatedAt,submittedAt,completadaAt,sessionId,strikes:strikes||0,incidents:incidents||{},endedBy:endedBy||null,submitted:r.submitted===true,completada:r.completada===true};
+async function publicAttempt(db,r,i){if(!r||r.resetAt)return null;const {answers,reflection,startedAt,updatedAt,submittedAt,completadaAt,sessionId,strikes,incidents,endedBy,timerStartedAt,expiresAt}=r;
+ const out={answers:answers||{},reflection:reflection||{},startedAt,updatedAt,submittedAt,completadaAt,sessionId,timerStartedAt:timerStartedAt||null,expiresAt:expiresAt||null,strikes:strikes||0,incidents:incidents||{},endedBy:endedBy||null,submitted:r.submitted===true,completada:r.completada===true};
  if(delivered(r))out.performance=performance(r,i.guided);
  const pub=(await db.ref(CONFIG+'/publicacion').once('value')).val()||{};
  if(delivered(r)&&(pub.cursos?.[i.curso]===true||pub.estudiantes?.[i.uid]===true)){const c=catalogFor(r);out.result=c.grade(answers||{},i.guided);out.review=c.questionsFor(i.guided);}
@@ -51,7 +60,7 @@ async function handle(action,req,res,{db,auth,adminUid}){
  try{
   if(action.startsWith('admin-mini-')){
    if(!adminUid)throw error(403,'No autorizado.');
-   if(action==='admin-mini-list'){const rows=[];for(const sid of [C.SESSION,C.SESSION+'-guiada']){const records=(await db.ref(BASE+'/'+sid).once('value')).val()||{};for(const [uid,r]of Object.entries(records))rows.push({...r,uid,sessionId:sid,performance:performance(r,sid.endsWith('-guiada')),review:catalogFor(r).questionsFor(sid.endsWith('-guiada'))});}return res.status(200).json({success:true,rows,publication:(await db.ref(CONFIG+'/publicacion').once('value')).val()||{},keys:{regular:C.questionsFor(false),guided:C.questionsFor(true)}});}
+   if(action==='admin-mini-list'){const rows=[];for(const sid of [C.SESSION,C.SESSION+'-guiada']){const records=(await db.ref(BASE+'/'+sid).once('value')).val()||{};for(const [uid,record]of Object.entries(records)){const g=sid.endsWith('-guiada'),r=await closeExpired(db.ref(BASE+'/'+sid+'/'+uid),record,g);rows.push({...r,uid,sessionId:sid,performance:performance(r,g),review:catalogFor(r).questionsFor(g)});}}return res.status(200).json({success:true,rows,publication:(await db.ref(CONFIG+'/publicacion').once('value')).val()||{},keys:{regular:C.questionsFor(false),guided:C.questionsFor(true)}});}
    if(req.method!=='POST')throw error(405,'Usa POST.');
    const b=req.body||{};
    if(action==='admin-mini-release'){if(!['4A-HC','4B-HC','3A-HC','3B-HC'].includes(b.curso)||typeof b.published!=='boolean')throw error(400,'Curso no válido.');await db.ref(CONFIG+'/publicacion/cursos/'+b.curso).set(b.published);return res.status(200).json({success:true});}
@@ -64,10 +73,10 @@ async function handle(action,req,res,{db,auth,adminUid}){
    }throw error(400,'Acción no válida.');
   }
   const i=await identity(req,db,auth),ref=db.ref(BASE+'/'+i.sessionId+'/'+i.uid);
-  if(i.preview){if(action!=='mini-state')throw error(403,'La vista docente no crea ni entrega intentos.');return res.status(200).json({success:true,preview:true,identity:i,activity:C.publicActivity(req.query?.mode==='guided'),form:form(i.uid),resetAt:null,attempt:null});}
+  if(i.preview){if(action!=='mini-state')throw error(403,'La vista docente no crea ni entrega intentos.');return res.status(200).json({success:true,preview:true,identity:i,activity:timedActivity(C,req.query?.mode==='guided'),form:form(i.uid),resetAt:null,attempt:null,serverNow:Date.now()});}
   if(action==='mini-state'){
    if((req.query?.mode==='guided')!==i.guided)return res.status(200).json({success:true,redirect:i.guided?'/paes/mini-invierno-2027/guiada.html':'/paes/mini-invierno-2027/'});
-   const raw=(await ref.once('value')).val(),c=catalogFor(raw);return res.status(200).json({success:true,identity:{uid:i.uid,nombre:i.nombre,curso:i.curso},activity:c.publicActivity(i.guided),form:i.guided?{}:form(i.uid,c.VERSION),resetAt:raw?.resetAt||raw?.resetAtAcknowledged||null,attempt:await publicAttempt(db,raw,i)});
+   const raw=await closeExpired(ref,(await ref.once('value')).val(),i.guided),c=catalogFor(raw);return res.status(200).json({success:true,identity:{uid:i.uid,nombre:i.nombre,curso:i.curso},activity:timedActivity(c,i.guided),form:i.guided?{}:form(i.uid,c.VERSION),resetAt:raw?.resetAt||raw?.resetAtAcknowledged||null,attempt:await publicAttempt(db,raw,i),serverNow:Date.now()});
   }
   if(!['mini-start','mini-save','mini-submit','mini-incident'].includes(action))throw error(400,'Acción no válida.');
   if(req.method!=='POST')throw error(405,'Usa POST para guardar.');const b=req.body||{},c=b.version===V1.VERSION?V1:C,data=validate(b,i.guided,c);
@@ -79,18 +88,20 @@ async function handle(action,req,res,{db,auth,adminUid}){
    if(catalogFor(current).VERSION!==b.version)return;
    if(current===null&&b.resetAt)return null;
    if((current?.resetAt||current?.resetAtAcknowledged||null)!==(b.resetAt||null))return;
-   if(action==='mini-start'&&current&&!current.resetAt)return current;
+   if(expired(current,now))return finishExpired(current,now,i.guided);
+   const timerStartedAt=current?.timerStartedAt||now,expiresAt=current?.expiresAt||timerStartedAt+TIME_LIMIT_MS;
+   if(action==='mini-start'&&current&&!current.resetAt)return {...current,timerStartedAt,expiresAt};
    if(isIncident&&current?.incidents?.[b.eventId])return current;
    const incidents={...(current?.incidents||{})};if(isIncident&&!incidents[b.eventId]&&Object.keys(incidents).length<3)incidents[b.eventId]={reason:b.reason,at:now};
    const strikes=Object.keys(incidents).length,final=action==='mini-submit'||strikes>=3;
-   const payload={uid:i.uid,nombre:i.nombre,curso:i.curso,sessionId:i.sessionId,variant:i.guided?'guided-access-2026':'regular',version:c.VERSION,...data,startedAt:current?.startedAt||now,updatedAt:now,strikes,incidents,submitted:final,completada:final};
+   const payload={uid:i.uid,nombre:i.nombre,curso:i.curso,sessionId:i.sessionId,variant:i.guided?'guided-access-2026':'regular',version:c.VERSION,...data,startedAt:current?.startedAt||now,timerStartedAt,expiresAt,updatedAt:now,strikes,incidents,submitted:final,completada:final};
    if(current?.resetAt||current?.resetAtAcknowledged)payload.resetAtAcknowledged=current.resetAt||current.resetAtAcknowledged;
    if(final)Object.assign(payload,{submitted:true,completada:true,submittedAt:now,completadaAt:now,endedBy:strikes>=3?'strikes':'student',...c.grade(data.answers,i.guided)});
    return payload;
   },undefined,false);
   if(!tx.committed)throw error(409,'El intento ya está entregado o fue reabierto. Recupera su estado.');
   const attempt=await publicAttempt(db,tx.snapshot.val(),i);if(!attempt)throw error(409,'Recarga el intento reabierto.');
-  return res.status(200).json({success:true,attempt});
+  return res.status(200).json({success:true,attempt,serverNow:Date.now()});
  }catch(e){return res.status(e.status||500).json({error:e.status?e.message:'No se pudo guardar. Tu avance se conserva.'});}
 }
-module.exports={handle,BASE,CONFIG,identity,validate,form,estimate,performance};
+module.exports={handle,BASE,CONFIG,identity,validate,form,estimate,performance,TIME_LIMIT_MS};

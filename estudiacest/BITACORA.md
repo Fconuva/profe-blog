@@ -1,5 +1,12 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-08, Guía 22: contador de 75 minutos desde Comenzar
+
+- Francisco solicita un temporizador de 75 minutos iniciado al pulsar Comenzar. Se aplica a ambos recorridos del miniensayo; la excepción a la pauta general sin temporizador del recorrido individual queda documentada en REGLAS.md y en el plan PAES. La vista previa docente sigue sin crear intentos ni reloj.
+- El servidor fija `timerStartedAt` y `expiresAt` y devuelve su hora; el navegador descuenta con reloj monotónico. Recargar o repetir Comenzar conserva el plazo, sin confiar en fechas del cliente. Al vencer se bloquea la edición y se entrega con las últimas respuestas guardadas dentro de plazo; no se aceptan cambios tardíos ni se añade un strike. El estudiante ve el puntaje referencial y el docente el motivo de cierre por tiempo.
+- La entrega espera la cola de guardado, confirma por lectura y reintenta ante fallo de red. Si la pestaña estaba cerrada, la siguiente solicitud del estudiante o consulta docente confirma el vencimiento; sin proceso residente ni escrituras masivas. Los intentos anteriores sin reloj reciben 75 minutos desde su siguiente inicio o guardado y conservan su inicio, versión y respuestas históricas. Una reapertura archiva el intento previo y otorga un reloj nuevo.
+- Tarjeta, instrucciones, ambos recorridos y planificación docente coinciden con el plazo. Servidor: 216 comprobaciones con fixtures, incluyendo inicio sin reloj al ingresar, persistencia, manipulación cliente, límite exacto, omisiones, versiones antiguas, reapertura y consulta docente. QA de navegador: contador, recarga, cierre con falla de red, reintento, reloj del equipo alterado, bloqueo de edición, puntaje y vista móvil; publicación pendiente de cierre.
+
 ## 2026-10-08, Guía 22: selección bloqueada y puntaje PAES referencial al entregar
 
 - Francisco solicita impedir la selección del contenido por su uso con Google Lens y mostrar puntaje según tabla DEMRE al finalizar. CSS y eventos bloquean selección, arrastre y Ctrl/Cmd+A en el contenido; los campos editables conservan selección y escritura. No agrega strikes por seleccionar. Una web no puede impedir capturas ni fotografías; desactivar Lens integrado requiere administración del navegador, fuera de esta modificación.

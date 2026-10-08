@@ -195,7 +195,10 @@ Antes de editar y nuevamente antes de publicar:
   con la ruta individual guiada del estudiante registrado para este apoyo. La
   adaptación conserva el objetivo lector y usa un estímulo breve, seis preguntas
   A-D, pasos visuales explícitos, una pregunta a la vez, lectura en voz alta y sin
-  temporizador. Su acceso es exclusivo; las claves y la retroalimentación quedan
+  temporizador. Excepción para Guía 22 autorizada por Francisco el 08-10-2026:
+  el contador de 75 minutos solicitado para esta aplicación rige ambos recorridos
+  desde Comenzar, con plazo en servidor, persistencia al recargar, entrega al vencer
+  y reinicio solo tras reapertura docente. Su acceso es exclusivo; las claves y la retroalimentación quedan
   en servidor con `variant: guided-access-2026`, integración en Firebase y admin,
   y pruebas de celular, guardado, entrega, lectura de vuelta y redirección. La
   interfaz nunca muestra diagnósticos ni el nombre técnico de la variante.

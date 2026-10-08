@@ -183,7 +183,11 @@ Antes de editar y nuevamente antes de publicar:
   en servidor. La proyección CEST usa la tabla DEMRE de Admisión 2027, sin atribuir
   equiparación, puntaje oficial ni predicción. Claves, habilidades y fundamentos
   siguen sujetos a publicación docente. No altera otras guías ni registros previos.
-- Un intento enviado es inmutable hasta que el docente lo restablezca.
+- Un intento enviado es inmutable hasta que el docente lo restablezca. Excepción
+  autorizada el 08-10-2026 para Guía 22: quitar strikes puede retomar un cierre
+  por strikes con respuestas guardadas y reloj original, únicamente si queda
+  tiempo. Conserva el cierre previo y las incidencias en el historial docente;
+  no reabre entregas voluntarias ni amplía plazos vencidos.
 - Al recalcular notas, identificar primero la sesión y la ubicación real de la
   evidencia. La escritura puede vivir en `notes`, `ticket`,
   `thesisContexts` u otra estructura.
@@ -205,6 +209,40 @@ Antes de editar y nuevamente antes de publicar:
   en servidor con `variant: guided-access-2026`, integración en Firebase y admin,
   y pruebas de celular, guardado, entrega, lectura de vuelta y redirección. La
   interfaz nunca muestra diagnósticos ni el nombre técnico de la variante.
+
+### Integridad PAES: regla desde el 08-10-2026
+
+- Toda nueva actividad PAES interactiva (guía, sesión, práctica, juego,
+  miniensayo o ensayo), en recorrido regular y guiado, incorpora strikes desde
+  Comenzar o el inicio efectivo del trabajo. No se activan al ingresar, en
+  instrucciones previas ni en vista docente. Esta regla rige las próximas
+  publicaciones; no modifica automáticamente intentos históricos.
+- Usar el control compartido de `paes/mini-invierno-2027/integridad.js` o su
+  evolución compatible: pestaña oculta por 200 ms; pérdida de foco, salida de
+  pantalla completa o reducción compatible con pantalla dividida, con gracia
+  de 5 segundos. Una salida sostenida genera una sola incidencia, sin duplicar
+  los eventos de foco, visibilidad y tamaño. Conservar ajustes de móvil, zoom,
+  orientación, teclado y audio del recorrido guiado.
+- Cada incidencia tiene un identificador único y se cuenta en servidor. Al
+  tercer strike se entregan las respuestas disponibles con `submitted` y
+  `completada` juntas, leyendo confirmación. El guardado usa cola, conserva
+  avance ante fallos y reintenta sin duplicar; no descuenta puntaje por strikes.
+- El admin muestra incidencias y permite quitar strikes de un intento individual
+  con motivo, fecha y responsable, sin borrar respuestas ni reiniciar el reloj.
+  Conserva historial, rechaza colas anteriores a la corrección y confirma por
+  relectura. Distinguirlo de reiniciar desde cero. Si un tercer strike cerró el
+  intento y queda tiempo, puede continuar con su trabajo guardado; si venció el
+  plazo, quitar strikes no otorga más tiempo. La corrección no altera notas
+  publicadas ni abre entregas voluntarias. No ejecutar correcciones masivas
+  por el solo hecho de publicar esta función.
+- Antes de publicar, verificar ambas rutas con funciones reales y base ficticia:
+  una incidencia por salida, gracia de foco, tercer strike, red interrumpida,
+  guardado/recarga, corrección docente, conservación de respuestas y reloj,
+  idempotencia, colas tardías, permisos y ausencia de claves durante el trabajo.
+  Registrar el control en el contrato y en la auditoría del instrumento.
+- Los strikes son antecedentes para revisión docente, no prueba automática de
+  fraude. El bloqueo disuade selección, copiar/cortar/pegar y división de
+  pantalla; una web no puede impedir fotografías, capturas u otros dispositivos.
 
 ## 8. Administración y datos
 

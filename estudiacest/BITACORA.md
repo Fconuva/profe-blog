@@ -1,5 +1,12 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-08, PAES: corrección de strikes sin perder trabajo y regla para nuevas actividades
+
+- Francisco solicita mejorar el administrador y establecer strikes en todas las próximas actividades PAES. REGLAS.md, sección 7, exige el sistema en guía, sesión, práctica, juego, miniensayo y ensayo, regular y guiado: una incidencia por salida, gracia de foco, tercer strike con entrega confirmada, conteo servidor, revisión docente, reintento y ausencia de descuentos automáticos. No modifica retroactivamente intentos históricos ni ejecuta correcciones masivas.
+- Guía 22 incorpora Quitar strikes por intento, con motivo docente y lectura de confirmación. Conserva respuestas, reflexiones, versión e inicio del reloj; retoma un cierre por tercer strike únicamente si queda tiempo. Las entregas voluntarias y los vencimientos permanecen cerrados. Incidencias, responsable, motivo y cierre anterior quedan en historial privado. La generación del intento impide que colas tardías repongan strikes o sobrescriban respuestas; eventos anulados son idempotentes.
+- El panel distingue Quitar strikes de Reiniciar desde cero, con advertencia explícita sobre archivo y nuevo trabajo. Añade búsqueda, filtro de estado, cierres por strikes, resumen privado y tiempo restante basado en hora servidor. Mantiene acceso desde el admin principal, sesión docente nombrada, pautas privadas, publicación y puntaje referencial. Ambos recorridos registran su integridad en el contrato de entrega.
+- Validación: 280 comprobaciones del servidor con base ficticia, incluyendo permisos, validación, idempotencia, colas antiguas, conservación, nueva salida, ambos recorridos, entrega voluntaria y plazo vencido. Navegador con funciones reales y base ficticia: 90 comprobaciones, cancelación, fallo de red sin falso éxito, corrección docente, relectura, recuperación de respuestas/reloj, continuación, audio guiado, búsqueda, filtros, móvil/escritorio/4K y consola sin errores. Evidencia `%TEMP%/paes-mini-qa-0BKylq`. Contrato verificado en 55 clases. No se han quitado strikes ni cambiado respuestas de estudiantes reales por publicar esta función.
+
 ## 2026-10-08, Guía 22: tres horas para 4.º A HC y acceso desde el administrador
 
 - Francisco amplía a 180 minutos desde Comenzar para 4.º A HC por los bloques 13:15–14:00 y 14:45–15:30, separados por almuerzo. Los demás cursos conservan 75 minutos. El servidor determina el plazo por identidad autenticada; la interfaz muestra el plazo correspondiente y el reloj continúa entre bloques.

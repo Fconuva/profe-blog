@@ -7,7 +7,7 @@ const BASE='plataforma_paes/mini_invierno_intentos',CONFIG='plataforma_paes/mini
 const clean=v=>String(v||'').replace(/[^0-9A-Z]/gi,'').toUpperCase();
 const error=(status,message)=>Object.assign(new Error(message),{status});
 const delivered=r=>r?.submitted===true&&r?.completada===true;
-const courses=new Set(['4AHC','4BHC']);
+const courses=new Set(['3AHC','3BHC','4AHC','4BHC']);
 async function identity(req,db,auth){
  const token=String(req.headers?.authorization||'').replace(/^Bearer\s+/i,'').trim();if(!token)throw error(401,'Ingresa con tu cuenta de Estudia CEST.');
  let d;try{d=await auth.verifyIdToken(token);}catch(_){throw error(401,'Vuelve a ingresar con tu cuenta.');}
@@ -17,7 +17,7 @@ async function identity(req,db,auth){
  // Cuenta de prueba ya reconocida por PAES_TEST_RUT en api/paes.js.
  if(p&&p.activo!==false&&clean(p.rut)==='111111111')return {uid:d.uid,nombre:'Vista docente',curso:'Docente',guided:false,preview:true,sessionId:C.SESSION};
  const course=clean(p?.curso),guided=clean(p?.rut)==='229327739';
- if(!p||p.activo===false||(!courses.has(course)&&!(guided&&['3AHC','3BHC'].includes(course))))throw error(403,'Este miniensayo corresponde a NM4 PAES.');
+ if(!p||p.activo===false||!courses.has(course))throw error(403,'Este miniensayo corresponde a los cursos PAES HC.');
  return {uid:d.uid,nombre:String(p.nombre||p.name||'').slice(0,120),curso:course.replace(/^(\d)([A-Z])HC$/,'$1$2-HC'),guided,sessionId:C.SESSION+(guided?'-guiada':'')};
 }
 function validate(input,g,c=C){

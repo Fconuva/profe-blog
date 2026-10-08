@@ -11,7 +11,12 @@ const auth={verifyIdToken:async t=>{if(!['alumno','pareja','apoyo','otro','profe
 async function call(db,action,token,body,mode='regular',admin=false){let status=200,value;const res={setHeader(){},status(n){status=n;return this;},json(v){value=JSON.parse(JSON.stringify(v));return this;}};await B.handle(action,{method:body?'POST':'GET',headers:{authorization:token?'Bearer '+token:''},query:{mode},body},res,{db,auth,adminUid:admin?'profesor':undefined});return {status,body:value};}
 const full=g=>({version:C.VERSION,answers:Object.fromEntries(C.questionsFor(g).map(q=>[q.id,q.key])),reflection:{}});
 async function audit(){let n=0;const check=(condition,label)=>{assert.ok(condition,label);n++;},db=database();
- check((await call(db,'mini-state')).status===401,'sin token');check((await call(db,'mini-state','falso')).status===401,'token inválido');check((await call(db,'mini-state','otro')).status===403,'curso fuera de alcance');
+ check((await call(db,'mini-state')).status===401,'sin token');check((await call(db,'mini-state','falso')).status===401,'token inválido');check((await call(db,'mini-state','otro')).status===200,'3A HC autorizado para el miniensayo');
+ db.state.plataforma_estudiantes.estudiantes.otro.curso='3B-HC';check((await call(db,'mini-state','otro')).status===200,'3B HC autorizado para el miniensayo');
+ db.state.plataforma_estudiantes.estudiantes.otro.curso='4B-HC';check((await call(db,'mini-state','otro')).status===200,'4B HC autorizado para el miniensayo');
+ db.state.plataforma_estudiantes.estudiantes.otro.curso='2A-HC';check((await call(db,'mini-state','otro')).status===403,'NM2 fuera de alcance');
+ db.state.plataforma_estudiantes.estudiantes.otro.curso='4D-TP';check((await call(db,'mini-state','otro')).status===403,'TP fuera de alcance PAES HC');
+ db.state.plataforma_estudiantes.estudiantes.otro.curso='3A-HC';
  db.state.plataforma_estudiantes.estudiantes.otro.activo=false;check((await call(db,'mini-state','otro')).status===403,'cuenta inactiva');
  let r=await call(db,'mini-state','alumno');check(r.status===200&&r.body.activity.questions.length===18,'tres textos y dieciocho ítems');check(!/"(?:key|reason|failures|skill|task)":/.test(JSON.stringify(r.body)),'claves y habilidades privadas');
  r=await call(db,'mini-state','profesor');check(r.status===200&&r.body.preview===true&&r.body.activity.questions.length===18,'docente autorizado ve el instrumento sin perfil de estudiante');check(!/"(?:key|reason|failures)":/.test(JSON.stringify(r.body)),'vista docente sin claves en aplicación');check((await call(db,'mini-start','profesor',full(false))).status===403,'vista docente no crea intentos');check((await db.ref(B.BASE+'/'+C.SESSION+'/profesor').once('value')).val()===null,'sin registro de prueba docente');

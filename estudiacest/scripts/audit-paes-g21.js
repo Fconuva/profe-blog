@@ -107,7 +107,10 @@ assert(css.length > 1000 && /@media/.test(css), 'Los estilos no incluyen reglas 
 // Portal
 assert((portal.match(/<span class="ensayo-tag">Sesión actual<\/span>/g) || []).length === 1, 'Debe existir una sola tarjeta marcada como Sesión actual.');
 const card21 = portal.match(/<article\b[^>]*id="cardGuia21"[^>]*>([\s\S]*?)<\/article>/);
-assert(card21 && /Sesión actual/.test(card21[1]) && /href="guia21\.html"/.test(card21[1]), 'G21 no es la sesión actual del portal.');
+assert(card21 && /href="guia21\.html"/.test(card21[1]), 'G21 debe conservar su acceso.');
+const card22 = portal.match(/<article\b[^>]*id="miniInviernoCard"[^>]*>([\s\S]*?)<\/article>/);
+assert(card22 && /Sesión actual/.test(card22[1]) && /href="mini-invierno-2027\/"/.test(card22[1]), 'G22 debe ser la sesión actual del portal.');
+assert(portal.indexOf('id="cardGuia21"') < portal.indexOf('id="miniInviernoCard"'), 'G22 debe continuar la secuencia tras G21.');
 assert(card21 && /24 preguntas/.test(card21[1]) && /datetime="2026-09-10"/.test(card21[1]), 'La tarjeta de G21 no anuncia 24 preguntas y la fecha 10 de septiembre.');
 assert(!/<article\b[^>]*class="upcoming-card"[^>]*data-guided-guide="21"/.test(portal), 'G21 sigue duplicada como sesión futura.');
 assert(/for \(let n = 10; n <= 21; n\+\+\)/.test(portal), 'El bloqueo de guías del portal no cubre g21.');

@@ -4,6 +4,8 @@
 
 - Francisco solicita dejar la tarjeta de inmediato para los estudiantes. Se identifica el miniensayo existente como «Guía N°22: Miniensayo de Competencia Lectora» y se ubica después de la Guía 21 en la secuencia del portal PAES, marcado como sesión actual. Se conservan el identificador de tarjeta, acceso regular e individual, recuperación del avance y todos los enlaces anteriores.
 - Cambio limitado a la tarjeta del portal; no se cambian lecturas, preguntas, intentos ni puntajes. Validación, publicación y comprobación pública se registran al concluir.
+- Francisco informa que «Ingresar» no muestra respuesta. En su navegador se comprueba que el clic abre la sesión tras una espera sin aviso; consola sin errores. El botón muestra de inmediato recuperación de sesión y apertura, impide clics duplicados y recupera su disponibilidad con un mensaje de reintento si cualquiera de esas esperas supera 20 segundos. No modifica autenticación ni permisos.
+- Francisco confirma que el curso afectado es 3.º B HC y solicita habilitar el instrumento para todos los cursos PAES. Se corrige la restricción inicial a NM4: ahora admite 3.º A/B y 4.º A/B HC autenticados y activos. Se conservan cuenta de prueba, revisión docente y ruta individual por identidad. No se amplía a NM2 ni TP. Auditorías verifican los cuatro cursos y rechazos fuera de alcance; el portal muestra Guía 22 sin duplicarla como futura y los controles de secuencia se actualizan conservando la Guía 21.
 
 ## 2026-10-08, PAES NM4: retirar el rótulo de invierno
 

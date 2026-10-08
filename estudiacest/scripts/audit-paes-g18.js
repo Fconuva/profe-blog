@@ -117,13 +117,16 @@ const card18 = portal.indexOf('id="cardGuia18"');
 const card19 = portal.indexOf('id="cardGuia19"');
 assert(card16 >= 0 && card16 < card17 && card17 < card18 && card18 < card19, 'El portal no ordena las tarjetas G16 → G17 → G18 → G19.');
 assert((portal.match(/<span class="ensayo-tag">Sesión actual<\/span>/g) || []).length === 1, 'Debe existir una sola tarjeta marcada como Sesión actual.');
-for (let guide = 22; guide <= 31; guide += 1) {
+for (let guide = 23; guide <= 31; guide += 1) {
   if (guide === 21) continue;
   assert(portal.includes(`Guía ${guide}</span>`), `Falta la tarjeta futura gris de la Guía ${guide}.`);
 }
 const currentCard21 = portal.match(/<article\b[^>]*id="cardGuia21"[^>]*>([\s\S]*?)<\/article>/);
-assert(currentCard21 && /<span class="ensayo-tag">Sesión actual<\/span>/.test(currentCard21[1]), 'G21 debe existir como sesión actual, no como tarjeta futura.');
-assert(currentCard21 && /href="guia21\.html"/.test(currentCard21[1]), 'La sesión actual debe abrir guia21.html.');
+assert(currentCard21 && /href="guia21\.html"/.test(currentCard21[1]), 'G21 debe conservar su acceso.');
+const currentCard22 = portal.match(/<article\b[^>]*id="miniInviernoCard"[^>]*>([\s\S]*?)<\/article>/);
+assert(currentCard22 && /<span class="ensayo-tag">Sesión actual<\/span>/.test(currentCard22[1]) && /href="mini-invierno-2027\/"/.test(currentCard22[1]), 'G22 debe ser la sesión actual y abrir el miniensayo.');
+assert(portal.indexOf('id="cardGuia21"') < portal.indexOf('id="miniInviernoCard"'), 'G22 debe aparecer después de G21.');
+assert(!/<article\b[^>]*class="upcoming-card"[^>]*data-guided-guide="22"/.test(portal), 'G22 no debe duplicarse como futura.');
 assert(currentCard21 && /24 preguntas/.test(currentCard21[1]) && /3 textos/.test(currentCard21[1]) && /datetime="2026-09-10"/.test(currentCard21[1]), 'G21 debe anunciar 24 preguntas, 3 textos y fecha 10 de septiembre de 2026.');
 assert(!/<article\b[^>]*class="upcoming-card"[^>]*data-guided-guide="21"/.test(portal), 'G21 no puede duplicarse como sesión futura.');
 assert(/PAES Regular de Admisión 2027/.test(portal), 'Falta el hito final de la PAES Regular.');

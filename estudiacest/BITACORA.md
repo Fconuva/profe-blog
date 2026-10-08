@@ -1,5 +1,10 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-08, PAES NM4: retirar el rótulo de invierno
+
+- Francisco solicita quitar el mensaje «PAES Invierno». Las vistas regular, individual y docente muestran «Miniensayo NM4»; la tarjeta del portal dice «Miniensayo de lectura» y el enlace de administración «Miniensayo NM4». La referencia visible se rotula «Referencia oficial DEMRE». El título público del catálogo vigente y anterior coincide con esas vistas.
+- Se conservan URL, sesión, versiones, textos, reactivos, alternativas, claves, registros y controles de integridad. Auditoría focalizada: 157 comprobaciones aprobadas; build integral aprobado con 775 recursos críticos. Publicación segura y comprobación pública se registran al concluir.
+
 ## 2026-10-07, PAES NM4: ajustes editoriales y vista de revisión docente
 
 - Francisco solicita aplicar todos los ajustes de la revisión y reporta 403 repetidos en `mini-state`. Se corrigen las justificaciones 12 y 18 sin referencias a letras desactualizadas, también en la pauta anterior. Se fortalecen los distractores 9 y 14 y la pregunta 7 exige cruzar filas y columnas de la tabla; las temperaturas exactas ya no se repiten en los párrafos. Tres lecturas de 612, 589 y 599 palabras; se conservan 18 preguntas, claves y matriz 2/10/6. La exigencia alta es una estimación editorial del conjunto, sin pilotaje ni confiabilidad estadística.

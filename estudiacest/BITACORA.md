@@ -1,5 +1,13 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-08, PAES 3.º B HC: revisión de un estudiante y reapertura individual de G20 y G21
+
+- Francisco pide revisar las tareas PAES de un estudiante de 3.º B HC, informar notas y pendientes y dejarle todo habilitado para volver a responder. Identidad resuelta por RUN normalizado: un único perfil en el curso y registros coincidentes. Consulta de solo lectura a perfil, entregas, libro y configuración.
+- Estado encontrado: ninguna guía bloqueada; G10–G19 con reenvío abierto hasta hoy inclusive (`reenvio_cierra=2026-10-09`); G20 y G21 entregadas e inmutables; Guía 22 en curso y sin incidencias. Solo G20 y G21 requerían acción.
+- Reapertura individual de esas dos entregas sin borrar evidencia: el registro vuelve a borrador editable con sus respuestas; la entrega anterior (respuestas, desarrollo, puntaje y hora) queda en `intentosAnteriores`, con la misma forma que usa el servidor al reenviar, y `reaperturaDocente` guarda fecha y motivo. Simulación con checksum, escritura condicional por ETag, 2 esperadas y 2 aplicadas, respaldo local privado y relectura.
+- Relectura independiente por la API pública de producción: las 21 guías responden editables o sin iniciar para ese estudiante, ninguna cerrada. No se cambian notas del libro, configuración global, reenvío de otros estudiantes ni código; sin despliegue.
+- Queda informado a Francisco: si el estudiante no vuelve a entregar G20 o G21, permanecen como borrador y la entrega original se restaura desde `intentosAnteriores`. El reenvío G10–G19 cierra para todos esta medianoche. El admin no tiene una reapertura individual de guías PAES que conserve la entrega (su botón «Restablecer» la borra); se usó un script local de una sola vez, fuera del repositorio.
+
 ## 2026-10-08, PAES NM4: tarjeta de la Guía 22
 
 - Francisco solicita dejar la tarjeta de inmediato para los estudiantes. Se identifica el miniensayo existente como «Guía N°22: Miniensayo de Competencia Lectora» y se ubica después de la Guía 21 en la secuencia del portal PAES, marcado como sesión actual. Se conservan el identificador de tarjeta, acceso regular e individual, recuperación del avance y todos los enlaces anteriores.

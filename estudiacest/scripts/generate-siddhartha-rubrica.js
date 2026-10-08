@@ -5,7 +5,7 @@ const root=path.resolve(__dirname,'..'),base='nm3/siddhartha-carrete';
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 async function main(){
  const data=JSON.parse(fs.readFileSync(path.join(root,base,'assets/rubrica-holistica.json'),'utf8'));
- const template=fs.readFileSync(path.join(root,'referencias/formato-institucional/plantilla-guia.html'),'utf8');
+ const template=fs.readFileSync(path.join(root,'referencias/formato-institucional/plantilla-guia.html'),'utf8').replace(/\r\n/g,'\n');
  const header=template.match(/  <div class="membrete-banner">[\s\S]*?(?=  <div class="doc-title">)/)[0].replace(/\.\.\/\.\.\/estudiantes\//g,'/estudiantes/').replace('[Asignatura]','Lengua y Literatura').replace('[Nivel]','NM3 · 3.º A, B y D');
  const footer=n=>template.match(/  <footer class="footer">[\s\S]*?<\/footer>/)[0].replace('[n]',n).replace('[total]','2');
  const rows=levels=>levels.map(l=>`<tr data-level="${l.level}"><td class="level">Nivel ${l.level}<span>${esc(l.name)}</span><span>${l.points} puntos</span></td><td>${esc(l.descriptor)}</td></tr>`).join('\n');

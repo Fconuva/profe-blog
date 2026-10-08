@@ -1,5 +1,7 @@
 # Miniensayo NM4 · referencia Invierno, Admisión 2027
 
+Actualización de acceso, 08-10-2026: por instrucción de Francisco, la actividad se presenta en el portal como Guía 22 y admite los cuatro cursos PAES HC (3.º A/B y 4.º A/B). La ruta individual sigue seleccionada por identidad en servidor. Se conservan las rutas, versiones e intentos; no se habilitan NM2 ni TP. El botón de ingreso muestra la recuperación y apertura de sesión, con reintento si la espera supera 20 segundos.
+
 Objetivo: interpretar relaciones y sentidos de textos literarios y no literarios y evaluar afirmaciones mediante evidencia textual.
 
 Matriz previa: tres textos originales de 500–700 palabras, seis ítems A–D por texto. Texto 1, cuento: 1 b, 2 d, 3 h, 4 c, 5 l, 6 n. Texto 2, divulgación con tabla: 7 b, 8 c, 9 d, 10 h, 11 j, 12 n. Texto 3, ensayo: 13 f, 14 h, 15 c, 16 d, 17 l, 18 j. Total: Localizar 2, Interpretar 10, Evaluar 6. La numeración a–n procede del temario DEMRE; proporciones y extensión son decisiones CEST.

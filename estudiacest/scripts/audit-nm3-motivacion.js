@@ -84,7 +84,7 @@ async function main(){
  const assets=['motivacion.js','motivacion.css','assets/videos-motivacion.json',...data.fragments.map(f=>f.file)];
  for(const file of assets){
   check(manifest.criticalFiles.some(f=>f.path===base+'/'+file),'Recurso protegido '+file);
-  if(publicMode){const response=await fetch(`${origin}/${base}/${file}`);check(response.ok(),'Recurso público '+file);const bytes=Buffer.from(await response.arrayBuffer());check(crypto.createHash('sha256').update(bytes).digest('hex')===crypto.createHash('sha256').update(fs.readFileSync(path.join(root,base,file))).digest('hex'),'Recurso exacto '+file);}
+  if(publicMode){const response=await fetch(`${origin}/${base}/${file}`);check(response.ok,'Recurso público '+file);const bytes=Buffer.from(await response.arrayBuffer());check(crypto.createHash('sha256').update(bytes).digest('hex')===crypto.createHash('sha256').update(fs.readFileSync(path.join(root,base,file))).digest('hex'),'Recurso exacto '+file);}
  }
  check(errors.length===0,'Sin errores JavaScript/HTTP: '+errors.join('\n'));
  fs.writeFileSync(path.join(evidence,'resultado.json'),JSON.stringify({origin,checks,errors,passed:true},null,2));

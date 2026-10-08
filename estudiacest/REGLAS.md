@@ -193,6 +193,11 @@ Antes de editar y nuevamente antes de publicar:
   `thesisContexts` u otra estructura.
 - Toda mutación masiva de resultados se ejecuta primero en simulación, se revisa
   y luego se aplica. La cantidad esperada y aplicada debe coincidir.
+- Reenvíos PAES: por decisión de Francisco (8-oct-2026, «deja la mejor nota»),
+  un reenvío sube la nota si mejora y nunca la baja; el libro conserva la mayor.
+  `scripts/grade-paes-reopened.js` aplica siempre el último envío: revisar su
+  simulación y no aplicar ningún cambio a la baja. El intento cuyo reenvío
+  resultó menor queda calificado con la nota vigente del libro.
 - Las adecuaciones individuales conservan el objetivo lector, no exhiben datos
   clínicos y permanecen aisladas del intento regular.
 - Toda nueva guía, sesión, miniensayo o ensayo PAES debe publicarse el mismo día

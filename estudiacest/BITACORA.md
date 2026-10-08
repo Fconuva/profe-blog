@@ -1,5 +1,14 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-08, PAES: notas G1–G21 actualizadas tras los reenvíos, con la regla «mejor nota»
+
+- Francisco resuelve la decisión pendiente de la entrada siguiente: **«deja la mejor nota»**. Regla vigente para los reenvíos PAES: un reenvío sube la nota si mejora y nunca la baja; el libro conserva la mayor.
+- Aplicado sobre G1–G19 a partir de `buildPlan` del calificador versionado: 158 intentos calificados y 79 casillas del libro (69 altas y 11 cambios al alza, menos una alta retenida). Los 8 reenvíos con resultado menor conservan la nota del libro y su intento queda calificado con esa nota vigente (`fuente: mejor-nota-vigente`), para que una pasada posterior del calificador no la baje. Modelo `paes-reenvios-g1-g19-mejor-nota-2026-10-08`.
+- Procedimiento: simulación con checksum, escritura condicional por ETag, respaldo local privado, cero conflictos; relectura con 158 intentos y 79 casillas verificados y ninguna nota del libro reducida. G20 y G21: dos entregas nuevas del día calificadas con el procedimiento de la mañana.
+- Verificación independiente: el calificador versionado en simulación informa cero intentos por calificar en G1–G19, y `audit-paes-reopened-grades` cero entregas elegibles sin nota de intento en G1–G21 (1.109 entregas).
+- Sin tocar, para decisión docente: una casilla de G14 que el libro tiene vacía aunque el intento conserva nota (posible borrado manual; el calificador versionado la repondría) y las 3 discrepancias entre intento y libro editado a mano ya informadas.
+- **Atención para la próxima pasada:** `scripts/grade-paes-reopened.js` aplica siempre el último envío y bajaría notas; mientras no se le incorpore esta regla, usar su simulación y no aplicar un cambio a la baja. El reenvío G10–G19 cierra hoy a medianoche: falta la pasada final posterior. La visibilidad estudiantil sigue en G11–G17, a la espera de confirmación de Francisco. Sin cambios de código ni despliegue.
+
 ## 2026-10-08, PAES: actualización de notas por reenvíos G1–G19, simulada y pendiente de aplicar
 
 - Francisco pide dejar revisado y calificado hasta la G21 y actualizar las notas porque muchos estudiantes volvieron a responder y enviar. G20 y G21: una entrega nueva calificada con el mismo procedimiento de la entrada anterior, relectura conforme; el resto ya estaba calificado.

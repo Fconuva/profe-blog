@@ -35,7 +35,13 @@ Son tiempos propuestos, pendientes de aplicación. No hay espera obligatoria ni 
 
 ### Inicio: activación conceptual oral
 
-Distribución orientativa: activación, 2 minutos; norma y objetivo, 1; conceptos, 3; demostración oral breve, 4. Preguntar qué hace creíble un mensaje y recoger dos respuestas. Recordar trabajo en papel y sin celular. Leer el objetivo.
+Distribución orientativa: videos y cuatro pausas orales, 5 minutos; norma y objetivo, 1; conceptos, 2; demostración oral breve, 2. En la diapositiva 1, pulsar «Ver videos con pausas». Son aproximadamente 93 segundos de video y cuatro conversaciones de 30 segundos, con margen para abrir y cambiar de caso. Recoger una o dos intervenciones breves por pausa, sin exigir respuestas escritas. Recordar trabajo en papel y sin celular en la diapositiva 2; leer el objetivo en la 3. Mantener los 10 minutos del inicio y ajustar el número de intervenciones según lo observado.
+
+Selección verificada el 8 de octubre de 2026. TVN, «Las tres fake news de la semana», publicado en YouTube el 18-11-2024: solo el caso de la imagen de un supuesto rescate durante la DANA en España (47,88–66,6 y 66,6–79 segundos). Se pausa antes de «falsa» y después del contraste. T13, «¿Real o falso? La supuesta multa por QR que se volvió viral», 28-11-2024: mensaje recibido en un grupo de vecinos (227,04–248,8) y consulta directa a Carabineros (268,08–307,96). Se omite la explicación intermedia sobre clonar un teléfono; no se enseña que escanear cualquier QR produzca ese efecto. Ambos son reportajes de canales chilenos; el rescate corresponde a un supuesto hecho en España. Son archivos de 2024, no noticias de hoy ni evidencia de los tres casos de la guía.
+
+Preguntas intercaladas: emoción y comprobación de la imagen; límites de una herramienta y búsqueda de fuente y fecha; afirmación del mensaje y organismo al que consultar; contenido y competencia de la respuesta institucional. Conectar oralmente con los casos impresos: comparar imágenes, consultar a quien registra el hecho y revisar la fecha. No convertir el resultado de una herramienta de detección de IA ni el nombre de un canal en prueba concluyente. La evidencia más directa del segundo clip es el testimonio de Carabineros acerca de sus propias notificaciones.
+
+Los cuatro archivos conservan audio, imágenes y logos de las fuentes originales. Se editan solo sus límites temporales, con enlaces y fechas visibles. El video se detiene al final de cada fragmento y la continuación depende del docente; permite repetir, pausar antes para comentar y cerrar. No se registran estudiantes ni respuestas. Fuentes: https://www.youtube.com/watch?v=XVssSLNp_xA y https://www.youtube.com/watch?v=xTWlL62PHhQ. Procedencia y cortes en `assets/videos-motivacion.json`.
 
 Explicar con palabras simples:
 

@@ -63,9 +63,23 @@ async function audit(){let n=0;const check=(condition,label)=>{assert.ok(conditi
  // Reloj controlado exclusivamente en fixtures: nunca espera 75 minutos ni escribe producción.
  const realNow=Date.now,timed=database();let clock=realNow();Date.now=()=>clock;
  try{
-  let t=await call(timed,'mini-state','alumno');check(t.body.attempt===null&&t.body.serverNow===clock&&t.body.activity.timeLimitMinutes===75,'ingresar no inicia reloj');
+  for(const course of ['4A-HC','4°A HC','4AHC'])check(B.timeLimitFor(course)===180*60000,'4A normalizado recibe tres horas');
+  for(const course of ['4B-HC','3A-HC','3B-HC','Docente'])check(B.timeLimitFor(course)===75*60000,'otros cursos conservan 75 minutos');
+  const migrating=database(),migrationRef=migrating.ref(B.BASE+'/'+C.SESSION+'/alumno'),migrationStart=clock-90*60000;
+  const oldAttempt={uid:'alumno',curso:'4A-HC',version:C.VERSION,startedAt:migrationStart,timerStartedAt:migrationStart,expiresAt:migrationStart+B.TIME_LIMIT_MS,answers:{q1:'B'},reflection:{comprendi:'Conservar'},strikes:1,incidents:{'fixture-existing':{reason:'blur',at:migrationStart}},submitted:false,completada:false};
+  await migrationRef.set(oldAttempt);let migrated=await call(migrating,'mini-state','alumno');
+  check(!migrated.body.attempt.submitted&&migrated.body.attempt.expiresAt===migrationStart+180*60000,'estado amplía antes de cerrar por el antiguo plazo de 75 minutos');
+  check(migrated.body.attempt.timerStartedAt===migrationStart&&migrated.body.attempt.startedAt===migrationStart&&migrated.body.attempt.answers.q1==='B'&&migrated.body.attempt.reflection.comprendi==='Conservar'&&migrated.body.attempt.strikes===1,'ampliación conserva inicio, respuestas, reflexión e incidencias');
+  check((await migrationRef.once('value')).val().expiresAt===migrated.body.attempt.expiresAt,'ampliación persistida en servidor');
+  await migrationRef.set(oldAttempt);migrated=await call(migrating,'mini-save','alumno',{version:C.VERSION,answers:{q1:'C'},curso:'4B-HC',timeLimitMinutes:999});
+  check(!migrated.body.attempt.submitted&&migrated.body.attempt.expiresAt===migrationStart+180*60000&&migrated.body.attempt.answers.q1==='C','guardado extiende según identidad y no duración enviada');
+  await migrationRef.set(oldAttempt);migrated=await call(migrating,'admin-mini-list','profesor',null,'regular',true);
+  check(!migrated.body.rows[0].submitted&&migrated.body.rows[0].expiresAt===migrationStart+180*60000,'consulta docente extiende antes de vencer');
+  const completed={...oldAttempt,submitted:true,completada:true,endedBy:'time',submittedAt:clock-1000,completadaAt:clock-1000};await migrationRef.set(completed);
+  migrated=await call(migrating,'mini-state','alumno');check(migrated.body.attempt.submitted&&migrated.body.attempt.timeLimitMinutes===75&&JSON.stringify((await migrationRef.once('value')).val())===JSON.stringify(completed),'entrega previa de 75 minutos se conserva intacta');
+  let t=await call(timed,'mini-state','alumno');check(t.body.attempt===null&&t.body.serverNow===clock&&t.body.activity.timeLimitMinutes===180,'ingresar no inicia reloj; 4A dispone de 180 minutos');
   t=await call(timed,'mini-start','alumno',{version:C.VERSION,answers:{}});const deadline=t.body.attempt.expiresAt,start=t.body.attempt.timerStartedAt;
-  check(start===clock&&deadline-start===75*60000,'Comenzar inicia 75 minutos exactos en servidor');
+  check(start===clock&&deadline-start===180*60000,'Comenzar inicia 180 minutos exactos para 4A en servidor');
   clock+=6*60000;t=await call(timed,'mini-start','alumno',full(false));check(t.body.attempt.expiresAt===deadline&&Object.keys(t.body.attempt.answers).length===0,'volver a comenzar no reinicia ni reemplaza respuestas');
   t=await call(timed,'mini-save','alumno',{version:C.VERSION,answers:{q1:C.questionsFor(false)[0].key},expiresAt:clock+99999999,timerStartedAt:clock,serverNow:0});check(t.body.attempt.expiresAt===deadline&&t.body.attempt.timerStartedAt===start,'no confiar fechas ni duración cliente');
   t=await call(timed,'mini-state','alumno');check(t.body.attempt.expiresAt===deadline,'recarga conserva plazo');
@@ -76,15 +90,15 @@ async function audit(){let n=0;const check=(condition,label)=>{assert.ok(conditi
   check((await call(timed,'mini-save','alumno',full(false))).status===409,'intento vencido inmutable');
   const previous=JSON.stringify((await timed.ref(B.BASE+'/'+C.SESSION+'/alumno').once('value')).val());await call(timed,'mini-state','alumno');check(JSON.stringify((await timed.ref(B.BASE+'/'+C.SESSION+'/alumno').once('value')).val())===previous,'relectura vencida idempotente');
   await call(timed,'admin-mini-reset','profesor',{uid:'alumno',sessionId:C.SESSION},'regular',true);const reopened=(await call(timed,'mini-state','alumno')).body;clock+=1000;
-  t=await call(timed,'mini-start','alumno',{version:C.VERSION,resetAt:reopened.resetAt,answers:{}});check(t.body.attempt.expiresAt===clock+B.TIME_LIMIT_MS&&t.body.attempt.timerStartedAt===clock,'reapertura inicia plazo nuevo');
+  t=await call(timed,'mini-start','alumno',{version:C.VERSION,resetAt:reopened.resetAt,answers:{}});check(t.body.attempt.expiresAt===clock+B.timeLimitFor('4A-HC')&&t.body.attempt.timerStartedAt===clock,'reapertura inicia plazo nuevo');
   const archive=(await timed.ref(B.BASE+'/'+C.SESSION+'/alumno').once('value')).val();check(archive.expiresAt>deadline,'reapertura no reutiliza reloj vencido');
-  await call(timed,'mini-start','pareja',{version:C.VERSION,answers:{q1:C.questionsFor(false)[0].key}});const inactiveDeadline=(await call(timed,'mini-state','pareja')).body.attempt.expiresAt;clock=inactiveDeadline+1000;
+  await call(timed,'mini-start','pareja',{version:C.VERSION,answers:{q1:C.questionsFor(false)[0].key},curso:'4A-HC',timeLimitMinutes:180});const inactiveDeadline=(await call(timed,'mini-state','pareja')).body.attempt.expiresAt;check(inactiveDeadline===clock+B.TIME_LIMIT_MS,'4B no puede obtener tres horas suplantando curso');clock=inactiveDeadline+1000;
   t=await call(timed,'mini-state','pareja');check(t.body.attempt.endedBy==='time'&&t.body.attempt.performance.correct===1,'regreso tras cerrar pestaña confirma vencimiento sin depender del cliente');
   t=await call(timed,'mini-start','apoyo',{version:C.VERSION,answers:{}},'guided');check(t.body.attempt.expiresAt===clock+B.TIME_LIMIT_MS,'recorrido guiado recibe 75 minutos');clock=t.body.attempt.expiresAt;
   t=await call(timed,'admin-mini-list','profesor',null,'regular',true);const support=t.body.rows.find(r=>r.uid==='apoyo');check(support.endedBy==='time'&&support.total===6&&support.completada,'consulta docente confirma vencimiento y conserva variante');
   const history=database(),oldStart=clock-10*3600000;await history.ref(B.BASE+'/'+C.SESSION+'/alumno').set({version:V1.VERSION,startedAt:oldStart,answers:{q7:'D'},submitted:false,completada:false});
   t=await call(history,'mini-state','alumno');check(!t.body.attempt.expiresAt&&!t.body.attempt.submitted,'intento antiguo no vence retroactivamente');
-  t=await call(history,'mini-start','alumno',{version:V1.VERSION,answers:{}});check(t.body.attempt.startedAt===oldStart&&t.body.attempt.expiresAt===clock+B.TIME_LIMIT_MS&&t.body.attempt.answers.q7==='D','primer comienzo tras actualización agrega reloj sin perder intento histórico');
+  t=await call(history,'mini-start','alumno',{version:V1.VERSION,answers:{}});check(t.body.attempt.startedAt===oldStart&&t.body.attempt.expiresAt===clock+B.timeLimitFor('4A-HC')&&t.body.attempt.answers.q7==='D','primer comienzo tras actualización agrega reloj sin perder intento histórico');
  }finally{Date.now=realNow;}
  for(const file of ['mini.js','integridad.js','sesion.js','docente.js','portal.js'])new Function(fs.readFileSync(path.join(__dirname,'../paes/mini-invierno-2027',file),'utf8'));
  console.log(`Miniensayo NM4: ${n} comprobaciones aprobadas. Evidencia, identidad, claves privadas, strikes, reapertura y entrega. Solo fixtures.`);return n;

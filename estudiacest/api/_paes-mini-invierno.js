@@ -8,12 +8,15 @@ const clean=v=>String(v||'').replace(/[^0-9A-Z]/gi,'').toUpperCase();
 const error=(status,message)=>Object.assign(new Error(message),{status});
 const delivered=r=>r?.submitted===true&&r?.completada===true;
 const TIME_LIMIT_MS=75*60*1000;
-const timedActivity=(c,g)=>({...c.publicActivity(g),suggestedMinutes:75,timeLimitMinutes:75});
+const timeLimitFor=course=>clean(course)==='4AHC'?180*60*1000:TIME_LIMIT_MS;
+const timedActivity=(c,g,course)=>({...c.publicActivity(g),suggestedMinutes:timeLimitFor(course)/60000,timeLimitMinutes:timeLimitFor(course)/60000});
+// Extiende solo intentos abiertos de 4A, desde Comenzar, sin reiniciar el reloj.
+function extendOpen(r,course=r?.curso){if(!r||r.resetAt||delivered(r)||!Number.isFinite(r.timerStartedAt)||timeLimitFor(course)===TIME_LIMIT_MS)return r;const expiresAt=Math.max(r.expiresAt||0,r.timerStartedAt+timeLimitFor(course));return expiresAt===r.expiresAt?r:{...r,expiresAt};}
 const expired=(r,now)=>Boolean(r&&!r.resetAt&&!delivered(r)&&Number.isFinite(r.expiresAt)&&r.expiresAt<=now);
 function finishExpired(r,now,g){return {...r,submitted:true,completada:true,submittedAt:now,completadaAt:now,updatedAt:now,endedBy:'time',...catalogFor(r).grade(r.answers||{},g)};}
-async function closeExpired(ref,r,g,now=Date.now()){
- if(!expired(r,now))return r;
- const tx=await ref.transaction(current=>expired(current,now)?finishExpired(current,now,g):undefined,undefined,false);
+async function closeExpired(ref,r,g,now=Date.now(),course=r?.curso){
+ if(extendOpen(r,course)===r&&!expired(r,now))return r;
+ const tx=await ref.transaction(current=>{const adjusted=extendOpen(current,course);return expired(adjusted,now)?finishExpired(adjusted,now,g):adjusted!==current?adjusted:undefined;},undefined,false);
  return tx.snapshot.val();
 }
 const SCORE_SOURCE='https://portaldemre.demre.cl/paes/factores-seleccion/tabla-transformacion-puntajes-paes-invierno-p2027-competencia-lectora';
@@ -49,7 +52,7 @@ function validate(input,g,c=C){
 }
 function form(uid,version=C.VERSION){let seed=2166136261;for(const c of uid+version)seed=Math.imul(seed^c.charCodeAt(0),16777619)>>>0;const map={};for(const q of C.questionsFor(false)){let a=['A','B','C','D'];for(let i=3;i>0;i--){seed=(Math.imul(seed,1664525)+1013904223)>>>0;const j=seed%(i+1);[a[i],a[j]]=[a[j],a[i]];}map[q.id]=a;}return map;}
 async function publicAttempt(db,r,i){if(!r||r.resetAt)return null;const {answers,reflection,startedAt,updatedAt,submittedAt,completadaAt,sessionId,strikes,incidents,endedBy,timerStartedAt,expiresAt}=r;
- const out={answers:answers||{},reflection:reflection||{},startedAt,updatedAt,submittedAt,completadaAt,sessionId,timerStartedAt:timerStartedAt||null,expiresAt:expiresAt||null,strikes:strikes||0,incidents:incidents||{},endedBy:endedBy||null,submitted:r.submitted===true,completada:r.completada===true};
+ const out={answers:answers||{},reflection:reflection||{},startedAt,updatedAt,submittedAt,completadaAt,sessionId,timerStartedAt:timerStartedAt||null,expiresAt:expiresAt||null,timeLimitMinutes:timerStartedAt&&expiresAt?(expiresAt-timerStartedAt)/60000:timeLimitFor(i.curso)/60000,strikes:strikes||0,incidents:incidents||{},endedBy:endedBy||null,submitted:r.submitted===true,completada:r.completada===true};
  if(delivered(r))out.performance=performance(r,i.guided);
  const pub=(await db.ref(CONFIG+'/publicacion').once('value')).val()||{};
  if(delivered(r)&&(pub.cursos?.[i.curso]===true||pub.estudiantes?.[i.uid]===true)){const c=catalogFor(r);out.result=c.grade(answers||{},i.guided);out.review=c.questionsFor(i.guided);}
@@ -76,7 +79,7 @@ async function handle(action,req,res,{db,auth,adminUid}){
   if(i.preview){if(action!=='mini-state')throw error(403,'La vista docente no crea ni entrega intentos.');return res.status(200).json({success:true,preview:true,identity:i,activity:timedActivity(C,req.query?.mode==='guided'),form:form(i.uid),resetAt:null,attempt:null,serverNow:Date.now()});}
   if(action==='mini-state'){
    if((req.query?.mode==='guided')!==i.guided)return res.status(200).json({success:true,redirect:i.guided?'/paes/mini-invierno-2027/guiada.html':'/paes/mini-invierno-2027/'});
-   const raw=await closeExpired(ref,(await ref.once('value')).val(),i.guided),c=catalogFor(raw);return res.status(200).json({success:true,identity:{uid:i.uid,nombre:i.nombre,curso:i.curso},activity:timedActivity(c,i.guided),form:i.guided?{}:form(i.uid,c.VERSION),resetAt:raw?.resetAt||raw?.resetAtAcknowledged||null,attempt:await publicAttempt(db,raw,i),serverNow:Date.now()});
+   const raw=await closeExpired(ref,(await ref.once('value')).val(),i.guided,Date.now(),i.curso),c=catalogFor(raw);return res.status(200).json({success:true,identity:{uid:i.uid,nombre:i.nombre,curso:i.curso},activity:timedActivity(c,i.guided,i.curso),form:i.guided?{}:form(i.uid,c.VERSION),resetAt:raw?.resetAt||raw?.resetAtAcknowledged||null,attempt:await publicAttempt(db,raw,i),serverNow:Date.now()});
   }
   if(!['mini-start','mini-save','mini-submit','mini-incident'].includes(action))throw error(400,'Acción no válida.');
   if(req.method!=='POST')throw error(405,'Usa POST para guardar.');const b=req.body||{},c=b.version===V1.VERSION?V1:C,data=validate(b,i.guided,c);
@@ -88,8 +91,9 @@ async function handle(action,req,res,{db,auth,adminUid}){
    if(catalogFor(current).VERSION!==b.version)return;
    if(current===null&&b.resetAt)return null;
    if((current?.resetAt||current?.resetAtAcknowledged||null)!==(b.resetAt||null))return;
+   current=extendOpen(current,i.curso);
    if(expired(current,now))return finishExpired(current,now,i.guided);
-   const timerStartedAt=current?.timerStartedAt||now,expiresAt=current?.expiresAt||timerStartedAt+TIME_LIMIT_MS;
+   const timerStartedAt=current?.timerStartedAt||now,expiresAt=current?.expiresAt||timerStartedAt+timeLimitFor(i.curso);
    if(action==='mini-start'&&current&&!current.resetAt)return {...current,timerStartedAt,expiresAt};
    if(isIncident&&current?.incidents?.[b.eventId])return current;
    const incidents={...(current?.incidents||{})};if(isIncident&&!incidents[b.eventId]&&Object.keys(incidents).length<3)incidents[b.eventId]={reason:b.reason,at:now};
@@ -104,4 +108,4 @@ async function handle(action,req,res,{db,auth,adminUid}){
   return res.status(200).json({success:true,attempt,serverNow:Date.now()});
  }catch(e){return res.status(e.status||500).json({error:e.status?e.message:'No se pudo guardar. Tu avance se conserva.'});}
 }
-module.exports={handle,BASE,CONFIG,identity,validate,form,estimate,performance,TIME_LIMIT_MS};
+module.exports={handle,BASE,CONFIG,identity,validate,form,estimate,performance,TIME_LIMIT_MS,timeLimitFor};

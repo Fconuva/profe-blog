@@ -1,5 +1,12 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-08, Guía 22: tres horas para 4.º A HC y acceso desde el administrador
+
+- Francisco amplía a 180 minutos desde Comenzar para 4.º A HC por los bloques 13:15–14:00 y 14:45–15:30, separados por almuerzo. Los demás cursos conservan 75 minutos. El servidor determina el plazo por identidad autenticada; la interfaz muestra el plazo correspondiente y el reloj continúa entre bloques.
+- Los intentos abiertos de 4.º A HC reciben la extensión desde su inicio original antes de comprobar vencimiento, conservando respuestas, reflexiones e incidencias. Las entregas previas permanecen inmutables; no se reabren ni se recalifican. La extensión se aplica al consultar o guardar, sin migración masiva.
+- Guía 22 añadida al selector de Guías Interactivas del administrador, con acceso destacado y navegación al panel propio de revisión. Conserva el curso seleccionado; el panel revisa respuestas, puntaje referencial, strikes, publicación de pauta y reapertura. Se corrige el nombre antiguo del catálogo y el motivo de cierre usa la duración histórica del intento.
+- Servidor: 230 comprobaciones con base ficticia, incluidos normalización del curso, extensión de un intento tras su antiguo plazo, persistencia, manipulación cliente, consulta docente y conservación de entregas de 75 minutos. Publicación y comprobación pública se registran al finalizar.
+
 ## 2026-10-08, Guía 22: contador de 75 minutos desde Comenzar
 
 - Francisco solicita un temporizador de 75 minutos iniciado al pulsar Comenzar. Se aplica a ambos recorridos del miniensayo; la excepción a la pauta general sin temporizador del recorrido individual queda documentada en REGLAS.md y en el plan PAES. La vista previa docente sigue sin crear intentos ni reloj.

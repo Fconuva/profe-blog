@@ -196,7 +196,10 @@ Antes de editar y nuevamente antes de publicar:
   adaptación conserva el objetivo lector y usa un estímulo breve, seis preguntas
   A-D, pasos visuales explícitos, una pregunta a la vez, lectura en voz alta y sin
   temporizador. Excepción para Guía 22 autorizada por Francisco el 08-10-2026:
-  el contador de 75 minutos solicitado para esta aplicación rige ambos recorridos
+  el contador solicitado para esta aplicación rige ambos recorridos: 75 minutos,
+  excepto 4.º A HC, con 180 minutos autorizados el mismo día por el almuerzo entre
+  los bloques 13:15–14:00 y 14:45–15:30. El reloj continúa durante el almuerzo.
+  Se extienden los intentos abiertos desde su inicio original; no se reabren entregas. El plazo corre
   desde Comenzar, con plazo en servidor, persistencia al recargar, entrega al vencer
   y reinicio solo tras reapertura docente. Su acceso es exclusivo; las claves y la retroalimentación quedan
   en servidor con `variant: guided-access-2026`, integración en Firebase y admin,

@@ -4,6 +4,7 @@
 
 - Francisco solicita quitar el mensaje «PAES Invierno». Las vistas regular, individual y docente muestran «Miniensayo NM4»; la tarjeta del portal dice «Miniensayo de lectura» y el enlace de administración «Miniensayo NM4». La referencia visible se rotula «Referencia oficial DEMRE». El título público del catálogo vigente y anterior coincide con esas vistas.
 - Se conservan URL, sesión, versiones, textos, reactivos, alternativas, claves, registros y controles de integridad. Auditoría focalizada: 157 comprobaciones aprobadas; build integral aprobado con 775 recursos críticos. Publicación segura y comprobación pública se registran al concluir.
+- Publicado `ba342958c1d7868049e7f6fdcef6fccbba994205`, enviado a origin/main, mediante `deploy:prod:safe` desde checkout limpio: `dpl_2wBdXMiuGtfznLLzNCSThrYKERWT`, proceso terminado con código 0. Build remoto aprobado; alias www.estudiacest.com confirma READY, proyecto y commit exactos. Verificación pública: 54 comprobaciones aprobadas, nueve recursos idénticos a Git, portadas y privacidad conservadas, navegador en celular, escritorio y 4K sin errores ni desbordes. Evidencia `%TEMP%/paes-mini-publico-CzeFeF`; captura móvil abierta. Comprobación adicional de las tres vistas muestra «Miniensayo NM4» sin «Invierno» en su texto visible; la tarjeta PAES muestra «Miniensayo de lectura». Cierre documental con commit acotado y push, sin otro despliegue. Enlace: https://www.estudiacest.com/paes/mini-invierno-2027/.
 
 ## 2026-10-07, PAES NM4: ajustes editoriales y vista de revisión docente
 

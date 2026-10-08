@@ -35,7 +35,7 @@
    const requestId=crypto.randomUUID();await api('admin-mini-clear-strikes',{uid:r.uid,sessionId:r.sessionId,integrityEpoch:r.integrityEpoch||0,requestId,reason:reason.trim()});
    await refresh();const saved=data.rows.find(x=>x.uid===r.uid&&x.sessionId===r.sessionId);
    if(!saved?.strikeAdjustments?.[requestId])throw Error('La corrección no está confirmada. Actualiza el panel.');
-   detail(saved);$('adminStatus').textContent='Corrección confirmada. Respuestas y reloj conservados. El estudiante debe recargar para continuar.';
+   detail(saved);$('adminStatus').textContent=completed(saved)?'Corrección confirmada. Las respuestas y el resultado se conservan; la entrega permanece finalizada.':'Corrección confirmada. Respuestas y reloj conservados. El estudiante debe recargar para continuar.';
   }));
   document.querySelectorAll('[data-reset]').forEach(b=>b.onclick=()=>perform(async()=>{
    const r=rows[Number(b.dataset.reset)];if(!confirm('¿Reiniciar desde cero? El intento actual se archiva y el estudiante comenzará sin respuestas, con un reloj nuevo. Para conservar su trabajo, usa Quitar strikes.'))return;

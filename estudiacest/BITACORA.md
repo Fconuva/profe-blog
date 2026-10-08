@@ -1,5 +1,12 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-07, PAES NM4: ajustes editoriales y vista de revisión docente
+
+- Francisco solicita aplicar todos los ajustes de la revisión y reporta 403 repetidos en `mini-state`. Se corrigen las justificaciones 12 y 18 sin referencias a letras desactualizadas, también en la pauta anterior. Se fortalecen los distractores 9 y 14 y la pregunta 7 exige cruzar filas y columnas de la tabla; las temperaturas exactas ya no se repiten en los párrafos. Tres lecturas de 612, 589 y 599 palabras; se conservan 18 preguntas, claves y matriz 2/10/6. La exigencia alta es una estimación editorial del conjunto, sin pilotaje ni confiabilidad estadística.
+- Se introduce v2 para nuevos intentos. El servidor conserva estímulos, alternativas, orden por UID, puntaje y pauta v1 de los intentos iniciados; rechaza mezclar versiones y una reapertura docente habilita v2 conservando el archivo anterior. No se alteran respuestas ni se escriben pruebas ficticias en producción.
+- La sesión visible en el navegador pertenece a NM2; el rechazo obedecía al alcance NM4. Se añade vista de revisión para administradores autenticados y la cuenta de prueba ya reconocida en PAES: lecturas y opciones, sin guardar, entregar ni generar strikes. El servidor rechaza sus escrituras; no se amplían cursos ordinarios ni se exponen claves en la aplicación. Pauta y versión por intento disponibles en el panel privado.
+- Auditoría focalizada: 157 comprobaciones aprobadas, con regresión de v1, mezcla rechazada, pauta por intento, reapertura v2, administrador, cuenta de prueba NM2 e inactividad. Navegador HTTP con backend y base ficticia verifica guardado, entrega, strikes, rutas regular/individual, tabla y vista docente sin escrituras. Build integral, publicación segura y verificación pública se registran al concluir.
+
 ## 2026-10-07, PAES NM4: miniensayo de tres textos con controles de integridad
 
 - Francisco solicita dificultad alta, tres textos y cinco a siete preguntas por lectura, tomando como referencia Invierno, Admisión 2027. Se verifican prueba oficial del 16-jun-2026 y temario DEMRE: tres textos originales de 612, 606 y 599 palabras, seis reactivos A–D por texto; dos Localizar, diez Interpretar y seis Evaluar. Matriz previa, claves irregulares, evidencia literal y descarte de cada distractor privados. Exigencia editorial prevista, sin atribuir dificultad o confiabilidad empíricas ni convertir a escala PAES.

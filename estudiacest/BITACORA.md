@@ -1,5 +1,10 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-08, PAES NM4: tarjeta de la Guía 22
+
+- Francisco solicita dejar la tarjeta de inmediato para los estudiantes. Se identifica el miniensayo existente como «Guía N°22: Miniensayo de Competencia Lectora» y se ubica después de la Guía 21 en la secuencia del portal PAES, marcado como sesión actual. Se conservan el identificador de tarjeta, acceso regular e individual, recuperación del avance y todos los enlaces anteriores.
+- Cambio limitado a la tarjeta del portal; no se cambian lecturas, preguntas, intentos ni puntajes. Validación, publicación y comprobación pública se registran al concluir.
+
 ## 2026-10-08, PAES NM4: retirar el rótulo de invierno
 
 - Francisco solicita quitar el mensaje «PAES Invierno». Las vistas regular, individual y docente muestran «Miniensayo NM4»; la tarjeta del portal dice «Miniensayo de lectura» y el enlace de administración «Miniensayo NM4». La referencia visible se rotula «Referencia oficial DEMRE». El título público del catálogo vigente y anterior coincide con esas vistas.

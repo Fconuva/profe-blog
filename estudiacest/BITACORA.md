@@ -1,5 +1,12 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-08, Termas: nombres por asiento y edición de la inscripción
+
+- Francisco autoriza mostrar quién ocupa cada asiento, permitir editar la inscripción y mantener oculto el total de inscritos. El mapa público incluye únicamente primer nombre y primer apellido por asiento; cifras, correos, teléfonos y contactos de emergencia permanecen privados. Consulta independiente del formulario desde «Ver bus y asientos», disponible también para quienes van en transporte propio o consultan su pase.
+- «Ya me inscribí · editar inscripción» recupera el registro mediante correo y teléfono registrados, normalizando el prefijo chileno. Entrega una llave adicional cifrada por hash, conserva la llave original, fechas y reserva, y limita los intentos en la base compartida. Respuestas personales con no-store; errores sin revelar existencia del correo. El correo identifica el registro y permanece de solo lectura al editar.
+- Edición pública hasta el 23 de octubre inclusive, hora de Chile; el servidor mantiene el bloqueo desde el 24. El pase puede consultarse y recuperarse después. La gestión administrativa conserva ambos accesos y los conflictos de asiento se resuelven en transacción. Sin eliminar, duplicar ni modificar inscripciones reales durante las pruebas.
+- Auditoría HTTP con función real y base ficticia aprobada: recuperación con caché fría, datos incorrectos, límite de intentos, acceso original y recuperado, cambios, conservación de datos, gestión administrativa, conflictos y cierre. Navegador contra servidor local de funciones reales y datos ficticios: consulta de ocupante, rechazo, recuperación, edición de asiento, recarga, edición de transporte/alimentación y lectura de vuelta en celular. Plazo y privacidad en 320/390/1440/3840 px aprobados, sin errores ni desbordes. Build integral aprobado; publicación segura y comprobación pública se registran al finalizar.
+
 ## 2026-10-08, PAES: notas G1–G21 actualizadas tras los reenvíos, con la regla «mejor nota»
 
 - Francisco resuelve la decisión pendiente de la entrada siguiente: **«deja la mejor nota»**. Regla vigente para los reenvíos PAES: un reenvío sube la nota si mejora y nunca la baja; el libro conserva la mayor.

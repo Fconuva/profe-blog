@@ -10,7 +10,8 @@
 // `plataforma_estudiantes`. La raíz de firebase-rules.json niega lectura y
 // escritura, así que ningún navegador llega a ese nodo: todo pasa por aquí con
 // credenciales de servidor. La vista pública recibe solo disponibilidad de
-// asientos y plazo. Los nombres de otras personas y los totales son del admin.
+// asientos, nombre breve de cada ocupante y plazo. Los totales y contactos
+// permanecen privados; los nombres por asiento fueron autorizados por Francisco.
 //
 // Reglas de la inscripción:
 //  - Nombres, apellidos, correo (cualquier dominio), teléfono y contacto de
@@ -18,8 +19,8 @@
 //    permite una respuesta por correo.
 //  - Al inscribirse por primera vez, el servidor entrega una llave que queda en
 //    ese navegador y guarda solo su hash. Sin la llave no se modifica una
-//    inscripción ajena. Si alguien la pierde, Francisco quita la inscripción
-//    desde el admin y la persona vuelve a inscribirse.
+//    inscripción ajena. Puede recuperar acceso con el correo y teléfono
+//    registrados, sin eliminar su inscripción ni invalidar el navegador original.
 //  - El asiento se decide dentro de una transacción sobre todas las
 //    inscripciones: si dos personas eligen el mismo a la vez, gana una y la otra
 //    recibe 409 con el mapa actualizado. El mapa de asientos no se guarda
@@ -71,6 +72,15 @@ function llaveValida(guardada, llave) {
     return a.length === b.length && crypto.timingSafeEqual(a, b);
 }
 
+function accesoPropio(ins, llave) {
+    return ins && (llaveValida(ins.llave, llave) || llaveValida(ins.llaveRecuperacion, llave));
+}
+
+function telefonoComparable(valor) {
+    const digitos = String(valor || '').replace(/\D/g, '');
+    return /^569\d{8}$/.test(digitos) ? digitos.slice(2) : digitos;
+}
+
 function primeraPalabra(valor) { return String(valor || '').split(' ')[0] || ''; }
 
 function nombreCorto(ins) { return `${primeraPalabra(ins.nombre)} ${primeraPalabra(ins.apellido)}`.trim(); }
@@ -81,7 +91,7 @@ function estadoPublico(inscripciones) {
     const ahora = Date.now();
     const lista = Object.values(inscripciones || {});
     const asientos = {};
-    lista.filter(vaEnBus).forEach(i => { asientos[String(i.asiento)] = { ocupado: true }; });
+    lista.filter(vaEnBus).forEach(i => { asientos[String(i.asiento)] = { ocupado: true, nombre: nombreCorto(i) }; });
     return {
         capacidad: CAPACIDAD,
         asientos,
@@ -173,8 +183,38 @@ async function mia(req, res, db) {
     const correo = validarCorreo(body.correo);
     const snap = await db.ref(`${INSCRIPCIONES}/${claveDe(correo)}`).once('value');
     const ins = snap.val();
-    if (!ins || !llaveValida(ins.llave, body.llave)) return res.status(404).json({ error: 'No encontramos tu inscripción en este navegador.' });
+    if (!accesoPropio(ins, body.llave)) return res.status(404).json({ error: 'No encontramos tu inscripción en este navegador.' });
     return res.status(200).json({ ok: true, inscripcion: inscripcionPropia(ins) });
+}
+
+async function recuperar(req, res, db) {
+    const body = cuerpo(req);
+    const correo = validarCorreo(body.correo);
+    const telefono = validarTelefono(body.telefono, 'Escribe el teléfono usado al inscribirte.');
+    // Límite compartido entre instancias; no guardar correo ni teléfono en él.
+    const intentoId = crypto.createHash('sha256').update(correo).digest('hex');
+    let bloqueada = false;
+    const intento = await db.ref(`${BASE}/recuperaciones/${intentoId}`).transaction(actual => {
+        bloqueada = false;
+        const ahora = Date.now();
+        const datos = actual && Number(actual.hasta) > ahora ? actual : { intentos: 0, hasta: ahora + 15 * 60 * 1000 };
+        if (datos.intentos >= 10) { bloqueada = true; return; }
+        return { intentos: datos.intentos + 1, hasta: datos.hasta };
+    }, undefined, false);
+    if (!intento.committed || bloqueada) throw fallo(429, 'Demasiados intentos. Espera 15 minutos antes de volver a intentar.');
+    const ref = db.ref(`${INSCRIPCIONES}/${claveDe(correo)}`);
+    const llave = crypto.randomBytes(18).toString('base64url');
+    let encontrada = false;
+    const resultado = await ref.transaction(ins => {
+        encontrada = false;
+        // null con caché fría debe permitir una lectura y un nuevo intento.
+        if (ins === null) return null;
+        if (!ins || telefonoComparable(ins.telefono) !== telefonoComparable(telefono)) return;
+        encontrada = true;
+        return { ...ins, llaveRecuperacion: hashLlave(llave) };
+    }, undefined, false);
+    if (!resultado.committed || !encontrada) throw fallo(404, 'No encontramos una inscripción con ese correo y teléfono. Revisa los datos usados al inscribirte.');
+    return res.status(200).json({ ok: true, llave, inscripcion: inscripcionPropia(resultado.snapshot.val()) });
 }
 
 async function inscribir(req, res, db) {
@@ -194,7 +234,7 @@ async function inscribir(req, res, db) {
         if (Date.now() >= CIERRE_INSCRIPCION) { motivo = 'cerrada'; return; }
         const todas = actual || {};
         const previa = todas[clave];
-        if (previa && !llaveValida(previa.llave, llaveRecibida)) { motivo = 'ajena'; return; }
+        if (previa && !accesoPropio(previa, llaveRecibida)) { motivo = 'ajena'; return; }
         if (!previa && Object.keys(todas).length >= TOPE_INSCRIPCIONES) { motivo = 'tope'; return; }
         if (transporte === 'bus') {
             const ocupado = Object.entries(todas).some(([k, v]) => k !== clave && vaEnBus(v) && Number(v.asiento) === asiento);
@@ -214,6 +254,7 @@ async function inscribir(req, res, db) {
             asiento: transporte === 'bus' ? asiento : null,
             comida,
             llave: previa ? previa.llave : hashLlave(llaveNueva),
+            ...(previa && previa.llaveRecuperacion ? { llaveRecuperacion: previa.llaveRecuperacion } : {}),
             creado: previa ? previa.creado : ahora,
             actualizado: ahora
         };
@@ -225,7 +266,7 @@ async function inscribir(req, res, db) {
         const snap = await db.ref(INSCRIPCIONES).once('value');
         const mapa = estadoPublico(snap.val());
         if (motivo === 'ocupado') throw fallo(409, 'Alguien acaba de tomar ese asiento. Elige otro.', { codigo: 'ocupado', estado: mapa });
-        if (motivo === 'ajena') throw fallo(409, 'Ese correo ya está inscrito desde otro navegador. Si necesitas cambiar algo, escríbele a Francisco Núñez.', { codigo: 'ajena', estado: mapa });
+        if (motivo === 'ajena') throw fallo(409, 'Ese correo ya está inscrito. Abre «Ya me inscribí · editar inscripción» con el correo y teléfono registrados.', { codigo: 'ajena', estado: mapa });
         if (motivo === 'tope') throw fallo(409, 'La inscripción alcanzó su tope. Escríbele a Francisco Núñez.', { codigo: 'tope', estado: mapa });
         throw fallo(500, 'No se pudo guardar la inscripción. Intenta de nuevo.');
     }
@@ -315,6 +356,7 @@ async function adminGuardar(req, res, db, auth) {
         todas[claveNueva] = {
             ...datos,
             llave: previa ? previa.llave : hashLlave(crypto.randomBytes(18).toString('base64url')),
+            ...(previa && previa.llaveRecuperacion ? { llaveRecuperacion: previa.llaveRecuperacion } : {}),
             creado: previa ? previa.creado : ahora,
             actualizado: ahora,
             gestionAdmin: true
@@ -374,12 +416,13 @@ async function adminRestaurar(req, res, db, auth) {
 }
 
 async function manejar(req, res, accion, db, auth) {
-    if (accion.startsWith('admin-')) res.setHeader('Cache-Control', 'no-store');
+    if (accion !== 'estado') res.setHeader('Cache-Control', 'no-store');
     try {
         if (accion === 'estado' && req.method === 'GET') return await estado(req, res, db);
         if (accion === 'admin-lista' && req.method === 'GET') return await adminLista(req, res, db, auth);
         if (req.method !== 'POST') return res.status(405).json({ error: 'Método no permitido.' });
         if (accion === 'mia') return await mia(req, res, db);
+        if (accion === 'recuperar') return await recuperar(req, res, db);
         if (accion === 'inscribir') return await inscribir(req, res, db);
         if (accion === 'admin-guardar') return await adminGuardar(req, res, db, auth);
         if (accion === 'admin-quitar') return await adminQuitar(req, res, db, auth);

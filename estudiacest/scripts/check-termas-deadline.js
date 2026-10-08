@@ -41,7 +41,7 @@ async function main() {
       // Solo fixtures de navegador. Ninguna petición de inscripción llega al servidor.
       await page.route('**/api/estudiantes?*', route => {
         const accion = new URL(route.request().url()).searchParams.get('action');
-        if (accion === 'termas-estado') return route.fulfill({ json: { ok: true, capacidad: 45, asientos: { '7': { ocupado: true } }, cierreInscripcion: cierre, inscripcionAbierta: ahora < cierre, actualizado: ahora } });
+        if (accion === 'termas-estado') return route.fulfill({ json: { ok: true, capacidad: 45, asientos: { '7': { ocupado: true, nombre: 'Persona Ficticia' } }, cierreInscripcion: cierre, inscripcionAbierta: ahora < cierre, actualizado: ahora } });
         if (accion === 'termas-mia') return route.fulfill({ json: { ok: true, inscripcion: { nombre: 'Persona', apellido: 'Ficticia', asiste: 'si', transporte: 'personal', comida: 'ninguna' } } });
         escrituras += 1;
         return route.abort();
@@ -53,8 +53,8 @@ async function main() {
       assert.equal(await page.locator('#chipAsisten, #chipLibres, #cuentaBus, #listaBus').count(), 0);
       await page.locator('label[for="asiste-si"]').click();
       await page.locator('label[for="tr-bus"]').click();
-      assert.equal(await page.locator('.asiento[data-n="7"]').getAttribute('aria-label'), 'Asiento 7, reservado');
-      await page.locator('.asiento[data-n="8"]').click();
+      assert.equal(await page.locator('#bus .asiento[data-n="7"]').getAttribute('aria-label'), 'Asiento 7, reservado por Persona Ficticia');
+      await page.locator('#bus .asiento[data-n="8"]').click();
       assert.equal(await page.locator('#eleccionTitulo').innerText(), 'Asiento 8');
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
       await page.locator('.plazo').scrollIntoViewIfNeeded();
@@ -78,7 +78,7 @@ async function main() {
       assert.equal(escrituras, 0);
       assert.deepEqual(errors, []);
       assert.deepEqual(failed, []);
-      console.log(`${width}px: sin cifras ni pasajeros públicos, asiento reservado anónimo y selección libre; reloj, plazo, cierre, recarga y pase conservado; sin desbordes, errores ni escrituras.`);
+      console.log(`${width}px: sin totales públicos, asiento con nombre breve y selección libre; reloj, plazo, cierre, recarga y pase conservado; sin desbordes, errores ni escrituras.`);
       await page.close();
     }
     console.log(`Capturas: ${evidence}`);

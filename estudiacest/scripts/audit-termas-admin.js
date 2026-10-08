@@ -139,7 +139,11 @@ const baseB = {
 
   function comprobarEstadoPrivado(publico) {
     assert.deepStrictEqual(Object.keys(publico).sort(), ['actualizado', 'asientos', 'capacidad', 'cierreInscripcion', 'inscripcionAbierta']);
-    Object.values(publico.asientos).forEach(asiento => assert.deepStrictEqual(asiento, { ocupado: true }));
+    Object.values(publico.asientos).forEach(asiento => {
+      assert.deepStrictEqual(Object.keys(asiento).sort(), ['nombre', 'ocupado']);
+      assert.strictEqual(asiento.ocupado, true);
+      assert.strictEqual(typeof asiento.nombre, 'string');
+    });
   }
   const privacidad = mockDb();
   const altaPublica = await call(privacidad, 'inscribir', baseA, false);
@@ -149,7 +153,7 @@ const baseB = {
   assert.strictEqual(consultaPublica.code, 200);
   const { ok, ...estadoConsulta } = consultaPublica.payload;
   comprobarEstadoPrivado(estadoConsulta);
-  assert.deepStrictEqual(estadoConsulta.asientos, { '7': { ocupado: true } });
+  assert.deepStrictEqual(estadoConsulta.asientos, { '7': { ocupado: true, nombre: 'Prueba Docente' } });
   for (const datos of [{ ...baseB, asiento: baseA.asiento }, baseA]) {
     const conflictoPublico = await call(privacidad, 'inscribir', datos, false);
     assert.strictEqual(conflictoPublico.code, 409);
@@ -165,6 +169,51 @@ const baseB = {
   const noAdmin = await call(privacidad, 'admin-lista');
   assert.strictEqual(noAdmin.code, 403);
   assert.strictEqual(noAdmin.payload.totales, undefined);
+
+  // Recuperar verifica ambos datos privados sin eliminar ni duplicar la reserva.
+  const recuperacion = mockDb(true);
+  const inicial = await call(recuperacion, 'inscribir', baseA, false);
+  assert.strictEqual(inicial.code, 200);
+  const rutaPersona = 'eventos_docentes/termas_2026/inscripciones/uno@example,test';
+  const insOriginal = clone(getAt(recuperacion.state, rutaPersona));
+  const antesRecuperar = clone(recuperacion.state);
+  const incorrecta = await call(recuperacion, 'recuperar', { correo: baseA.correo, telefono: baseB.telefono }, false);
+  assert.strictEqual(incorrecta.code, 404);
+  assert.deepStrictEqual(getAt(recuperacion.state, 'eventos_docentes/termas_2026/inscripciones'), getAt(antesRecuperar, 'eventos_docentes/termas_2026/inscripciones'), 'Un teléfono ajeno no recupera ni cambia la inscripción.');
+  const inexistente = await call(recuperacion, 'recuperar', { correo: baseB.correo, telefono: baseB.telefono }, false);
+  assert.strictEqual(inexistente.code, 404);
+  assert.strictEqual(inexistente.payload.error, incorrecta.payload.error, 'El error no confirma si existe un correo.');
+  assert.deepStrictEqual(getAt(recuperacion.state, 'eventos_docentes/termas_2026/inscripciones'), getAt(antesRecuperar, 'eventos_docentes/termas_2026/inscripciones'));
+  const recuperada = await call(recuperacion, 'recuperar', { correo: baseA.correo, telefono: '911111111' }, false);
+  assert.strictEqual(recuperada.code, 200, 'Recuperación con caché fría y teléfono chileno sin +56.');
+  assert.strictEqual(recuperada.cacheControl, 'no-store');
+  assert.deepStrictEqual(Object.keys(recuperada.payload).sort(), ['inscripcion', 'llave', 'ok']);
+  assert.strictEqual(recuperada.payload.inscripcion.asiento, 7);
+  const despuesRecuperar = clone(getAt(recuperacion.state, rutaPersona));
+  delete despuesRecuperar.llaveRecuperacion;
+  assert.deepStrictEqual(despuesRecuperar, insOriginal, 'Recuperar conserva todos los datos, fechas y llave original.');
+  assert.strictEqual((await call(recuperacion, 'mia', { correo: baseA.correo, llave: inicial.payload.llave }, false)).code, 200);
+  assert.strictEqual((await call(recuperacion, 'mia', { correo: baseA.correo, llave: 'otra' }, false)).code, 404);
+  assert.strictEqual((await call(recuperacion, 'inscribir', { ...baseA, comida: 'once', llave: recuperada.payload.llave }, false)).code, 200);
+  assert.strictEqual((await call(recuperacion, 'mia', { correo: baseA.correo, llave: recuperada.payload.llave }, false)).payload.inscripcion.comida, 'once');
+  assert.strictEqual(Object.keys(getAt(recuperacion.state, 'eventos_docentes/termas_2026/inscripciones')).length, 1);
+  assert.strictEqual((await call(recuperacion, 'admin-guardar', { ...baseA, originalCorreo: baseA.correo, comida: 'desayuno' })).code, 200);
+  assert.strictEqual((await call(recuperacion, 'mia', { correo: baseA.correo, llave: recuperada.payload.llave }, false)).code, 200, 'Editar desde el admin conserva ambos accesos.');
+  assert.strictEqual((await call(recuperacion, 'inscribir', baseB, false)).code, 200);
+  const antesConflictoRecuperado = clone(recuperacion.state);
+  assert.strictEqual((await call(recuperacion, 'inscribir', { ...baseA, asiento: 8, llave: recuperada.payload.llave }, false)).code, 409);
+  assert.deepStrictEqual(recuperacion.state, antesConflictoRecuperado, 'La recuperación no permite ocupar un asiento ajeno.');
+  const relojRecuperacion = Date.now;
+  try {
+    Date.now = () => cierre;
+    const paseCerrado = await call(recuperacion, 'recuperar', { correo: baseA.correo, telefono: baseA.telefono }, false);
+    assert.strictEqual(paseCerrado.code, 200, 'El pase puede recuperarse después del cierre.');
+    assert.strictEqual((await call(recuperacion, 'inscribir', { ...baseA, llave: paseCerrado.payload.llave }, false)).code, 403);
+  } finally { Date.now = relojRecuperacion; }
+  const limitada = mockDb(true);
+  for (let i = 0; i < 10; i += 1) assert.strictEqual((await call(limitada, 'recuperar', { correo: baseA.correo, telefono: baseA.telefono }, false)).code, 404);
+  assert.strictEqual((await call(limitada, 'recuperar', { correo: baseA.correo, telefono: baseA.telefono }, false)).code, 429, 'Los intentos se limitan en la base compartida, también con caché fría.');
+  assert.strictEqual(getAt(limitada.state, 'eventos_docentes/termas_2026/inscripciones'), undefined);
 
   const fria = mockDb(true);
   const ruta = 'eventos_docentes/termas_2026';
@@ -265,7 +314,7 @@ const baseB = {
 
   const api = fs.readFileSync(path.join(ROOT, 'api', '_termas.js'), 'utf8');
   const pagina = fs.readFileSync(path.join(ROOT, 'termas', 'index.html'), 'utf8');
-  for (const marcador of ['chipAsisten', 'chipLibres', 'cuentaBus', 'listaBus', 'mapa.totales', 'ocupante.nombre']) {
+  for (const marcador of ['chipAsisten', 'chipLibres', 'cuentaBus', 'listaBus', 'mapa.totales']) {
     assert.ok(!pagina.includes(marcador), `La página pública todavía expone cifras o pasajeros: ${marcador}`);
   }
   const plazoCliente = pagina.match(/const CIERRE_INSCRIPCION = Date.parse\('([^']+)'\)/);
@@ -282,7 +331,7 @@ const baseB = {
   const vercelIgnore = fs.readFileSync(path.join(ROOT, '.vercelignore'), 'utf8');
   assert.ok(vercelIgnore.includes('!scripts/audit-termas-admin.js'), 'Vercel excluiría la auditoría del prebuild.');
 
-  console.log('Termas: totales y pasajeros exclusivos del administrador, consultas/confirmaciones/conflictos públicos mínimos; plazo de Santiago, rechazo sin escrituras, pase conservado, edición, papelera y restauración correctos, también con caché fría.');
+  console.log('Termas: totales y contactos privados, nombre breve por asiento autorizado; recuperación correo + teléfono, conservación de acceso y reserva, plazo de Santiago, pase después del cierre, edición, conflictos, papelera y restauración correctos, también con caché fría.');
 })().catch(error => {
   console.error(error.stack || error.message);
   process.exit(1);

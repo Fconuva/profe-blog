@@ -254,8 +254,12 @@ Antes de editar y nuevamente antes de publicar:
 - En Termas, la cantidad de inscritos y las cifras de asistencia, transporte y
   cupos son privadas: solo se entregan al administrador autenticado y autorizado.
   Ninguna consulta, confirmación ni error público incluye esos totales. La página
-  no muestra contadores ni listados de pasajeros; el mapa conserva únicamente la
-  disponibilidad necesaria para escoger asiento, sin nombres de otras personas.
+  no muestra contadores ni listados generales de pasajeros. Por autorización de
+  Francisco el 08-10-2026, el mapa público muestra el primer nombre y primer
+  apellido de quien ocupa cada asiento, sin correos, teléfonos ni contactos de
+  emergencia. Cada persona puede recuperar su inscripción con el correo y
+  teléfono registrados, y editarla hasta el cierre; la consulta y recuperación
+  del pase siguen disponibles después. La llave original conserva su acceso.
 - Todo panel con información de estudiantes requiere autenticación y autorización
   verificadas en servidor; una URL difícil de adivinar no protege datos.
 - El admin debe permitir filtrar por curso y sesión, revisar evidencia, habilitar

@@ -260,6 +260,10 @@
     .asiento.der[data-nombre].ver::after { left: auto; right: -2px; transform: none; }
 
     .panel-asiento { display: grid; gap: 14px; align-content: start; }
+    details.tarjeta > summary { cursor: pointer; font-size: 20px; font-weight: 800; }
+    details.tarjeta > summary:focus-visible { outline: 3px solid var(--noche); outline-offset: 4px; }
+    #formRecuperar .boton { margin-top: 16px; }
+    #detalleConsultaBus { overflow-wrap: anywhere; }
     .eleccion { border-radius: var(--radio); padding: 17px; background: var(--termal-claro); border: 1px solid #b5ddd3; }
     .eleccion small { display: block; font-size: 14px; font-weight: 700; color: var(--pino); }
     .eleccion strong { display: block; margin-top: 3px; font-size: 24px; font-weight: 800; letter-spacing: -.025em; line-height: 1.15; }
@@ -455,6 +459,34 @@
   </section>
 
   <main id="contenido">
+    <details class="tarjeta" id="consultaBus">
+      <summary>Ver bus y asientos</summary>
+      <p class="nota">Toca un asiento para ver quién lo ocupa. Para reservar o cambiar el tuyo, completa o edita tu inscripción.</p>
+      <div class="zona-bus">
+        <div>
+          <div class="leyenda" aria-hidden="true"><span><i></i>Libre</span><span><i class="o"></i>Ocupado</span><span><i class="t"></i>Tu asiento</span></div>
+          <div class="bus">
+            <span class="rueda a"></span><span class="rueda b"></span><span class="rueda c"></span><span class="rueda d"></span>
+            <div class="frente"><span class="chofer">Chofer</span><span class="puerta">PUERTA</span></div>
+            <div class="filas" id="filasConsulta" role="group" aria-label="Consultar asientos del bus"></div>
+            <div class="atras" id="atrasConsulta" role="group" aria-label="Consultar última fila"></div>
+          </div>
+        </div>
+        <div class="panel-asiento"><div class="eleccion" aria-live="polite"><small>Asiento consultado</small><strong id="tituloConsultaBus">Toca un asiento</strong><span id="detalleConsultaBus">Verás el nombre de quien lo ocupa o si está libre.</span></div></div>
+      </div>
+    </details>
+    <details class="tarjeta" id="recuperarInscripcion">
+      <summary>Ya me inscribí · editar inscripción</summary>
+      <p class="nota">Ingresa el correo y tu teléfono tal como los registraste. Podrás cambiar tus datos, transporte, asiento y alimentación.</p>
+      <form id="formRecuperar">
+        <div class="campos dos">
+          <div class="campo"><label for="recuperarCorreo">Correo de tu inscripción</label><input id="recuperarCorreo" type="email" autocomplete="email" maxlength="100" required></div>
+          <div class="campo"><label for="recuperarTelefono">Tu teléfono registrado</label><input id="recuperarTelefono" type="tel" autocomplete="tel" maxlength="20" required></div>
+        </div>
+        <button class="boton" type="submit" id="btnRecuperar">Abrir mi inscripción</button>
+        <p class="nota" id="mensajeRecuperar" role="status"></p>
+      </form>
+    </details>
     <section class="pase oculto" id="pase" aria-labelledby="paseTitulo" tabindex="-1">
       <div class="pase-top">
         <div>
@@ -485,7 +517,7 @@
           <div class="campo"><label for="emergenciaNombre">Nombre y parentesco</label><input id="emergenciaNombre" name="emergenciaNombre" autocomplete="off" placeholder="Ej.: Ana Pérez, esposa" maxlength="80" required></div>
           <div class="campo"><label for="emergenciaTelefono">Teléfono de emergencia</label><input id="emergenciaTelefono" name="emergenciaTelefono" type="tel" inputmode="tel" autocomplete="off" placeholder="+56 9 1234 5678" maxlength="20" required></div>
         </div>
-        <p class="nota">Tus datos solo los ve la organización. En el mapa del bus se muestra si cada asiento está disponible.</p>
+          <p class="nota">Tus datos de contacto solo los ve la organización. El mapa del bus muestra tu nombre breve junto a tu asiento, sin teléfonos ni correos.</p>
       </section>
 
       <section class="tarjeta" data-paso aria-labelledby="t-asiste">
@@ -724,6 +756,8 @@
         }
       }
       for (let k = 0; k < nAtras; k++) atras.appendChild(crear(n++, k === 0 ? 'izq' : k === nAtras - 1 ? 'der' : ''));
+      $('filasConsulta').replaceChildren(...Array.from(filas.children, el => el.cloneNode(true)));
+      $('atrasConsulta').replaceChildren(...Array.from(atras.children, el => el.cloneNode(true)));
     }
 
     function pintarBus() {
@@ -737,11 +771,12 @@
         b.classList.toggle('ocupado', !!ajeno);
         b.classList.toggle('tuyo', esMio);
         b.classList.toggle('elegido', elegido);
-        b.setAttribute('aria-pressed', elegido ? 'true' : 'false');
+        if (b.closest('#consultaBus')) b.removeAttribute('aria-pressed');
+        else b.setAttribute('aria-pressed', elegido ? 'true' : 'false');
         if (ajeno) {
           b.textContent = n;
-          b.dataset.nombre = 'Asiento ' + n + ' · Reservado';
-          b.setAttribute('aria-label', 'Asiento ' + n + ', reservado');
+          b.dataset.nombre = 'Asiento ' + n + ' · ' + (ocupante.nombre || 'Reservado');
+          b.setAttribute('aria-label', 'Asiento ' + n + ', reservado por ' + (ocupante.nombre || 'otra persona'));
           if (!estado.primera && !estado.previos[n]) { b.classList.remove('recien'); void b.offsetWidth; b.classList.add('recien'); }
         } else {
           b.textContent = esMio ? 'TÚ' : n;
@@ -760,10 +795,26 @@
     }
 
     let temporizadorBurbuja = 0;
+    let asientoConsultado = null;
+    function pintarConsulta() {
+      if (!asientoConsultado || !estado.mapa) return;
+      const ocupante = estado.mapa.asientos[String(asientoConsultado)];
+      $('tituloConsultaBus').textContent = 'Asiento ' + asientoConsultado;
+      $('detalleConsultaBus').textContent = ocupante ? 'Reservado por ' + (ocupante.nombre || 'otra persona') : 'Libre · ' + ubicacion(asientoConsultado);
+    }
+    function consultarAsiento(e) {
+      const b = e.target.closest('.asiento'); if (!b) return;
+      asientoConsultado = Number(b.dataset.n); pintarConsulta();
+    }
+    $('filasConsulta').addEventListener('click', consultarAsiento);
+    $('atrasConsulta').addEventListener('click', consultarAsiento);
     function alTocarAsiento(e) {
       const b = e.target.closest('.asiento'); if (!b) return;
       const n = Number(b.dataset.n);
       if (b.classList.contains('ocupado')) {
+        asientoConsultado = n; pintarConsulta();
+        $('eleccionTitulo').textContent = 'Asiento ' + n + ' · reservado';
+        $('eleccionDetalle').textContent = estado.mapa.asientos[String(n)].nombre || 'Otra persona';
         document.querySelectorAll('.asiento.ver').forEach(x => x.classList.remove('ver'));
         b.classList.add('ver'); clearTimeout(temporizadorBurbuja);
         temporizadorBurbuja = setTimeout(() => b.classList.remove('ver'), 2600);
@@ -786,6 +837,7 @@
         estado.asiento = null; actualizarResumen();
       }
       pintarBus();
+      pintarConsulta();
       estado.primera = false;
     }
 
@@ -894,6 +946,12 @@
         if (err.datos && err.datos.estado) aplicarMapa(err.datos.estado);
         if (err.datos && err.datos.codigo === 'ocupado') { estado.asiento = null; pintarBus(); }
         if (err.datos && err.datos.codigo === 'cerrada') { estado.cerrada = true; actualizarPlazo(); }
+        if (err.datos && err.datos.codigo === 'ajena') {
+          $('recuperarCorreo').value = datos.correo;
+          $('recuperarTelefono').value = datos.telefono;
+          $('recuperarInscripcion').open = true;
+          $('recuperarInscripcion').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
         mensaje(err.message, 'error');
       } finally {
         estado.enviando = false; actualizarPlazo(); actualizarResumen();
@@ -935,12 +993,33 @@
       if (estado.cerrada) return;
       form.classList.remove('oculto');
       $('pase').classList.add('oculto');
+      $('correo').readOnly = !!estado.mia;
       mostrarPasos(); pintarBus();
       const destino = irAlBus && !$('pasoAsiento').classList.contains('oculto') ? $('pasoAsiento') : form;
       setTimeout(() => destino.scrollIntoView({ behavior: 'smooth', block: 'start' }), 40);
     }
     $('btnModificar').addEventListener('click', () => abrirFormulario(false));
-    $('btnVerBus').addEventListener('click', () => abrirFormulario(true));
+    $('btnVerBus').addEventListener('click', () => {
+      $('consultaBus').open = true;
+      $('consultaBus').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+
+    $('formRecuperar').addEventListener('submit', async e => {
+      e.preventDefault();
+      const btn = $('btnRecuperar'); if (btn.disabled) return;
+      btn.disabled = true; $('mensajeRecuperar').textContent = 'Buscando tu inscripción…';
+      try {
+        const correo = $('recuperarCorreo').value.trim().toLowerCase();
+        const r = await api('recuperar', { correo, telefono: $('recuperarTelefono').value.trim() });
+        estado.local = { correo, llave: r.llave }; guardarLocal(estado.local);
+        estado.mia = r.inscripcion; rellenar(r.inscripcion);
+        $('recuperarInscripcion').open = false;
+        $('mensajeRecuperar').textContent = '';
+        await refrescar();
+        if (estado.cerrada) mostrarPase(true); else abrirFormulario(false);
+      } catch (err) { $('mensajeRecuperar').textContent = err.message; }
+      finally { btn.disabled = false; }
+    });
 
     function rellenar(m) {
       CAMPOS.forEach(id => { $(id).value = m[id] || ''; });

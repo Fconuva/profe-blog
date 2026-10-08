@@ -35,13 +35,48 @@ Son tiempos propuestos, pendientes de aplicación. No hay espera obligatoria ni 
 
 ### Inicio: activación conceptual oral
 
-Distribución orientativa: videos y cuatro pausas orales, 5 minutos; norma y objetivo, 1; conceptos, 2; demostración oral breve, 2. En la diapositiva 1, pulsar «Ver videos con pausas». Son aproximadamente 93 segundos de video y cuatro conversaciones de 30 segundos, con margen para abrir y cambiar de caso. Recoger una o dos intervenciones breves por pausa, sin exigir respuestas escritas. Recordar trabajo en papel y sin celular en la diapositiva 2; leer el objetivo en la 3. Mantener los 10 minutos del inicio y ajustar el número de intervenciones según lo observado.
+Distribución orientativa: videos y cuatro pausas orales, 4 minutos; caso de Instagram, 3; norma y objetivo, 1; conceptos y síntesis del ejemplo, 2. En la diapositiva 1, pulsar «Ver videos y analizar Instagram». Son aproximadamente 93 segundos de video y cuatro conversaciones breves. Después del cuarto fragmento, el mismo botón de continuación abre seis preguntas orales sobre la publicación. Una intervención de unos 15–20 segundos por pregunta, con margen para observar y mostrar las evidencias. Recordar trabajo en papel y sin celular en la diapositiva 2; leer el objetivo en la 3. Los 10 minutos siguen siendo un supuesto: si la conversación se extiende, priorizar país, fuente y diferencia entre pronóstico y hecho; retomar las otras preguntas en el cierre, sin quitar tiempo de respuesta escrita.
 
 Selección verificada el 8 de octubre de 2026. TVN, «Las tres fake news de la semana», publicado en YouTube el 18-11-2024: solo el caso de la imagen de un supuesto rescate durante la DANA en España (47,88–66,6 y 66,6–79 segundos). Se pausa antes de «falsa» y después del contraste. T13, «¿Real o falso? La supuesta multa por QR que se volvió viral», 28-11-2024: mensaje recibido en un grupo de vecinos (227,04–248,8) y consulta directa a Carabineros (268,08–307,96). Se omite la explicación intermedia sobre clonar un teléfono; no se enseña que escanear cualquier QR produzca ese efecto. Ambos son reportajes de canales chilenos; el rescate corresponde a un supuesto hecho en España. Son archivos de 2024, no noticias de hoy ni evidencia de los tres casos de la guía.
 
 Preguntas intercaladas: emoción y comprobación de la imagen; límites de una herramienta y búsqueda de fuente y fecha; afirmación del mensaje y organismo al que consultar; contenido y competencia de la respuesta institucional. Conectar oralmente con los casos impresos: comparar imágenes, consultar a quien registra el hecho y revisar la fecha. No convertir el resultado de una herramienta de detección de IA ni el nombre de un canal en prueba concluyente. La evidencia más directa del segundo clip es el testimonio de Carabineros acerca de sus propias notificaciones.
 
 Los cuatro archivos conservan audio, imágenes y logos de las fuentes originales. Se editan solo sus límites temporales, con enlaces y fechas visibles. El video se detiene al final de cada fragmento y la continuación depende del docente; permite repetir, pausar antes para comentar y cerrar. No se registran estudiantes ni respuestas. Fuentes: https://www.youtube.com/watch?v=XVssSLNp_xA y https://www.youtube.com/watch?v=xTWlL62PHhQ. Procedencia y cortes en `assets/videos-motivacion.json`.
+
+#### Instagram: una noticia que cambia de país al compartirse
+
+Caso basado en la captura aportada por Francisco: cuenta urgente24, insignia visible,
+sigla BCRA, titular sobre dólar a $1.614, reacciones y descripción truncada. Se
+presenta como transcripción de esos elementos, sin datos personales de WhatsApp ni
+de quienes siguen la cuenta. No se inventa una captura descargada ni se atribuye una
+fecha al post de Instagram que no aparece en la imagen. Los comentarios «Pésimo
+gobierno» y «Políticos ladrones» se incorporan como situación propuesta y recreada:
+no se ven en la captura y no se atribuyen a personas o comentarios reales comprobados.
+
+Primero identificar la afirmación y preguntar si puede situarse en Chile; después,
+analizar el supuesto de los comentarios, la insignia y la ausencia de documento,
+fecha y enlace completos en el recorte. Solo en la cuarta pregunta se revelan las
+evidencias. La nota relacionada de Urgente24 es del 7 de octubre de 2026, 11:20;
+remite al REM del Banco Central de la República Argentina, publicado el 6 de octubre.
+El informe de septiembre de 2026 se conserva íntegro como PDF local (19 páginas).
+Revisar páginas 2–3 para ámbito, fecha y autoría de los pronósticos, y 8–9 para
+moneda, promedio mensual y cifra. No describir este REM como un informe de 2025.
+
+La cifra es una expectativa de participantes de una encuesta sobre pesos argentinos
+por dólar para diciembre de 2026, no una cotización chilena observada ni un pronóstico
+propio del BCRA. El lugar físico donde se fotografió el billete no está establecido.
+La transferencia del dato a Chile resulta engañosa por contexto; no demuestra por
+sí sola una intención de engañar, la falsedad del dato original o una causa política.
+Que el recorte no muestre la fuente completa no demuestra que el post completo no
+la cite. Tampoco se afirma que el medio o el BCRA hayan mentido anteriormente: esa
+acusación hipotética se somete a petición de evidencia y contraste independiente.
+
+Las seis preguntas y las orientaciones quedan en `assets/instagram-contexto.json`.
+Se contestan en voz alta; no agregan escritura, páginas ni requisitos de entrega a
+la guía. La síntesis del caso sustituye el ejemplo escolar inicial como modelamiento
+oral: dato, fuente, contexto y conclusión con límites. Fuentes verificadas el
+8 de octubre de 2026: https://urgente24.com/dinero/bcra-especialistas-proyectan-dolar-1614-diciembre-y-recesion-tecnica-n634241
+y https://www.bcra.gob.ar/archivos/Pdfs/PublicacionesEstadisticas/informes/relevamiento-expectativas-mercado-2026-09.pdf.
 
 Explicar con palabras simples:
 
@@ -50,7 +85,11 @@ Explicar con palabras simples:
 - Fuente primaria: el registro original o quien produjo el dato; revisar si es competente para ese asunto.
 - Conclusión: lo que podemos afirmar después de comparar el mensaje con las evidencias.
 
-Demostrar oralmente cómo unir dato y conclusión en un ejemplo distinto de los tres casos: una noticia escolar dice «hoy», pero la ficha de la foto corresponde a otro año. Pedir qué dato permite comprobarlo y expresar una conclusión breve con su límite. No resolver las preguntas de la evaluación ni recuperar en la guía la página explicativa retirada.
+Demostrar oralmente cómo unir dato y conclusión retomando Instagram: el registro
+identifica un país y una proyección, por lo que atribuir el dato a Chile cambia su
+sentido. Pedir el dato que permite concluirlo y qué no se puede asegurar sobre el
+precio futuro o la intención de quien compartió. No resolver las preguntas de la
+evaluación ni recuperar en la guía la página explicativa retirada.
 
 ### Monitoreo del desarrollo
 

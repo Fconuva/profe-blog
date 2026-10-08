@@ -76,3 +76,37 @@ Actualización de formatos (6 de octubre): «Vecinos Talca Norte» incluye alivi
 
 
 Por indicación docente se retira completa la última página: preguntas 18 y 19, informe, cuadro de revisión y observación docente. La síntesis permanece en las justificaciones de casos y el plenario, sin exigir otro producto. Guía vigente de nueve A4 y 61 renglones, con dieciséis consignas escritas y una oral.
+
+## Adenda del 8 de octubre: Instagram junto con los videos
+
+Se incorporan seis preguntas orales después de los cuatro fragmentos existentes.
+El caso transcribe elementos visibles de la captura del docente; identifica los
+comentarios políticos como una situación recreada y omite datos personales de la
+interfaz. No afirma que se haya recuperado la imagen original de Instagram.
+
+Las preguntas trabajan afirmación, supuesto, popularidad, insignia, fuente, país,
+fecha, distinción entre pronóstico y hecho y revisión responsable de una acusación
+contra la reputación de una fuente. Primero se observa, después se pide evidencia
+y solo en la cuarta pregunta se muestra el contraste documental. Se exige un dato
+de la nota y otro del registro original; no basta contestar «es falso».
+
+La noticia relacionada se identificó en Urgente24 (7 de octubre de 2026, 11:20) y
+se contrastó con el REM de septiembre de 2026, publicado el 6 de octubre por BCRA.
+Se conserva el PDF original íntegro de 19 páginas. El ámbito argentino y la moneda
+se comprueban en ese registro; no se determina el lugar donde se fotografió el
+billete ni la fecha invisible del post de Instagram. El pronóstico no acredita un
+precio futuro observado y el banco informa expectativas de participantes, no
+proyecciones propias.
+
+Compartir el dato como información sobre Chile distorsiona su contexto. Esa
+conclusión no prueba que el dato original sea falso, que haya intención de engañar
+o que un gobierno cause el resultado. Tampoco convierte la ausencia de una fuente
+completa en el recorte en ausencia demostrada de fuentes en la publicación íntegra.
+La afirmación «esa fuente ya ha mentido» permanece hipotética y requiere pruebas;
+no se atribuye como antecedente comprobado a una institución o al medio.
+
+No se modifica la guía, su PDF, las diecisiete consignas ni su calificación. Se
+reorganiza el inicio previsto: videos 4 minutos, Instagram 3, norma/objetivo 1 y
+conceptos/síntesis 2. No es una duración medida: priorizar país y fuente y retomar
+otras preguntas al cierre si el diálogo requiere más tiempo. La revisión del diseño
+y las pruebas de funcionamiento no acreditan pilotaje ni validación externa.

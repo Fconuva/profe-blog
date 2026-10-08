@@ -19,7 +19,7 @@ async function main(){
  check(html.includes('Sin celular'),'Trabajo sin celular');
  check(!/firebase|textarea|contenteditable/i.test(html+slide),'Sin respuestas digitales ni escritura de datos');
  check((html.match(/class="sheet"/g)||[]).length===9,'Nueve páginas');
- check(!/informe final|80 a 110|18\.|19\.|Revisa tus respuestas|Revisión docente:/i.test(html)&&!/informe|pregunta 19|respondan la 19|16–18|9 y 10/i.test(slide),'Informe y página final retirados sin requisitos pendientes');
+ check(!/informe final|80 a 110|18\.|19\.|Revisa tus respuestas|Revisión docente:/i.test(html)&&!/informe final|escrib[ae]n? un informe|pregunta 19|respondan la 19|16–18|9 y 10/i.test(slide),'Informe final y página retirados sin requisitos pendientes; se permite nombrar una fuente documental');
  const planning=fs.readFileSync(path.join(root,base,'PLANIFICACION.md'),'utf8');
  check(html.includes('15. Plenario oral')&&html.includes('Respuesta oral.')&&slide.includes('data-guide-question="15"')&&slide.includes('data-stage="cierre"'),'Plenario oral sincronizado');
  check(!html.includes('otra sobre el alcance')&&!html.includes('Evalúa la imagen y el mensaje por separado')&&!html.includes('un límite de la evidencia'),'Consignas ambiguas sustituidas');

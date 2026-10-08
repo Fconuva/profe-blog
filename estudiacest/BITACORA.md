@@ -1,5 +1,13 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-08, PAES: actualización de notas por reenvíos G1–G19, simulada y pendiente de aplicar
+
+- Francisco pide dejar revisado y calificado hasta la G21 y actualizar las notas porque muchos estudiantes volvieron a responder y enviar. G20 y G21: una entrega nueva calificada con el mismo procedimiento de la entrada anterior, relectura conforme; el resto ya estaba calificado.
+- G1–G19: simulación con `buildPlan` del calificador versionado sobre los datos vigentes: 158 intentos por calificar y 88 casillas de libro (69 altas y 19 cambios), de ellos 89 reenvíos verificados; cero puntajes inválidos. **No se aplicó**: el control de permisos de la sesión bloqueó la escritura masiva y queda a la espera de la autorización de Francisco. No se modificó ninguna nota de G1–G19.
+- Decisión docente pendiente antes de aplicar: 8 de los 19 cambios bajarían la nota vigente porque el reenvío quedó peor que el intento anterior (entre ellos un envío vacío y dos con cero aciertos). El calificador versionado aplica siempre el último envío; se propone conservar la nota mayor en esos casos. El intento anterior de cada uno sigue en `intentosAnteriores`.
+- Se conservan sin tocar 3 discrepancias entre la calificación del intento y una casilla del libro editada a mano; manda el libro hasta que el docente indique otra cosa.
+- El reenvío G10–G19 sigue abierto hasta esta medianoche: después del cierre hace falta una pasada final. La visibilidad estudiantil de notas sigue limitada a G11–G17 (`SECOND_SEMESTER_GUIDES`, fijada también por `audit-paes-semester-grades`); ampliarla hasta G21 requiere cambio de código, auditoría y despliegue, y conviene hacerlo después de actualizar las notas. Sin cambios de código ni despliegue en esta entrada.
+
 ## 2026-10-08, PAES: revisión y calificación de las entregas de G20 y G21
 
 - Francisco pide revisar todas las entregas de G20 y G21 y calificarlas. Se aplica el modelo usado el 1-oct para G10–G19: alternativas recalculadas contra la clave del servidor y nota con 60 % de exigencia (`gradeFromScore`); el desarrollo escrito no pondera. G20 y G21 habían quedado fuera de esa calificación por decisión de ese día.

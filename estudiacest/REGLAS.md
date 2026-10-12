@@ -514,3 +514,86 @@ autoriza a rehacer automáticamente materiales o evaluaciones ya publicados.
 - Reparar enlaces contra archivos existentes y el árbol vigente, conservando
   la historia y marcando instrucciones sustituidas. Una reorganización del
   mapa no autoriza recalcular notas, escribir datos ni desplegar.
+
+## 15. Hoja de ruta, lenguaje y limpieza de las clases
+
+Por decisión de Francisco (12-oct-2026), lo aprendido al revisar por qué una
+clase escrita no se puede conducir a la primera rige también para las clases de
+esta plataforma: «Es el formato. También queda para las clases en estudiacest.
+Creo que faltó el lenguaje: palabras que no se entienden, exceso de cosas que
+ensucian». Rige para Claude, Codex y cualquier agente en las próximas clases,
+planificaciones, presentaciones y guías, y en las correcciones que Francisco
+solicite. Esta decisión no autoriza a rehacer automáticamente materiales o
+evaluaciones ya publicados.
+
+Se suma a las secciones 5, 12 y 13 y no las reemplaza: siguen el inicio en tres
+diapositivas (activación, normas y objetivo), el objetivo con verbo en
+infinitivo, el contenido disciplinar enseñado, la duración real de la sesión, el
+formato institucional de las guías y el panel para anotar. La regla equivalente
+de los portafolios vive en su propio repositorio; sus 40 minutos y sus topes de
+palabras no se copian aquí.
+
+### Hoja de ruta de la sesión
+
+- La planificación de cada sesión (`docente.html` o su equivalente) abre con una
+  **hoja de ruta de una página**: una tabla con una fila por momento y cuatro
+  columnas: minuto; qué está en pantalla, con su número de diapositiva, o qué
+  tienen en la mano o en el cuaderno; qué hace el docente; qué hacen los
+  estudiantes.
+- Junto a la tabla van **qué preparar** antes de entrar a la sala (copias y
+  cuántas, enlace que se abre, materiales, lo que se escribe en la pizarra) y
+  **qué se acorta si la clase se atrasa**, decidido de antemano. Si la
+  planificación ya trae un bloque de materiales, se usa ese; no se duplica.
+- Los minutos, los números de diapositiva y los nombres de las guías de la hoja
+  de ruta coinciden con la presentación y la guía publicadas. Si cambia una, se
+  corrige la otra en el mismo trabajo.
+- El detalle (preguntas, respuestas esperadas, pauta, intervenciones) va después.
+  La hoja de ruta no crece para contenerlo: si una corrección agrega una fila,
+  otra sale o se fusiona.
+- Prueba: quien dicta la clase lee solo la hoja de ruta y sabe qué hace en cada
+  minuto y con qué en la mano, sin abrir otro archivo.
+
+### Lenguaje que el curso entiende
+
+- Todo lo que el estudiante lee u oye (instrucciones, preguntas, títulos,
+  botones) va en español de Chile y con palabras de todos los días, al nivel
+  del curso.
+- Los términos del currículo que se enseñan se usan, y la primera vez van con
+  su explicación en una frase y un ejemplo. Una palabra técnica que no es parte
+  de lo que se enseña se cambia por una corriente.
+- **Un nombre por cosa.** Si la hoja se llama «guía», no pasa a ser «ficha»,
+  «documento» o «material» más adelante; lo mismo con las partes de la clase,
+  los productos y los botones. El nombre coincide entre planificación,
+  presentación y guía.
+- Los nombres de la secuencia (activación, modelamiento, sistematización,
+  metacognición) pueden titular una diapositiva, como en la referencia NM4. La
+  instrucción y la pregunta que van debajo se escriben en palabras corrientes;
+  el rótulo no las reemplaza.
+- No quedan a la vista del estudiante nombres internos o inventados por
+  nosotros: códigos de unidad o de clase, nombres de archivo, apodos de una
+  actividad que nadie explicó, términos de planificación dentro de una
+  instrucción.
+- Cada instrucción dice quién (solos, en parejas, en grupo), con qué (guía,
+  cuaderno, pantalla), dónde se responde, cuánto (cuántas preguntas o líneas),
+  si es oral o escrito y en cuánto tiempo.
+
+### Limpieza: nada que ensucie
+
+- Una idea, una instrucción o una imagen principal por diapositiva; una pregunta
+  por línea. Lo que se copia en el cuaderno se distingue de lo que solo se lee
+  o se comenta.
+- Cada pieza dice para qué es y quién la usa: presentación para proyectar, guía
+  para el estudiante, planificación y pauta para el docente.
+- Nada interno a la vista del estudiante: notas para el docente, marcas de
+  revisión, restos de versiones anteriores, etiquetas, insignias, códigos,
+  rutas ni información administrativa.
+- Colores, íconos y recuadros se usan solo cuando significan algo, y significan
+  lo mismo en toda la clase.
+- **Si una corrección agrega algo, algo sale.** No se acumulan capas. Lo que se
+  retira sale también de menús, enlaces y requisitos de entrega, sin borrar
+  respuestas históricas.
+- Antes de cerrar, quien construye lee la presentación y la guía completas como
+  estudiante del curso, al ancho de la pantalla de la sala, y saca toda palabra
+  que no se entendería y todo elemento que no ayuda a hacer la tarea. Lo anota
+  en la bitácora. No hay guarda automática: `npm run build` no revisa esta
+  sección.

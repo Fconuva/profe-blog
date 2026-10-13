@@ -8,6 +8,7 @@
 - Sin tocar, por la regla de no rehacer material publicado: guía PDF de 6 páginas, plantillas recortables, video tutorial, imágenes ilustrativas, `carrete.css` y `carrete.js`. La guía, las plantillas y el video todavía no mencionan el reverso.
 - Archivos: `nm3/siddhartha-carrete/assets/rubrica-holistica.json`, `rubrica.html`, `assets/rubrica-holistica-siddhartha.pdf`, `assets/pauta-siddhartha.pdf`, `index.html` y `scripts/generate-siddhartha-rubrica.js`.
 - Validación: PDF regenerado y abierto, 2 páginas A4 sin desbordes ni texto sobre el pie; `audit-siddhartha-rubrica` con 76 comprobaciones y cero fallas (descriptores completos en el PDF, formato institucional, 320/390/1440/3840 px, video y recursos intactos); `npm run build` aprobado con 793 recursos críticos. Lectura como estudiante de 3.º medio de la página: un nombre por cosa («imagen del reverso»), sin palabras internas. No hay prueba física de impresora.
+- Publicación: commit `44a8206f` en `main`. **Sin desplegar todavía**: producción sigue en `455a61e2`, con la rúbrica en su versión 2026-10-08. Queda un checkout limpio en `C:/dev/releases/siddhartha-reverso-20261013` con `--predeploy` aprobado (fuente, Git y 793 recursos críticos); entre `455a61e2` y `44a8206f` solo hay documentación, así que el despliegue lleva únicamente este cambio. El control de permisos de la sesión frenó `npm run deploy:prod:safe`; falta ejecutarlo, comprobar la URL pública con `audit-siddhartha-rubrica --public` y anotar aquí el resultado.
 
 ## 2026-10-08, Termas: nombres por asiento y edición de la inscripción
 

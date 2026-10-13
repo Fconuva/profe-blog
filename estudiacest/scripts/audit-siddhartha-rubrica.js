@@ -29,13 +29,30 @@ for i,p in enumerate(d):
  for b in p.get_text('blocks'): assert b[1]>=26 and b[3]<=817
 g=fitz.open(r/'nm3/siddhartha-carrete/assets/guia-siddhartha.pdf'); assert len(g)==6
 assert 'un solo nivel' in g[0].get_text(); assert '90 puntos' not in g[0].get_text()
-print(json.dumps({'rubricPages':len(d),'guidePages':len(g),'completeDescriptors':6,'a4':True,'bounds':True}))`,root],{encoding:'utf8'});
+words=lambda doc: ' '.join(w[4] for p in doc for w in p.get_text('words',sort=True)).replace(chr(0x2010),'-')
+gt=words(g)
+assert 'mbolo o esquema' not in gt and 'Esquema:' not in gt
+assert gt.count('En el reverso:')==1 and gt.count('Imagen del reverso:')==2 and 'Imagen en el reverso de cada tarjeta' in gt
+photo={i[0] for i in g[5].get_images(full=True) if (i[2],i[3])==(1400,1045)}; assert len(photo)==1
+assert g.extract_image(photo.pop())['image']==(r/'nm3/siddhartha-carrete/assets/imagen-ia-5.jpg').read_bytes()
+t=fitz.open(r/'nm3/siddhartha-carrete/assets/plantillas-siddhartha.pdf'); assert len(t)==9
+for p in t: assert abs(p.rect.width-595.28)<1 and abs(p.rect.height-841.89)<1
+tt=words(t)
+assert tt.count('Imagen del reverso: explica qué idea muestra')==12 and tt.count('Reverso: imagen o símbolo de la tarjeta')==8
+assert 'mbolo o esquema' not in tt and 'Símbolo 1:' in tt and 'Símbolo 2:' in tt and 'diámetro 20 cm' in tt
+print(json.dumps({'rubricPages':len(d),'guidePages':len(g),'templatePages':len(t),'completeDescriptors':6,'a4':True,'bounds':True,'backImage':True}))`,root],{encoding:'utf8'});
  check(JSON.parse(pdfCheck).completeDescriptors===6,'PDF A4, complete rows and footer bounds');
- // The original templates, tutorial and illustrations belong to the retained activity.
- for(const f of ['carrete.css','carrete.js','assets/plantillas-siddhartha.pdf','assets/tutorial-siddhartha.mp4',...Array.from({length:5},(_,i)=>'assets/imagen-ia-'+(i+1)+'.jpg')]){
+ check(JSON.parse(pdfCheck).backImage===true,'Guide and templates ask for the back image instead of the front symbol');
+ // The original tutorial, styles and illustrations 1-4 belong to the retained activity.
+ for(const f of ['carrete.css','carrete.js','assets/tutorial-siddhartha.mp4',...Array.from({length:4},(_,i)=>'assets/imagen-ia-'+(i+1)+'.jpg')]){
   const original=execFileSync('git',['show','1a4751f6:estudiacest'+base+f],{maxBuffer:25*1024*1024});
   check(sha(original)===sha(fs.readFileSync(path.join(root,base,f))),'Original resource preserved '+f);
  }
+ // Since 2026-10-13 the back image replaces the front symbol: the card photo is the
+ // retouched one (scripts/retouch-siddhartha-card-photo.py) and the templates are regenerated.
+ check(sha(fs.readFileSync(path.join(root,base,'assets/imagen-ia-5.jpg')))==='6c0be761a5193feb6182517aa022879d003f4cedc87a8dc56b19258f0cb8d98c','Retouched card photo');
+ const classPage=fs.readFileSync(path.join(root,base,'index.html'),'utf8');
+ check(!/[Ss]ímbolo o esquema/.test(classPage)&&classPage.includes('<strong>Imagen del reverso:</strong>'),'Class page asks for the back image instead of the front symbol');
  let server;let origin='https://www.estudiacest.com';
  if(!remote){server=http.createServer((req,res)=>{
   let f=path.resolve(root,'.'+new URL(req.url,'http://localhost').pathname);

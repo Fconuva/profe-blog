@@ -1,5 +1,14 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-13, NM3: imagen en el reverso de cada tarjeta del carrete de Siddhartha
+
+- Francisco agrega una instrucción al carrete literario: en el reverso de cada tarjeta va una imagen referencial o un símbolo, porque quiere que el trabajo sea visual, y pide ajustar la rúbrica con ello.
+- Rúbrica holística, versión 2026-10-13: los seis descriptores incorporan las imágenes del reverso sin crear puntajes ni criterios nuevos; sigue siendo un solo nivel global con 100/80/60/40/20/0 puntos y 60 % de exigencia. «Cómo se evalúa» y la comparación 5/4 dicen que la imagen se valora por su relación con el texto, no por la calidad del dibujo. Regla de aplicación nueva: sirve dibujo, recorte o impresión; si las imágenes faltan en todo el carrete no corresponde el nivel 5, y si faltan en algunos fotogramas se valora el conjunto. Ese tope es una decisión de construcción que queda informada a Francisco para que la confirme o la cambie.
+- Página del carrete: el objetivo, «Las 16 partes», el paso «Une y pliega», la nota de las imágenes y la lista «Antes de entregar» mencionan la imagen del reverso. Se mantiene el «Símbolo o esquema» del frente de cada capítulo: queda preguntado a Francisco si la imagen del reverso lo reemplaza.
+- Sin tocar, por la regla de no rehacer material publicado: guía PDF de 6 páginas, plantillas recortables, video tutorial, imágenes ilustrativas, `carrete.css` y `carrete.js`. La guía, las plantillas y el video todavía no mencionan el reverso.
+- Archivos: `nm3/siddhartha-carrete/assets/rubrica-holistica.json`, `rubrica.html`, `assets/rubrica-holistica-siddhartha.pdf`, `assets/pauta-siddhartha.pdf`, `index.html` y `scripts/generate-siddhartha-rubrica.js`.
+- Validación: PDF regenerado y abierto, 2 páginas A4 sin desbordes ni texto sobre el pie; `audit-siddhartha-rubrica` con 76 comprobaciones y cero fallas (descriptores completos en el PDF, formato institucional, 320/390/1440/3840 px, video y recursos intactos); `npm run build` aprobado con 793 recursos críticos. Lectura como estudiante de 3.º medio de la página: un nombre por cosa («imagen del reverso»), sin palabras internas. No hay prueba física de impresora.
+
 ## 2026-10-08, Termas: nombres por asiento y edición de la inscripción
 
 - Francisco autoriza mostrar quién ocupa cada asiento, permitir editar la inscripción y mantener oculto el total de inscritos. El mapa público incluye únicamente primer nombre y primer apellido por asiento; cifras, correos, teléfonos y contactos de emergencia permanecen privados. Consulta independiente del formulario desde «Ver bus y asientos», disponible también para quienes van en transporte propio o consultan su pase.

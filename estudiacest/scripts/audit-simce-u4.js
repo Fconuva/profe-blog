@@ -86,6 +86,11 @@ async function apiTests(){
  const large=mockDb();large.state[BASE].padding_test='x'.repeat(17*1024*1024);
  check((await call(large,'simce-u4-save')).status===200,'BASE de más de 16 MB no bloquea intento individual');
  check(Buffer.byteLength(JSON.stringify(large.state[BASE].respuestas['sesion-u4-1'].student))<2048,'Escritura de borrador menor a 2 KB');
+ const revoked=mockDb(fixture(),state=>{state[BASE].admins.teacher=false;});
+ revoked.state[BASE].respuestas['sesion-u4-1']={student:clone(before)};
+ await attempts.manejar({method:'POST',headers:{authorization:'Bearer teacher'},body:{sessionId:'sesion-u4-1',studentUid:'student',requestId:'u4-revoke-fixture-001'}},res,'reopen',revoked,auth);
+ check(status===403,'Permiso docente revalidado antes de publicar reapertura');
+ check(revoked.state[BASE].respuestas['sesion-u4-1'].student.completada===true,'Revocación conserva la entrega original');
  const rules=JSON.parse(fs.readFileSync(path.join(ROOT,'firebase-rules.json'))).rules.plataforma_estudiantes;
  for(const node of ['respuestas','resultados']){
   const rule=rules[node].$sesionId.$uid['.write'].replaceAll('.matches(','.match(');

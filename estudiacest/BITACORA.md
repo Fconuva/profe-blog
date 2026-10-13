@@ -1,5 +1,13 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-13, corrección del Excel: informes guardados NM4 y videos del blog NM3
+
+- Francisco advierte que algunos informes se hicieron sin confirmar el botón de entrega y que faltan los videos del blog de terceros. Se vuelve a leer la fuente académica y el almacenamiento de archivos; se consideran versiones individuales, parejas y respaldos, con identidad cruzada por RUN cifrado y matrícula vigente. Se conserva separado el estado de entrega del desarrollo existente.
+- Informes IV TP: 154 estudiantes con desarrollo guardado (42/36/43/33 en A/B/C/E); se incorporan 47 puntos omitidos, incluidos 44 sin marca de entrega. Identificación sola no acredita trabajo. El avance parcial queda visible y no se inventa nota sumativa.
+- Videos III TP: 42 archivos estudiantiles accesibles y 2 pruebas técnicas excluidas. Se identifican 86 estudiantes vigentes (28/36/22 en A/B/D), con un punto por actividad sin duplicar cargas. Nueve archivos contienen integrantes pendientes de confirmar; se conserva su evidencia y se pregunta a Francisco, sin adjudicar esos nombres por similitud. La carpeta de carga no determina el curso de matrícula.
+- Excel privado local actualizado a 15 hojas: puntos de informe en cursos, columna específica de video en tres cursos, detalle «Videos NM3», «Informes NM4», resumen y evidencia. Cuatro espacios extra de cuaderno permanecen disponibles en terceros; 60 % de exigencia. No se modifican Lirmi ni Firebase.
+- Verificación: apertura, guardado y reapertura en Excel nativo; 154 puntos de informe y 86 de video cotejados con fuentes; cinco comprobaciones del cálculo; cero errores de fórmulas y cero cambios en notas directas, observaciones o celdas ajenas. Los datos individuales, archivos y respaldos se mantienen fuera de Git.
+
 ## 2026-10-13, NM3: la imagen del reverso reemplaza al símbolo del frente en el carrete de Siddhartha
 
 - Francisco responde las dos consultas que quedaron abiertas en la entrada anterior. Primera: «la imagen es parte de la nota»; queda confirmado el tope de la rúbrica (un carrete sin imágenes en el reverso no obtiene el nivel 5) y la rúbrica no cambia. Segunda: «que los reemplace»; la imagen del reverso reemplaza al «símbolo o esquema» que se pedía en el frente de cada tarjeta de capítulo. El frente conserva una frase que explica esa imagen, para que no se pida dos veces lo mismo.

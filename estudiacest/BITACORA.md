@@ -1,5 +1,13 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-13, lista de pendientes del segundo semestre TP
+
+- Francisco dispone que no se toque nada del primer semestre. Queda excluido del saneamiento: los ajustes históricos no se ejecutarán. Pide identificar pendientes de Capital Semilla, Economista, interrogaciones, video del blog NM3 e informes NM4.
+- Se releen las API de interrogaciones y los informes/pruebas guardados del proyecto correcto; se contrastan con el libro Lirmi verificado hoy, el padrón vigente y la evidencia de entregas revisada en este bloque. Capital Semilla se cruza además con recordatorios del docente y búsquedas de reenvíos posteriores en el correo escolar. No se envían mensajes.
+- Resultado privado por curso y número de lista: 9 pendientes de video Capital Semilla, 9 de Economista, 22 de interrogación, 33 sin video del blog identificado y 17 sin desarrollo de informe. Un caso con nota mínima en el libro se incluye en tres pendientes por el recordatorio docente explícito del 9 de octubre. No se equipara cualquier 1,0 a una deuda.
+- Un intento de interrogación iniciado, sin respuestas ni fecha de entrega, queda como pendiente de rendir: su existencia no acredita grabación entregada. Los informes con trabajo guardado se excluyen de pendientes aunque falte la marca de entrega. Una entrega audiovisual con dos nombres no identificados permanece visible para revisión; IV D trabaja Anuario y no entra como deudor del informe técnico de los demás cuartos.
+- Listado nominal guardado fuera de Git en el mismo directorio privado del Excel. Sin modificaciones en Lirmi, Firebase, notas ni primer semestre.
+
 ## 2026-10-13, corrección del Excel: informes guardados NM4 y videos del blog NM3
 
 - Francisco advierte que algunos informes se hicieron sin confirmar el botón de entrega y que faltan los videos del blog de terceros. Se vuelve a leer la fuente académica y el almacenamiento de archivos; se consideran versiones individuales, parejas y respaldos, con identidad cruzada por RUN cifrado y matrícula vigente. Se conserva separado el estado de entrega del desarrollo existente.

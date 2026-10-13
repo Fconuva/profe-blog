@@ -11,10 +11,11 @@ def metrics(t):
     ns=[len(words(x)) for x in s]
     return dict(words_lexical=len(words(t)),words_whitespace=len(t.split()),sentences_approx=len(s),mean_sentence_words=round(statistics.mean(ns),1) if ns else 0,max_sentence_words=max(ns,default=0),long_sentences_over_30=sum(n>30 for n in ns),subordination_markers=len(re.findall(r'\b(?:que|aunque|cuando|porque|si|mientras|donde|cuyo|cuya)\b',t,re.I)))
 def body(doc,n,title):
-    t=doc[n-1].get_text(sort=True)
+    # En las dos columnas, el orden de bloques evita intercalar sus renglones.
+    t=doc[n-1].get_text(sort=n not in (38,39))
     # Se excluyen solo folio, título y referencias; se conservan contexto,
     # personajes, acotaciones, bajada, fecha, pie de imagen y comentarios.
-    t=re.sub(r'^\s*\d+\s*\n','',t)
+    t=re.sub(rf'(?m)^\s*{n-4}\s*$','',t)
     t=t.split('Fuente:')[0]
     t=re.sub(r'(?<=\w)-\s*\n(?=\w)','',t)
     t=re.sub(r'\s+',' ',t).strip()
@@ -30,6 +31,7 @@ for title,pages,form in units:
     spans=[s for n in pages for b in doc[n-1].get_text('dict')['blocks'] if b['type']==0 for l in b['lines'] for s in l['spans']]
     rect=doc[pages[0]-1].rect
     record={'title':title,'pdf_pages':pages,'printed_pages':[n-4 for n in pages],'format':form,**metrics(content),'font_sizes_pt':sorted(set(round(s['size'],1) for s in spans)),'page_size_pt':[round(rect.width,2),round(rect.height,2)],'embedded_rasters':sum(len(doc[n-1].get_images()) for n in pages),'count_note':'Incluye paratextos de lectura excepto título, folio y fuente. No cuenta letras de la imagen. Segmentación de oraciones aproximada, no comparable con verso sin interpretación.'}
+    record['font_names_embedded']=sorted(set(s['font'] for s in spans))
     if title=='Macbeth':
         ctx=re.search(r'Contexto:(.*?)Escena V',content)
         record['context_words']=len(words(ctx.group(1))) if ctx else None

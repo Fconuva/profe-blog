@@ -76,14 +76,14 @@ La comparación E4 q17 ofrece opciones; no prueba que el estudiante pueda produc
 
 | Texto del PDF | Páginas impresas | Palabras léxicas | Formato |
 |---|---|---:|---|
-| El bosque de la autopista | 20–21–22 | 898 | Narrativa con ironía y perspectiva equivocada |
-| El joven que no tenía nombre | 26–27 | 705 | Narrativa fantástica y simbolismo de identidad |
-| Macbeth | 30–31 | 606 | Drama con contexto, carta, parlamentos y acotaciones |
-| La canción kitsch y cebolla llega a los escenarios con “Morir de Amor” | 34–35 | 633 | Artículo con entrevista, dos columnas, imagen y pie |
-| Morir de Amor: noticia y comentarios | 36–37 | 366 | Noticia y cuatro comentarios con datos de interacción |
+| El bosque de la autopista | 20–21–22 | 896 | Narrativa con ironía y perspectiva equivocada |
+| El joven que no tenía nombre | 26–27 | 704 | Narrativa fantástica y simbolismo de identidad |
+| Macbeth | 30–31 | 605 | Drama con contexto, carta, parlamentos y acotaciones |
+| La canción kitsch y cebolla llega a los escenarios con “Morir de Amor” | 34–35 | 632 | Artículo con entrevista, dos columnas, imagen y pie |
+| Morir de Amor: noticia y comentarios | 36–37 | 365 | Noticia y cuatro comentarios con datos de interacción |
 | Fatalidad | 42 | 115 | Poema: seis estrofas de cuatro versos |
 
-**Macbeth:** 606 palabras contando contexto (70), personajes y acotaciones, sin título, folios ni fuente. Dos páginas de lectura; cuerpo de 11 pt, nombres de personaje destacados, encabezado de escena y contexto. No tiene ilustración. Léxico menos familiar (nuncios, clemencia, hado, henchidme, hórrida, columbrar, áspid), metáforas e invocación, y carta dentro del parlamento. La ambición está en contexto y parlamento: su pregunta puede ser Elemental pese al texto complejo. La certeza sobre el trono requiere inferir el plan de asesinato y distinguirlo de la profecía: Adecuado. Los presagios son desencadenante de ambición, no causa del nombramiento ni promesa de ayuda.
+**Macbeth:** 605 palabras contando contexto (70), personajes y acotaciones, sin título, folios ni fuente. Dos páginas de lectura; cuerpo de 11 pt, nombres de personaje destacados, encabezado de escena y contexto. No tiene ilustración. Léxico menos familiar (nuncios, clemencia, hado, henchidme, hórrida, columbrar, áspid), metáforas e invocación, y carta dentro del parlamento. La ambición está en contexto y parlamento: su pregunta puede ser Elemental pese al texto complejo. La certeza sobre el trono requiere inferir el plan de asesinato y distinguirlo de la profecía: Adecuado. Los presagios son desencadenante de ambición, no causa del nombramiento ni promesa de ayuda.
 
 **Calvino:** ironía y lecturas equivocadas de bosque/carteles/personas. Un apoyo explícito no asegura baja demanda: prensa para abrigarse compite con usarla para encender la estufa. El lenguaje figurado poco familiar del bosque constituye el ejemplo de expectativa curricular.
 

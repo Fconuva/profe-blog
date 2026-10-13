@@ -28,7 +28,11 @@ function measure(){
    const lengths=q.options.map(o=>o.split(/\s+/u).length);optionWords.push(lengths);
    const k='ABCD'.indexOf(q.key);check(lengths[k]<=Math.max(...lengths.filter((_,i)=>i!==k))*1.5,'Clave no destaca por longitud');
   }}
-  check(JSON.stringify(skills)===JSON.stringify({LOCALIZAR:4,INTERPRETAR:9,REFLEXIONAR:5}),'4/9/5 por habilidad');
+  const auditedCounts=[[4,8,6],[4,9,5],[5,8,5],[4,10,4],[4,8,6]][exam.number-1];
+  check(['LOCALIZAR','INTERPRETAR','REFLEXIONAR'].every((s,i)=>skills[s]===auditedCounts[i]),'Distribución por demanda auditada, sin imponer cuota a la etiqueta');
+  questions.forEach(q=>{check(q.demandAudit && q.demandAudit.rationale.length>90,'Fundamento específico de demanda');check(q.demandAudit.assessedSkill===q.skill,'Eje corresponde a la tarea auditada');});
+  check(!JSON.stringify(publicExam(exam.number)).includes('demandAudit'),'Auditoría privada, sin pistas durante el intento');
+  check(exam.writtenPractice.rubric.length===4 && exam.writtenPractice.evidence.length===2,'Respuesta redactada con pauta y evidencia de ambos textos');
   check(Object.values(keys).every(n=>n>=4 && n<=5),'Claves 4–5 por letra');
   const seq=questions.map(q=>q.key).join('');check(!/(.)\1\1|(.{2})\2\2|(.{4})\3/u.test(seq),'Sin ciclos ni rachas de tres');
   const visible=JSON.stringify(publicExam(exam.number));check(!/"(?:key|errors|evidence|skill|demand|operation)":/.test(visible),'Sin pauta en vista estudiante');
@@ -41,7 +45,7 @@ async function apiTests(){
  const db=mockDb();const pristine=clone(db.state);
  db.state[BASE].sesiones['sesion-2']={activa:false,contenido:{textos:[{id:'t1',titulo:'Ejemplo ficticio',fuente:'Fuente ficticia',parrafos:[{texto:'Un ejemplo<br>sin etiquetas.'}]}],preguntas:[{id:1,textoRef:'t1',enunciado:'¿Qué dice?',correcta:'A',habilidad:'LOCALIZAR',opciones:[{texto:'Una opción',letra:'A'}]}]}};
  const beforeExample=clone(db.state);
- const example=await call(db,'simce-u4-example');check(example.status===200 && example.data.texts[0].questions.length===1,'Forma P disponible aunque el intento antiguo esté cerrado');check(!JSON.stringify(example.data).includes('correcta'),'Referencia sin claves');check(JSON.stringify(db.state)===JSON.stringify(beforeExample),'Referencia no reabre intentos');check((await call(db,'simce-u4-example','other')).status===403,'Referencia limitada a NM2');
+ const example=await call(db,'simce-u4-example');check(example.status===200 && example.data.texts[0].questions.length===1,'Forma P disponible aunque el intento antiguo esté cerrado');check(example.data.constructedResponses.length===2 && example.data.constructedResponses.every(q=>q.prompt && q.measures),'Referencia contiene ambas respuestas construidas y su demanda');check(!JSON.stringify(example.data).includes('correcta'),'Referencia sin claves');check(JSON.stringify(db.state)===JSON.stringify(beforeExample),'Referencia no reabre intentos');check((await call(db,'simce-u4-example','other')).status===403,'Referencia limitada a NM2');
  for(const[token,status]of [['',401],['invalid',401],['other',403]])check((await call(db,'simce-u4-state',token)).status===status,'Permisos');
  check((await call(db,'simce-u4-state','student',{},'../1')).status===400,'ID inválido');
  check((await call(db,'simce-u4-review','student')).status===403,'Alumno sin pauta');
@@ -147,7 +151,14 @@ async function browserTests(stats){
   await page.goto(running.url+'/estudiantes/dashboard.html');await page.waitForFunction(()=>document.querySelector('#unit4SessionList .completed'));check(await page.locator('#unit4SessionList .session-card').count()===5,'Cinco sesiones en panel');check((await page.locator('#unit4SessionList .completed').textContent()).includes('Completada'),'Panel confirma entrega');
   // La página docente real usa el API real con identidad ficticia y alcance de curso.
   await page.goto(running.url+'/estudiantes/simce-unidad4/docente.html?teacher=1');await page.waitForFunction(()=>document.getElementById('status').textContent.includes('verificado'));check((await page.locator('#results').textContent()).includes('18/18 correctas'),'Admin recibe resultado');check(await page.locator('#key details').count()===18,'Pauta docente completa');
+  for(const width of [320,390,1440,3840]){await page.setViewportSize({width,height:900});check(!await overflow(),'Pauta y rúbrica sin desborde');}
+  await page.setViewportSize({width:390,height:900});
+  for(const n of [1,2,3,4,5]){await page.locator('#exam').selectOption(String(n));await page.waitForFunction(()=>document.getElementById('status').textContent.includes('verificado'));check((await page.locator('#key').textContent()).includes('Fundamento del nivel:'),'Fundamentos individuales visibles al docente');check((await page.locator('#writing').textContent()).includes('3 puntos:'),'Rúbrica redactada visible');check((await page.locator('#writing').textContent()).includes('No descontar comprensión'),'Escritura separada de comprensión');check(!await overflow(),'Cinco pautas sin desborde');}
+  await page.screenshot({path:path.join(evidence,'pauta-escritura-390.png'),fullPage:true});
   await page.goto(running.url+'/estudiantes/simce-unidad4/docente.html');await page.waitForFunction(()=>document.getElementById('status').textContent.includes('reservado'));check(await page.locator('#key details').count()===0,'Pauta no visible al alumno');
+  check((await page.locator('#writing').textContent())==='','Rúbrica y evidencias no visibles al alumno');
+  running.db.state[BASE].sesiones['sesion-2']={activa:false,contenido:{textos:Array.from({length:7},(_,i)=>({id:'t'+(i+1),titulo:'Texto ficticio '+(i+1),fuente:'Fixture',parrafos:[{texto:'Texto de prueba.'}]})),preguntas:Array.from({length:7},(_,i)=>({id:i+1,textoRef:'t'+(i+1),enunciado:'Pregunta de prueba',opciones:[{texto:'A'},{texto:'B'},{texto:'C'},{texto:'D'}]}))}};
+  await page.goto(running.url+'/estudiantes/simce-unidad4/forma-p.html');await page.waitForFunction(()=>document.getElementById('status').textContent.includes('Referencia cargada'));check(await page.getByText('Respuesta redactada:',{exact:false}).count()===2,'Dos abiertas de referencia renderizadas');check(!await overflow(),'Referencia con abiertas sin desborde');
   for(const n of [2,3,4,5]){
    await page.setViewportSize({width:390,height:900});await page.goto(running.url+`/estudiantes/simce-unidad4/?ensayo=${n}`);await page.getByRole('button',{name:'Comenzar miniensayo'}).click();check(await page.locator('input[type=radio]').count()===72,'Alternativas en cada miniensayo');check(!await overflow(),'Cada miniensayo sin desborde');
    stats[n-1].renderedOptionLines={390:await page.locator('.question').evaluateAll(fields=>fields.map(field=>[...field.querySelectorAll('.option span')].map(span=>Math.round(span.getBoundingClientRect().height/parseFloat(getComputedStyle(span).lineHeight)))))};
@@ -158,6 +169,6 @@ async function browserTests(stats){
   fs.writeFileSync(path.join(evidence,'measurement.json'),JSON.stringify({checks,stats,errors,failed},null,2));console.log('Evidencia local: '+evidence);
  }finally{await browser.close();await new Promise(resolve=>running.server.close(resolve));}
 }
-async function main(){const stats=measure();await apiTests();if(process.argv.includes('--browser'))await browserTests(stats);console.log(`SIMCE U4: ${checks} comprobaciones aprobadas; 5 miniensayos, 15 textos, 90 preguntas, claves privadas, cobertura 4/9/5, entrega, reapertura y permisos. Solo fixtures.`);if(process.argv.includes('--details'))console.log(JSON.stringify(stats,null,2));}
+async function main(){const stats=measure();await apiTests();if(process.argv.includes('--browser'))await browserTests(stats);console.log(`SIMCE U4: ${checks} comprobaciones aprobadas; 5 miniensayos, 15 textos, 90 preguntas, demanda individual, claves privadas, entrega, reapertura y permisos. Solo fixtures.`);if(process.argv.includes('--details'))console.log(JSON.stringify(stats,null,2));}
 if(require.main===module){if(process.argv.includes('--serve'))serve().then(({url})=>console.log(url));else main().catch(e=>{console.error(e.stack);process.exitCode=1;});}
 module.exports={fixture,mockDb,serve,measure};

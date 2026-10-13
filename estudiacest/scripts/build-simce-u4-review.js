@@ -3,6 +3,8 @@ const fs=require('fs'),path=require('path'),crypto=require('crypto');
 const {exams}=require('../api/_simce-u4-catalog');
 const {measure}=require('./audit-simce-u4');
 const dir=path.resolve(__dirname,'../referencias/simce-unidad4-2026');fs.mkdirSync(dir,{recursive:true});
+const reportPath=path.join(dir,'INFORME_AUDITORIA.md');
+const publicationClosure=fs.existsSync(reportPath)?(fs.readFileSync(reportPath,'utf8').match(/\n## Cierre de public[\s\S]*$/u)?.[0]||''):'';
 const cell=v=>'"'+String(v??'').replaceAll('"','""')+'"';
 const rows=[['miniensayo','fecha','item','texto','genero','habilidad','operacion','demanda_prevista','enunciado','A','B','C','D','clave','evidencia','error_A','error_B','error_C','error_D','palabras_A','palabras_B','palabras_C','palabras_D']];
 exams.forEach(e=>e.texts.forEach(t=>t.questions.forEach(q=>rows.push([e.number,e.date,q.id,t.title,t.genre,q.skill,q.operation,q.demand,q.prompt,...q.options,q.key,q.evidence,...q.errors,...q.options.map(o=>o.split(/\s+/u).length)]))));
@@ -33,6 +35,8 @@ fs.writeFileSync(path.join(dir,'INFORME_AUDITORIA.md'),`# Auditoría Unidad 4 SI
 
 **Dictamen:** apto como práctica abreviada de lectura y diagnóstico formativo después de las correcciones descritas. No acredita equivalencia 1:1 de formato, dificultad, cobertura exhaustiva ni escala de puntajes con SIMCE. No asigna nota escolar automática. La revisión de contenido y las pruebas las realizó el mismo agente constructor; no es verificación independiente ni aprobación externa.
 
+**Ampliación vigente:** AUDITORIA_DIFICULTAD.md y AUDITORIA_90_PREGUNTAS.csv contienen la revisión individual de demanda y la cobertura completa de condiciones por nivel. La tabla resumida de 11 operaciones de este informe es solo un inventario temático; no acredita la cobertura de cada condición Elemental, Adecuado o expectativa curricular.
+
 ## Medición reproducible
 
 ${metrics}
@@ -42,7 +46,7 @@ Conteo por espacios: incluye vocabulario y contexto; excluye títulos, fuente y 
 ## Alternativas y pautas
 
 - 90/90 ítems tienen cuatro opciones distintas, una clave, evidencia precisa y explicación del error de cada distractor en MATRIZ_90_ITEMS.csv. Revisión editorial: respuesta válida para el enunciado y descarte de las tres opciones desde el texto; sin conocimientos externos exigidos.
-- Cada miniensayo: Localizar 4 (22,2 %), Interpretar y relacionar 9 (50 %), Reflexionar 5 (27,8 %). Total: 20/45/25. Es aproximación editorial al peso observado en la reproducción local de Forma P (8/19/9 sobre 36 alternativas), no distribución oficial obligatoria de 2026.
+- Distribución corregida tras revisar la tarea real: E1 4/8/6; E2 4/9/5; E3 5/8/5; E4 4/10/4; E5 4/8/6 (Localizar/Interpretar/Reflexionar). Total 21/43/26. No se fuerza una cuota sobre etiquetas incorrectas. La auditoría individual y la cobertura de todas las condiciones por nivel están en AUDITORIA_DIFICULTAD.md; sustituyen las etiquetas genéricas y el alcance de la anterior matriz resumida de 11 operaciones.
 - Cada aplicación tiene A=4, B=5, C=4 y D=5. Orden editorial sin rachas de tres ni ciclos repetidos de dos/cuatro. El balance no certifica calidad del ítem.
 - Ninguna clave supera en más de 50 % la extensión de la mayor alternativa incorrecta. En navegador, no se encontró clave única con dos o más líneas adicionales respecto de las otras opciones en las vistas medidas. Palabras por opción quedan en el CSV; líneas reales, en la evidencia privada de navegador.
 - Existe reiteración temática deliberada dentro de cada bloque. La pregunta sobre el rasgo del hijo y la lectura simbólica de la llave comparten evidencia, pero no requieren haber marcado otra respuesta. No se modelan soluciones ni se entrega feedback durante el intento.
@@ -108,5 +112,5 @@ Navegador: miniensayo 1 en 320/390/1440/3840 px y los demás en 390 px; sin desb
 - El resto son textos originales y situaciones ficticias CEST, rotulados; no son entrevistas, noticias, datos ni campañas reales.
 
 Regenerar matriz, cobertura y mediciones: node scripts/build-simce-u4-review.js. Archivos internos excluidos del despliegue público. Estado de publicación y verificaciones actuales: BITACORA.md.
-`);
+`+publicationClosure);
 console.log('Informe privado, matriz de 90 ítems, cobertura y mediciones generados.');

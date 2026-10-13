@@ -14,7 +14,7 @@ function text(genre, title, paragraphs, questions, table) {
 }
 function q(skill, operation, prompt, options, key, evidence, errors) {
   return { skill, operation, prompt, options, key, evidence, errors,
-    demand:skill === 'LOCALIZAR' ? 'Elemental/Adecuado: discriminación de datos' : 'Adecuado: integración y juicio con evidencia' };
+    demand:null };
 }
 
 exam('Decidir con evidencia', ['Narrador y perspectiva','Conflicto y motivaciones','Símbolo y sentido global','Tesis, argumentos y contraargumentos','Información explícita','Tablas y límites de una conclusión'], [
@@ -271,6 +271,8 @@ q('REFLEXIONAR','Evaluar una acusación según evidencia','¿Qué respuesta est�
 // Reordenación editorial posterior a fijar la evidencia, sin cambiar opciones.
 require('./_simce-u4-literature').apply(exams,{text,q});
 exams.forEach(exam=>{let i=0;exam.texts.forEach(t=>t.questions.forEach(q=>{q.id=`q${++i}`;}));});
+require('./_simce-u4-demand').apply(exams);
+require('./_simce-u4-writing').apply(exams);
 // 4/5 claves por letra, sin ciclos de dos/cuatro ni tres claves consecutivas.
 const keyOrders=['CBADCDCCBBDABABDAD','CDACACDCBBDBDBBADA','DBCACDBBADBBDACDAC','ADDCDDCBBCBDACBAAB','DAACCBDDBBADCCADBB'];
 exams.forEach((exam,index)=>exam.texts.flatMap(t=>t.questions).forEach((item,i)=>{

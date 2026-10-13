@@ -73,7 +73,12 @@ async function manejar(req,res,action,db,auth) {
       const content=(await db.ref(`${BASE}/sesiones/sesion-2/contenido`).once('value')).val();
       if(!Array.isArray(content?.textos) || !Array.isArray(content?.preguntas))throw fail(503,'La referencia no está disponible.');
       const plain=value=>String(value || '').replace(/<br\s*\/?\s*>/gi,'\n').replace(/<[^>]*>/g,'');
-      return res.status(200).json({ok:true,title:'Forma P 2025 · Referencia de lectura',texts:content.textos.map(t=>({
+      return res.status(200).json({ok:true,title:'Forma P 2025 · Referencia de lectura',
+        referenceNote:'Reproducción local de contenido, no facsímil oficial. Se incluyen las dos respuestas construidas omitidas en la vista anterior; no se reabren intentos.',
+        constructedResponses:[
+          {id:10,textNumber:2,prompt:'En la reseña se mencionan grandes temas del libro de O’Brien. ¿Cuál se refleja mejor en el cuento «Medias»? Indica el tema y fundamenta con citas o ejemplos concretos del cuento.',measures:'Relacionar cuento y reseña, interpretar un tema y fundamentarlo con evidencia del cuento.'},
+          {id:24,textNumber:4,prompt:'Considerando el fragmento y la conversación de los personajes sobre los roles de género, ¿qué función cumplirían los hombres en ese contexto? Justifica con información del texto.',measures:'Inferir el rol atribuido a los hombres a partir del diálogo y justificarlo con información pertinente.'}
+        ],texts:content.textos.map(t=>({
         title:plain(t.titulo),source:plain(t.fuente),paragraphs:(t.parrafos||[]).map(p=>plain(p.texto)),
         questions:content.preguntas.filter(q=>q.textoRef===t.id).map(q=>({id:q.id,prompt:plain(q.enunciado),options:(q.opciones||[]).map(o=>plain(o.texto))}))
       }))});

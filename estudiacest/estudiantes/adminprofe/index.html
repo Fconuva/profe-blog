@@ -3982,6 +3982,7 @@ function loadResults(){
 
     const results=allResults[sesId]||{};
     const responses=allResponses[sesId]||{};
+    const isMiniU4=/^sesion-u4-[1-5]$/.test(sesId);
     const isFormativeWriting=sessions[sesId]?.formativa===true||sessions[sesId]?.formato_panel==='evidencia-dos-textos';
     let items=[];
     const reopened=Object.fromEntries(Object.entries(responses).filter(([,r])=>r?.reopenedAt&&r.submitted!==true&&r.completada!==true).map(([uid])=>[uid,{}]));
@@ -4005,7 +4006,9 @@ function loadResults(){
     // Level distribution
     const levels={Insuficiente:0,Elemental:0,Adecuado:0,Destacado:0};
     items.filter(i=>!i.reopened).forEach(i=>levels[getLevel(i.porcentaje)]++);
-    document.getElementById('levelCards').innerHTML=isFormativeWriting
+    document.getElementById('levelCards').innerHTML=isMiniU4
+      ? `<div class="level-card lv-adeq"><div class="lv-label">Miniensayo · 18 preguntas</div><div class="lv-val">${items.filter(i=>!i.reopened).length} entregas</div></div><div class="level-card lv-dest"><a href="/estudiantes/simce-unidad4/docente.html?ensayo=${sesId.slice(-1)}">Ver pauta, aciertos y puntaje simulado</a><p>Sin clasificación de nivel SIMCE oficial.</p></div>`
+      : isFormativeWriting
       ? `<div class="level-card lv-adeq"><div class="lv-label">Productos escritos entregados</div><div class="lv-val">${items.filter(i=>!i.reopened).length}</div></div><div class="level-card lv-dest"><div class="lv-label">Modalidad</div><div style="font-weight:800;margin-top:8px">Formativa · sin nota automática</div></div>`
       : `<div class="level-card lv-insuf"><div class="lv-label">Insuficiente (&lt;40%)</div><div class="lv-val">${levels.Insuficiente}</div></div>
         <div class="level-card lv-elem"><div class="lv-label">Elemental (40-59%)</div><div class="lv-val">${levels.Elemental}</div></div>
@@ -4031,7 +4034,7 @@ function loadResults(){
             <td>${r.reopened?'—':isFormativeWriting?r.total+' '+(Number(r.total)===1?'producto':'productos'):r.puntaje+'/'+r.total}</td>
             <td>${r.reopened?'<strong style="color:#b45309">Reabierta para corregir</strong>':isFormativeWriting?'<strong style="color:#16a34a">Entregada</strong>':`<strong style="color:${r.porcentaje>=60?'#16a34a':'#dc2626'}">${r.porcentaje}%</strong>${r.notas_pct>0?`<br><span style="font-size:10px;color:#64748b">Notas:${r.notas_pct}%</span>`:''}`}</td>
             <td><strong style="color:${notaColor};font-size:18px">${isFormativeWriting?'—':(r.nota>0?r.nota.toFixed(1):'—')}</strong></td>
-            <td>${r.reopened?'<span class="badge badge-amber">Pendiente de entrega</span>':isFormativeWriting?'<span class="badge badge-blue">Formativa</span>':getLevelBadge(r.porcentaje)}</td>
+            <td>${r.reopened?'<span class="badge badge-amber">Pendiente de entrega</span>':isMiniU4?'<span class="badge badge-blue">Práctica SIMCE</span>':isFormativeWriting?'<span class="badge badge-blue">Formativa</span>':getLevelBadge(r.porcentaje)}</td>
             <td style="font-size:12px;color:#64748b">${mins>0?mins+' min':'—'}</td>
             <td>
                 <button class="btn btn-sm btn-secondary" onclick="viewStudentDetail('${r.uid}')">👤</button>

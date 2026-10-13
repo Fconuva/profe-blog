@@ -970,6 +970,7 @@ const PERFILES = require('./_perfiles-publicos.js');
 // motivo que SALAS: no quedan funciones libres en el plan.
 const TERMAS = require('./_termas.js');
 const SIMCE_U3S12 = require('./_simce-u3s12.js');
+const SIMCE_U4 = require('./_simce-u4.js');
 const SIMCE_ADMIN_ATTEMPTS = require('./_simce-admin-attempts.js');
 
 module.exports = async (req, res) => {
@@ -988,6 +989,7 @@ module.exports = async (req, res) => {
         if (action.startsWith('simce-u3s7-')) return await handleU3S7(req, res, action);
         if (action.startsWith('simce-u3s8-')) return await handleU3S8(req, res, action);
         if (action.startsWith('simce-u3s12-')) return await SIMCE_U3S12.manejar(req, res, action, db, auth);
+        if (action.startsWith('simce-u4-')) return await SIMCE_U4.manejar(req, res, action, db, auth);
         if (action === 'simce-u3s9-classstats') return await handleU3S9Classstats(req, res);
         if (action.startsWith('personal-guided-')) return await handlePersonalGuided(req, res, action);
         if (action.startsWith('salas-')) return await SALAS.manejar(req, res, action.slice('salas-'.length), db, auth);

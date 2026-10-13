@@ -107,10 +107,10 @@ for (const entry of registry.files || []) {
   if (storage === 'firebase-client' && !/child\(["']completada["']\)\.once\(["']value["']\)/.test(source)) {
     failures.push(`${relativePath}: falta la verificación final de Firebase.`);
   }
-  if (entry.atomicResult === true && !/db\.ref\(BASE\)\.update\(/.test(source)) {
+  if (entry.atomicResult === true && !/db\.ref\(BASE\)\.(?:update|transaction)\(/.test(source)) {
     failures.push(`${relativePath}: respuesta y resultado no se escriben en una actualización atómica.`);
   }
-  if (storage === 'api' && (!/(?:get-guia-state|personal-guided-state|simce-u3s12-state|cards-state|mini-state)/.test(source) || !/attempt\.completada\s*!==\s*true/.test(source))) {
+  if (storage === 'api' && (!/(?:get-guia-state|personal-guided-state|simce-u3s12-state|simce-u4-state|cards-state|mini-state)/.test(source) || !/attempt\.completada\s*!==\s*true/.test(source))) {
     failures.push(`${relativePath}: falta la lectura final de confirmación mediante API.`);
   }
   if (relativePath.startsWith('estudiantes/guia-') && !/work-telemetry\.js["'][^>]*data-session=["'][^"']+["']/.test(source)) {

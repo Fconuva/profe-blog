@@ -489,44 +489,6 @@
                     <div class="session-list" id="currentSessionList"></div>
                   </div>
 
-                  <div class="plan-unidad">
-                    <div class="plan-head">
-                      <h4>Lo que viene hasta el SIMCE</h4>
-                      <p>Cada clase se abre el miércoles que corresponde. El SIMCE es el 11 y 12 de noviembre.</p>
-                    </div>
-                        <div class="session-card locked">
-                            <div class="session-num">13</div>
-                            <div class="session-info">
-                                <h3>Ensayo 4</h3>
-                                <p>Segundo ensayo completo del semestre.</p>
-                            </div>
-                            <div class="session-status"><span class="badge">14 de octubre</span></div>
-                        </div>
-                        <div class="session-card locked">
-                            <div class="session-num">14</div>
-                            <div class="session-info">
-                                <h3>Refuerzo focalizado</h3>
-                                <p>Práctica dirigida a la habilidad más baja de cada curso.</p>
-                            </div>
-                            <div class="session-status"><span class="badge">21 de octubre</span></div>
-                        </div>
-                        <div class="session-card locked">
-                            <div class="session-num">15</div>
-                            <div class="session-info">
-                                <h3>Ensayo final</h3>
-                                <p>Última medición antes de la prueba oficial.</p>
-                            </div>
-                            <div class="session-status"><span class="badge">28 de octubre</span></div>
-                        </div>
-                        <div class="session-card locked">
-                            <div class="session-num">16</div>
-                            <div class="session-info">
-                                <h3>Cierre y estrategia</h3>
-                                <p>Manejo del tiempo y descarte. Sin contenido nuevo.</p>
-                            </div>
-                            <div class="session-status"><span class="badge">4 de noviembre</span></div>
-                        </div>
-                  </div>
                 </div>
             </details>
 
@@ -534,16 +496,17 @@
                 <summary>
                     <div class="unit-summary-main">
                         <div class="unit-kicker">📘 Unidad 4</div>
-                        <h3>Próximo tramo del segundo semestre</h3>
-                        <p>Las clases aparecerán aquí cuando comience esta unidad.</p>
+                        <h3>Miniensayos hasta el SIMCE</h3>
+                        <p>3 textos y 18 preguntas por clase. Aciertos y puntaje simulado CEST al entregar.</p>
                     </div>
                     <div class="unit-summary-right">
-                        <span class="unit-chip">Próximamente</span>
+                        <span class="unit-chip">14 de octubre — 10 de noviembre</span>
                         <span class="unit-toggle"><span class="unit-toggle-open">▲ Ocultar</span><span class="unit-toggle-close">▼ Ver Unidad 4</span></span>
                     </div>
                 </summary>
                 <div class="unit-content">
-                    <div class="session-list"><div style="text-align:center;padding:24px;color:#64748b;">Unidad 4 aún no tiene sesiones publicadas.</div></div>
+                    <p><a href="/estudiantes/simce-unidad4/repaso.html">Repasar contenidos y conocer un ejemplo de la Forma P</a></p>
+                    <div id="unit4SessionList" class="session-list"><div style="text-align:center;padding:24px;color:#64748b;">Cargando miniensayos…</div></div>
                 </div>
             </details>
 
@@ -1193,6 +1156,7 @@
             if (normalized === 'u1' || normalized === 'unidad 1' || normalized === 'unidad1' || normalized === '1') return 'u1';
             if (normalized === 'u2' || normalized === 'unidad 2' || normalized === 'unidad2' || normalized === '2') return 'u2';
             if (normalized === 'u3' || normalized === 'unidad 3' || normalized === 'unidad3' || normalized === '3') return 'u3';
+            if (normalized === 'u4' || normalized === 'unidad 4' || normalized === 'unidad4' || normalized === '4') return 'u4';
             return '';
         }
 
@@ -1457,11 +1421,13 @@
         function renderSessionGroups(sesiones, respuestas, resultados, laborGrades) {
             const byUnit = {
                 u1: createEmptySessionGroups(),
+                u4: createEmptySessionGroups(),
                 [CURRENT_PANEL_UNIT]: createEmptySessionGroups()
             };
             sesiones.forEach((ses, index) => {
                 const sectionKey = inferPanelSection(ses);
-                const unitKey = inferPanelUnit(ses) === CURRENT_PANEL_UNIT ? CURRENT_PANEL_UNIT : 'u1';
+                const inferredUnit = inferPanelUnit(ses);
+                const unitKey = inferredUnit === 'u4' ? 'u4' : inferredUnit === CURRENT_PANEL_UNIT ? CURRENT_PANEL_UNIT : 'u1';
                 byUnit[unitKey][sectionKey].push({
                     session: ses,
                     sectionKey,
@@ -1476,6 +1442,7 @@
             return {
                 byUnit,
                 current: renderSectionGroupsHtml(byUnit[CURRENT_PANEL_UNIT], respuestas, resultados, laborGrades),
+                unit4: renderSectionGroupsHtml(byUnit.u4, respuestas, resultados, laborGrades),
                 archive: renderSectionGroupsHtml(byUnit.u1, respuestas, resultados, laborGrades)
             };
         }
@@ -1530,8 +1497,13 @@
                 currentContainer.innerHTML = rendered.current.html || '<div style="text-align:center;padding:12px 0;color:#475569;">Aún no hay clases activas nuevas para Unidad 2.</div>';
                 archiveContainer.innerHTML = rendered.archive.html || '<div style="text-align:center;padding:40px;color:#94a3b8;">No hay sesiones archivadas aún.</div>';
                 syncUnitShell(rendered.current.totalCount > 0);
+                document.getElementById('unit4SessionList').innerHTML = rendered.unit4.html || '<p>Los miniensayos aún no están asignados a tu curso.</p>';
+                if (rendered.unit4.totalCount > 0) {
+                    document.getElementById('unit4Accordion').open = true;
+                    document.getElementById('unit3Accordion').open = false;
+                }
 
-                const primaryUnit = rendered.current.totalCount > 0 ? rendered.byUnit[CURRENT_PANEL_UNIT] : rendered.byUnit.u1;
+                const primaryUnit = rendered.unit4.totalCount > 0 ? rendered.byUnit.u4 : rendered.current.totalCount > 0 ? rendered.byUnit[CURRENT_PANEL_UNIT] : rendered.byUnit.u1;
                 const trackedSesiones = (primaryUnit.plan.length
                     ? primaryUnit.plan.map(entry => entry.session)
                     : flattenSessionGroups(primaryUnit))

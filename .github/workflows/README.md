@@ -77,5 +77,11 @@ Every audit script called by `npm run build` must be explicitly allowed through 
 
 ## Local Testing Note
 
+SIMCE Unidad 4: `node scripts/audit-simce-u4.js --browser` verifica funciones
+reales con base ficticia, guardado, confirmaci?n, reapertura, pautas privadas y
+vistas m?viles/escritorio/4K. Publicar reglas de Firebase por separado y luego
+habilitar las cinco sesiones mediante `scripts/publish-simce-u4.js`, primero en
+simulaci?n. El ?ndice simulado CEST no representa una equiparaci?n oficial.
+
 - Plain static servers will fail on `/api/*` POST requests. Use them only for static rendering checks.
 - For grading tasks, a static preview does not prove where writing is stored; the owner code path and Firebase data are the source of truth.

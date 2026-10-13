@@ -25,6 +25,10 @@ Al cerrar una tarea que cambie comportamiento, datos, contenido académico,
 administración o producción, agregar una entrada a `BITACORA.md`. No registrar
 RUT, notas individuales, correos, credenciales ni otros datos personales.
 
+SIMCE Unidad 4 usa `/estudiantes/simce-unidad4/`, las acciones `simce-u4-*`
+de la API y claves solo en servidor. Su panel docente exige admin y alcance de
+curso. El puntaje simulado CEST no asigna niveles oficiales de SIMCE.
+
 Los paneles `/nm3/interrogacion-un-lugar-sin-limites/calificar/` y
 `/nm4/interrogacion-mocha-dick/calificar/` son accesos docentes directos sin
 contraseña ni código de enlace. La ruta base corresponde a Francisco y el

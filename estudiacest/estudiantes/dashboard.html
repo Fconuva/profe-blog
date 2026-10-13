@@ -1485,8 +1485,13 @@
                         const myRespSnap = await db.ref(BASE + '/respuestas/' + ses.id + '/' + uid).once('value');
                         if (myRespSnap.exists()) respuestas[ses.id] = myRespSnap.val();
                         if (ses.resultados_visibles === true) {
-                            const myResSnap = await db.ref(BASE + '/resultados/' + ses.id + '/' + uid).once('value');
-                            if (myResSnap.exists()) resultados[ses.id] = myResSnap.val();
+                            const ownAttempt = respuestas[ses.id];
+                            if (/^sesion-u4-[1-5]$/.test(ses.id) && ownAttempt?.submitted === true && ownAttempt?.completada === true && ownAttempt.result) {
+                                resultados[ses.id] = ownAttempt.result;
+                            } else {
+                                const myResSnap = await db.ref(BASE + '/resultados/' + ses.id + '/' + uid).once('value');
+                                if (myResSnap.exists()) resultados[ses.id] = myResSnap.val();
+                            }
                         }
                     } catch(e) {}
                 }));

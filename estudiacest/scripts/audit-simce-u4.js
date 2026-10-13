@@ -10,7 +10,7 @@ const clone=v=>v==null?v:structuredClone(v);
 const get=(state,route)=>route.split('/').filter(Boolean).reduce((n,k)=>n?.[k],state);
 function put(state,route,value){const keys=route.split('/').filter(Boolean);let node=state;for(const k of keys.slice(0,-1))node=node[k] ||= {};if(value===null)delete node[keys.at(-1)];else node[keys.at(-1)]=clone(value);}
 function fixture(){return {[BASE]:{admins:{teacher:true,teacherB:true},docentes:{teacher:{cursos:['2A-HC']},teacherB:{cursos:['2B-HC']}},estudiantes:{student:{nombre:'ESTUDIANTE FICTICIO',curso:'2A-HC',perfil_completo:true},studentB:{nombre:'ESTUDIANTE FICTICIO B',curso:'2B-HC',perfil_completo:true},other:{nombre:'OTRO FICTICIO',curso:'3A-HC',perfil_completo:true}},sesiones:Object.fromEntries(exams.map(e=>[e.sessionId,standardSession(e)])),respuestas:{},resultados:{}}};}
-function mockDb(state=fixture(),retry=null){let lock=Promise.resolve();const db={state,ref(route){return {child:k=>db.ref(route+'/'+k),once:async()=>({val:()=>clone(get(state,route) ?? null)}),transaction:async fn=>{const work=lock.then(()=>{fn(null);if(retry){fn(clone(get(state,route)));retry(state);retry=null;}const next=fn(clone(get(state,route)));if(next===undefined)return {committed:false};put(state,route,next);return {committed:true,snapshot:{val:()=>clone(next)}};});lock=work.catch(()=>null);return work;}};}};return db;}
+function mockDb(state=fixture(),retry=null){let lock=Promise.resolve();const db={state,ref(route){return {child:k=>db.ref(route+'/'+k),once:async()=>({val:()=>clone(get(state,route) ?? null)}),update:async values=>{for(const [k,v]of Object.entries(values))put(state,route+'/'+k,v);},transaction:async fn=>{const work=lock.then(()=>{assert.notEqual(route,BASE,'U4 no transacciona el nodo global');fn(null);if(retry){fn(clone(get(state,route)));retry(state);retry=null;}const next=fn(clone(get(state,route)));if(next===undefined)return {committed:false};put(state,route,next);return {committed:true,snapshot:{val:()=>clone(next)}};});lock=work.catch(()=>null);return work;}};}};return db;}
 const auth={async verifyIdToken(token){if(token==='invalid')throw Error('invalid');return {uid:token};}};
 async function call(db,action,token='student',body={},number='1',method=action.endsWith('state')||action.endsWith('review')||action.endsWith('example')?'GET':'POST'){
  let status=200,data,headers={};const res={setHeader(k,v){headers[k]=v;},status(v){status=v;return this;},json(v){data=v;}};
@@ -69,6 +69,9 @@ async function apiTests(){
  check(JSON.stringify(db.state[BASE].respuestas['sesion-u4-1'].student.answers)===JSON.stringify(before.answers),'Conserva respuestas');
  check((await call(db,'simce-u4-save','student',{answers:{q1:'A'},reopenedAt:0})).status===409,'Cola anterior a reapertura rechazada');
  const restored=await call(db,'simce-u4-state');check(restored.data.result===null,'Resultado retirado al reabrir');
+ await api.mirrorResult(db,exams[0],'student',before);
+ check(db.state[BASE].resultados['sesion-u4-1'].student.reopened===true,'Copia tardía no revive resultado reabierto');
+ check((await call(db,'simce-u4-review','teacher')).data.results.length===0,'Docente no ve resultado canónico pendiente');
  check((await call(db,'simce-u4-submit','student',{answers:before.answers,reopenedAt:restored.data.attempt.reopenedAt})).status===200,'Reentrega con versión nueva');
  const race=mockDb();const all=Object.fromEntries(exams[0].texts.flatMap(t=>t.questions).map(q=>[q.id,q.key]));
  const concurrent=await Promise.all([call(race,'simce-u4-submit','student',{answers:all}),call(race,'simce-u4-save','student',{answers:{}})]);
@@ -79,6 +82,10 @@ async function apiTests(){
  check(!api.available(standardSession(exams[0]),'student',api.CLOSE_AT),'Cierre al iniciar SIMCE');
  check(api.available(standardSession(exams[0]),'student',api.CLOSE_AT-1),'Día previo disponible');
  const changed=mockDb(fixture(),state=>{state[BASE].estudiantes.student.curso='3A-HC';});check((await call(changed,'simce-u4-save')).status===403,'Curso revalidado al reintentar');
+ check(get(changed.state,BASE+'/respuestas/sesion-u4-1/student')==null,'Cambio de permiso revierte solo la escritura propia');
+ const large=mockDb();large.state[BASE].padding_test='x'.repeat(17*1024*1024);
+ check((await call(large,'simce-u4-save')).status===200,'BASE de más de 16 MB no bloquea intento individual');
+ check(Buffer.byteLength(JSON.stringify(large.state[BASE].respuestas['sesion-u4-1'].student))<2048,'Escritura de borrador menor a 2 KB');
  const rules=JSON.parse(fs.readFileSync(path.join(ROOT,'firebase-rules.json'))).rules.plataforma_estudiantes;
  for(const node of ['respuestas','resultados']){
   const rule=rules[node].$sesionId.$uid['.write'].replaceAll('.matches(','.match(');

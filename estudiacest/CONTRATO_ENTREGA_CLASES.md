@@ -163,6 +163,16 @@ Este documento define el comportamiento mínimo de toda clase, guía o ensayo de
 
 ## 13. Definición de terminado
 
+SIMCE Unidad 4 conserva su resultado canónico en
+`respuestas/{sessionId}/{uid}/result`, dentro de la misma transacción individual
+que las respuestas, `submitted`, `completada` y sus fechas. API, dashboard y
+Resultados docente leen ese intento. `resultados/{sessionId}/{uid}` es una copia
+para reportes anteriores, protegida con revisión creciente; una copia tardía no
+revive una entrega reabierta. La reapertura archiva el intento dentro de su
+historial individual y replica la evidencia al archivo docente. Nunca se usa una
+transacción sobre toda `plataforma_estudiantes` para estas cinco sesiones: excede
+el límite de escritura del SDK en la base vigente.
+
 Una clase no está terminada hasta que cumple simultáneamente lo siguiente:
 
 - Autoguarda sin competir con la entrega final.

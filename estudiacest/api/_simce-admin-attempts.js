@@ -94,6 +94,9 @@ async function manejar(req, res, action, db, auth) {
             if (typeof body[key] !== 'string' || !VALID_KEY.test(body[key])) throw fail(400, 'Identificador no válido.');
         }
         if (body.requestId.length < 12) throw fail(400, 'Identificador de solicitud no válido.');
+        if (/^sesion-u4-[1-5]$/.test(body.sessionId)) {
+            return res.status(200).json(await require('./_simce-u4').reopenAttempt(db, actor.uid, body, RESET_FIELDS));
+        }
         const now = Date.now();
         let refusal = null;
         const transaction = await db.ref(BASE).transaction(current => {

@@ -92,6 +92,8 @@ Cobertura directa significa presencia de la operación en un ítem. No demuestra
 
 Funciones reales con base ficticia: identidad/curso, asignación, cinco instrumentos, clave oculta antes de entrega, puntaje desde servidor, inicio desde servidor, faltantes, guardado y recarga, red caída/reintento, entrega/resultado, concurrencia, inmutabilidad, reapertura del módulo canónico, cola previa rechazada y alcance docente. Panel del estudiante confirma Completada y panel docente lee el resultado. Cierre: 11 de noviembre a las 00:00, hora de Santiago; termina la preparación el 10. No se escribieron respuestas, notas ni datos de estudiantes reales para probar.
 
+Guardado can?nico U4: respuestas/{sessionId}/{uid}/result se guarda con respuestas, submitted y completada en una transacci?n por UID. La copia de resultados para reportes antiguos usa revisi?n creciente; reapertura individual conserva archivo dentro del intento y lo replica al historial docente. No se transacciona el nodo de 18 MB. API, dashboard y Resultados docente leen la evidencia can?nica. Se agreg? una regresi?n de BASE sint?tica mayor a 16 MB, reversi?n de revisi?n propia si cambia permiso y rechazo de copia de resultado tard?a.
+
 Navegador: miniensayo 1 en 320/390/1440/3840 px y los demás en 390 px; sin desbordes ni errores JS; bloqueo de copia, faltantes, recuperación, entrega, relectura y acceso privado comprobados. Las mediciones son digitales; no hay validación física impresa porque la aplicación solicitada es digital.
 
 ## Fuentes y reproducción

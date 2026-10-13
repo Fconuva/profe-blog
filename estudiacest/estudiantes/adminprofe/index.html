@@ -3980,9 +3980,11 @@ function loadResults(){
     updateDetenerButton(sesId);
     updateUnlockUI(sesId);
 
-    const results=allResults[sesId]||{};
     const responses=allResponses[sesId]||{};
     const isMiniU4=/^sesion-u4-[1-5]$/.test(sesId);
+    const results=isMiniU4
+        ? Object.fromEntries(Object.entries(responses).filter(([,r])=>r.submitted===true&&r.completada===true&&r.result).map(([uid,r])=>[uid,r.result]))
+        : allResults[sesId]||{};
     const isFormativeWriting=sessions[sesId]?.formativa===true||sessions[sesId]?.formato_panel==='evidencia-dos-textos';
     let items=[];
     const reopened=Object.fromEntries(Object.entries(responses).filter(([,r])=>r?.reopenedAt&&r.submitted!==true&&r.completada!==true).map(([uid])=>[uid,{}]));

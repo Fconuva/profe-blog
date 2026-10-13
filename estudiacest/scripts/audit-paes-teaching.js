@@ -13,7 +13,7 @@ for(let id=1;id<=21;id++)for(const guided of [false,true]){
   for(const token of ['Objetivo de la clase','workInstructions','lesson-expansion','Pienso en voz alta','teaching-response'])assert(html.includes(token),`${file}: falta ${token}`);
   assert.equal((html.match(/class="lesson-chapter"/g)||[]).length,4,file);
  }else{
-  assert(html.includes(render(id,guided).trim()),`${file}: enseñanza desactualizada; ejecutar generate-paes-teaching.js`);
+  assert(html.replace(/\r\n/g,'\n').includes(render(id,guided).replace(/\r\n/g,'\n').trim()),`${file}: enseñanza desactualizada; ejecutar generate-paes-teaching.js`);
   assert.equal((html.match(/PAES_TEACHING_START/g)||[]).length,1,file);
   assert.equal((html.match(/css\/guia-teaching.css/g)||[]).length,1,file);
   assert.equal((html.match(/class="pt-chapter"/g)||[]).length,4,file);

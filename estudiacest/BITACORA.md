@@ -4725,3 +4725,8 @@ Validación proporcional: rutas y fuentes existentes, mapa actualizado con cober
 - No reemplaza las secciones 5, 12 y 13: siguen el inicio en tres diapositivas, el objetivo en infinitivo, el contenido disciplinar enseñado, la duración real de la sesión y el panel para anotar. No se copian los 40 minutos ni los topes de palabras de los portafolios.
 - Rige para las próximas clases y para las correcciones que Francisco solicite. No se rehízo ni se tocó ninguna clase, guía o evaluación publicada. No hay guarda automática: `npm run build` no revisa la sección 15; la lectura como estudiante la hace quien construye.
 - Cambio exclusivamente documental: sin despliegue. Commit acotado a `REGLAS.md`, `AGENTS.md` y `BITACORA.md`, y push.
+
+## 2026-10-13, NM3: libro Siddhartha descargable
+
+- Francisco solicita dejar también en Estudia CEST el PDF del libro que proporcionó y se envió por correo. Se copia íntegro en `nm3/siddhartha-carrete/assets/siddhartha-libro.pdf` y se añade «Descargar libro PDF» al inicio de la página del carrete. Se conservan guía, tutorial, rúbrica y demás enlaces. El archivo se registra en el manifiesto académico.
+- Libro de Hermann Hesse, edición digital ILCE, 143 páginas, 751.983 bytes, sin contraseña. SHA-256 del original: c1b8d18df375e527a51922c9c58d7b5acc85e4db2225478e130be699ffb5aaf2. Sin datos de estudiantes ni cambios de evaluaciones. Validación y publicación se anotan al concluir.

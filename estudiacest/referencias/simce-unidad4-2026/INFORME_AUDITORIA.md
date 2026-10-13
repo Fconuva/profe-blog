@@ -97,3 +97,7 @@ Navegador: miniensayo 1 en 320/390/1440/3840 px y los demás en 390 px; sin desb
 - El resto son textos originales y situaciones ficticias CEST, rotulados; no son entrevistas, noticias, datos ni campañas reales.
 
 Regenerar matriz, cobertura y mediciones: node scripts/build-simce-u4-review.js. Archivos internos excluidos del despliegue público. Estado de publicación y verificaciones actuales: BITACORA.md.
+
+## Cierre de publicaci?n
+
+Publicado 81b66763, deployment dpl_3yFWRnAYbeGxmFcphWJhd2FbyvZc, alias READY y proyecto/SHA comprobados. Cinco sesiones habilitadas; 547 comprobaciones locales y 46 reales con cuenta t?cnica ef?mera. Ingreso com?n, cinco entregas, result can?nico, recarga, panel, Forma P, pauta privada, alcance, reapertura y reentrega verificados. Cuenta, respuestas, resultados, telemetr?a, excepciones y archivo t?cnicos eliminados y relectura de limpieza aprobada. Ning?n estudiante real fue usado en pruebas.

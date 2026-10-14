@@ -1,5 +1,15 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-14, miniensayo nuevo para el 15 y calendario HC
+
+- Francisco ordena miniensayo nuevo para 3°A/3°B HC el jueves 15, visita a Feria Escolar Universidad de Talca para 4°A/4°B HC y celebración del Día del Profesor el viernes 16. Elige expresamente «Uno nuevo»; no se reemplaza Guía 22 ni sus intentos.
+- Nueva ruta `/paes/mini-octubre-2026/`, sesión `paes-mini-octubre-20261015`, catálogo privado de tres textos originales (601/604/608 palabras), 18 alternativas y variante acompañada de 185 palabras/seis preguntas con audio y pasos. Regular: 70 minutos desde Comenzar, bloque docente 90; acompañado sin temporizador. Alcance regular 3A/3B HC; variante individual determinada por servidor conforme a la regla vigente.
+- API y almacenamiento separados de G22, autenticación, claves/resultado privados hasta publicación, marcas de entrega atómicas y confirmación por relectura. Strikes con historial y corrección docente conservando respuestas/plazo. Revisión independiente detectó copia antigua de respuestas en reintento de incidencia: nuevo cliente transmite el avance actual al vaciar la cola, sin modificar G22. Sin nuevas notas o conversiones PAES, sin datos reales usados en pruebas.
+- Catálogo revisado por otro agente: cuatro observaciones corregidas (unicidad q6, evidencia q13 y demanda de guiadas q4/q5); dictamen favorable sobre SHA256 f1f0afcc34b3b1b521c229022b145b5c3a08c4373bf3a26b3b1e17e58bb641e3. No se afirma calibración empírica.
+- Planifica Lirmi: cuatro distribuciones del 15 guardadas y releídas como Planificada: 3B08:15–09:45, 3A10:00–11:30; visita4B con salida institucional13:00;4A sin bloques ordinarios posteriores. Hora de feria/traslado no confirmada. Seis filas futuras mantienen asistencia, leccionario y firma intactos; no se guardan leccionarios futuros.
+- Resolución Exenta SEREMI Maule1642,15-dic-2025, artículo12/página9 del calendario2026:16-oct sin clases, fecha no modificable. Calendario PAES, aviso G22, plan local y consulta general actualizados; las actividades futuras no se declaran aplicadas.
+- Verificaciones previas a publicación: 115 comprobaciones API con fixtures, navegador real16 controles móvil regular/acompañado (guardado, recarga, entrega, privacidad, publicación y aislamiento), contrato62 clases y build integral con812 recursos críticos aprobados. Publicación y verificación de producción se registran al cierre.
+
 ## 2026-10-14, actualización de planificaciones con aplicación y continuidad por curso
 
 - Encargo de Continuar.md, bloque independiente del saneamiento SIMCE. Francisco confirma 5–9: informe 4°A/4°B, manual 4°C/4°E y Anuario 4°D; esta semana, hasta el 14: casos del correo 4°C/4°E/4°D. En NM3 confirma guía impresa de análisis de casos, sin precisar día por curso. Se registra aplicación, continuidad y previsión sin convertir publicación en clase realizada ni afirmar término de todo el curso.

@@ -1,5 +1,11 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-14, PAES: miniensayo 23 y retiro de la tarjeta de cartas
+
+- Francisco solicita publicar el N.º 23, confirmar el foco planificado y borrar la tarjeta «Crónicas del Umbral». El plan histórico indica «Evidencia y consistencia: evaluar fuentes y afirmaciones». Se identifica con ese número el miniensayo de octubre ya construido y publicado para 3A/3B HC el jueves 15: tres textos y 18 preguntas, 70 minutos; recorrido acompañado separado y sin temporizador. La aplicación usa relato, reportaje ficticio y opinión; la propuesta histórica contemplaba divulgación, reportaje y opinión. No se presenta esa diferencia como equivalencia exacta.
+- Se armonizan títulos del portal, ambas rutas, catálogo y panel docente; se añade acceso al panel N.º 23 en admin PAES. Se retiran solo la tarjeta de cartas, su consulta de estado en portada y la tarjeta futura duplicada del N.º 23. Se conservan preguntas, claves, sesión, intentos y registros históricos. Plan y calendario de octubre alineados.
+- Validación y cierre de producción se anotan al finalizar.
+
 ## 2026-10-14, administrador SIMCE: todas las unidades y planilla vigente
 
 - Francisco informa que no aparece U3, Resultados muestra solo U4 y pide todas las unidades ordenadas y edición de notas. Amplía el encargo: Planilla Notas no carga o se bloquea; debe funcionar con las notas actuales de 2A/2B HC.

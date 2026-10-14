@@ -3,11 +3,12 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const { readPlatform, updatePlatform } = require('./firebase-maintenance-db');
+const { evidenceFingerprint } = require('./export-simce-labor-review');
 
-// Clases 1 a 8 y 10 de la Unidad 3; la Clase 9 es informativa y no lleva nota.
-const EXPECTED_SESSIONS = [1, 2, 3, 4, 5, 6, 7, 8, 10].map(number => `sesion-u3-${number}`);
+// Unidad 3 hasta la Clase 12; las clases 8 y 9 siguen sin nota.
+const EXPECTED_SESSIONS = [1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12].map(number => `sesion-u3-${number}`);
 const ALLOWED_GRADES = new Set([1, 3, 5, 7]);
-const MODEL_VERSION = 'laboriosidad-u3-c1-c10-2026-10-05-r5';
+const MODEL_VERSION = 'laboriosidad-u3-c1-c12-2026-10-14-r6';
 // Debe coincidir con el exportador: esas clases no se publican y su nota se retira.
 const NOT_EVALUATED = { 'sesion-u3-8': ['2A-HC', '2B-HC'] };
 const COURSES = ['2A-HC', '2B-HC'];
@@ -82,7 +83,7 @@ function publicStatus(row) {
   return { code: 'submitted', label: 'Entrega registrada.' };
 }
 
-function buildPublication(source, publishedAt, expectedStudents) {
+function buildPublication(source, publishedAt, expectedStudents, currentRoot = {}) {
   if (!source || !Array.isArray(source.rows)) throw new Error('El archivo de revisión no contiene rows.');
   if (!Number.isInteger(expectedStudents) || expectedStudents <= 0) {
     throw new Error('Indica --expected-students con el número de estudiantes revisado en la simulación.');
@@ -93,7 +94,15 @@ function buildPublication(source, publishedAt, expectedStudents) {
       throw new Error(`Clase sin evaluar no autorizada: ${item.sessionId} en ${item.course}.`);
     }
   });
-  const expectedRows = expectedStudents * EXPECTED_SESSIONS.length - notEvaluated.length;
+  const enrollmentExemptions = source.enrollmentExemptions || [];
+  const exemptionPairs = new Set();
+  enrollmentExemptions.forEach(item => {
+    if (!item.uid || !COURSES.includes(item.course) || !EXPECTED_SESSIONS.includes(item.sessionId) || Number(item.sessionId.split('-').pop()) > 10 || item.sessionId === 'sesion-u3-8' || Number(item.createdAt) < Date.parse('2026-09-24T00:00:00-03:00')) throw new Error('Exención de incorporación inválida.');
+    const pair = `${item.uid}/${item.sessionId}`;
+    if (exemptionPairs.has(pair)) throw new Error('Exención de incorporación duplicada.');
+    exemptionPairs.add(pair);
+  });
+  const expectedRows = expectedStudents * EXPECTED_SESSIONS.length - notEvaluated.length - enrollmentExemptions.length;
   if (source.rows.length !== expectedRows) throw new Error(`Se esperaban ${expectedRows} registros y llegaron ${source.rows.length}.`);
 
   const students = new Set();
@@ -109,15 +118,18 @@ function buildPublication(source, publishedAt, expectedStudents) {
     const pendingPersonal = row.personalRoute === true && row.status === 'Pendiente ruta personal' && row.proposedGrade === null;
     if (!pendingPersonal && !ALLOWED_GRADES.has(Number(row.proposedGrade))) throw new Error(`Nota no permitida en ${row.sessionId}.`);
     const pair = `${row.uid}/${row.sessionId}`;
+    if (exemptionPairs.has(pair)) throw new Error('Una sesión exenta trae una nota.');
     if (pairs.has(pair)) throw new Error(`Registro duplicado: ${pair}.`);
     pairs.add(pair);
     students.add(row.uid);
     sessions.add(row.sessionId);
 
     const status = publicStatus(row);
-    const grade = pendingPersonal ? null : Number(row.proposedGrade);
+    const previous = currentRoot[row.uid] && currentRoot[row.uid][row.sessionId];
+    const previousGrade = previous && previous.grade !== undefined ? Number(previous.grade) : null;
+    const grade = pendingPersonal ? null : Math.max(Number(row.proposedGrade), Number.isFinite(previousGrade) && previousGrade >= 1 && previousGrade <= 7 ? previousGrade : 1);
     const adjustedForSimilarity = status.code === 'similarity_adjusted';
-    if (adjustedForSimilarity && grade !== null && grade > 5) throw new Error(`Una coincidencia ajustada conserva nota ${grade}.`);
+    if (adjustedForSimilarity && grade !== null && grade > 5 && grade !== previousGrade) throw new Error(`Una coincidencia ajustada conserva nota ${grade}.`);
 
     records[pair] = {
       sessionId: row.sessionId,
@@ -131,6 +143,7 @@ function buildPublication(source, publishedAt, expectedStudents) {
       submitted: row.status === 'Entregada',
       adjustedForSimilarity,
       ...(row.personalRoute ? { personalRoute: true, evidenceSession: String(row.evidenceSession || row.sessionId) } : {}),
+      ...(row.teacherGradeOverride ? { teacherGradeOverride: row.teacherGradeOverride } : {}),
       modelVersion: MODEL_VERSION,
       publishedAt
     };
@@ -159,6 +172,7 @@ function buildPublication(source, publishedAt, expectedStudents) {
     stats: {
       rows: pairs.size,
       notEvaluated: retiredPairs.length,
+      enrollmentExemptions: enrollmentExemptions.length,
       students: students.size,
       sessions: sessions.size,
       ...stats
@@ -204,16 +218,23 @@ async function main() {
   const source = JSON.parse(fs.readFileSync(input, 'utf8'));
   const publishedAt = String(args['published-at'] || new Date().toISOString());
   const expectedStudents = Number(args['expected-students']);
-  const first = buildPublication(source, publishedAt, expectedStudents);
-  const second = buildPublication(source, publishedAt, expectedStudents);
+  const platform = await readPlatform();
+  if (!source.evidenceFingerprint || source.evidenceFingerprint !== evidenceFingerprint(source.rows, platform)) throw new Error('La evidencia cambió desde la revisión: vuelve a exportar antes de publicar.');
+  source.rows.forEach(row => {
+    if (!COURSES.includes(row.course) || platform.estudiantes?.[row.uid]?.curso !== row.course) throw new Error('Identidad o curso fuera del alcance verificado.');
+  });
+  (source.enrollmentExemptions || []).forEach(item => {
+    if (Number(platform.estudiantes?.[item.uid]?.createdAt) !== Number(item.createdAt)) throw new Error('La incorporación exenta no coincide con el padrón actual.');
+  });
+  const currentRoot = platform.calificaciones_clase || {};
+  const first = buildPublication(source, publishedAt, expectedStudents, currentRoot);
+  const second = buildPublication(source, publishedAt, expectedStudents, currentRoot);
   const firstChecksum = checksum(first.records);
   const secondChecksum = checksum(second.records);
   if (firstChecksum !== secondChecksum || first.stats.rows !== second.stats.rows) {
     throw new Error('La simulación no fue determinista; no se publicará nada.');
   }
 
-  const platform = await readPlatform();
-  const currentRoot = platform.calificaciones_clase || {};
   const report = {
     mode: args.apply ? 'apply' : 'simulation',
     inputGeneratedAt: source.generatedAt || null,
@@ -274,7 +295,9 @@ async function main() {
   console.log(JSON.stringify({ applied: first.stats.rows, retired: first.retiredPairs.length, verified: first.stats.rows, backupPath }, null, 2));
 }
 
-main().catch(error => {
+if (require.main === module) main().catch(error => {
   console.error('[publish-simce-labor-grades]', error.message);
   process.exitCode = 1;
 });
+
+module.exports = { buildPublication, checksum, recordsFromObject, changesAgainst };

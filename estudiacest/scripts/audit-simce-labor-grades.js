@@ -54,9 +54,9 @@ if (publisher) {
 ].forEach(fragment => {
   if (!exporter.includes(fragment)) failures.push(`Exportador: falta el lector canónico ${fragment}.`);
 });
-const numberedScope = /\[1, 2, 3, 4, 5, 6, 7, 8, 10\]\.map\(number => `sesion-u3-\$\{number\}`\)/;
-if (!numberedScope.test(exporter)) failures.push('Exportador: el alcance debe ser las clases 1 a 8 y 10.');
-if (publisher && !numberedScope.test(publisher)) failures.push('Publicador: el alcance debe ser las clases 1 a 8 y 10.');
+const numberedScope = /\[1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12\]\.map\(number => `sesion-u3-\$\{number\}`\)/;
+if (!numberedScope.test(exporter)) failures.push('Exportador: falta cobertura hasta la Clase 12.');
+if (publisher && !numberedScope.test(publisher)) failures.push('Publicador: falta cobertura hasta la Clase 12.');
 if (/sesion-u3-9['"]\s*:/.test(exporter)) failures.push('Exportador: la Clase 9 es informativa y no lleva nota.');
 ['function exclusionFor(uid, student)', 'UNIT_ENROLLMENT_CUTOFF', "sessionId.startsWith('personal-u3-')", 'function personalRouteRow(', 'LATE_COPY_GAP_MS'].forEach(fragment => {
   if (!exporter.includes(fragment)) failures.push(`Exportador: falta la regla ${fragment}.`);
@@ -74,9 +74,83 @@ if (publisher && !publisher.includes("row.status === 'Inconsistente'")) {
   failures.push('Publicador: no conserva el estado de entrega inconsistente.');
 }
 
+// Productos escritos y cierre vigentes: no confundirlos con alternativas ni
+// exigir el taller retirado de la Clase 12.
+const assert = require('assert');
+const { CONFIG, rowFor } = require('./export-simce-labor-review');
+const { buildPublication } = require('./publish-simce-labor-grades');
+const student = { curso: '2A-HC' };
+const full11 = { submitted:true, completada:true, answers:{} };
+CONFIG['sesion-u3-11'].writing.forEach(([field, minimum]) => {
+  full11.answers[field.split('.')[1]] = Array(minimum).fill('palabra').join(' ');
+});
+assert.strictEqual(rowFor(student, 'fixture', 'sesion-u3-11', {}, full11, {}).proposedGrade, 7);
+const incomplete11 = JSON.parse(JSON.stringify(full11));
+incomplete11.answers['news-body'] = 'Una noticia demasiado breve.';
+assert.strictEqual(rowFor(student, 'fixture', 'sesion-u3-11', {}, incomplete11, {}).proposedGrade, 5);
+const full12 = { submitted:true, completada:true, answers:Object.fromEntries(Array.from({length:24}, (_, i) => [`q${i+1}`, 'A'])), metaResponses:{m1:'Una reflexión con más de veinticinco caracteres.'} };
+assert.strictEqual(rowFor(student, 'fixture', 'sesion-u3-12', {}, full12, {}).proposedGrade, 7);
+const fixtureRows = [1,2,3,4,5,6,7,10,11,12].map(n => ({uid:'fixture',course:'2A-HC',sessionId:`sesion-u3-${n}`,status:'Entregada',proposedGrade:3,completion:0.5,flags:[]}));
+const publication = buildPublication({rows:fixtureRows,notEvaluated:[{uid:'fixture',course:'2A-HC',sessionId:'sesion-u3-8'}]}, 'fixture-date', 1, {fixture:{'sesion-u3-7':{grade:7}}});
+assert.strictEqual(publication.records['fixture/sesion-u3-7'].grade, 7);
+assert.strictEqual(publication.records['fixture/sesion-u3-12'].grade, 3);
+assert.strictEqual(publication.records['fixture/sesion-u3-9'], undefined);
+
 if (failures.length) {
   console.error(`Auditoría de notas SIMCE fallida:\n- ${failures.join('\n- ')}`);
   process.exit(1);
 }
 
 console.log('Notas SIMCE auditadas: panel privado, simbología, correo, reglas y publicación determinista presentes.');
+
+async function verifyDeliveryStore() {
+  const vm = require('vm');
+  const source = fs.readFileSync(path.join(root,'estudiantes/js/simce-session-gate.js'),'utf8');
+  const elements = new Map();
+  const document = {
+    getElementById:id => elements.get(id),
+    createElement:() => ({style:{},setAttribute(){},remove(){elements.delete(this.id);},focus(){}}),
+    body:{appendChild(el){elements.set(el.id,el);}},documentElement:{style:{}}
+  };
+  const window = {location:{reload(){}}};
+  vm.runInNewContext(source,{window,document,Map,Promise,JSON,Date,Error});
+  const gate = window.SimceSessionGate;
+  let attempt = {answers:{q1:'A'}}, result = null, failWrite = false, failRead = false, atomicWrites = 0;
+  const snapshot = value => ({val:()=>value});
+  const db = {ref(location){return {
+    once:async()=>{if(failRead)throw Error('Sin red');return snapshot(location.includes('/sesiones/') ? {activa:true} : JSON.parse(JSON.stringify(attempt)));},
+    child:key=>({once:async()=>snapshot(attempt[key])}),
+    transaction:async fn=>{const value=fn(attempt);if(value!==undefined)attempt=value;return {committed:value!==undefined};},
+    update:async updates=>{if(failWrite)throw Error('Sin red');atomicWrites++;const responsePath=Object.keys(updates).find(k=>k.startsWith('respuestas/'));const resultPath=Object.keys(updates).find(k=>k.startsWith('resultados/'));assert(responsePath&&resultPath);attempt=updates[responsePath];result=updates[resultPath];}
+  };}};
+  assert.strictEqual(await gate.check(db,'fixture','sesion-u3-1','fixture',true),false);
+  await assert.rejects(gate.saveDraft(db,'fixture','sesion-u3-1','fixture',{answers:{q1:'B'}}));
+  assert.strictEqual(attempt.answers.q1,'A');
+  gate.markLoaded('sesion-u3-1','fixture');
+  const draft = {answers:{q1:'B'},submitted:false,completada:false};
+  const pending = gate.saveDraft(db,'fixture','sesion-u3-1','fixture',draft);
+  draft.answers.q1='C'; await pending;
+  assert.strictEqual(attempt.answers.q1,'B');
+  failWrite=true;
+  await assert.rejects(gate.submit(db,'fixture','sesion-u3-1','fixture',{answers:{q1:'B'}},{puntaje:1,total:1}));
+  assert.strictEqual(attempt.completada,false);assert.strictEqual(result,null);
+  failWrite=false;
+  await gate.submit(db,'fixture','sesion-u3-1','fixture',{answers:{q1:'B'}},{puntaje:1,total:1});
+  assert.strictEqual(attempt.submitted,true);assert.strictEqual(attempt.completada,true);assert.strictEqual(result.puntaje,1);
+  await gate.saveDraft(db,'fixture','sesion-u3-1','fixture',{answers:{},submitted:false,completada:false});
+  assert.strictEqual(attempt.answers.q1,'B');assert.strictEqual(attempt.completada,true);
+  await gate.submit(db,'fixture','sesion-u3-1','fixture',{answers:{}},{puntaje:0,total:1});
+  assert.strictEqual(atomicWrites,1);
+  failRead=true;
+  assert.strictEqual(await gate.check(db,'fixture','sesion-u3-2','fixture',true),true);
+  await assert.rejects(gate.submit(db,'fixture','sesion-u3-2','fixture',{},{puntaje:0,total:1}));
+  assert.strictEqual(atomicWrites,1);
+  const start=dashboard.indexOf('        function classifySubmissionStatus(');
+  const end=dashboard.indexOf('        function renderLaborGrades(',start);
+  const context={Date,Number};vm.createContext(context);vm.runInContext(dashboard.slice(start,end),context);
+  const oldGrade={sessionId:'sesion-u3-1',grade:1,status:'not_submitted',publishedAt:new Date(1000).toISOString()};
+  assert.strictEqual(context.reconcileLaborGradeStatus(oldGrade,{'sesion-u3-1':{submitted:true,completada:true,submittedAt:2000}}).needsReview,true);
+  assert.strictEqual(context.reconcileLaborGradeStatus(oldGrade,{'sesion-u3-1':{__readError:true}}).status,'read_error');
+  console.log('Guardado SIMCE probado: carga fallida protegida, entrega atómica, reintento, confirmación, borrador tardío y nota desactualizada.');
+}
+verifyDeliveryStore().catch(error=>{console.error(error);process.exitCode=1;});

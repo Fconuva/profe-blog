@@ -310,8 +310,8 @@
 
 <div class="actionbar">
   <div class="actionbar-inner">
-    <span class="save-status" id="saveStatus">Conectando…</span>
-    <button class="submit" id="submitBtn" type="button">Entregar clase</button>
+    <span class="save-status" id="saveStatus" role="status" aria-live="polite">Conectando…</span>
+    <button class="submit" id="submit" type="button">Entregar clase</button>
   </div>
 </div>
 
@@ -750,7 +750,7 @@ function localBackup(){try{localStorage.setItem(localKey(),JSON.stringify(payloa
 function scheduleSave(){localBackup();setStatus("Guardando…");clearTimeout(saveTimer);saveTimer=setTimeout(saveDraft,1200)}
 async function saveDraft(){
   localBackup();if(IS_LOCAL||!currentUID||isSubmitted){if(IS_LOCAL)setStatus("Vista previa local.");return}
-  try{await db.ref(`${BASE}/respuestas/${SESSION_ID}/${currentUID}`).update(payload(false));setStatus("Avance guardado automáticamente.")}
+  try{await window.SimceSessionGate.saveDraft(db,BASE,SESSION_ID,currentUID,payload(false));setStatus("Avance guardado automáticamente.")}
   catch(error){console.error(error);setStatus("Sin conexión: el avance quedó guardado en este dispositivo.")}
 }
 function hydrate(saved){
@@ -766,7 +766,7 @@ function hydrate(saved){
   Object.entries(saved.metacognicion||{}).forEach(([key,value])=>{const el=document.querySelector(`[data-meta="${key}"]`);if(el)el.value=value});
   if(saved.completada){
     isSubmitted=true;revealFeedback();document.getElementById("doneBanner").style.display="block";
-    document.getElementById("submitBtn").disabled=true;lockSubmittedControls();
+    document.getElementById("submit").disabled=true;lockSubmittedControls();
     setStatus("Clase ya entregada.");
   }
 }
@@ -783,20 +783,18 @@ async function submitGuide(){
   if(answered<questions.length){toast(`Faltan ${questions.length-answered} preguntas SIMCE por responder.`);document.getElementById(`card-${questions.find(q=>!answers[q.id]).id}`).scrollIntoView();return}
   if(!metacognitionComplete()){toast("Escribe los cinco peldaños de la escalera con al menos 20 caracteres en cada respuesta.");document.getElementById("paso5").scrollIntoView();return}
   if(!confirm("¿Entregar la clase? Después de entregar no podrás cambiar las alternativas."))return;
-  const button=document.getElementById("submitBtn");button.disabled=true;
+  const button=document.getElementById("submit");button.disabled=true;
   const g=grade(),s=stats(),now=Date.now(),detail={};
   questions.forEach(q=>detail[q.id]={respuesta:answers[q.id],correcta:q.correct,esCorrecta:answers[q.id]===q.correct,habilidad:SKILL_NAMES[q.skill].toUpperCase(),dificultad:q.difficulty});
   try{
     const data=payload(true);data.submitted_at=now;
-    await Promise.all([
-      db.ref(`${BASE}/respuestas/${SESSION_ID}/${currentUID}`).update(data),
-      db.ref(`${BASE}/resultados/${SESSION_ID}/${currentUID}`).set({
+    clearTimeout(saveTimer);
+      await window.SimceSessionGate.submit(db,BASE,SESSION_ID,currentUID,data,{
         puntaje:g.ok,total:questions.length,porcentaje:g.pct,nota:g.nota,detalle:detail,
         por_habilidad:s,respuesta_abierta:data.respuesta_abierta,metacognicion:data.metacognicion,
         conceptos:{pareados:true,verdadero_falso:true,sopa:true,completos:true},nombre:data.nombre,curso:data.curso,
         version_alternativas:data.version_alternativas,submitted_at:now,timestamp:now
-      })
-    ]);
+      });
     if(studentData&&studentData.curso){
       try{await db.ref(`${BASE}/ranking/${SESSION_ID}/${studentData.curso}/${currentUID}`).set({nombre:studentData.nombre,puntaje:g.ok,porcentaje:g.pct})}catch(e){}
     }
@@ -821,7 +819,7 @@ document.getElementById("checkVF").addEventListener("click",checkVF);
 document.getElementById("checkWords").addEventListener("click",checkWords);
 document.getElementById("openResponse").addEventListener("input",scheduleSave);
 document.querySelectorAll("[data-meta]").forEach(el=>el.addEventListener("input",scheduleSave));
-document.getElementById("submitBtn").addEventListener("click",submitGuide);
+document.getElementById("submit").addEventListener("click",submitGuide);
 const conceptVideo=document.getElementById("conceptVideo");
 conceptVideo.defaultPlaybackRate=1.5;
 conceptVideo.playbackRate=1.5;
@@ -839,7 +837,7 @@ if(IS_LOCAL){
   auth.onAuthStateChanged(async user=>{
     if(!user){location.href=SHARED_LOGIN_URL;return}
     currentUID=user.uid;renderAll(user.uid);
-    if(window.SimceSessionGate&&await window.SimceSessionGate.check(db,BASE,SESSION_ID,user.uid))return;
+    if(window.SimceSessionGate&&await window.SimceSessionGate.check(db,BASE,SESSION_ID,user.uid,true))return;
     try{
       const [studentSnap,remoteSnap]=await Promise.all([
         db.ref(`${BASE}/estudiantes/${user.uid}`).once("value"),
@@ -850,10 +848,10 @@ if(IS_LOCAL){
       const remote=remoteSnap.val();let local=null;
       try{const raw=localStorage.getItem(localKey());if(raw)local=JSON.parse(raw)}catch(e){}
       const useLocal=local && local.completada!==true && local.submitted!==true && !(remote&&remote.completada)&&(!remote||(local.last_save||0)>(remote.last_save||0));
-      hydrate(useLocal?local:remote);
+      hydrate(useLocal?local:remote);window.SimceSessionGate.markLoaded(SESSION_ID,user.uid);
       if(useLocal){toast("Recuperamos el avance guardado en este dispositivo.");scheduleSave()}
       if(!isSubmitted)setStatus("Tus respuestas se guardan automáticamente.");
-    }catch(error){console.error(error);toast("No se pudo cargar la clase. Actualiza la página.")}
+    }catch(error){console.error(error);window.SimceSessionGate.failLoad();toast("No se pudo cargar la clase. Actualiza la página.")}
   });
 }
 </script>

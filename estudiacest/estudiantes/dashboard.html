@@ -1234,6 +1234,7 @@
                 draft: { symbol:'◐', label:'Borrador', css:'draft' },
                 revision_pending: { symbol:'↻', label:'En revisión', css:'draft' },
                 submission_inconsistent: { symbol:'!', label:'Por revisar', css:'adjusted' },
+                read_error: { symbol:'↻', label:'No se pudo comprobar', css:'draft' },
                 writing_incomplete: { symbol:'△', label:'Escritura incompleta', css:'incomplete' },
                 similarity_adjusted: { symbol:'!', label:'Nota ajustada', css:'adjusted' }
             };
@@ -1241,7 +1242,14 @@
         }
 
         function reconcileLaborGradeStatus(item, respuestas) {
-            const submissionStatus = classifySubmissionStatus(respuestas[item.sessionId]);
+            const response = respuestas[item.evidenceSession || item.sessionId] || respuestas[item.sessionId];
+            if (response && response.__readError) return { ...item, status:'read_error', statusLabel:'No pudimos consultar la entrega. Recarga para comprobarla.' };
+            const submissionStatus = classifySubmissionStatus(response);
+            const submittedAt = Number(response && (response.submittedAt || response.completadaAt || response.submitted_at) || 0);
+            const publishedAt = Date.parse(item.publishedAt || '');
+            if (submissionStatus.completed && Number.isFinite(publishedAt) && submittedAt > publishedAt) {
+                return { ...item, status:'revision_pending', needsReview:true, statusLabel:'Nueva entrega confirmada: pendiente de actualizar la nota.' };
+            }
             const snapshotDeniesSubmission = item.status === 'not_submitted' || item.status === 'draft';
             if (!submissionStatus.completed || !snapshotDeniesSubmission) return item;
             return {
@@ -1284,6 +1292,9 @@
         }
 
         function renderSessionCard(ses, displayIndex, sectionKey, myResp, myResult, myLaborGrade) {
+            if (myResp && myResp.__readError) {
+                return `<div class="session-card"><h3>${escapeDashboardHtml(ses.titulo || 'Clase')}</h3><p>No pudimos consultar tu entrega. Esto no significa que esté sin entregar.</p><button type="button" onclick="window.location.reload()">Reintentar</button></div>`;
+            }
             const isActive = (ses.activa !== false && ses.respuestas_bloqueadas !== true)
                 || ses.__individualAccess === true;
             const requiresSubmission = ses.requiere_entrega !== false;
@@ -1493,7 +1504,7 @@
                                 if (myResSnap.exists()) resultados[ses.id] = myResSnap.val();
                             }
                         }
-                    } catch(e) {}
+                    } catch(e) { respuestas[ses.id] = { __readError:true }; }
                 }));
                 renderLaborGrades(laborGrades, respuestas);
 

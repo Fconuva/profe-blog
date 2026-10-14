@@ -8,6 +8,7 @@
 
   var PANEL_URL = '/estudiantes/dashboard.html';
   var stores = new Map();
+  var blockedElements = new Map();
   function store(sessionId, uid) {
     var key = sessionId + '/' + uid;
     if (!stores.has(key)) {
@@ -24,6 +25,11 @@
       layer.style.cssText = 'position:fixed;inset:0;z-index:2147483001;display:grid;place-items:center;background:#0f172acc;padding:20px';
       document.body.appendChild(layer);
     }
+    Array.from(document.body.children || []).forEach(function (element) {
+      if (element === layer || blockedElements.has(element)) return;
+      blockedElements.set(element,element.inert);
+      element.inert = true;
+    });
     layer.innerHTML = '<div style="background:white;color:#172033;padding:24px;border-radius:16px;max-width:420px;font:16px Arial">' +
       (failed ? '<h2>No pudimos cargar tu trabajo</h2><p>No podemos comprobar tu entrega por ahora. Reintenta antes de escribir.</p><button type="button" id="simceLoadRetry">Reintentar</button>' : '<h2>Cargando tu trabajo…</h2><p>Espera mientras recuperamos tus respuestas.</p>') + '</div>';
     var retry = document.getElementById('simceLoadRetry');
@@ -31,6 +37,8 @@
   }
   function markLoaded(sessionId, uid) {
     store(sessionId,uid).loaded = true;
+    blockedElements.forEach(function (previous,element) {element.inert=previous;});
+    blockedElements.clear();
     var layer = document.getElementById('simceLoadState'); if (layer) layer.remove();
   }
   function saveDraft(db, base, sessionId, uid, data) {
@@ -112,11 +120,12 @@
   }
 
   function check(db, base, sessionId, uid, requireRestore) {
-    if (requireRestore) loadLayer(false);
+    if (requireRestore) {store(sessionId,uid).loaded=false;loadLayer(false);}
     return Promise.all([db.ref(base + '/sesiones/' + sessionId).once('value'),db.ref(base + '/respuestas/' + sessionId + '/' + uid).once('value')]).then(function (snaps) {
       var attempt = snaps[1].val();
       var closed = isClosed(snaps[0].val(), uid) && !(attempt && (attempt.completada === true || attempt.submitted === true));
       if (closed) {
+        blockedElements.forEach(function (previous,element) {element.inert=previous;}); blockedElements.clear();
         var loading = document.getElementById('simceLoadState'); if (loading) loading.remove();
         window.__simceSessionClosed = true;
         showLayer();
@@ -128,5 +137,5 @@
     });
   }
 
-  window.SimceSessionGate = { check: check, isClosed: isClosed, beginLoad:function (sessionId,uid) {store(sessionId,uid).loaded=false;loadLayer(false);}, markLoaded:markLoaded, failLoad:function () {loadLayer(true);}, saveDraft:saveDraft, submit:submit };
+  window.SimceSessionGate = { check: check, isClosed: isClosed, isLoaded:function (sessionId,uid) {return store(sessionId,uid).loaded;}, beginLoad:function (sessionId,uid) {store(sessionId,uid).loaded=false;loadLayer(false);}, markLoaded:markLoaded, failLoad:function () {loadLayer(true);}, saveDraft:saveDraft, submit:submit };
 })();

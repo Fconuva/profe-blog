@@ -107,10 +107,11 @@ async function verifyDeliveryStore() {
   const vm = require('vm');
   const source = fs.readFileSync(path.join(root,'estudiantes/js/simce-session-gate.js'),'utf8');
   const elements = new Map();
+  const background = {inert:false};
   const document = {
     getElementById:id => elements.get(id),
     createElement:() => ({style:{},setAttribute(){},remove(){elements.delete(this.id);},focus(){}}),
-    body:{appendChild(el){elements.set(el.id,el);}},documentElement:{style:{}}
+    body:{children:[background],appendChild(el){elements.set(el.id,el);}},documentElement:{style:{}}
   };
   const window = {location:{reload(){}}};
   vm.runInNewContext(source,{window,document,Map,Promise,JSON,Date,Error});
@@ -124,9 +125,11 @@ async function verifyDeliveryStore() {
     update:async updates=>{if(failWrite)throw Error('Sin red');atomicWrites++;const responsePath=Object.keys(updates).find(k=>k.startsWith('respuestas/'));const resultPath=Object.keys(updates).find(k=>k.startsWith('resultados/'));assert(responsePath&&resultPath);attempt=updates[responsePath];result=updates[resultPath];}
   };}};
   assert.strictEqual(await gate.check(db,'fixture','sesion-u3-1','fixture',true),false);
+  assert.strictEqual(background.inert,true);
   await assert.rejects(gate.saveDraft(db,'fixture','sesion-u3-1','fixture',{answers:{q1:'B'}}));
   assert.strictEqual(attempt.answers.q1,'A');
   gate.markLoaded('sesion-u3-1','fixture');
+  assert.strictEqual(background.inert,false);
   const draft = {answers:{q1:'B'},submitted:false,completada:false};
   const pending = gate.saveDraft(db,'fixture','sesion-u3-1','fixture',draft);
   draft.answers.q1='C'; await pending;
@@ -160,6 +163,18 @@ async function verifyDeliveryStore() {
   route('sesion-u3-10',{curso:'2B-HC'},{location});
   assert.strictEqual(target,'/estudiantes/guia-u3-s10-cronica-carta.html');
   target=null;route('sesion-u3-10',{curso:'3A-TP'},{location});assert.strictEqual(target,null);
+  for (const file of ['guia-u3-s1-lirica-tono.html','guia-u3-s2-teatro.html','guia-u3-s3-reportaje.html','guia-u3-s6-lirica-figuras.html','guia-u3-s10-cronica-carta.html','guia-u3-s11-evidencia-dos-textos.html']) {
+    const page=fs.readFileSync(path.join(root,'estudiantes',file),'utf8');
+    const begin=page.indexOf('function localBackup(){');assert(begin>=0);
+    let end=page.indexOf('{',begin)+1,depth=1;
+    while(depth&&end<page.length){if(page[end]==='{')depth++;else if(page[end]==='}')depth--;end++;}
+    const run=new Function('IS_LOCAL','window','SESSION_ID','currentUID','localStorage','localKey','payload',`return (${page.slice(begin,end)})();`);
+    let writes=0;
+    run(false,{SimceSessionGate:{isLoaded:()=>false}},'fixture','fixture',{setItem(){writes++;}},()=> 'fixture',()=>{throw Error('No se debe fabricar un respaldo antes de restaurar');});
+    assert.strictEqual(writes,0);
+    run(false,{SimceSessionGate:{isLoaded:()=>true}},'fixture','fixture',{setItem(){writes++;}},()=> 'fixture',()=>({answers:{q1:'A'}}));
+    assert.strictEqual(writes,1);
+  }
   console.log('Guardado SIMCE probado: carga fallida protegida, entrega atómica, reintento, confirmación, borrador tardío y nota desactualizada.');
 }
 verifyDeliveryStore().catch(error=>{console.error(error);process.exitCode=1;});

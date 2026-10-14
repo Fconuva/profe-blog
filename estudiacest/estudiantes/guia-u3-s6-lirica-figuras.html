@@ -713,7 +713,7 @@
       last_save:Date.now()};
   }
   function localKey(){return currentUID?('draft_'+SESSION_ID+'_'+currentUID):null;}
-  function localBackup(){
+  function localBackup(){if(!IS_LOCAL&&!window.SimceSessionGate.isLoaded(SESSION_ID,currentUID))return;
     const k=localKey();if(!k)return;
     try{localStorage.setItem(k,JSON.stringify(payload(false)));}catch(e){}
   }
@@ -735,7 +735,7 @@
       scheduleResync();
     }
   }
-  function scheduleSave(){localBackup();setStatus('Guardando…');clearTimeout(saveTimer);saveTimer=setTimeout(()=>saveDraft(false),1500);}
+  function scheduleSave(){if(!IS_LOCAL&&!window.SimceSessionGate.isLoaded(SESSION_ID,currentUID))return;localBackup();setStatus('Guardando…');clearTimeout(saveTimer);saveTimer=setTimeout(()=>saveDraft(false),1500);}
 
   let resyncTimer=null;
   function scheduleResync(){

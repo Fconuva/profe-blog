@@ -1,6 +1,6 @@
 # Bitácora de Estudia CEST
 
-- 2026-10-14, corrección menor PAES: tarjetas publicadas reordenadas al abrir el panel, N.º 23 → 22 → 21 → … → 1, ensayos históricos 2 → 1 y biblioteca al final; se retira la llamada residual al estado de cartas que ya no carga la portada. Mismos contenidos, enlaces y registros; validación y publicación pendientes de cierre.
+- 2026-10-14, corrección menor PAES: tarjetas publicadas reordenadas al abrir el panel, N.º 23 → 22 → 21 → … → 1, ensayos históricos 2 → 1 y biblioteca al final; se retira la llamada residual al estado de cartas que ya no carga la portada. Mismos contenidos, enlaces y registros (26 tarjetas comparadas); auditorías y build aprobados, 813 recursos. Publicado 63cd0c8089770c7db1b31e6b228344ee4b8d364f en dpl_CheZ6nhDmkDeDRXUNzKvGpSqbg73 READY mediante deploy seguro, proceso código 0, alias/proyecto/SHA exactos. HTML público idéntico por SHA-256; navegador sobre producción con perfil ficticio y servicios de datos aislados confirma orden completo, 390/1440/3840 sin desbordes ni errores JS; sin escrituras en estudiantes.
 
 ## 2026-10-14, PAES: miniensayo 23 y retiro de la tarjeta de cartas
 

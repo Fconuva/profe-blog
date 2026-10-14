@@ -36,7 +36,8 @@ async function manejar(req,res,db,auth){
    return {...(current||{}),sessionId:sid,classNumber:Number(sid.match(/-(\d+)$/)?.[1]||session.panel_orden||0),title:current?.title||session.titulo||sid,
     ...(sid!==b.sessionId?{personalRoute:true,evidenceSession:b.sessionId}:{}),grade:b.grade,
     ...(!current?{status:'manual_grade',statusLabel:'Calificación asignada por el docente; no confirma una entrega.'}:{}),
-    manualGradeAt:now,teacherGradeOverride:override,
+    manualGradeAt:now,publishedAt:new Date(now).toISOString(),teacherGradeOverride:override,
+    ...(response?.submitted===true&&response?.completada===true?{needsReview:false,...(current?.status==='revision_pending'?{status:'submitted',statusLabel:'Nota revisada por el docente.'}:{})}:{}),
     manualGradeHistory:{...(current?.manualGradeHistory||{}),[b.requestId]:{...override,previous:current?{grade:current.grade??null,status:current.status||'',publishedAt:current.publishedAt||'',needsReview:current.needsReview===true}:null}}};
   },undefined,false);
   const record=(await ref.once('value')).val();

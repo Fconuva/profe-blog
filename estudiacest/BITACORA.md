@@ -1,5 +1,14 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-14, SIMCE U3: entregas, guardado y laboriosidad hasta la Clase 12
+
+- Francisco solicita sanear 2A-HC y 2B-HC y confirma que las clases 8 y 9 continúan sin nota. Se revisa el padrón completo: 84 estudiantes reales, tres cuentas técnicas excluidas; una incorporación posterior conserva la exención de clases anteriores, pero se incluyen sus actividades 11 y 12.
+- Se reparan 13 pares históricos de marcas y una confirmación recuperable mediante telemetría. Se corrigen 45 estados publicados antiguos sin alterar puntajes ni respuestas; relectura con cero casos recuperables pendientes. Las incidencias sin evidencia concluyente no se convierten automáticamente en entregas.
+- Exportador y publicador cubren diez actividades hasta la Clase 12: escritura real y mínimos por palabra de la 11; 24 alternativas y solo el cierre vigente de la 12. Publicación determinista de 832 registros con respaldo privado y relectura; se conservan notas superiores y todas las notas fuera del alcance. Las rutas personales sin entrega permanecen pendientes. Una corrección individual expresamente autorizada se conserva en el libro protegido al administrador, sin fabricar respuestas ni puntajes.
+- Se identifican fallas técnicas: las guías 1, 2, 3 y 6 escribían respuesta y resultado por separado y no confirmaban ambas marcas; el panel silenciosamente trataba lecturas fallidas como ausencia de respuesta. Se incorpora guardado compartido: cola, transacción de borrador que respeta entregas previas, entrega atómica, relectura, confirmación accesible y reintento. Se impide escribir antes de restaurar el intento en las guías afectadas y la 10. Los errores de consulta se muestran como desconocidos, nunca como «sin entrega». Una entrega posterior a su publicación queda en revisión y su nota antigua no penaliza el promedio. Se protege la atestación docente al abrir la ruta genérica.
+- Las cuatro guías históricas entran al contrato automático; ahora cubre 60 clases. Auditorías prueban carga fallida, fallo de escritura, reintento, atomicidad, borrador tardío, envío repetido, publicación antigua y preservación de la nota mayor. Build integral aprobado con 803 recursos críticos. Verificación pública y cierre se registran tras publicar.
+- Evidencias con datos académicos solo en expediente privado temporal y outputs locales, fuera de Git. Sin cambios en Lirmi ni en el primer semestre.
+
 ## 2026-10-13, lista de pendientes del segundo semestre TP
 
 - Francisco dispone que no se toque nada del primer semestre. Queda excluido del saneamiento: los ajustes históricos no se ejecutarán. Pide identificar pendientes de Capital Semilla, Economista, interrogaciones, video del blog NM3 e informes NM4.

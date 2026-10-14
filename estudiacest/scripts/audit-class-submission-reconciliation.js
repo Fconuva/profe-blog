@@ -51,7 +51,7 @@ function run() {
   const plan = buildPlan(fixture, 3000);
   assert.strictEqual(plan.counts.students, 87);
   assert.strictEqual(plan.counts.sessions, SESSION_IDS.length);
-  assert.strictEqual(plan.counts.pairs, 1044);
+  assert.strictEqual(plan.counts.pairs, 87 * SESSION_IDS.length);
   assert.strictEqual(plan.counts.legacyResponsesRepaired, 1);
   assert.strictEqual(plan.counts.telemetryConfirmationsRepaired, 1);
   assert.strictEqual(plan.counts.staleGradesRepaired, 3);

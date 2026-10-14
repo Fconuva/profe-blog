@@ -280,8 +280,8 @@
 
 <div class="actionbar">
   <div class="inner">
-    <span class="save-status" id="saveStatus">Conectando…</span>
-    <button class="btn primary" id="submitBtn">Entregar clase</button>
+    <span class="save-status" id="saveStatus" role="status" aria-live="polite">Conectando…</span>
+    <button class="btn primary" id="submit" type="button">Entregar clase</button>
   </div>
 </div>
 
@@ -676,7 +676,7 @@
     localBackup();
     if(IS_LOCAL||!currentUID||isSubmitted)return;
     try{
-      await db.ref(BASE+'/respuestas/'+SESSION_ID+'/'+currentUID).update(payload(false));
+      await window.SimceSessionGate.saveDraft(db,BASE,SESSION_ID,currentUID,payload(false));
       setStatus('✓ Avance guardado.');
     }catch(e){
       console.error(e);
@@ -694,7 +694,7 @@
     resyncTimer=setTimeout(async()=>{
       if(IS_LOCAL||!currentUID||isSubmitted)return;
       try{
-        await db.ref(BASE+'/respuestas/'+SESSION_ID+'/'+currentUID).update(payload(false));
+        await window.SimceSessionGate.saveDraft(db,BASE,SESSION_ID,currentUID,payload(false));
         setStatus('✓ Avance guardado (recuperado tras la caída de conexión).');
       }catch(e){console.error(e);scheduleResync();}
     },8000);
@@ -709,22 +709,20 @@
       ? '¿Entregar la clase con '+respondidas+' de '+QUESTIONS.length+' preguntas respondidas? Tu resultado quedará registrado.'
       : '¿Entregar la clase? Tu resultado quedará registrado.';
     if(!confirm(msg))return;
-    document.getElementById('submitBtn').disabled=true;
+    document.getElementById('submit').disabled=true;
     revealAllCorrections();
     const g=grade();const now=Date.now();const s=statsByHab();
     const detalle={};QUESTIONS.forEach(q=>{detalle[q.id]={respuesta:answers[q.id]||null,correcta:q.correcta,esCorrecta:answers[q.id]===q.correcta,habilidad:HABNAME[q.hab].toUpperCase()};});
     try{
       const data=payload(true);data.submitted_at=now;
-      await Promise.all([
-        db.ref(BASE+'/respuestas/'+SESSION_ID+'/'+currentUID).update(data),
-        db.ref(BASE+'/resultados/'+SESSION_ID+'/'+currentUID).set({
+      clearTimeout(saveTimer);
+      await window.SimceSessionGate.submit(db,BASE,SESSION_ID,currentUID,data,{
           puntaje:g.ok,total:QUESTIONS.length,porcentaje:g.pct,nota:g.nota,detalle:detalle,
           por_habilidad:{L:s.L,I:s.I,R:s.R},
           desarrollo:(document.getElementById('desarrollo').value||'').trim(),
           desarrollo2:(document.getElementById('desarrollo2').value||'').trim(),
           nombre:studentData?(studentData.nombre||''):'',curso:studentData?(studentData.curso||''):'',
-          submitted_at:now,timestamp:now})
-      ]);
+          submitted_at:now,timestamp:now});
       if(studentData&&studentData.curso){
         try{await db.ref(BASE+'/ranking/'+SESSION_ID+'/'+studentData.curso+'/'+currentUID).set({nombre:studentData.nombre,puntaje:g.ok,porcentaje:g.pct});}catch(e){}
       }
@@ -736,7 +734,7 @@
       console.error(e);
       localBackup();
       showToast('No se pudo entregar (sin conexión o error de red). Tu avance quedó guardado en este dispositivo: vuelve a intentar "Entregar" cuando tengas internet.');
-      document.getElementById('submitBtn').disabled=false;
+      document.getElementById('submit').disabled=false;
     }
   }
 
@@ -748,14 +746,14 @@
     if(typeof saved.desarrollo==='string')document.getElementById('desarrollo').value=saved.desarrollo;
     if(typeof saved.desarrollo2==='string')document.getElementById('desarrollo2').value=saved.desarrollo2;
     if(saved.completada){isSubmitted=true;document.getElementById('doneBanner').style.display='block';
-      document.getElementById('submitBtn').disabled=true;
+      document.getElementById('submit').disabled=true;
       document.querySelectorAll('.opt').forEach(b=>b.disabled=true);
       setStatus('✅ Clase ya entregada.');}
   }
 
   renderWarmup();
   render();
-  document.getElementById('submitBtn').addEventListener('click',submitGuide);
+  document.getElementById('submit').addEventListener('click',submitGuide);
   document.getElementById('desarrollo').addEventListener('input',scheduleSave);
   document.getElementById('desarrollo2').addEventListener('input',scheduleSave);
   document.getElementById('btnModelo2').addEventListener('click',()=>{
@@ -773,7 +771,7 @@
     auth.onAuthStateChanged(async user=>{
       if(!user){window.location.href=SHARED_LOGIN_URL;return;}
       currentUID=user.uid;
-      if(window.SimceSessionGate&&await window.SimceSessionGate.check(db,BASE,SESSION_ID,user.uid))return;
+      if(window.SimceSessionGate&&await window.SimceSessionGate.check(db,BASE,SESSION_ID,user.uid,true))return;
       try{
         const [stuSnap,savedSnap]=await Promise.all([
           db.ref(BASE+'/estudiantes/'+user.uid).once('value'),
@@ -785,10 +783,10 @@
         let local=null;
         try{const raw=localStorage.getItem(localKey());if(raw)local=JSON.parse(raw);}catch(e){}
         const useLocal=local && local.completada!==true && local.submitted!==true && !(remote&&remote.completada) && (!remote || (local.last_save||0)>(remote.last_save||0));
-        hydrate(useLocal?local:remote);
+        hydrate(useLocal?local:remote);window.SimceSessionGate.markLoaded(SESSION_ID,user.uid);
         if(useLocal){showToast('Recuperamos tu avance guardado en este dispositivo.');scheduleSave();}
         if(!isSubmitted)setStatus('Tus respuestas se guardan solas. Puedes cambiarlas cuando quieras. 💡');
-      }catch(e){console.error(e);showToast('No se pudo cargar la clase.');}
+      }catch(e){console.error(e);window.SimceSessionGate.failLoad();showToast('No se pudo cargar la clase.');}
     });
   }else{setStatus('Vista previa local.');}
 </script>

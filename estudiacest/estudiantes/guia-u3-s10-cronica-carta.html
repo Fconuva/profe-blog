@@ -513,7 +513,7 @@
       saveQueue=saveQueue.then(async()=>{
         if(IS_LOCAL||!currentUID||isSubmitted)return;
         try{
-          await db.ref(BASE+'/respuestas/'+SESSION_ID+'/'+currentUID).update(payload(false));
+          await window.SimceSessionGate.saveDraft(db,BASE,SESSION_ID,currentUID,payload(false));
           setStatus('✓ Avance guardado.');
         }catch(e){
           console.error(e);
@@ -532,7 +532,7 @@
       if(IS_LOCAL||!currentUID||isSubmitted)return;
       saveQueue=saveQueue.then(async()=>{
         try{
-          await db.ref(BASE+'/respuestas/'+SESSION_ID+'/'+currentUID).update(payload(false));
+          await window.SimceSessionGate.saveDraft(db,BASE,SESSION_ID,currentUID,payload(false));
           setStatus('✓ Avance guardado (recuperado tras la caída de conexión).');
         }catch(e){console.error(e);scheduleResync();}
       });
@@ -633,7 +633,7 @@
     auth.onAuthStateChanged(async user=>{
       if(!user){window.location.href=SHARED_LOGIN_URL;return;}
       currentUID=user.uid;
-      if(window.SimceSessionGate&&await window.SimceSessionGate.check(db,BASE,SESSION_ID,user.uid))return;
+      if(window.SimceSessionGate&&await window.SimceSessionGate.check(db,BASE,SESSION_ID,user.uid,true))return;
       try{
         const [stuSnap,savedSnap,sessionSnap]=await Promise.all([
           db.ref(BASE+'/estudiantes/'+user.uid).once('value'),
@@ -647,11 +647,11 @@
         let local=null;
         try{const raw=localStorage.getItem(localKey());if(raw)local=JSON.parse(raw);}catch(e){}
         const useLocal=local && local.completada!==true && local.submitted!==true && !(remote&&remote.completada) && (!remote || (local.last_save||0)>(remote.last_save||0));
-        hydrate(useLocal?local:remote);
+        hydrate(useLocal?local:remote);window.SimceSessionGate.markLoaded(SESSION_ID,user.uid);
         if(!startedAt){startedAt=Date.now();scheduleSave();}
         if(useLocal){showToast('Recuperamos tu avance guardado en este dispositivo.');scheduleSave();}
         if(!isSubmitted)setStatus('Tus respuestas se guardan solas. Puedes cambiarlas cuando quieras. 💡');
-      }catch(e){console.error(e);showToast('No se pudo cargar la clase.');}
+      }catch(e){console.error(e);window.SimceSessionGate.failLoad();showToast('No se pudo cargar la clase.');}
     });
   }else{setStatus('Vista previa local.');}
 </script>

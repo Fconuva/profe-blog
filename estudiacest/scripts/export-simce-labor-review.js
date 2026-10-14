@@ -1,12 +1,12 @@
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const { classifySubmissionStatus } = require('./class-submission-status');
 const { readPlatform } = require('./firebase-maintenance-db');
 const { GUIDED_SESSIONS } = require('../api/_simce-personal-guided-catalog');
 
-// Clases 1 a 8 y 10 de la Unidad 3. La Clase 9 es informativa (`requiere_entrega: false`)
-// y no lleva nota. El modelo del 26-ago cubría 1 a 6; el del 30-sep agrega 7, 8 y 10.
-const SESSION_IDS = [1, 2, 3, 4, 5, 6, 7, 8, 10].map(number => `sesion-u3-${number}`);
+// Unidad 3 hasta la Clase 12. La Clase 9 es informativa y la 8 no se aplicó.
+const SESSION_IDS = [1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12].map(number => `sesion-u3-${number}`);
 const COURSES = new Set(['2A-HC', '2B-HC']);
 // Quien se incorpora después del cierre de la regularización (23-sep) no cursó la unidad.
 const UNIT_ENROLLMENT_CUTOFF = Date.parse('2026-09-24T00:00:00-03:00');
@@ -27,14 +27,20 @@ const CONFIG = {
   // Ensayo parcial: las dos preguntas metacognitivas no alteran el puntaje, pero sí la laboriosidad.
   'sesion-u3-8': { alternatives: 36, concepts: 0, writing: [['metaResponses.m1', 15], ['metaResponses.m2', 15]] },
   // Desarrollo sobre la opinión del autor y noticia propia con titular, lead, cuerpo y cierre.
-  'sesion-u3-10': { alternatives: 14, concepts: 0, writing: [['desarrollo', 60], ['noticia', 300]] }
+  'sesion-u3-10': { alternatives: 14, concepts: 0, writing: [['desarrollo', 60], ['noticia', 300]] },
+  // La Clase 11 guarda productos escritos en answers, no alternativas.
+  'sesion-u3-11': { alternatives: 0, concepts: 0, writingUnit: 'words', writing: [['answers.news-title', 5], ['answers.news-lead', 25], ['answers.news-body', 115], ['answers.drama-title', 3], ['answers.drama-body', 100], ['answers.close-preserved', 10], ['answers.close-transformed', 10], ['answers.close-improve', 8]] },
+  // La versión vigente retiró el taller y conserva solo el cierre m1.
+  'sesion-u3-12': { alternatives: 24, concepts: 0, writing: [['metaResponses.m1', 25]] }
 };
 
 // Estas sesiones no tienen `titulo` en Firebase; el panel usa su respaldo estático.
 const TITLE_FALLBACKS = {
   'sesion-u3-6': 'Unidad 3 · Clase 6 — Poesía II: el lenguaje figurado',
   'sesion-u3-8': 'Unidad 3 · Clase 8 — Ensayo parcial SIMCE',
-  'sesion-u3-10': 'Unidad 3 · Clase 10 — Crónica y carta'
+  'sesion-u3-10': 'Unidad 3 · Clase 10 — Crónica y carta',
+  'sesion-u3-11': 'Unidad 3 · Clase 11 — Transformar dos textos',
+  'sesion-u3-12': 'Unidad 3 · Clase 12 — La entrevista'
 };
 
 const SUBSTANTIVE_FIELDS = {
@@ -43,8 +49,19 @@ const SUBSTANTIVE_FIELDS = {
   'sesion-u3-5': ['openResponses.q10', 'openResponses.q24'],
   'sesion-u3-7': ['openResponses.o1', 'openResponses.o2'],
   'sesion-u3-8': [],
-  'sesion-u3-10': ['desarrollo', 'noticia']
+  'sesion-u3-10': ['desarrollo', 'noticia'],
+  'sesion-u3-11': ['answers.news-body', 'answers.drama-body'],
+  'sesion-u3-12': []
 };
+
+function evidenceFingerprint(rows, platform) {
+  const ordered = value => Array.isArray(value) ? value.map(ordered) : value && typeof value === 'object' ? Object.fromEntries(Object.keys(value).sort().map(key => [key, ordered(value[key])])) : value;
+  const evidence = rows.map(row => {
+    const sessions = [...new Set([row.sessionId, row.evidenceSession].filter(Boolean))].sort();
+    return { uid:row.uid, sessionId:row.sessionId, student:platform.estudiantes[row.uid], teacherGradeOverride:platform.calificaciones_clase?.[row.uid]?.[row.sessionId]?.teacherGradeOverride || null, attempts:sessions.map(id => ({id,response:platform.respuestas?.[id]?.[row.uid] || null,result:platform.resultados?.[id]?.[row.uid] || null})) };
+  });
+  return crypto.createHash('sha256').update(JSON.stringify(ordered(evidence))).digest('hex');
+}
 
 function readSource(snapshotPath) {
   if (snapshotPath) return Promise.resolve(JSON.parse(fs.readFileSync(path.resolve(snapshotPath), 'utf8')));
@@ -213,7 +230,8 @@ function rowFor(student, uid, sessionId, session, response, result, configOverri
   const conceptsDone = Math.min(config.concepts, countConcepts(sessionId, response));
   const writings = config.writing.map(([field, minimum]) => {
     const text = textValue(response, result, field);
-    return { field, minimum, length: text.length, score: writingScore(text, minimum) };
+    const length = config.writingUnit === 'words' ? text.split(/\s+/).filter(Boolean).length : text.length;
+    return { field, minimum, length, score: !length ? 0 : length >= minimum ? 1 : 0.5 };
   });
   const writingDone = writings.reduce((sum, item) => sum + item.score, 0);
   const totalUnits = config.alternatives + config.concepts + config.writing.length;
@@ -338,11 +356,12 @@ async function main() {
   const rows = [];
   const excluded = [];
   const notEvaluated = [];
+  const enrollmentExemptions = [];
   Object.entries(students).forEach(([uid, student]) => {
     const course = String(student.curso || '').toUpperCase();
     if (!COURSES.has(course)) return;
     const reason = exclusionFor(uid, student);
-    if (reason) {
+    if (reason === 'Cuenta técnica de prueba') {
       excluded.push({ uid, course, name: student.nombre || '', reason });
       return;
     }
@@ -350,6 +369,10 @@ async function main() {
     SESSION_IDS.forEach(sessionId => {
       if ((NOT_EVALUATED[sessionId] || []).includes(course)) {
         notEvaluated.push({ uid, course, sessionId });
+        return;
+      }
+      if (reason && Number(sessionId.split('-').pop()) <= 10) {
+        enrollmentExemptions.push({ uid, course, sessionId, reason, createdAt: Number(student.createdAt) });
         return;
       }
       const personalSessionId = personalRoute[Number(sessionId.split('-').pop())];
@@ -372,6 +395,18 @@ async function main() {
   });
   rows.sort((left, right) => left.course.localeCompare(right.course, 'es') || left.name.localeCompare(right.name, 'es') || left.sessionId.localeCompare(right.sessionId));
   const matches = findWritingMatches(rows);
+  rows.forEach(row => {
+    // Esta decisión vive en el libro protegido al administrador, nunca en una
+    // respuesta que pueda escribir el estudiante.
+    const override = platform.calificaciones_clase?.[row.uid]?.[row.sessionId]?.teacherGradeOverride;
+    if (override && Number(override.grade) >= 1 && Number(override.grade) <= 7 && override.source && Number(override.recordedAt) > 0 && override.reason) {
+      row.proposedGrade = Number(override.grade);
+      row.teacherGradeOverride = override;
+      row.penalizedDuplicateGroups = [];
+      row.flags = row.flags.filter(flag => !/Escritura requerida|Ajuste aplicado/.test(flag));
+      row.flags.push('Calificación docente documentada ante incidencia técnica');
+    }
+  });
   const sessionState = SESSION_IDS.map(sessionId => ({
     sessionId,
     title: sessions[sessionId]?.titulo || sessionId,
@@ -382,17 +417,19 @@ async function main() {
   }));
   const payload = {
     generatedAt: new Date().toISOString(),
+    evidenceFingerprint: evidenceFingerprint(rows, platform),
     methodology: {
       grades: { none: 1, halfOrLess: 3, moreThanHalf: 5, almostAll: 7, almostAllThreshold: 0.85 },
       writingAdjustment: 'La escritura ausente o incompleta baja una banda cuando corresponde.',
       timing: 'No se aplica rebaja por velocidad: las clases 1 a 6 no guardaron hora inicial confiable y el criterio no se amplió a 7, 8 y 10.',
       matches: 'Toda coincidencia textual superior al 90 % deja la nota de ambos estudiantes con máximo 5,0.',
-      scope: 'Clases 1 a 8 y 10; la Clase 9 es informativa y no lleva nota. La Clase 8 no se aplicó en 2A-HC ni en 2B-HC y queda sin evaluar.'
+      scope: 'Clases 1 a 12; la Clase 9 es informativa y no lleva nota. La Clase 8 no se aplicó en 2A-HC ni en 2B-HC y queda sin evaluar.'
     },
     sessionState,
     rows,
     matches,
     excluded,
+    enrollmentExemptions,
     notEvaluated
   };
   fs.mkdirSync(path.dirname(output), { recursive: true });
@@ -401,7 +438,9 @@ async function main() {
   console.log(JSON.stringify({ output, students: new Set(rows.map(row => row.uid)).size, rows: rows.length, matches: matches.length, excludedByReason }, null, 2));
 }
 
-main().catch(error => {
+if (require.main === module) main().catch(error => {
   console.error('[export-simce-labor-review]', error);
   process.exitCode = 1;
 });
+
+module.exports = { CONFIG, SESSION_IDS, rowFor, exclusionFor, personalRouteFor, personalRouteRow, evidenceFingerprint };

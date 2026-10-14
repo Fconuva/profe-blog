@@ -5,7 +5,7 @@ const { closeFirebase, readPlatform } = require('./firebase-maintenance-db');
 
 const COURSES = new Set(['2A-HC', '2B-HC']);
 const SESSION_IDS = [
-  ...Array.from({ length: 11 }, (_, index) => `sesion-u3-${index + 1}`),
+  ...Array.from({ length: 12 }, (_, index) => `sesion-u3-${index + 1}`),
   'ensayo-simce-n3-nm2-2026'
 ];
 

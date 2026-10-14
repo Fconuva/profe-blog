@@ -1,5 +1,7 @@
 # Bitácora de Estudia CEST
 
+- 2026-10-14, corrección menor PAES: tarjetas publicadas reordenadas al abrir el panel, N.º 23 → 22 → 21 → … → 1, ensayos históricos 2 → 1 y biblioteca al final; se retira la llamada residual al estado de cartas que ya no carga la portada. Mismos contenidos, enlaces y registros; validación y publicación pendientes de cierre.
+
 ## 2026-10-14, PAES: miniensayo 23 y retiro de la tarjeta de cartas
 
 - Francisco solicita publicar el N.º 23, confirmar el foco planificado y borrar la tarjeta «Crónicas del Umbral». El plan histórico indica «Evidencia y consistencia: evaluar fuentes y afirmaciones». Se identifica con ese número el miniensayo de octubre ya construido y publicado para 3A/3B HC el jueves 15: tres textos y 18 preguntas, 70 minutos; recorrido acompañado separado y sin temporizador. La aplicación usa relato, reportaje ficticio y opinión; la propuesta histórica contemplaba divulgación, reportaje y opinión. No se presenta esa diferencia como equivalencia exacta.

@@ -116,7 +116,11 @@ function buildPublication(source, publishedAt, expectedStudents, currentRoot = {
     if (!EXPECTED_SESSIONS.includes(row.sessionId)) throw new Error(`Sesión fuera del alcance: ${row.sessionId}.`);
     // Solo la ruta personal adaptada puede quedar pendiente (sin nota) mientras sigue abierta.
     const pendingPersonal = row.personalRoute === true && row.status === 'Pendiente ruta personal' && row.proposedGrade === null;
-    if (!pendingPersonal && !ALLOWED_GRADES.has(Number(row.proposedGrade))) throw new Error(`Nota no permitida en ${row.sessionId}.`);
+    const previous = currentRoot[row.uid] && currentRoot[row.uid][row.sessionId];
+    const manualOverride = previous?.teacherGradeOverride || row.teacherGradeOverride;
+    const manualGrade = Number(manualOverride?.grade);
+    const validManual = manualOverride?.source === 'admin-manual' && Number(manualOverride.recordedAt) > 0 && manualOverride.reason && manualGrade >= 1 && manualGrade <= 7 && Math.abs(manualGrade * 10 - Math.round(manualGrade * 10)) < 1e-8;
+    if (!pendingPersonal && !ALLOWED_GRADES.has(Number(row.proposedGrade)) && !(validManual && Number(row.proposedGrade) === manualGrade)) throw new Error(`Nota no permitida en ${row.sessionId}.`);
     const pair = `${row.uid}/${row.sessionId}`;
     if (exemptionPairs.has(pair)) throw new Error('Una sesión exenta trae una nota.');
     if (pairs.has(pair)) throw new Error(`Registro duplicado: ${pair}.`);
@@ -125,11 +129,10 @@ function buildPublication(source, publishedAt, expectedStudents, currentRoot = {
     sessions.add(row.sessionId);
 
     const status = publicStatus(row);
-    const previous = currentRoot[row.uid] && currentRoot[row.uid][row.sessionId];
     const previousGrade = previous && previous.grade !== undefined ? Number(previous.grade) : null;
-    const grade = pendingPersonal ? null : Math.max(Number(row.proposedGrade), Number.isFinite(previousGrade) && previousGrade >= 1 && previousGrade <= 7 ? previousGrade : 1);
+    const grade = validManual ? manualGrade : pendingPersonal ? null : Math.max(Number(row.proposedGrade), Number.isFinite(previousGrade) && previousGrade >= 1 && previousGrade <= 7 ? previousGrade : 1);
     const adjustedForSimilarity = status.code === 'similarity_adjusted';
-    if (adjustedForSimilarity && grade !== null && grade > 5 && grade !== previousGrade) throw new Error(`Una coincidencia ajustada conserva nota ${grade}.`);
+    if (!validManual && adjustedForSimilarity && grade !== null && grade > 5 && grade !== previousGrade) throw new Error(`Una coincidencia ajustada conserva nota ${grade}.`);
 
     records[pair] = {
       sessionId: row.sessionId,
@@ -143,7 +146,8 @@ function buildPublication(source, publishedAt, expectedStudents, currentRoot = {
       submitted: row.status === 'Entregada',
       adjustedForSimilarity,
       ...(row.personalRoute ? { personalRoute: true, evidenceSession: String(row.evidenceSession || row.sessionId) } : {}),
-      ...(row.teacherGradeOverride ? { teacherGradeOverride: row.teacherGradeOverride } : {}),
+      ...(manualOverride ? { teacherGradeOverride: manualOverride } : {}),
+      ...(previous?.manualGradeHistory ? { manualGradeHistory: previous.manualGradeHistory, manualGradeAt: previous.manualGradeAt } : {}),
       modelVersion: MODEL_VERSION,
       publishedAt
     };

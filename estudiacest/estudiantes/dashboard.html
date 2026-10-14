@@ -1235,6 +1235,7 @@
                 revision_pending: { symbol:'↻', label:'En revisión', css:'draft' },
                 submission_inconsistent: { symbol:'!', label:'Por revisar', css:'adjusted' },
                 read_error: { symbol:'↻', label:'No se pudo comprobar', css:'draft' },
+                manual_grade: { symbol:'✎', label:'Nota docente', css:'draft' },
                 writing_incomplete: { symbol:'△', label:'Escritura incompleta', css:'incomplete' },
                 similarity_adjusted: { symbol:'!', label:'Nota ajustada', css:'adjusted' }
             };
@@ -1270,7 +1271,7 @@
                     sessionId: item.sessionId || sessionId
                 }, respuestas))
                 .filter(Boolean)
-                .sort((left, right) => Number(left.classNumber || 0) - Number(right.classNumber || 0));
+                .sort((left, right) => Number(left.sessionId.match(/-u(\d+)-/)?.[1]||0)-Number(right.sessionId.match(/-u(\d+)-/)?.[1]||0)||Number(left.classNumber || 0) - Number(right.classNumber || 0));
             if (!panel || !body || !entries.length) {
                 if (panel) panel.classList.remove('visible');
                 return;
@@ -1282,7 +1283,7 @@
             body.innerHTML = entries.map(item => {
                 const meta = laborStatusMeta(item.status);
                 return `<tr>
-                    <td>Clase ${Number(item.classNumber || 0)}</td>
+                    <td>${item.sessionId.match(/-u(\d+)-/) ? 'Unidad '+item.sessionId.match(/-u(\d+)-/)[1]+' · ' : ''}Clase ${Number(item.classNumber || 0)}</td>
                     <td><span class="labor-grade-value">${item.needsReview === true ? 'Pendiente de revisión' : item.grade === null || item.grade === undefined || item.grade === '' ? 'Pendiente' : formatSchoolGrade(item.grade)}</span></td>
                     <td><span class="labor-status ${meta.css}"><span class="labor-status-symbol">${meta.symbol}</span>${meta.label}</span></td>
                     <td class="labor-reason">${escapeDashboardHtml(item.statusLabel || '')}</td>

@@ -360,14 +360,14 @@
                 </select>
                 <select id="sessionUnitFilter" onchange="applySessionScopeFilters()">
                     <option value="">Todas las unidades</option>
-                    <option value="u4">Unidad 4</option>
+                    <option value="u1">Unidad 1</option>
+                    <option value="u2">Unidad 2</option>
                     <option value="u3">Unidad 3</option>
-                    <option value="u2">🚀 Unidad 2</option>
-                    <option value="u1">📚 Unidad 1</option>
+                    <option value="u4">Unidad 4</option>
                     <option value="__legacy">🗂 Sin unidad / legado</option>
                 </select>
                 <label style="display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:8px 12px;font-size:12px;color:#475569;white-space:nowrap">
-                    <input type="checkbox" id="sessionHideArchived" checked onchange="applySessionScopeFilters()">
+                    <input type="checkbox" id="sessionHideArchived" onchange="applySessionScopeFilters()">
                     Ocultar archivadas
                 </label>
                 <span id="sessionScopeSummary" style="margin-left:auto;font-size:12px;color:#64748b"></span>
@@ -382,6 +382,7 @@
         <div class="section" id="sec-results">
             <h2>Resultados</h2>
             <div class="search-bar">
+                <select id="resultUnit" aria-label="Unidad de resultados" onchange="populateResultsDropdown();loadResults()"><option value="">Todas las unidades</option><option value="u1">Unidad 1</option><option value="u2">Unidad 2</option><option value="u3">Unidad 3</option><option value="u4">Unidad 4</option><option value="__legacy">Sin unidad / legado</option></select>
                 <select id="resultSession" onchange="loadResults()">
                     <option value="">Selecciona sesión...</option>
                 </select>
@@ -439,7 +440,7 @@
         <div class="section" id="sec-planilla">
             <h2>📝 Planilla de Notas</h2>
             <div class="search-bar" style="margin-bottom:16px">
-                <select id="planillaCourse" onchange="renderPlanilla()">
+                <select id="planillaCourse" onchange="renderPlanilla()"><option value="__nm2hc" selected>2.º A y 2.º B HC</option>
                     <option value="">Todos los cursos</option>
                     <option value="1A-HC">1°A HC</option>
                     <option value="1B-HC">1°B HC</option>
@@ -452,7 +453,7 @@
                 </select>
                 <button class="btn btn-primary" onclick="exportPlanillaCSV()" style="white-space:nowrap">📥 Exportar CSV</button>
             </div>
-            <div class="stat-row" id="planillaStats"></div>
+            <p id="planillaLoadStatus" role="status" aria-live="polite">Cargando notas…</p><select id="planillaUnit" aria-label="Unidad de la planilla" onchange="renderPlanilla()"><option value="">Todas las unidades</option><option value="u1">Unidad 1</option><option value="u2">Unidad 2</option><option value="u3">Unidad 3</option><option value="u4">Unidad 4</option></select> <button class="btn btn-secondary" type="button" onclick="refreshGradebook()">Actualizar notas</button><div class="stat-row" id="planillaStats"></div>
             <div class="panel-table" style="overflow-x:auto">
                 <table id="planillaTable"><thead id="planillaHead"></thead><tbody id="planillaBody"></tbody></table>
             </div>
@@ -653,6 +654,9 @@ let students={};
 let sessions={};
 let allResults={};
 let allResponses={};
+let allGrades={};
+let gradebookLoaded=false;
+const manualGradeBusy=new Set();
 let currentAdminUid=null;
 let currentDocente=null; // {nombre,cursos:[...],superadmin:bool}
 let autoLoginAttempted=false;
@@ -934,6 +938,47 @@ function normalizeSessionUnit(unit){
     return raw;
 }
 
+function getSessionUnit(ses){
+    const explicit=normalizeSessionUnit(ses?.panel_unidad);
+    if(explicit)return explicit;
+    const byId=String(ses?.id||'').match(/(?:sesion|personal)-u([1-4])-/);
+    if(byId)return 'u'+byId[1];
+    if(/^sesion-[1-7]$/.test(ses?.id||'')||ses?.id==='prueba-ingreso'||ses?.id==='retro-idee-nm2')return 'u1';
+    return '';
+}
+function sessionClassOrder(s){const m=String(s.id||'').match(/^(?:sesion|personal)-u[1-4]-(\d+)(?:-|$)/);return m?Number(m[1]):Number(s.panel_orden??s.orden)||0;}
+function compareSessionEntries(a,b){
+    const rank=s=>getSessionUnitRank(getSessionUnit(s))||99;
+    return rank(a)-rank(b)||sessionClassOrder(a)-sessionClassOrder(b)||getSessionAppliedAt(a)-getSessionAppliedAt(b)||(a.titulo||a.id||'').localeCompare(b.titulo||b.id||'','es',{numeric:true});
+}
+function gradeSessionId(sid){const m=sid.match(/^personal-u3-(\d+)-/);return m?'sesion-u3-'+m[1]:sid;}
+function getPublishedGrade(uid,sid){return allGrades[uid]?.[gradeSessionId(sid)]||null;}
+function getGradeValue(uid,sid,result){const g=getPublishedGrade(uid,sid),value=Number(g?g.grade:result?.nota);return Number.isFinite(value)&&value>=1&&value<=7?value:null;}
+function gradeIsExcluded(sid,course){return sessions[sid]?.requiere_entrega===false||gradeSessionId(sid)==='sesion-u3-9'||gradeSessionId(sid)==='sesion-u3-8'&&['2A-HC','2B-HC'].includes(course);}
+function gradeEditor(uid,sid){
+    if(progFromCurso(students[uid]?.curso)!=='simce')return '';
+    if(gradeIsExcluded(sid,students[uid]?.curso))return '<span style="font-size:11px">Sin evaluación</span>';
+    const n=getGradeValue(uid,sid,allResults[sid]?.[uid]);
+    return `<button class="btn btn-sm btn-secondary" style="min-height:36px" data-edit-grade="${uid}" data-grade-session="${sid}" onclick="editSimceGrade('${sid}','${uid}')" ${manualGradeBusy.has(sid+'/'+uid)?'disabled':''}>${n?'Cambiar nota':'Asignar nota'}</button>`;
+}
+async function editSimceGrade(sid,uid){
+    const previous=getPublishedGrade(uid,sid),shown=getGradeValue(uid,sid,allResults[sid]?.[uid]);
+    const raw=prompt('Nota de 1,0 a 7,0',shown?String(shown).replace('.',','):'');if(raw===null)return;
+    const grade=Number(raw.trim().replace(',','.'));if(!raw.trim()||!Number.isFinite(grade)||grade<1||grade>7||Math.abs(grade*10-Math.round(grade*10))>1e-8){toast('Escribe una nota de 1,0 a 7,0, con un decimal como máximo.','err');return;}
+    const reason=prompt('Motivo del cambio (3 a 300 caracteres). La entrega y las respuestas se conservarán.');if(reason===null)return;
+    if(reason.trim().length<3||reason.trim().length>300){toast('Escribe un motivo de 3 a 300 caracteres.','err');return;}
+    if(manualGradeBusy.has(sid+'/'+uid))return;manualGradeBusy.add(sid+'/'+uid);loadResults();
+    try{
+        const token=await auth.currentUser.getIdToken();const requestId=crypto.randomUUID();
+        const r=await fetch('/api/estudiantes?action=simce-admin-grade',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({sessionId:sid,studentUid:uid,grade,reason:reason.trim(),requestId,expectedGrade:previous?.grade==null?null:Number(previous.grade),expectedVersion:String(previous?.manualGradeAt||previous?.publishedAt||'')})});
+        const data=await r.json();if(!r.ok)throw new Error(data.error||'No se pudo guardar.');
+        const saved=(await db.ref(BASE+'/calificaciones_clase/'+uid+'/'+data.sessionId).once('value')).val();
+        if(saved?.grade!==grade||saved?.manualGradeHistory?.[requestId]?.recordedBy!==currentAdminUid)throw new Error('No se pudo confirmar la nota. Actualiza y reintenta.');
+        (allGrades[uid]||={})[data.sessionId]=saved;toast('Nota guardada y verificada: '+grade.toFixed(1).replace('.',','),'ok');renderPlanilla();
+    }catch(e){toast(e.message,'err');try{allGrades[uid]=(await db.ref(BASE+'/calificaciones_clase/'+uid).once('value')).val()||{};}catch(_) {}}
+    finally{manualGradeBusy.delete(sid+'/'+uid);loadResults();}
+}
+
 function getSessionCreatedAt(ses){
     return Number(ses?.createdAt||ses?.created_at||ses?.timestamp||0)||0;
 }
@@ -971,7 +1016,7 @@ function formatSessionCreatedAt(ses){
 
 function getSessionSelectorLabel(ses){
     const parts=[];
-    const unit=normalizeSessionUnit(ses.panel_unidad);
+    const unit=getSessionUnit(ses);
     const courses=getSessionAssignedCourses(ses);
     if(unit) parts.push(getSessionUnitLabel(unit));
     const applicationDate=formatSessionCreatedAt(ses);
@@ -1000,11 +1045,11 @@ function populateSessionUnitFilter(){
     const current=selectEl.value;
     const units=[...new Set(Object.values(sessions)
         .filter(s=>isMiSesion(s))
-        .map(s=>normalizeSessionUnit(s.panel_unidad))
+        .map(s=>getSessionUnit(s))
         .filter(Boolean))]
-        .sort((a,b)=>getSessionUnitRank(b)-getSessionUnitRank(a));
+        .sort((a,b)=>getSessionUnitRank(a)-getSessionUnitRank(b));
     // Keep the four curricular units visible even before they have responses.
-    for(const unit of ['u4','u3','u2','u1']) if(!units.includes(unit)) units.push(unit);
+    for(const unit of ['u1','u2','u3','u4']) if(!units.includes(unit)) units.push(unit);
     selectEl.innerHTML='<option value="">Todas las unidades</option>'
         +units.map(unit=>`<option value="${unit}"${unit===current?' selected':''}>${getSessionUnitLabel(unit)}</option>`).join('')
         +'<option value="__legacy"'+(current==='__legacy'?' selected':'')+'>Sin unidad / legado</option>';
@@ -1035,22 +1080,12 @@ function getVisibleSessionEntries(){
     }
 
     if(unitFilter==='__legacy'){
-        items=items.filter(s=>!normalizeSessionUnit(s.panel_unidad));
+        items=items.filter(s=>!getSessionUnit(s));
     }else if(unitFilter){
-        items=items.filter(s=>normalizeSessionUnit(s.panel_unidad)===unitFilter);
+        items=items.filter(s=>getSessionUnit(s)===unitFilter);
     }
 
-    items.sort((a,b)=>{
-        const byApplied=getSessionAppliedAt(b)-getSessionAppliedAt(a);
-        if(byApplied!==0) return byApplied;
-        const byCreated=getSessionCreatedAt(b)-getSessionCreatedAt(a);
-        if(byCreated!==0) return byCreated;
-        const byUnit=getSessionUnitRank(b.panel_unidad)-getSessionUnitRank(a.panel_unidad);
-        if(byUnit!==0) return byUnit;
-        const byOrden=(Number(b.orden)||0)-(Number(a.orden)||0);
-        if(byOrden!==0) return byOrden;
-        return (a.titulo||a.id||'').localeCompare(b.titulo||b.id||'');
-    });
+    items.sort(compareSessionEntries);
 
     return items;
 }
@@ -1062,7 +1097,7 @@ function renderSessionScopeSummary(items){
     const total=allItems.length;
     const archivedCount=allItems.filter(s=>isSessionArchived(s)).length;
     const {courseFilter,unitFilter,hideArchived}=getSessionScopeState();
-    const summary=['Mostrando '+items.length+' de '+total+' sesiones','aplicación más reciente primero'];
+    const summary=['Mostrando '+items.length+' de '+total+' sesiones','por unidad y clase'];
     if(courseFilter==='__general') summary.push('Solo sin curso');
     else if(courseFilter) summary.push(cLabel(courseFilter));
     if(unitFilter==='__legacy') summary.push('Solo sin unidad');
@@ -1100,7 +1135,7 @@ function applyDocenteFilters(){
 
     // Planilla course filter
     const planillaFilter=document.getElementById('planillaCourse');
-    if(planillaFilter) updateCourseSelect(planillaFilter,cursosDisponibles,true);
+    if(planillaFilter){const previous=planillaFilter.value;updateCourseSelect(planillaFilter,cursosDisponibles,true);if(cursosDisponibles.some(c=>['2A-HC','2B-HC'].includes(c))){planillaFilter.insertAdjacentHTML('afterbegin','<option value="__nm2hc">2.º A y 2.º B HC</option>');if(previous==='__nm2hc')planillaFilter.value=previous;}}
 
     // Ranking course filter
     const rankingFilter=document.getElementById('rankingCourseFilter');
@@ -1144,15 +1179,17 @@ function updateCourseSelect(selectEl,cursos,includeAll){
 // estudiantes, que son livianos, y el panel ya se puede usar; lo pesado se
 // carga despues y vuelve a pintar lo que depende de ello.
 async function loadAllData(){
-    const [estS,sesS]=await Promise.all([
+    const [estS,sesS,gradeS]=await Promise.all([
         readOnceWithRetry(BASE+'/estudiantes'),
-        readOnceWithRetry(BASE+'/sesiones')
+        readOnceWithRetry(BASE+'/sesiones'),
+        readOnceWithRetry(BASE+'/calificaciones_clase')
     ]);
+    allGrades=gradeS.val()||{};gradebookLoaded=true;
     students=estS.val()||{};
     const remoteSessions=sesS.val()||{};
     sessions={...STATIC_SESSION_FALLBACKS};
     Object.entries(remoteSessions).forEach(([id,value])=>{
-        sessions[id]={...(STATIC_SESSION_FALLBACKS[id]||{}),...value};
+        sessions[id]={...(STATIC_SESSION_FALLBACKS[id]||{}),...value,id};
     });
     populateSessionUnitFilter();
     renderStudents();
@@ -1160,6 +1197,7 @@ async function loadAllData(){
     populateResultsDropdown();
     populateLiveDropdown();
 
+    if(document.getElementById('sec-planilla').classList.contains('active'))renderPlanilla();
     const [resS,respS]=await Promise.all([
         readOnceWithRetry(BASE+'/resultados'),
         readOnceWithRetry(BASE+'/respuestas')
@@ -1167,6 +1205,7 @@ async function loadAllData(){
     allResults=resS.val()||{};
     allResponses=respS.val()||{};
     renderOverview();
+    if(document.getElementById('sec-planilla').classList.contains('active'))renderPlanilla();
     renderStudents();
     populateLiveDropdown();
     if(document.getElementById('resultSession').value)loadResults();
@@ -2020,7 +2059,7 @@ function renderSessions(){
         const asignadosCount=getSessionAssignedTargets(s).length;
         const asigBadge=asignadosCount?`<span class="badge badge-purple">👤 ${asignadosCount} asignado(s)</span>`:'';
         const meta=[];
-        const unit=normalizeSessionUnit(s.panel_unidad);
+        const unit=getSessionUnit(s);
         if(unit) meta.push(getSessionUnitLabel(unit));
         if(assignedCourses.length) meta.push(assignedCourses.map(cLabel).join(', '));
         else meta.push('Sin curso / general');
@@ -3579,8 +3618,8 @@ async function loadWorkTelemetry(uid,sesId){
 function viewStudentResponses(uid, sesId){
     const est=students[uid];
     const ses=sessions[sesId];
-    const res=allResults[sesId]?.[uid];
     const resp=allResponses[sesId]?.[uid];
+    const res=/^sesion-u4-[1-5]$/.test(sesId)?resp?.result:allResults[sesId]?.[uid];
     if(!est||!ses)return;
 
     document.getElementById('respStudentName').textContent=est.nombre+' — '+(ses.titulo||sesId);
@@ -3940,17 +3979,10 @@ async function deleteSession(sesId){
 
 /* ============ RESULTS ============ */
 function populateResultsDropdown(){
-    const sel=document.getElementById('resultSession');
-    const current=sel.value;
-    // Clear except first option
-    while(sel.options.length>1) sel.remove(1);
-    getVisibleSessionEntries().forEach(s=>{
-        const opt=document.createElement('option');
-        opt.value=s.id;
-        opt.textContent=getSessionSelectorLabel(s);
-        if(s.id===current) opt.selected=true;
-        sel.appendChild(opt);
-    });
+    const sel=document.getElementById('resultSession'),current=sel.value,unit=document.getElementById('resultUnit').value;
+    const items=Object.entries(sessions).map(([id,s])=>({...s,id})).filter(s=>isMiSesion(s)&&(!unit||(unit==='__legacy'?!getSessionUnit(s):getSessionUnit(s)===unit))).sort(compareSessionEntries);
+    sel.innerHTML='<option value="">Selecciona sesión...</option>';
+    let group,label;for(const s of items){const next=getSessionUnitLabel(getSessionUnit(s));if(next!==label){label=next;group=document.createElement('optgroup');group.label=label;sel.appendChild(group);}const opt=document.createElement('option');opt.value=s.id;opt.textContent=getSessionSelectorLabel(s);opt.selected=s.id===current;group.appendChild(opt);}
 }
 
 function getLevel(pct){
@@ -3988,7 +4020,8 @@ function loadResults(){
     const isFormativeWriting=sessions[sesId]?.formativa===true||sessions[sesId]?.formato_panel==='evidencia-dos-textos';
     let items=[];
     const reopened=Object.fromEntries(Object.entries(responses).filter(([,r])=>r?.reopenedAt&&r.submitted!==true&&r.completada!==true).map(([uid])=>[uid,{}]));
-    for(const[uid,r]of Object.entries({...reopened,...results})){
+    const gradeRows=Object.fromEntries(Object.entries(allGrades).filter(([,g])=>g?.[gradeSessionId(sesId)]).map(([uid])=>[uid,{}]));
+    for(const[uid,r]of Object.entries({...gradeRows,...reopened,...results})){
         const est=students[uid];
         if(!est) continue;
         if(!isMiCurso(est.curso)) continue;
@@ -4001,17 +4034,17 @@ function loadResults(){
         if(copyAttempts>0) flags.push('copy_x'+copyAttempts);
         if(focusLogs>2) flags.push('foco_perdido_x'+focusLogs);
         if(esCopia) flags.unshift('🚫 COPIA');
-        items.push({uid,nombre:est.nombre,curso:est.curso,reopened:!!reopened[uid],puntaje:r.puntaje||r.score||0,total:r.total||0,porcentaje:r.porcentaje||0,timestamp:r.timestamp||0,tiempo:r.tiempo_transcurrido||0,tiempo_min:r.tiempo_min||0,flags,esCopia,nota:r.nota||0,notas_pct:r.notas_pct||0,combinado:r.puntaje_combinado||0});
+        items.push({uid,nombre:est.nombre,curso:est.curso,reopened:!!reopened[uid],puntaje:r.puntaje||r.score||0,total:r.total||0,porcentaje:r.porcentaje||0,timestamp:r.timestamp||0,tiempo:r.tiempo_transcurrido||0,tiempo_min:r.tiempo_min||0,flags,esCopia,nota:getGradeValue(uid,sesId,r)||0,delivery:classifyAdminSubmission(resp,r),notas_pct:r.notas_pct||0,combinado:r.puntaje_combinado||0});
     }
     items.sort((a,b)=>b.porcentaje-a.porcentaje);
 
     // Level distribution
     const levels={Insuficiente:0,Elemental:0,Adecuado:0,Destacado:0};
-    items.filter(i=>!i.reopened).forEach(i=>levels[getLevel(i.porcentaje)]++);
+    items.filter(i=>!i.reopened&&i.delivery.completed).forEach(i=>levels[getLevel(i.porcentaje)]++);
     document.getElementById('levelCards').innerHTML=isMiniU4
-      ? `<div class="level-card lv-adeq"><div class="lv-label">Miniensayo · 18 preguntas</div><div class="lv-val">${items.filter(i=>!i.reopened).length} entregas</div></div><div class="level-card lv-dest"><a href="/estudiantes/simce-unidad4/docente.html?ensayo=${sesId.slice(-1)}">Ver pauta, aciertos y puntaje simulado</a><p>Sin clasificación de nivel SIMCE oficial.</p></div>`
+      ? `<div class="level-card lv-adeq"><div class="lv-label">Miniensayo · 18 preguntas</div><div class="lv-val">${items.filter(i=>!i.reopened&&i.delivery.completed).length} entregas</div></div><div class="level-card lv-dest"><a href="/estudiantes/simce-unidad4/docente.html?ensayo=${sesId.slice(-1)}">Ver pauta, aciertos y puntaje simulado</a><p>Sin clasificación de nivel SIMCE oficial.</p></div>`
       : isFormativeWriting
-      ? `<div class="level-card lv-adeq"><div class="lv-label">Productos escritos entregados</div><div class="lv-val">${items.filter(i=>!i.reopened).length}</div></div><div class="level-card lv-dest"><div class="lv-label">Modalidad</div><div style="font-weight:800;margin-top:8px">Formativa · sin nota automática</div></div>`
+      ? `<div class="level-card lv-adeq"><div class="lv-label">Productos escritos entregados</div><div class="lv-val">${items.filter(i=>!i.reopened&&i.delivery.completed).length}</div></div><div class="level-card lv-dest"><div class="lv-label">Modalidad</div><div style="font-weight:800;margin-top:8px">Formativa · sin nota automática</div></div>`
       : `<div class="level-card lv-insuf"><div class="lv-label">Insuficiente (&lt;40%)</div><div class="lv-val">${levels.Insuficiente}</div></div>
         <div class="level-card lv-elem"><div class="lv-label">Elemental (40-59%)</div><div class="lv-val">${levels.Elemental}</div></div>
         <div class="level-card lv-adeq"><div class="lv-label">Adecuado (60-79%)</div><div class="lv-val">${levels.Adecuado}</div></div>
@@ -4033,10 +4066,10 @@ function loadResults(){
         return `<tr${rowBg}>
             <td><strong>${r.nombre}</strong>${flagHtml}</td>
             <td><span class="badge ${cBadge(r.curso)}">${cursoLabel}</span></td>
-            <td>${r.reopened?'—':isFormativeWriting?r.total+' '+(Number(r.total)===1?'producto':'productos'):r.puntaje+'/'+r.total}</td>
-            <td>${r.reopened?'<strong style="color:#b45309">Reabierta para corregir</strong>':isFormativeWriting?'<strong style="color:#16a34a">Entregada</strong>':`<strong style="color:${r.porcentaje>=60?'#16a34a':'#dc2626'}">${r.porcentaje}%</strong>${r.notas_pct>0?`<br><span style="font-size:10px;color:#64748b">Notas:${r.notas_pct}%</span>`:''}`}</td>
-            <td><strong style="color:${notaColor};font-size:18px">${isFormativeWriting?'—':(r.nota>0?r.nota.toFixed(1):'—')}</strong></td>
-            <td>${r.reopened?'<span class="badge badge-amber">Pendiente de entrega</span>':isMiniU4?'<span class="badge badge-blue">Práctica SIMCE</span>':isFormativeWriting?'<span class="badge badge-blue">Formativa</span>':getLevelBadge(r.porcentaje)}</td>
+            <td>${r.reopened||!r.delivery.completed?'—':isFormativeWriting?r.total+' '+(Number(r.total)===1?'producto':'productos'):r.puntaje+'/'+r.total}</td>
+            <td>${r.reopened?'<strong style="color:#b45309">Reabierta para corregir</strong>':!r.delivery.completed?'<span>Sin entrega confirmada</span>':isFormativeWriting?'<strong style="color:#16a34a">Entregada</strong>':`<strong style="color:${r.porcentaje>=60?'#16a34a':'#dc2626'}">${r.porcentaje}%</strong>${r.notas_pct>0?`<br><span style="font-size:10px;color:#64748b">Notas:${r.notas_pct}%</span>`:''}`}</td>
+            <td><strong style="color:${notaColor};font-size:18px">${r.nota>0?r.nota.toFixed(1).replace('.',','):'—'}</strong><br>${gradeEditor(r.uid,sesId)}</td>
+            <td>${r.reopened?'<span class="badge badge-amber">Pendiente de entrega</span>':!r.delivery.completed?'<span class="badge badge-gray">'+(r.delivery.status==='draft'?'En progreso':'Sin entrega confirmada')+'</span>':isMiniU4?'<span class="badge badge-blue">Práctica SIMCE</span>':isFormativeWriting?'<span class="badge badge-blue">Formativa</span>':getLevelBadge(r.porcentaje)}</td>
             <td style="font-size:12px;color:#64748b">${mins>0?mins+' min':'—'}</td>
             <td>
                 <button class="btn btn-sm btn-secondary" onclick="viewStudentDetail('${r.uid}')">👤</button>
@@ -4213,6 +4246,7 @@ const LOGRO_COLORS={7:'#16a34a',5:'#2563eb',3:'#d97706',1:'#dc2626'};
 const LOGRO_BG={7:'#f0fdf4',5:'#eff6ff',3:'#fffbeb',1:'#fee2e2'};
 
 async function setNotaManual(sesId,uid,val){
+    if(progFromCurso(students[uid]?.curso)==='simce'){await editSimceGrade(sesId,uid);return;}
     if(!val&&val!==0)return;
     const nota=parseFloat(val);
     try{
@@ -4280,9 +4314,42 @@ function updateUnlockUI(sesId){
     }
 }
 
+function planillaScope(){
+    const course=document.getElementById('planillaCourse').value,unit=document.getElementById('planillaUnit').value;
+    const pupils=Object.entries(students).map(([uid,s])=>({...s,uid})).filter(s=>isMiCurso(s.curso)&&s.activo!==false&&progFromCurso(s.curso)==='simce'&&(!course||(course==='__nm2hc'?['2A-HC','2B-HC'].includes(s.curso):s.curso===course))).sort((a,b)=>a.curso.localeCompare(b.curso)||(a.nombre||'').localeCompare(b.nombre||'','es'));
+    const courses=new Set(pupils.map(s=>s.curso));
+    const entries=Object.entries(sessions).map(([id,s])=>({...s,id})).filter(s=>isMiSesion(s)&&s.programa!=='paes'&&!s.id.startsWith('personal-')&&(!unit||getSessionUnit(s)===unit)&&(getSessionAssignedTargets(s).length===0||getSessionAssignedCourses(s).some(c=>courses.has(c)))).sort(compareSessionEntries);
+    return {pupils,entries};
+}
+async function refreshGradebook(){
+    const status=document.getElementById('planillaLoadStatus');status.textContent='Actualizando notas…';
+    try{allGrades=(await readOnceWithRetry(BASE+'/calificaciones_clase')).val()||{};gradebookLoaded=true;renderPlanilla();loadResults();}
+    catch(_){status.textContent='No se pudieron actualizar las notas. Conservamos la última lectura; vuelve a intentar.';}
+}
 function renderPlanilla(){
+    const course=document.getElementById('planillaCourse').value;
+    if(course&&course!=='__nm2hc'&&progFromCurso(course)!=='simce'){renderLegacyPlanilla();return;}
+    const status=document.getElementById('planillaLoadStatus');
+    if(!gradebookLoaded){status.textContent='Cargando las notas actuales…';return;}
+    const {pupils,entries}=planillaScope();let count=0,total=0,approved=0;
+    const gradeFor=(stu,s)=>gradeIsExcluded(s.id,stu.curso)?null:getGradeValue(stu.uid,s.id,allResults[s.id]?.[stu.uid]);
+    document.getElementById('planillaHead').innerHTML='<tr><th style="position:sticky;left:0;z-index:2;background:#f1f5f9;min-width:180px">Estudiante</th><th>Curso</th>'+entries.map(s=>`<th style="min-width:125px" title="${esc(s.titulo||s.id)}">${getSessionUnitLabel(getSessionUnit(s))}<br>${sessionClassOrder(s)?'Clase '+sessionClassOrder(s):esc(s.titulo||s.id)}</th>`).join('')+'<th>Promedio</th></tr>';
+    document.getElementById('planillaBody').innerHTML=pupils.map(stu=>{let sum=0,n=0;const cells=entries.map(s=>{const value=gradeFor(stu,s),pending=getPublishedGrade(stu.uid,s.id)?.needsReview===true;if(value!==null&&!pending){sum+=value;n++;}const label=pending?'En revisión':value===null?'—':value.toFixed(1).replace('.',',');return `<td style="text-align:center"><span data-grade-value="${stu.uid}/${s.id}">${label}</span><br>${gradeEditor(stu.uid,s.id)}</td>`;}).join('');const average=n?sum/n:null;if(average!==null){count++;total+=average;if(average>=4)approved++;}return `<tr><td style="position:sticky;left:0;background:#fff;z-index:1">${esc(stu.nombre||'')}</td><td>${cShort(stu.curso)}</td>${cells}<td>${average===null?'—':average.toFixed(1).replace('.',',')}</td></tr>`;}).join('')||`<tr><td colspan="${entries.length+3}">No hay estudiantes en este filtro.</td></tr>`;
+    document.getElementById('planillaStats').innerHTML=`<div class="stat-card"><div class="label">Estudiantes</div><div class="value">${pupils.length}</div></div><div class="stat-card"><div class="label">Clases</div><div class="value">${entries.length}</div></div><div class="stat-card"><div class="label">Promedio</div><div class="value">${count?(total/count).toFixed(1).replace('.',','):'—'}</div></div><div class="stat-card"><div class="label">Promedio igual o superior a 4,0</div><div class="value">${approved}</div></div>`;
+    status.textContent='Notas actuales del libro · ordenadas por unidad y clase · las pendientes de revisión no se incluyen en el promedio.';
+}
+function exportPlanillaCSV(){
+    const course=document.getElementById('planillaCourse').value;if(course&&course!=='__nm2hc'&&progFromCurso(course)!=='simce'){exportLegacyPlanillaCSV();return;}
+    if(!gradebookLoaded){toast('Espera a que carguen las notas.','err');return;}
+    const {pupils,entries}=planillaScope(),quote=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
+    const rows=[['Estudiante','Curso',...entries.map(s=>getSessionUnitLabel(getSessionUnit(s))+' · '+(s.titulo||s.id)),'Promedio']];
+    for(const stu of pupils){let sum=0,n=0;const grades=entries.map(s=>{const v=gradeIsExcluded(s.id,stu.curso)?null:getGradeValue(stu.uid,s.id,allResults[s.id]?.[stu.uid]);if(getPublishedGrade(stu.uid,s.id)?.needsReview)return 'En revisión';if(v!==null){sum+=v;n++;}return v??'';});rows.push([stu.nombre,stu.curso,...grades,n?(sum/n).toFixed(1):'']);}
+    const blob=new Blob(['\uFEFF'+rows.map(row=>row.map(quote).join(',')).join('\n')],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='notas-simce-'+new Date().toISOString().slice(0,10)+'.csv';a.click();URL.revokeObjectURL(url);
+}
+
+function renderLegacyPlanilla(){
     const courseF=document.getElementById('planillaCourse').value;
-    const sesIds=Object.keys(sessions).filter(sId=>isMiSesion(sessions[sId])).sort();
+    const sesIds=Object.entries(sessions).map(([id,s])=>({...s,id})).filter(s=>isMiSesion(s)).sort(compareSessionEntries).map(s=>s.id);
 
     // Build student list
     let stuList=[];
@@ -4317,6 +4384,7 @@ function renderPlanilla(){
         bodyHtml+=`<td style="text-align:center"><span class="badge ${cBadge(stu.curso)}" style="font-size:10px">${cShort(stu.curso)}</span></td>`;
         sesIds.forEach(sId=>{
             const r=allResults[sId]?.[stu.uid];
+                if(progFromCurso(stu.curso)==='simce'){const n=getGradeValue(stu.uid,sId,r);if(n&&!getPublishedGrade(stu.uid,sId)?.needsReview){sum+=n;cnt++;}bodyHtml+=`<td style="text-align:center">${n?n.toFixed(1).replace('.',','):'—'}<br>${gradeEditor(stu.uid,sId)}</td>`;return;}
             const resp=allResponses[sId]?.[stu.uid];
             const esCopia=resp?.bloqueado_por_copia===true;
             if(r){
@@ -4393,9 +4461,9 @@ function renderPlanilla(){
     `;
 }
 
-function exportPlanillaCSV(){
+function exportLegacyPlanillaCSV(){
     const courseF=document.getElementById('planillaCourse').value;
-    const sesIds=Object.keys(sessions).filter(sId=>isMiSesion(sessions[sId])).sort();
+    const sesIds=Object.entries(sessions).map(([id,s])=>({...s,id})).filter(s=>isMiSesion(s)).sort(compareSessionEntries).map(s=>s.id);
     let csv='Estudiante,RUT,Curso';
     sesIds.forEach(sId=>csv+=',"'+(sessions[sId].titulo||sId)+'"');
     csv+=',Promedio\n';
@@ -4413,6 +4481,7 @@ function exportPlanillaCSV(){
         let sum=0,cnt=0;
         sesIds.forEach(sId=>{
             const r=allResults[sId]?.[stu.uid];
+            if(progFromCurso(stu.curso)==='simce'){const n=getGradeValue(stu.uid,sId,r);csv+=','+(n??'');if(n&&!getPublishedGrade(stu.uid,sId)?.needsReview){sum+=n;cnt++;}return;}
             if(r){
                 const logro=getLogroFromNota(r.nota||calcNotaPlanilla(r.porcentaje||0));
                 csv+=`,"${LOGRO_SHORT[logro]} (${logro}.0)"`;

@@ -1,5 +1,13 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-14, administrador SIMCE: todas las unidades y planilla vigente
+
+- Francisco informa que no aparece U3, Resultados muestra solo U4 y pide todas las unidades ordenadas y edición de notas. Amplía el encargo: Planilla Notas no carga o se bloquea; debe funcionar con las notas actuales de 2A/2B HC.
+- La consulta de solo lectura confirma que U3 sigue en la base y que existen 430 notas de 2A y 398 de 2B en el libro protegido. El admin no leía ese libro; Resultados reutilizaba los filtros de Gestión de Sesiones. Se separan los filtros, se muestran unidades 1–4 por unidad/clase, se conservan metadatos estáticos y rutas personales y las archivadas son visibles por defecto. No se reactivan sesiones ni se modifican notas reales por publicar el arreglo.
+- Planilla abre con 2A/2B, carga el libro en la fase inicial antes de descargar respuestas/resultados pesados y pinta una tabla con columnas regulares ordenadas, filtros propios y actualización independiente. Resultados, planilla y CSV leen la misma nota vigente; una nota sola no confirma entrega y las pendientes de revisión no participan en el promedio. Se conservan las clases informativas y no aplicadas sin evaluación.
+- Edición individual por API con rol, curso, asignación e identidad validados; nota entre 1,0 y 7,0, motivo, comparación contra versión anterior, historial e idempotencia. Se modifica únicamente el libro individual, sin inventar puntajes/respuestas ni cerrar/reabrir intentos. Se relee para confirmar antes de mostrar éxito. El publicador conserva la decisión manual, incluso una corrección a la baja, y su historial. No se ejecuta una recalificación masiva ni se alteran notas del primer semestre.
+- Auditoría nueva: 25 controles API y 18 de navegador/carga, 43 aprobados en total; autenticación, permisos, decimal, conflicto, caché fría, conservación, reintento, publicación posterior, notas sin entrega, filtros independientes, 89 estudiantes y tres anchos 390/1440/3840. Auditorías vigentes de notas/reapertura y build integral aprobados. Verificación de producción y cierre se agregan después del despliegue seguro.
+
 ## 2026-10-14, miniensayo nuevo para el 15 y calendario HC
 
 - Francisco ordena miniensayo nuevo para 3°A/3°B HC el jueves 15, visita a Feria Escolar Universidad de Talca para 4°A/4°B HC y celebración del Día del Profesor el viernes 16. Elige expresamente «Uno nuevo»; no se reemplaza Guía 22 ni sus intentos.

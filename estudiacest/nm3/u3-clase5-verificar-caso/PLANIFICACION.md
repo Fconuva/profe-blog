@@ -1,6 +1,23 @@
 # Clase 5 · Verificar un caso real
 
-Aplicación prevista: viernes 9 de octubre de 2026. Nivel: 3° medio, NM3, cursos 3°A, 3°B y 3°D. Clase individual en papel, con conversación breve en parejas permitida. La presentación web es un espejo de la guía aprobada: proyecta sus casos, imágenes, fuentes y preguntas, sin agregar respuestas escritas ni modificar el PDF.
+Aplicación confirmada por Francisco el 14 de octubre: guía impresa de análisis de casos en NM3. El diseño se programó para la semana del 5 al 9 de octubre; no se fija retrospectivamente un día distinto ni se afirma que todos terminaron. Nivel: 3° medio, NM3, cursos 3°A, 3°B y 3°D. Clase individual en papel, con conversación breve en parejas permitida. La presentación web es un espejo de la guía aprobada: proyecta sus casos, imágenes, fuentes y preguntas, sin agregar respuestas escritas ni modificar el PDF.
+
+## Hoja de ruta · 90 minutos previstos
+
+**Preparar:** una guía de nueve páginas por estudiante (cinco hojas a doble cara), lápiz y cuaderno; abrir `/nm3/u3-clase5-verificar-caso/`; comprobar video y ampliación de imágenes. Escribir en la pizarra «afirmación → evidencia → conclusión con límites». No se permite el uso de celular.
+
+| Minuto | Pantalla o material | Docente | Estudiantes |
+|---|---|---|---|
+| 0–10 | Diapositivas 1–4; guía p. 1 | Activar con videos e Instagram; normas en 2, objetivo en 3; modelar evidencia en 4. | Conversar brevemente; identificar afirmación, fuente y contexto. |
+| 10–27 | Diapositivas 5–9; guía pp. 2–4 | Pedir comparar imágenes y fechas; revisar una justificación. | Leer caso 1 y responder 1–5 en p. 4. |
+| 27–43 | Diapositivas 10–14; guía pp. 5–6 | Preguntar qué registro respalda la conclusión. | Leer caso 2 y responder 6–10 en p. 6. |
+| 43–60 | Diapositivas 15–19; guía pp. 7–8 | Comprobar distinción entre A y B. | Leer caso 3 y responder 11–14 en p. 8. |
+| 60–80 | Diapositiva 20; guía p. 9 | Monitorear procedimiento y límites; no dictar respuestas. | Responder 16–17; revisar las tres conclusiones. |
+| 80–90 | Diapositiva 21; guía p. 9 | Conducir plenario 15, sintetizar y recoger. | Justificar oralmente; explicar qué verificarían antes de compartir. |
+
+**Si hay atraso:** abreviar las intervenciones de videos e Instagram y el plenario; conservar lectura y respuestas. Si no alcanza, guardar la guía y continuar en el bloque siguiente. Los tiempos son de diseño; la confirmación de aplicación no acredita duración medida ni término de todas las guías.
+
+**Continuidad 12–16 de octubre:** revisar las guías recibidas y devolver una justificación que necesite evidencia. Lunes 12 sin clase por feriado. La devolución y el avance del podcast se mantienen previstos hasta contar con registro de aula. Próximo cierre de Unidad 3: podcast y cuaderno, viernes 23, según calendario vigente; no prueba escrita.
 
 ## Objetivo y alcance
 
@@ -10,28 +27,9 @@ Se vincula con el OA 4, especialmente análisis de mensajes de comunidades digit
 
 Se evalúa verificación guiada con un expediente impreso. La comparación de imágenes y el archivo NASA aproxima el procedimiento de búsqueda inversa; no acredita que el estudiante ejecutó una búsqueda en internet ni seleccionó fuentes por sí mismo. El logro se determina revisando respuestas; esta planificación no afirma resultados de aula.
 
-## Contenidos y habilidades
+## Contenido que se enseña y evidencia que se observa
 
-| Dimensión | Contenido y evidencia de trabajo |
-|---|---|
-| Conceptual | Afirmación, evidencia, fuente primaria, credibilidad, contexto y distinción entre fecha de captura, publicación y actualización. Se recuperan oralmente al inicio y se aplican a los casos. |
-| Procedimental | Identificar afirmaciones, comparar imágenes y documentos, contrastar fechas, citar datos, distinguir un hecho de una generalización y redactar una conclusión con límites. Consignas 1–17, con 15 oral. |
-| Actitudinal | Revisar antes de compartir, modificar una primera impresión ante evidencia y reconocer lo que no se puede asegurar. Se observa en las justificaciones y en el plenario; no se certifican hábitos futuros. |
-
-Habilidad principal: evaluar críticamente información y fundamentar conclusiones. Habilidades de apoyo: localizar datos, comparar, interpretar, reconocer generalizaciones y sintetizar por escrito.
-
-## Secuencia prevista de 90 minutos
-
-| Momento | Tiempo | Acción y producto |
-|---|---:|---|
-| Inicio | 10 min | Activación, norma y objetivo; explicación oral de cuatro conceptos y demostración breve de una justificación. |
-| Caso 1 | 17 min | Leer páginas 2–3 y responder 1–5 en la 4. |
-| Caso 2 | 16 min | Leer página 5 y responder 6–10 en la 6. |
-| Caso 3 | 17 min | Leer página 7 y responder 11–14 en la 8, distinguiendo A y B. |
-| Procedimiento y revisión | 20 min | Escribir 16–17 en la página 9 y revisar las justificaciones de los tres casos. |
-| Cierre | 10 min | Plenario oral 15, síntesis y entrega presencial. |
-
-Son tiempos propuestos, pendientes de aplicación. No hay espera obligatoria ni temporizador. A los diez minutos de cada caso, comprobar si el curso identificó la afirmación y encontró evidencia; ayudar con la consigna cuando haga falta. Si la carga supera el tiempo observado, ampliar la sesión o permitir terminar la guía después; no convertir la velocidad de escritura en indicador de logro. Quienes terminan revisan si su conclusión excede lo que permite su fuente.
+Enseñar afirmación, evidencia, fuente primaria, credibilidad y contexto, distinguiendo fecha de captura, publicación y actualización. Modelar cómo comparar registros y justificar una conclusión con límites. Observar esas decisiones en las respuestas 1–17 (la 15 es oral), el contraste de imágenes y el plenario. Revisar antes de compartir y modificar una primera impresión se trabajan en las justificaciones; no se certifican hábitos futuros.
 
 ### Inicio: activación conceptual oral
 

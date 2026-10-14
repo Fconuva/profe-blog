@@ -1,6 +1,22 @@
 ﻿# Clase 8 NM4 · Un correo para pedir intervención
 
-Aplicación del martes 13 de octubre de 2026; material disponible para NM4. Francisco pide cuatro situaciones específicas y cuatro guías diferentes para aproximadamente 225 estudiantes. Cada estudiante recibe una versión de dos páginas: caso e indicaciones, y hoja con formato de composición Gmail. No recibe los cuatro casos impresos.
+Aplicación confirmada por Francisco el 14 de octubre de 2026: casos del correo trabajados esta semana en 4°C, 4°E y 4°D. La presentación está fechada martes 13; se conserva esa referencia del diseño, sin inferir el día exacto de cada curso. Material disponible para NM4; no se registra aplicación en 4°A/4°B esta semana. Francisco pide cuatro situaciones específicas y cuatro guías diferentes para aproximadamente 225 estudiantes. Cada estudiante recibe una versión de dos páginas: caso e indicaciones, y hoja con formato de composición Gmail. No recibe los cuatro casos impresos.
+
+## Hoja de ruta · 90 minutos previstos
+
+**Preparar:** dos páginas por estudiante, de una sola versión elegida; tener las cuatro versiones disponibles para cambiar sin explicación personal. Proyectar `/nm4/u3-clase8-correo-formal/`. Lápiz y guía; escribir «hechos → destinatario → petición → revisión». Ajustar copias a la matrícula y a la elección de cada curso. No se envía ningún correo real.
+
+| Minuto | Pantalla o material | Docente | Estudiantes |
+|---|---|---|---|
+| 0–10 | Diapositivas 1, 2 y 3 | Activar, indicar normas sin relatos personales y presentar objetivo. | Comentar una idea general; reconocer que el caso es ficticio. |
+| 10–30 | Diapositivas 4–5 | Enseñar hecho, juicio, petición, registro y partes; modelar la constancia. | Distinguir el hecho y la petición del ejemplo. |
+| 30–65 | Diapositivas 6–19; guía elegida pp. 1–2 | Presentar temas brevemente y acompañar la elección; monitorear hechos y destinatario. | Elegir una de cuatro guías; leer p. 1 y escribir el correo en p. 2. |
+| 65–80 | Diapositiva 20; correo en p. 2 | Revisar precisión, petición, orden y resguardo. | Corregir el correo en la misma hoja; intercambio voluntario. |
+| 80–90 | Diapositiva 21; dos páginas de la guía | Compartir mejoras sin leer denuncias; sintetizar y recoger. | Explicar una corrección y entregar las dos páginas. |
+
+**Si hay atraso:** reducir comentarios sobre los cuatro temas y el plenario; conservar escritura, revisión y recogida. Si queda texto incompleto, guardar la misma guía para continuarlo. No pedir una segunda copia ni experiencias personales.
+
+**Después de la aplicación:** devolver una observación sobre hecho/petición y pedir corregirla. En 4°C/4°E, retomar el manual desde el borrador existente, sin dar por realizadas sus cuatro etapas. En 4°D, continuar el anuario y revisar PDF antes de autorizar impresión para el lunes 26. Estas continuidades están previstas, sin nota nueva ni cambio de Lirmi.
 
 ## Objetivo y aprendizaje
 
@@ -20,16 +36,6 @@ Contenido enseñado en la presentación: hecho, juicio, petición y registro; de
 Todos los personajes, hechos, establecimientos y direcciones de correo son ficticios. Las direcciones usan el dominio reservado .example. No son personas de CEST ni correos operativos. El formato Gmail es una simulación impresa, no un formulario ni un envío real.
 
 Distribución orientativa para 225 estudiantes: 57 copias del caso 1 y 56 de cada uno de los otros tres; 450 caras impresas. A doble cara: 225 hojas. A una cara: 450 hojas. Las cantidades se ajustan a la elección del curso; no fijan quién debe trabajar cada tema. La versión disponible puede cambiarse. Los archivos guia-caso-1-nm4.pdf a guia-caso-4-nm4.pdf tienen dos páginas cada uno. El PDF maestro contiene las cuatro versiones, ocho páginas; no se reparte completo a cada estudiante.
-
-## Secuencia de 90 minutos
-
-| Momento | Minutos | Acción |
-|---|---:|---|
-| Inicio | 10 | Activación general sobre información necesaria para pedir intervención; normas sin relatos personales; objetivo. Tres pantallas separadas. |
-| Modelamiento | 20 | Enseñar conceptos y estructura; analizar el ejemplo independiente de constancia. Mostrar cómo un hecho sostiene una petición y cómo se organiza el correo en Gmail. |
-| Elección y escritura | 35 | Presentar brevemente los cuatro temas, sin leer todas las narraciones al grupo. Cada estudiante elige y lee su guía (15 min orientativos), organiza y escribe el correo (20 min). Circular: qué presenciaste, qué no sabes, qué debe hacer el destinatario. |
-| Revisión | 15 | Revisar datos, orden, petición, lenguaje y resguardo. Corregir en la misma hoja, sin una nueva copia completa. Revisión privada docente disponible; intercambio voluntario del texto ficticio. |
-| Cierre | 10 | Compartir cambios de escritura, sin leer denuncias ni dramatizar agresiones. Sistematizar hechos, destinatario, petición y revisión. Recoger las dos páginas. |
 
 Tiempos propuestos, no pilotados. Conteo del PDF: 603–629 palabras por versión, incluidos ambos membretes, ficha e indicaciones; se escribe un correo y se corrige. No se impone extensión en palabras ni se evalúa velocidad. La hoja de respuesta tiene 16 renglones de 8 mm más campos Para/Asunto de 8 mm; el texto puede corregirse con lápiz en ese espacio. Apoyo lector mediante lectura privada/oral y aclaración de vocabulario, conservando decisiones y producto individual.
 

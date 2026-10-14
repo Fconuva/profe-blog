@@ -23,7 +23,7 @@ async function main(){
  const planning=fs.readFileSync(path.join(root,base,'PLANIFICACION.md'),'utf8');
  check(html.includes('15. Plenario oral')&&html.includes('Respuesta oral.')&&slide.includes('data-guide-question="15"')&&slide.includes('data-stage="cierre"'),'Plenario oral sincronizado');
  check(!html.includes('otra sobre el alcance')&&!html.includes('Evalúa la imagen y el mensaje por separado')&&!html.includes('un límite de la evidencia'),'Consignas ambiguas sustituidas');
- check(planning.includes('Conceptual')&&planning.includes('Procedimental')&&planning.includes('Actitudinal')&&planning.includes('Afirmación:')&&planning.includes('Evidencia:')&&planning.includes('Fuente primaria:')&&planning.includes('Conclusión:'),'Contenido y activación conceptual docente');
+ check(planning.includes('Enseñar afirmación, evidencia, fuente primaria')&&planning.includes('Modelar cómo comparar registros')&&planning.includes('Observar esas decisiones')&&!planning.includes('| Conceptual |')&&!planning.includes('| Procedimental |')&&!planning.includes('| Actitudinal |')&&planning.includes('Afirmación:')&&planning.includes('Evidencia:')&&planning.includes('Fuente primaria:')&&planning.includes('Conclusión:'),'Contenido enseñado, modelamiento y evidencia observada integrados según REGLAS 13; activación conceptual docente');
  check(slide.includes('Casos: 50 min.')&&slide.includes('20 min.')&&slide.includes('Al cierre · 10 min')&&slide.includes('Inicio: 10 min'),'Secuencia de 90 minutos sincronizada');
 
  check((slide.match(/class="slide(?: active)? /g)||[]).length===21,'Veintiuna pantallas espejo');

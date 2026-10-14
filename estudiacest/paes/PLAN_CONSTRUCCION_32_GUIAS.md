@@ -1,6 +1,14 @@
 # PAES: plan de construcción y continuidad de 32 guías
 
-Fecha de referencia: 10 de septiembre de 2026. Documento interno de planificación, no catálogo de actividades publicadas.
+Fecha de referencia del diseño: 10 de septiembre de 2026. Estado y continuidad actualizados al 14 de octubre de 2026. Documento interno de planificación, no catálogo de actividades publicadas.
+
+## Estado de aplicación y continuidad · 14 de octubre
+
+- **5–9 de octubre:** Guía 22 aplicada digitalmente el jueves 8 en 3A-HC, 3B-HC, 4A-HC y 4B-HC: tres textos originales, 18 alternativas; recorrido acompañado separado. Objetivo: interpretar relaciones y sentidos y evaluar afirmaciones con evidencia. La corrección registrada de G20/G21 es revisión de entregas anteriores; no una clase nueva.
+- **12–16 de octubre, corte al 14:** lunes 12 sin clase por feriado. Devolución de G22 y práctica focalizada previstas; no se encontró evidencia de nueva aplicación en este período en las fuentes consultadas. No se declara realizado el 15 o el 16.
+- **Próximo bloque ordinario:** recuperar dos errores frecuentes de G22 después de su publicación docente, modelar con ejemplo distinto y pedir justificar una nueva decisión. Distribución propuesta: 10 min de activación/normas/objetivo, 15 de explicación y modelamiento, 45 de práctica y monitoreo, 10 de revisión y 10 de sistematización. Producto: dos justificaciones y una corrección en cuaderno; instrumento formativo, sin nota nueva. Si falta tiempo, reducir casos comentados y conservar respuesta y revisión.
+- **G22 histórica frente a actual:** el foco «Clínica de distractores», anunciado para 24-sep en el plan inicial, no describe el miniensayo que ocupa hoy la tarjeta G22. Mantener el diseño histórico como antecedente, no como actividad aplicada. La hoja de ruta vigente está en `/paes/mini-invierno-2027/docente.html`.
+- **G23–G31:** backlog regular por construir/validar; existen accesos guiados específicos, sin equivalencia con publicación regular. Las fechas anunciadas quedan como referencia histórica, pendientes de reprogramación docente. G25 no se declara listo para el 15 de octubre; sus 113 minutos exigen ventana extendida confirmada. G32 continúa sin fecha.
 
 ## 1. Decisión y alcance
 
@@ -126,7 +134,7 @@ Las mejoras de textos ya evaluados deben versionarse. No cambiar silenciosamente
 
 ## 6. Próximas guías: plan de construcción, no publicación
 
-Fechas G22–G31 tomadas de la portada vigente. Los volúmenes de práctica son propuestas de construcción; se ajustan tras pilotaje. No se aumenta la dificultad únicamente alargando textos o usando vocabulario raro.
+Fechas G22–G31 tomadas de la portada al construir este plan, conservadas como antecedente histórico. El estado actual y la reprogramación pendiente se leen arriba. Los volúmenes de práctica son propuestas de construcción; se ajustan tras pilotaje. No se aumenta la dificultad únicamente alargando textos o usando vocabulario raro.
 
 | Guía / fecha 2026 | Título anunciado o reservado | Diseño previsto y evidencia de aprendizaje |
 |---|---|---|

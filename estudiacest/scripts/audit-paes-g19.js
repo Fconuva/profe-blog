@@ -121,7 +121,10 @@ assert(currentCard21, 'G21 debe conservar su tarjeta.');
 assert(currentCard21 && /href="guia21\.html"/.test(currentCard21[1]), 'La sesión actual debe abrir guia21.html.');
 assert(currentCard21 && /24 preguntas/.test(currentCard21[1]) && /3 textos/.test(currentCard21[1]) && /datetime="2026-09-10"/.test(currentCard21[1]), 'G21 debe anunciar 24 preguntas, 3 textos y fecha 10 de septiembre de 2026.');
 assert(!/<article\b[^>]*class="upcoming-card"[^>]*data-guided-guide="21"/.test(portal), 'G21 no puede duplicarse como sesión futura.');
-for (let guide = 23; guide <= 31; guide += 1) {
+const currentCard23 = portal.match(/<article\b[^>]*id="miniOctubreCard"[^>]*>([\s\S]*?)<\/article>/);
+assert(currentCard23 && /Miniensayo N.º 23/.test(currentCard23[1]) && /href="mini-octubre-2026\/"/.test(currentCard23[1]), 'N.º 23 debe conservar su tarjeta y acceso al miniensayo.');
+assert(!/<article\b[^>]*class="upcoming-card"[^>]*data-guided-guide="23"/.test(portal), 'N.º 23 no debe duplicarse como futura.');
+for (let guide = 24; guide <= 31; guide += 1) {
   assert(portal.includes(`Guía ${guide}</span>`), `Falta la tarjeta futura gris de la Guía ${guide}.`);
 }
 

@@ -18,6 +18,7 @@
   const LOGIN_URL = `/lecturas/?next=${encodeURIComponent('/estudiantes/guia-u3-s12-entrevista.html')}`;
   const $ = (id) => document.getElementById(id);
 
+  let ready = false;
   let user = null;
   let submitted = false;
   let submitting = false;
@@ -89,6 +90,7 @@
   }
 
   function scheduleSave() {
+    if (!ready && !LOCAL_PREVIEW) return;
     if (submitted || submitting) return;
     rememberLocal();
     updateUi();
@@ -160,6 +162,7 @@
   }
 
   async function submit() {
+    if (!ready && !LOCAL_PREVIEW) return;
     if (submitted || submitting || !validate()) return;
     if (LOCAL_PREVIEW) {
       setMessage('Vista previa local: la validación está correcta y la entrega está desactivada.');
@@ -217,15 +220,18 @@
   updateUi();
 
   async function start(activeUser) {
-    user = activeUser;
+    user = activeUser;ready = false;
+    if (!LOCAL_PREVIEW) window.SimceSessionGate.beginLoad(SESSION_ID,user.uid);
     try {
       const state = await callApi('simce-u3s12-state');
       if (!state.session.active && !(state.attempt && state.attempt.completada)) throw new Error('Esta clase está cerrada por el docente.');
-      restore(state.attempt);
+      restore(state.attempt);ready = true;
+      if (!LOCAL_PREVIEW) window.SimceSessionGate.markLoaded(SESSION_ID,user.uid);
       updateUi();
     if (submitted) lockCompleted(false);
       else if (!LOCAL_PREVIEW) setMessage(`Avance disponible para ${state.student.nombre} · ${state.student.curso}.`);
     } catch (error) {
+      if (!LOCAL_PREVIEW) window.SimceSessionGate.failLoad();
       setMessage(error.message);
       $('submit').disabled = true;
     }

@@ -151,6 +151,15 @@ async function verifyDeliveryStore() {
   const oldGrade={sessionId:'sesion-u3-1',grade:1,status:'not_submitted',publishedAt:new Date(1000).toISOString()};
   assert.strictEqual(context.reconcileLaborGradeStatus(oldGrade,{'sesion-u3-1':{submitted:true,completada:true,submittedAt:2000}}).needsReview,true);
   assert.strictEqual(context.reconcileLaborGradeStatus(oldGrade,{'sesion-u3-1':{__readError:true}}).status,'read_error');
+  const generic=fs.readFileSync(path.join(root,'estudiantes/sesion.html'),'utf8');
+  const routeStart=generic.indexOf('        const simceU3Guides =');
+  const routeEnd=generic.indexOf('        // Try Firebase first',routeStart);
+  assert(routeStart>=0&&routeEnd>routeStart);
+  const route=new Function('sessionId','studentData','window',generic.slice(routeStart,routeEnd));
+  let target=null;const location={replace:value=>{target=value;}};
+  route('sesion-u3-10',{curso:'2B-HC'},{location});
+  assert.strictEqual(target,'/estudiantes/guia-u3-s10-cronica-carta.html');
+  target=null;route('sesion-u3-10',{curso:'3A-TP'},{location});assert.strictEqual(target,null);
   console.log('Guardado SIMCE probado: carga fallida protegida, entrega atómica, reintento, confirmación, borrador tardío y nota desactualizada.');
 }
 verifyDeliveryStore().catch(error=>{console.error(error);process.exitCode=1;});

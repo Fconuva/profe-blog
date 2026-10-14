@@ -35,7 +35,7 @@
 
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script><script src="/estudiantes/js/simce-session-gate.js"></script>
 <script src="/estudiantes/js/u3s7-data.js"></script>
 <script>
 (()=>{
@@ -46,7 +46,7 @@
   const data=window.SIMCE_U3S7_DATA;
   const questions=data.questions;
   const preview=new URLSearchParams(location.search).get('preview')==='1';
-  let user=null,student=null,attempt=null,submitting=false,saveTimer=null,saveQueue=Promise.resolve();
+  let ready=false,user=null,student=null,attempt=null,submitting=false,saveTimer=null,saveQueue=Promise.resolve();
   const state={answers:{},openResponses:{},metaResponses:{},concepts:{}};
   if(!firebase.apps.length)firebase.initializeApp(CONFIG);
   const auth=firebase.auth();
@@ -110,6 +110,7 @@
     const json=await response.json().catch(()=>({}));if(!response.ok){const error=new Error(json.error||'No fue posible conectar.');error.status=response.status;error.payload=json;throw error}return json;
   }
   function scheduleSave(){
+    if(!ready&&!preview)return;
     if(preview||submitting||(attempt&&attempt.completada===true))return;clearTimeout(saveTimer);$('saveStatus').textContent='Cambios pendientes…';$('saveStatus').className='status';
     saveTimer=setTimeout(()=>{saveQueue=saveQueue.then(async()=>{try{$('saveStatus').textContent='Guardando…';await callApi('save-draft','POST',payload());$('saveStatus').textContent='Avance guardado';$('saveStatus').className='status ok'}catch(error){$('saveStatus').textContent='No se pudo guardar. Tu avance sigue en pantalla; revisa internet y continúa.';$('saveStatus').className='status error'}})},700);
   }
@@ -129,6 +130,7 @@
     return true;
   }
   async function submitWork(){
+    if(!ready&&!preview)return;
     const missing=firstMissing();if(missing){$('saveStatus').textContent=missing.message;$('saveStatus').className='status error';$(missing.id)?.scrollIntoView({behavior:'smooth',block:'center'});return}
     if(preview){$('saveStatus').textContent='Vista previa: la entrega no se registra.';$('saveStatus').className='status';return}
     submitting=true;clearTimeout(saveTimer);const button=$('submit');button.disabled=true;button.textContent='Entregando…';
@@ -167,11 +169,12 @@
   async function start(activeUser){
     user=activeUser;renderConcepts();renderModel();renderReadings();renderMeta();bind();updateProgress();
     if(preview){$('studentLine').textContent='Vista previa docente · sin guardado';return}
+    window.SimceSessionGate.beginLoad(SESSION,user.uid);
     try{
       const result=await callApi('get-guia-state');student=result.student;attempt=result.attempt;$('studentLine').textContent=`${student.nombre} · ${student.curso}`;
-      if(!result.session.active&&!(attempt&&attempt.completada===true)){document.querySelector('main').innerHTML='<section class="band locked"><h2>Clase cerrada</h2><p>Si faltaste con justificación, solicita al profesor una habilitación individual.</p><a class="btn" href="/estudiantes/dashboard.html">Volver al panel</a></section>';document.querySelector('.dock').remove();return}
-      restore();if(applyConfirmedDelivery(result)&&result.result)setTimeout(()=>$('confirmModal').classList.add('open'),120)
-    }catch(error){$('saveStatus').textContent=error.message;$('saveStatus').className='status error'}
+      if(!result.session.active&&!(attempt&&attempt.completada===true)){window.SimceSessionGate.markLoaded(SESSION,user.uid);document.querySelector('main').innerHTML='<section class="band locked"><h2>Clase cerrada</h2><p>Si faltaste con justificación, solicita al profesor una habilitación individual.</p><a class="btn" href="/estudiantes/dashboard.html">Volver al panel</a></section>';document.querySelector('.dock').remove();return}
+      restore();ready=true;window.SimceSessionGate.markLoaded(SESSION,user.uid);if(applyConfirmedDelivery(result)&&result.result)setTimeout(()=>$('confirmModal').classList.add('open'),120)
+    }catch(error){window.SimceSessionGate.failLoad();$('saveStatus').textContent=error.message;$('saveStatus').className='status error'}
   }
   if(preview)start(null);else auth.onAuthStateChanged(activeUser=>{if(!activeUser){location.href='/lecturas/?next='+encodeURIComponent(location.pathname);return}start(activeUser)});
 })();

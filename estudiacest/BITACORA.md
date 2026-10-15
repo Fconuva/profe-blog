@@ -1,5 +1,12 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-15, PAES: etiquetas de avance y filtro de guías pendientes
+
+- Francisco solicita identificar encima de cada guía lo hecho y lo que falta. Las 23 tarjetas publicadas reciben etiqueta propia: hecha y entregada, en progreso, falta entregar, entrega incompleta o corrección sin entregar, con alternativas respondidas sobre el total. Se conservan las 26 tarjetas, destinos y orden descendente. Las etiquetas permanecen legibles aunque el docente bloquee el acceso.
+- Resumen del segundo semestre y botón «Ver solo pendientes», con regreso a todas las guías y actualización explícita/al volver a la pestaña. G1–G10 quedan identificadas como anteriores y no se suman a la deuda del semestre; G14 de 4A-HC y miniensayo 23 de cursos no asignados se excluyen. Se respeta el recorrido personal de seis preguntas. Las actividades futuras no se cuentan.
+- Nueva acción autenticada student-progress: resuelve identidad y curso desde el perfil del UID, lee solo sus registros y devuelve estados y cantidades, sin claves, respuestas, notas ni datos ajenos. Distingue borrador de entrega, versiones históricas y reenvíos; una nota no acredita entrega. Incompatibilidades quedan para revisión y fallos de lectura como estado desconocido. La consulta no escribe ni cambia calificaciones o intentos.
+- Validación local con API real y Firebase ficticio: 47 controles de clasificación, permisos, aislamiento, denominadores, variantes, filtro, reintento, conservación de tarjetas/orden y 390/1440/3840 sin desbordes ni errores JS. Capturas técnicas revisadas. Auditorías G18/G19 aprobadas; cierre de build y producción se agrega tras publicar.
+
 ## 2026-10-15, PAES: notas visibles hasta G21 y planilla completa por período
 
 - Francisco pide corregir el nombre de G22, revisar nuevas respuestas de G11–G21, calificar por laboriosidad y mostrar la planilla completa. G22 cambia «Miniensayo NM4» por «Guía 22 · Miniensayo de Competencia Lectora» en ambas rutas, catálogo y panel docente; se conservan preguntas, claves, plazos y registros.

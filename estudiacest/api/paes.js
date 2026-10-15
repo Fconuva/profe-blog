@@ -13,6 +13,7 @@ const PREMIOS_PAES = require('./_premios-paes');
 const CARTAS = require('./_paes-cartas');
 const MINI_INVIERNO = require('./_paes-mini-invierno');
 const MINI_OCTUBRE = require('./_paes-mini-octubre');
+const PROGRESS = require('./_paes-progress');
 Object.assign(GUIDED_GUIDE_KEYS, FOUNDATIONS.GUIDED_KEYS);
 Object.assign(GUIDED_GUIDE_FEEDBACK, FOUNDATIONS.GUIDED_FEEDBACK);
 
@@ -1119,6 +1120,21 @@ module.exports = async (req, res) => {
         if (action === 'submit-guia') return await handleSubmitGuia(req, res);
         if (action === 'track-download') return await handleTrackDownload(req, res);
         if (action === 'get-student-status') return await handleGetStudentStatus(req, res);
+        if (action === 'student-progress') return await PROGRESS.handle(req, res, {
+            db, auth, delivered: isDeliveredGuiaRecord,
+            spec(id, record, rut) {
+                const guided = isGuidedAccess(id, rut);
+                let key = guided ? GUIDED_GUIDE_KEYS[id] : (FOUNDATIONS.KEYS[id] || INTERACTIVE_GUIDE_KEYS[id]);
+                if (id === '14' && !guided) key = G14_KEY;
+                let ids = Object.keys(key || {});
+                if (id === '16' && !guided && [15, 20].includes(Number(record?.total))) ids = ids.slice(0, Number(record.total));
+                const compatible = ids.length > 0 && (!record ||
+                    (!FOUNDATIONS.KEYS[id] || record.contentVersion === FOUNDATIONS.VERSION) &&
+                    (id !== '14' || guided || isCurrentGuia14Record(record)) &&
+                    (record.variant === GUIDED_VARIANT) === guided);
+                return { ids, compatible };
+            }
+        });
         if (action === 'get-nomina-extra') return await handleGetNominaExtra(req, res);
         if (action === 'get-guia-draft') return await handleGetGuiaDraft(req, res);
         if (action === 'get-guia-state') return await handleGetGuiaState(req, res);

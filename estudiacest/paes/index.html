@@ -413,6 +413,21 @@
       grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
       gap: 24px;
     }
+    .paes-work-label { align-self:flex-start; margin-bottom:16px; padding:10px 14px; border:2px solid #64748b; border-radius:12px; background:#f1f5f9; color:#334155; width:100%; box-sizing:border-box; }
+    .paes-work-label strong { display:block; font-size:15px; line-height:1.35; }
+    .paes-work-label small { display:block; margin-top:4px; font-size:12px; line-height:1.4; }
+    .paes-work-label[data-state="completed"] { background:#dcfce7; color:#14532d; border-color:#15803d; }
+    .paes-work-label[data-state="missing"], .paes-work-label[data-state="incomplete"] { background:#fff7ed; color:#7c2d12; border-color:#c2410c; }
+    .paes-work-label[data-state="draft"] { background:#dbeafe; color:#1e3a8a; border-color:#2563eb; }
+    .ensayo-card.paes-filtered-out { display:none !important; }
+    .paes-progress-panel { margin:20px 0; padding:18px; background:#fff; border:1px solid #cbd5e1; border-radius:16px; }
+    .paes-progress-panel[hidden] { display:none; }
+    .paes-progress-panel p { margin:0 0 12px; line-height:1.5; }
+    .paes-progress-actions { display:flex; flex-wrap:wrap; gap:10px; }
+    .paes-progress-actions button { padding:10px 14px; border:1px solid #176b87; border-radius:9px; background:#fff; color:#17324d; font:inherit; font-size:14px; font-weight:700; line-height:1.3; cursor:pointer; }
+    .paes-progress-actions button[aria-pressed="true"] { background:#176b87; color:#fff; }
+    .paes-progress-actions button:disabled { opacity:.6; cursor:wait; }
+    .paes-progress-actions button:focus-visible { outline:3px solid #2563eb; outline-offset:3px; }
 
     .ensayo-card {
       background: var(--panel-bg);
@@ -952,6 +967,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js" defer></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js" defer></script>
   <script src="/paes/js/student-session.js" defer></script>
+  <script src="/paes/js/progreso-guias.js" defer></script>
   <script src="/paes/mini-invierno-2027/sesion.js" defer></script>
   <script src="/paes/mini-invierno-2027/portal.js" defer></script>
   <script src="/paes/mini-octubre-2026/portal.js" defer></script>
@@ -1054,6 +1070,10 @@
         </div>
       </details>
 
+      <section id="paesProgressPanel" class="paes-progress-panel" aria-label="Mis guías pendientes" hidden>
+        <p id="paesProgressSummary" role="status" aria-live="polite">Consultando tu trabajo guardado…</p>
+        <div class="paes-progress-actions"><button id="paesPendingToggle" type="button" aria-pressed="false" disabled>Ver solo pendientes</button><button id="paesProgressRefresh" type="button">Actualizar</button></div>
+      </section>
       <div class="ensayo-grid">
 
         
@@ -1739,6 +1759,7 @@
       // Trigger sync with Central Database
       syncStudentData(student);
       renderMisNotas(student.rut);
+      PaesGuideProgress.load(student);
     }
 
     // ============ MIS NOTAS ============
@@ -1901,7 +1922,7 @@
               }
               continue;
             }
-            card.style.opacity = '0.5';
+            card.style.opacity = '1';
             const statusBox = card.querySelector('.ensayo-status-box');
             if (statusBox) statusBox.innerHTML = '<div class="status-pending" style="color:#f87171;"><span>🔒</span> Disponible más adelante</div>';
             const btn = card.querySelector('.btn-action');

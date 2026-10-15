@@ -70,14 +70,14 @@ assert.strictEqual(buildReopenedGradePlan({
   'id="misNotasPanel"',
   'Mis notas del segundo semestre',
   'Promedio parcial',
-  'const GUIAS_NOTAS = [11, 12, 13, 14, 15, 16, 17]',
+  'const GUIAS_NOTAS = [11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21]',
   'renderMisNotas(student.rut)',
   'No aplica',
   'Sin nota',
   'frnunez@salesianostalca.cl'
 ].forEach(marker => assert.ok(portal.includes(marker), `Falta en el portal: ${marker}`));
 
-assert.ok(api.includes("const SECOND_SEMESTER_GUIDES = ['11', '12', '13', '14', '15', '16', '17']"), 'La API debe limitar el período.');
+assert.ok(api.includes("const SECOND_SEMESTER_GUIDES = ['11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21']"), 'La API debe limitar el período.');
 assert.ok(api.includes("omitidos: isFourthA ? ['14'] : []"), 'La API debe excluir G14 para 4°A HC.');
 assert.ok(!/handleGetMisNotas[\s\S]{0,800}nombre\s*:/.test(api), 'La consulta pública no debe devolver el nombre.');
 

@@ -819,7 +819,7 @@
     </div>
 
     <ul class="nav-list">
-      <li><a class="nav-btn" href="/paes/mini-invierno-2027/docente.html">Guía 22 · Miniensayo NM4</a></li>
+      <li><a class="nav-btn" href="/paes/mini-invierno-2027/docente.html">Guía 22 · Miniensayo de Competencia Lectora</a></li>
       <li><a class="nav-btn" href="/paes/mini-octubre-2026/docente.html">Miniensayo 23 · Evidencia y consistencia</a></li>
       <li>
         <button class="nav-btn active" data-tab="ensayos">
@@ -1174,6 +1174,8 @@
           </div>
           <div class="filters-bar">
             <input type="text" class="search-input" id="searchLibro" placeholder="Buscar por nombre o RUT...">
+            <select class="select-filter" id="periodoLibro" aria-label="Período de notas"><option value="2">Segundo semestre · G11–G21</option><option value="1">Primer semestre · G3–G10</option><option value="todos">Todas · G3–G21</option></select>
+            <button type="button" class="btn-primary" id="refreshLibro">Actualizar notas</button>
             <select class="select-filter" id="filterCourseLibro" title="Curso">
               <option value="3°A HC">3°A HC</option>
               <option value="3°B HC">3°B HC</option>
@@ -1185,6 +1187,7 @@
           </div>
         </div>
 
+        <p id="libroStatus" role="status" aria-live="polite" style="margin:0 0 12px"></p>
         <div class="table-container" style="max-height: 640px;">
           <table class="datatable matrix-table" id="libroTable">
             <thead>
@@ -1447,7 +1450,14 @@
     let databaseData = { resultados: {}, guias: {}, guiaResp: {}, guiasConfig: { blocked: {}, exceptions: {} }, libroNotas: {} };
 
     // Guías del Taller PAES que muestra el Libro de Notas.
-    const SESIONES_LIBRO = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31];
+    const SESIONES_LIBRO = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21];
+    function sesionesLibro() {
+      const periodo = document.getElementById('periodoLibro').value;
+      return SESIONES_LIBRO.filter(s => periodo === 'todos' || (periodo === '2' ? s >= 11 : s <= 10));
+    }
+    function omitirNotaLibro(guia, curso) {
+      return guia === 14 && String(curso || '').replace(/[^0-9A-Z]/gi, '').toUpperCase() === '4AHC';
+    }
 
     // ====== CATÁLOGO DE GUÍAS (ids compartidos con guias.html y guia-lock.js) ======
     // El 'id' debe coincidir con data-guia-id en guias.html y window.GUIA_LOCK_ID en cada guiaN.html
@@ -1771,6 +1781,7 @@
         // Load dashboard central data
         await fetchResultsConsolidated();
         if (location.hash === '#casas') document.querySelector('[data-tab="casas"]').click();
+        else if (location.hash === '#libro') document.querySelector('[data-tab="libro"]').click();
 
       } catch (error) {
         console.error('[Admin Auth Error]', error);
@@ -2641,8 +2652,9 @@
       const rec = databaseData.libroNotas[rut];
       return (rec && rec.notas) || {};
     }
-    function promedioDe(notas) {
-      const nums = SESIONES_LIBRO
+    function promedioDe(notas, curso) {
+      const nums = sesionesLibro()
+        .filter(s => !omitirNotaLibro(s, curso))
         .map(s => notas[s])
         .filter(v => v !== undefined && v !== null && String(v).trim() !== '' && String(v).trim().toUpperCase() !== 'A')
         .map(v => parseFloat(String(v).replace(',', '.')))
@@ -2665,25 +2677,29 @@
       if (!head || !tbody) return;
       if (typeof NOMINAS_PAES === 'undefined') return;
 
+      const sesiones = sesionesLibro();
       // Encabezado: Estudiante + una columna por sesión + Promedio
       head.innerHTML = `<th class="student-col" style="width: 240px; position: sticky; left: 0; background: #0b0e20; z-index: 10;">Estudiante</th>` +
-        SESIONES_LIBRO.map(s => `<th style="width: 58px;">G${s}</th>`).join('') +
+        sesiones.map(s => `<th style="width: 58px;">G${s}</th>`).join('') +
         `<th style="width: 70px; color: var(--paes-color-light);">Prom.</th>`;
 
       const search = (document.getElementById('searchLibro').value || '').toLowerCase().trim();
       const searchRut = search.replace(/[.\-\s]/g, '');
       const course = document.getElementById('filterCourseLibro').value;
+      const normalize = c => String(c || '').replace(/[^0-9A-Z]/gi, '').toUpperCase();
 
       const filtered = NOMINAS_PAES.filter(s => {
         const matchesSearch = s.nombre.toLowerCase().includes(search) || s.rut.includes(searchRut);
-        const matchesCourse = course === '' || s.curso === course;
-        return matchesSearch && matchesCourse;
+        const matchesCourse = course === '' || normalize(s.curso) === normalize(course);
+        return s.rut !== PAES_TEST_RUT && matchesSearch && matchesCourse;
       });
       filtered.sort((a, b) => a.nombre.localeCompare(b.nombre));
 
+      const cantidad = filtered.reduce((n, student) => n + sesiones.filter(g => !omitirNotaLibro(g, student.curso) && /^[1-7](?:[.,]\d)?$/.test(String(notasDe(student.rut)[g] ?? ''))).length, 0);
+      document.getElementById('libroStatus').textContent = `${filtered.length} estudiantes · ${cantidad} notas numéricas · ${sesiones.length} guías. El promedio corresponde al período seleccionado.`;
       tbody.innerHTML = '';
       if (filtered.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="${SESIONES_LIBRO.length + 2}" style="text-align:center; color:var(--text-muted); padding:30px;">No se encontraron estudiantes.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="${sesiones.length + 2}" style="text-align:center; color:var(--text-muted); padding:30px;">No se encontraron estudiantes.</td></tr>`;
         return;
       }
 
@@ -2691,13 +2707,14 @@
         const notas = notasDe(student.rut);
         const tr = document.createElement('tr');
         let html = `<td style="font-weight:600; color:#fff; text-align:left; position:sticky; left:0; background:#0b0e20; border-right:1px solid var(--border-color); z-index:5;">${student.nombre}<br><span style="font-size:10px; font-weight:bold; color:var(--paes-color-light);">${student.curso}</span></td>`;
-        SESIONES_LIBRO.forEach(s => {
+        sesiones.forEach(s => {
+          if (omitirNotaLibro(s, student.curso)) { html += '<td title="Guía no aplicada al curso">No aplica</td>'; return; }
           const v = notas[s] != null ? notas[s] : '';
           html += `<td><input class="nota-input ${notaInputClass(v)}" value="${v}" maxlength="4"
             data-rut="${student.rut}" data-ses="${s}"
             onchange="saveNota(this)" onfocus="this.select()" title="${student.nombre} · Guía ${s}"></td>`;
         });
-        const prom = promedioDe(notas);
+        const prom = promedioDe(notas, student.curso);
         html += `<td class="prom-cell" data-prom-rut="${student.rut}" style="color:${prom == null ? 'var(--text-muted)' : (parseFloat(prom) < 4 ? '#fbbf24' : '#6ee7b7')};">${prom == null ? '—' : prom}</td>`;
         tr.innerHTML = html;
         tbody.appendChild(tr);
@@ -2732,7 +2749,7 @@
       // recalcula el promedio de esa fila en vivo
       const promCell = document.querySelector(`[data-prom-rut="${rut}"]`);
       if (promCell) {
-        const prom = promedioDe(databaseData.libroNotas[rut].notas);
+        const prom = promedioDe(databaseData.libroNotas[rut].notas, student.curso);
         promCell.textContent = prom == null ? '—' : prom;
         promCell.style.color = prom == null ? 'var(--text-muted)' : (parseFloat(prom) < 4 ? '#fbbf24' : '#6ee7b7');
       }
@@ -2877,6 +2894,13 @@
     // Libro de notas: filtros
     document.getElementById('searchLibro').addEventListener('input', renderLibroTable);
     document.getElementById('filterCourseLibro').addEventListener('change', renderLibroTable);
+    document.getElementById('periodoLibro').addEventListener('change', renderLibroTable);
+    document.getElementById('refreshLibro').addEventListener('click', async function() {
+      this.disabled = true;
+      document.getElementById('libroStatus').textContent = 'Actualizando notas…';
+      try { if (!await fetchResultsConsolidated()) document.getElementById('libroStatus').textContent = 'No se pudieron actualizar las notas. Reintenta.'; }
+      finally { this.disabled = false; }
+    });
     document.getElementById('smRut').addEventListener('input', function() {
       if (this.disabled) return;
       const pos = this.selectionStart, before = this.value.length;

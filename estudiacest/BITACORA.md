@@ -1,5 +1,12 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-15, PAES: notas visibles hasta G21 y planilla completa por período
+
+- Francisco pide corregir el nombre de G22, revisar nuevas respuestas de G11–G21, calificar por laboriosidad y mostrar la planilla completa. G22 cambia «Miniensayo NM4» por «Guía 22 · Miniensayo de Competencia Lectora» en ambas rutas, catálogo y panel docente; se conservan preguntas, claves, plazos y registros.
+- El panel del estudiante y la API amplían G11–G17 a G11–G21. El admin abre el libro por enlace #libro, muestra segundo semestre G11–G21 de entrada, permite primer semestre G3–G10 y todas G3–G21, calcula promedio del período sin ausencias/vacíos ni G14 de 4A-HC y actualiza desde el libro vigente con botón explícito. Conserva los registros históricos y excluye la cuenta de prueba; curso normalizado y nómina extra integrada.
+- Revisión de producción de solo lectura respaldada fuera de Git: nuevas entregas sin calificar y discrepancias manuales entre intento/libro separadas. La calificación histórica PAES usa aciertos con 60 % de exigencia; Francisco ahora solicita laboriosidad. Se consulta el criterio de aplicación de L/ML/PL/NL antes de mutar calificaciones; no se asume una conversión ni se ejecutan los publicadores antiguos que pueden rebajar o borrar notas. Sin cambios en notas reales durante esta preparación.
+- Validación local: 23 controles con API real y base ficticia, 11 notas estudiantiles, promedio consistente con admin, períodos, G14 omitida, actualización y títulos, 390/1440/3840 sin desbordes ni errores JS; auditorías PAES aprobadas. Build y producción se registran al cierre.
+
 - 2026-10-14, corrección menor PAES: tarjetas publicadas reordenadas al abrir el panel, N.º 23 → 22 → 21 → … → 1, ensayos históricos 2 → 1 y biblioteca al final; se retira la llamada residual al estado de cartas que ya no carga la portada. Mismos contenidos, enlaces y registros (26 tarjetas comparadas); auditorías y build aprobados, 813 recursos. Publicado 63cd0c8089770c7db1b31e6b228344ee4b8d364f en dpl_CheZ6nhDmkDeDRXUNzKvGpSqbg73 READY mediante deploy seguro, proceso código 0, alias/proyecto/SHA exactos. HTML público idéntico por SHA-256; navegador sobre producción con perfil ficticio y servicios de datos aislados confirma orden completo, 390/1440/3840 sin desbordes ni errores JS; sin escrituras en estudiantes.
 
 ## 2026-10-14, PAES: miniensayo 23 y retiro de la tarjeta de cartas

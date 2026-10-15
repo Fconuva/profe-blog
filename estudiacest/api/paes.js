@@ -19,7 +19,7 @@ Object.assign(GUIDED_GUIDE_FEEDBACK, FOUNDATIONS.GUIDED_FEEDBACK);
 const DEFAULT_DATABASE_URL = 'https://estudiacest-default-rtdb.firebaseio.com';
 const BASE = 'plataforma_paes';
 const ADMIN_BASE = 'plataforma_estudiantes';
-const SECOND_SEMESTER_GUIDES = ['11', '12', '13', '14', '15', '16', '17'];
+const SECOND_SEMESTER_GUIDES = ['11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21'];
 const PAES_TEST_RUT = '111111111';
 
 function normalizePrivateKey(raw) {
@@ -850,7 +850,7 @@ async function handleGetMisNotas(req, res) {
             notas,
             omitidos: isFourthA ? ['14'] : [],
             desde: 11,
-            hasta: 17
+            hasta: 21
         }
     });
 }

@@ -70,7 +70,8 @@ async function handle(action,req,res,{db,auth,adminUid}){
     if(!/^[\w-]{1,128}$/.test(b.uid||'')||![C.SESSION,C.SESSION+'-guiada'].includes(b.sessionId)||!/^[\w-]{8,100}$/.test(b.requestId||'')||!Number.isSafeInteger(b.integrityEpoch)||b.integrityEpoch<0||typeof b.reason!=='string'||b.reason.trim().length<3||b.reason.trim().length>240)throw error(400,'Indica el intento y un motivo de 3 a 240 caracteres.');
     const now=Date.now(),ref=db.ref(BASE+'/'+b.sessionId+'/'+b.uid);
     const tx=await ref.transaction(r=>{
-     if(!r||r.resetAt||(r.uid&&r.uid!==b.uid)||(r.sessionId&&r.sessionId!==b.sessionId))return;
+     if(r===null)return null; // La primera lectura local puede preceder a la del servidor.
+     if(r.resetAt||(r.uid&&r.uid!==b.uid)||(r.sessionId&&r.sessionId!==b.sessionId))return;
      if(r.strikeAdjustments?.[b.requestId])return r;
      if((r.integrityEpoch||0)!==b.integrityEpoch)return;
      r=extendOpen(r);if(expired(r,now))r=finishExpired(r,now,b.sessionId.endsWith('-guiada'));

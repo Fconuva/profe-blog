@@ -1,5 +1,7 @@
 # Bitácora de Estudia CEST
 
+- 2026-10-15, corrección PAES: G1–G10 quedan con etiqueta neutra «Primer semestre · No se cuenta como pendiente», cualquiera sea su registro o un fallo de carga. Se excluyen explícitamente del resumen, filtro y avisos de falta de entrega; contenido, acceso, notas y respuestas históricos conservados. G11 en adelante mantiene sus estados vigentes. Validación y publicación se registran al cierre.
+
 ## 2026-10-15, PAES: etiquetas de avance y filtro de guías pendientes
 
 - Francisco solicita identificar encima de cada guía lo hecho y lo que falta. Las 23 tarjetas publicadas reciben etiqueta propia: hecha y entregada, en progreso, falta entregar, entrega incompleta o corrección sin entregar, con alternativas respondidas sobre el total. Se conservan las 26 tarjetas, destinos y orden descendente. Las etiquetas permanecen legibles aunque el docente bloquee el acceso.

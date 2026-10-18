@@ -164,6 +164,10 @@ module.exports = async (req, res) => {
         return res.status(500).json({ error: 'Firebase no disponible', detalle: initError });
     }
 
+    if (String((req.query && req.query.modulo) || '') === 'planilla-nm4') {
+        return require('./_nm4-classwork').createHandler({db,auth:admin.auth()})(req,res);
+    }
+
     if (String((req.query && req.query.modulo) || '') === 'informe-tecnico') {
         return informeTecnico(req, res, { admin, db });
     }

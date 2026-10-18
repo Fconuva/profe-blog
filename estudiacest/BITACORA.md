@@ -1,6 +1,6 @@
 # Bitácora de Estudia CEST
 
-- 2026-10-18, NM4 IA, corrección menor: Francisco autoriza usar el teléfono de forma responsable. Sustituida únicamente esa norma en la diapositiva 2 y sincronizados el acuerdo y el material de preparación de la planificación; se conserva el resto de la clase. Diff acotado a esos textos y esta línea; publicación segura y comprobación pública al cierre.
+- 2026-10-18, NM4 IA, corrección menor: Francisco autoriza usar el teléfono de forma responsable. Sustituida únicamente esa norma en la diapositiva 2 y sincronizados el acuerdo y el material de preparación de la planificación; se conserva el resto de la clase. Diff acotado a esos textos y esta línea. Código 8043f9708890dd0b5eace18848676fd756c4a0af, build aprobado con 829 recursos; deploy seguro terminado con código 0, dpl_32xwwzBcPauknXc8pC2hXSdeW9vg READY, alias/proyecto/commit exactos comprobados. Los dos archivos públicos coinciden por SHA-256 y la norma nueva se lee completa en navegador a 1366×768, sin la prohibición anterior. Cierre documental sin otro despliegue.
 
 ## 2026-10-18, NM4: ilustraciones, color y organizador completo para proyectar
 

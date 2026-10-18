@@ -1,5 +1,7 @@
 # Bitácora de Estudia CEST
 
+- 2026-10-18, NM4 IA, corrección menor: Francisco autoriza usar el teléfono de forma responsable. Sustituida únicamente esa norma en la diapositiva 2 y sincronizados el acuerdo y el material de preparación de la planificación; se conserva el resto de la clase. Diff acotado a esos textos y esta línea; publicación segura y comprobación pública al cierre.
+
 ## 2026-10-18, NM4: ilustraciones, color y organizador completo para proyectar
 
 - Francisco solicita decorar con imágenes de IA, quitar el contenido docente de la portada, separar las lecturas y mostrar el organizador entero en una página de la presentación. Se retira el acceso a la planificación del recorrido estudiantil; el archivo histórico queda sin enlace en la portada. Las cuatro lecturas por pareja, los dos temas, el trabajo en el cuaderno y la reflexión individual se conservan.

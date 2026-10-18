@@ -13,7 +13,7 @@ function database(){
 }
 async function call(db,body={},token='docente',action='save',course='4ATP'){
  let status=200,data;const res={setHeader(){},status(v){status=v;return this;},json(v){data=v;}};
- await createHandler({db,auth,roster})({method:action==='save'?'POST':'GET',headers:{authorization:token?'Bearer '+token:''},query:{course,action},body},res);return{status,data};
+ await createHandler({db,auth,roster})({method:['save','set-activity'].includes(action)?'POST':'GET',headers:{authorization:token?'Bearer '+token:''},query:{course,action},body},res);return{status,data};
 }
 const request={n:1,activity:'manual',grade:5.4,expectedVersion:0,requestId:'solicitud-ficticia-0001'};
 function answered(version,count){
@@ -61,6 +61,28 @@ async function apiAudit(){
  rows=project('4ATP',roster['4ATP'],{1:{informe:{version:1,grade:null}}},snapshots,false).rows;
  check(rows[0].grades.informe.grade===null,'blanco docente prevalece sobre automático');
  check(!JSON.stringify(rows).includes('answers')&&!JSON.stringify(rows).includes('history'),'vista pública no filtra respuestas ni historial');
+ const toggle={activity:'manual',enabled:false,expectedVersion:0,requestId:'activar-tarea-ficticia-0001'};
+ for(const token of ['','invalid','estudiante','limitado'])check((await call(db,toggle,token,'set-activity')).status===(token===''||token==='invalid'?401:403),'control de tareas protegido');
+ for(const change of [{activity:'../otra'},{enabled:'false'},{expectedVersion:-1},{requestId:'corto'}])check((await call(db,{...toggle,...change},'docente','set-activity')).status===400,'valida configuración');
+ await call(db,{...request,grade:6.4,expectedVersion:2,requestId:'nota-prueba-antes-desactivar'});
+ await call(db,{...request,activity:'oferta-contrato',grade:4,requestId:'nota-prueba-otra-actividad'});
+ const savedCells=JSON.stringify(db.state.plataforma_nm4.planilla_trabajo_2026.cursos['4ATP'].celdas);
+ const original=(await call(db,{},'docente','list')).data.rows[0];
+ result=await call(db,toggle,'docente','set-activity');
+ check(result.status===200&&!result.data.activities.find(a=>a.id==='manual').applicable,'desactivación confirmada');
+ check(result.data.rows[0].average===4&&result.data.rows[0].count===1&&result.data.rows[0].total===original.total-1,'desactivada fuera del promedio y del total');
+ check(JSON.stringify(db.state.plataforma_nm4.planilla_trabajo_2026.cursos['4ATP'].celdas)===savedCells,'desactivar no toca notas ni historial');
+ check((await call(db,{},'docente','list','4DTP')).data.activities.find(a=>a.id==='manual').applicable,'otro curso conserva tarea activa');
+ check((await call(db,{...request,expectedVersion:3,requestId:'nota-tarea-desactivada-0001'})).status===400,'tarea inactiva no admite nuevas notas');
+ check((await call(db,toggle,'docente','set-activity')).status===200,'configuración idempotente');
+ check((await call(db,{...toggle,requestId:'activar-tarea-ficticia-0002'},'docente','set-activity')).status===409,'rechaza configuración desactualizada');
+ result=await call(db,{...toggle,enabled:true,expectedVersion:1,requestId:'activar-tarea-ficticia-0003'},'docente','set-activity');
+ check(result.status===200&&result.data.rows[0].grades.manual.grade===6.4&&result.data.rows[0].average===5.2,'reactivar recupera la nota original');
+ check(Object.keys(db.state.plataforma_nm4.planilla_trabajo_2026.cursos['4ATP'].actividades.manual.history).length===2,'historial de activación independiente');
+ const settings=Object.fromEntries(result.data.activities.map(a=>[a.id,{enabled:false,version:1}]));
+ const empty=project('4ATP',roster['4ATP'],{},snapshots,false,settings).rows[0];check(empty.total===0&&empty.average===null&&!empty.partial,'sin tareas activas no crea un cero ni pendientes');
+ const digital=project('4ATP',roster['4ATP'],{},snapshots,false,{informe:{enabled:false,version:1}}).rows[0];check(digital.grades.informe.grade===null&&digital.count===0,'también excluye nota digital automática');
+ result=await call(db,{...toggle,activity:'correo',enabled:true,requestId:'activar-excepcion-por-curso'},'docente','set-activity');check(result.status===200&&result.data.activities.find(a=>a.id==='correo').applicable,'permite activar una tarea excluida inicialmente');
  const html=fs.readFileSync(path.join(ROOT,'nm4/index.html'),'utf8');check(html.includes('Nota de trabajo en clases')&&html.includes('/nm4/trabajo-en-clases/'),'portal enlaza nota correcta');
  return db;
 }
@@ -100,6 +122,17 @@ async function browserAudit(){
   await teacher.waitForFunction(()=>document.getElementById('notice').textContent.includes('Tu cambio sigue'));
   check(await teacher.locator('input[data-n="1"][data-activity="manual"]').inputValue()==='5,2','cambio conservado tras respuesta perdida');check(await teacher.locator('#course').isDisabled(),'no permite perder un cambio pendiente');
   await teacher.locator('input[data-n="1"][data-activity="manual"]').focus();await teacher.locator('input[data-n="1"][data-activity="manual"]').press('Enter');await teacher.getByText('Nota guardada y confirmada.',{exact:true}).waitFor();check(true,'reintento de respuesta perdida es idempotente');
+  await teacher.locator('#activitySettings summary').click();
+  await teacher.locator('#activityOptions [data-task="manual"]').uncheck();
+  await teacher.waitForFunction(()=>document.getElementById('notice').textContent.startsWith('Tarea desactivada'));
+  await student.waitForFunction(()=>document.querySelector('#grades thead').textContent.includes('Manual ilustradoNo cuenta'));
+  check(await teacher.locator('#grades input[data-activity="manual"]').count()===0,'sin editor en tarea desactivada');
+  check(await student.locator('#activitySettings').isHidden(),'alumno sin control de tareas');
+  check((await student.locator('#grades tbody tr').first().textContent()).includes('0/7 actividades'),'tarea con nota excluida también en vista alumno');
+  await teacher.reload();await teacher.locator('#grades tbody tr').first().waitFor();await teacher.locator('#activitySettings summary').click();check(!(await teacher.locator('#activityOptions [data-task="manual"]').isChecked()),'desactivación persiste tras recargar');
+  await teacher.selectOption('#course','4DTP');await teacher.waitForFunction(()=>document.querySelector('#grades tbody').textContent.includes('FICTICIO D'));check(await teacher.locator('#activityOptions [data-task="manual"]').isChecked(),'selección independiente por curso');
+  await teacher.selectOption('#course','4ATP');await teacher.waitForFunction(()=>document.querySelector('#grades tbody').textContent.includes('FICTICIO A'));await teacher.locator('#activityOptions [data-task="manual"]').check();
+  await student.waitForFunction(()=>document.querySelector('#grades tbody tr').textContent.includes('5,2'));check(true,'reactivar restaura nota en vivo');
   for(const width of [320,390,1440,3840]){
    await student.setViewportSize({width,height:900});check(await student.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'sin desborde '+width);
   }

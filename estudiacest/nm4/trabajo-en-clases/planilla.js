@@ -8,8 +8,8 @@
   let user=null,data=null,controller=null,retry=null,epoch=0,saving=false,dirty=false,ready=0,pendingInput=null;
   const format=n=>n===null?'':Number(n).toFixed(1).replace('.',',');
   const notice=(text,error=false)=>{$('notice').textContent=text;$('notice').classList.toggle('error',error);};
-  function lockEditing(input){pendingInput=input;document.querySelectorAll('#grades input').forEach(i=>i.disabled=i!==input);$('course').disabled=true;$('discard').hidden=false;}
-  function unlockEditing(){pendingInput=null;document.querySelectorAll('#grades input').forEach(i=>i.disabled=false);$('course').disabled=false;$('discard').hidden=true;}
+  function lockEditing(input){pendingInput=input;document.querySelectorAll('#grades input').forEach(i=>i.disabled=i!==input);document.querySelectorAll('#activityOptions input').forEach(i=>i.disabled=true);$('course').disabled=true;$('discard').hidden=false;}
+  function unlockEditing(){pendingInput=null;document.querySelectorAll('#grades input,#activityOptions input').forEach(i=>i.disabled=false);$('course').disabled=false;$('discard').hidden=true;}
   function url(action){return '/api/economista?modulo=planilla-nm4&action='+action+'&course='+encodeURIComponent($('course').value);}
   async function request(action,body){
     const token=await user.getIdToken();
@@ -19,12 +19,14 @@
   function render(){
     if(!data||saving||dirty||document.activeElement?.matches('#grades input'))return;
     $('editHelp').hidden=!data.canEdit;
-    $('grades').querySelector('thead').innerHTML='<tr><th class="number" scope="col">N°</th><th class="name" scope="col">Estudiante</th>'+data.activities.map(a=>`<th scope="col">${esc(a.title)}<small>${esc(a.mode)}</small></th>`).join('')+'<th scope="col">Promedio<small>Trabajo en clases</small></th></tr>';
+    $('activitySettings').hidden=!data.canEdit;
+    $('activityOptions').innerHTML=data.canEdit?data.activities.map(a=>`<label><input type="checkbox" data-task="${a.id}" data-version="${a.version}" ${a.applicable?'checked':''}><span>${esc(a.title)}<small>${a.applicable?'Cuenta en la nota':'Desactivada'}</small></span></label>`).join(''):'';
+    $('grades').querySelector('thead').innerHTML='<tr><th class="number" scope="col">N°</th><th class="name" scope="col">Estudiante</th>'+data.activities.map(a=>`<th scope="col" class="${a.applicable?'':'inactive'}">${esc(a.title)}<small>${a.applicable?esc(a.mode):'No cuenta'}</small></th>`).join('')+'<th scope="col">Promedio<small>Trabajo en clases</small></th></tr>';
     $('grades').querySelector('tbody').innerHTML=data.rows.map(row=>'<tr data-name="'+esc(row.name.toLocaleLowerCase('es'))+'"><td class="number">'+row.n+'</td><th class="name" scope="row">'+esc(row.name)+'</th>'+data.activities.map(a=>{
       const g=row.grades[a.id],title=g.source==='avance'?`Avance guardado: ${g.done} de ${g.total} apartados.`:g.grade===null?'Pendiente de revisión.':'Nota registrada por el docente.';
-      if(!g.applicable)return '<td class="na" title="No corresponde al curso">—</td>';
+      if(!g.applicable)return '<td class="na" title="Tarea desactivada para este curso; no cuenta en la nota">—</td>';
       return `<td class="${g.source==='avance'?'auto':''}" title="${esc(title)}">${data.canEdit?`<input type="text" inputmode="decimal" aria-label="${esc(row.name+' · '+a.title)}" data-n="${row.n}" data-activity="${a.id}" data-version="${g.version}" data-grade="${g.grade??''}" value="${format(g.grade)}" maxlength="4">`:g.grade===null?'<span class="pending" aria-label="Pendiente de revisión"></span>':format(g.grade)}</td>`;
-    }).join('')+`<td class="average">${row.average===null?'Pendiente':format(row.average)}<small>${row.partial?'Parcial · ':''}${row.count}/${row.total} actividades</small></td></tr>`).join('');
+    }).join('')+`<td class="average">${row.total===0?'Sin tareas activas':row.average===null?'Pendiente':format(row.average)}<small>${row.partial?'Parcial · ':''}${row.count}/${row.total} actividades</small></td></tr>`).join('');
     filter();
   }
   function filter(){const text=$('search').value.toLocaleLowerCase('es').trim();let count=0;document.querySelectorAll('#grades tbody tr').forEach(row=>{row.hidden=!row.dataset.name.includes(text);if(!row.hidden)count++;});$('count').textContent=data?`${count} de ${data.rows.length} estudiantes · Las notas se actualizan automáticamente.`:'';}
@@ -38,7 +40,7 @@
       if(!response.ok){const error=await response.json();throw new Error(error.error||'No se pudo conectar.');}
       const reader=response.body.getReader(),decoder=new TextDecoder();let buffer='';
       while(true){const {done,value}=await reader.read();if(done)break;buffer+=decoder.decode(value,{stream:true});let split;
-        while((split=buffer.indexOf('\n\n'))>=0){const event=buffer.slice(0,split);buffer=buffer.slice(split+2);if(event.startsWith('data: ')&&id===epoch){accept(JSON.parse(event.slice(6)));if(!saving&&!dirty&&!$('notice').textContent.startsWith('Nota guardada'))notice('Actualizado · conexión en vivo');}}
+        while((split=buffer.indexOf('\n\n'))>=0){const event=buffer.slice(0,split);buffer=buffer.slice(split+2);if(event.startsWith('data: ')&&id===epoch){accept(JSON.parse(event.slice(6)));if(!saving&&!dirty&&!/^(Nota guardada|Tarea activada|Tarea desactivada)/.test($('notice').textContent))notice('Actualizado · conexión en vivo');}}
       }
     }catch(e){if(e.name==='AbortError')return;if(id===epoch&&!saving&&!dirty)notice('Sin conexión en vivo. Reintentando…',true);}
     if(id===epoch)retry=setTimeout(()=>watch(id),2000);
@@ -49,13 +51,26 @@
     const text=input.value.trim().replace(',','.');const grade=text===''?null:Number(text),before=input.dataset.grade===''?null:Number(input.dataset.grade);
     if(grade===before){dirty=false;input.classList.remove('invalid');unlockEditing();render();return;}
     if(grade!==null&&(!/^\d(?:\.\d)?$/.test(text)||!Number.isFinite(grade)||grade<1||grade>7)){dirty=true;input.classList.add('invalid');lockEditing(input);notice('Escribe una nota de 1,0 a 7,0, con un decimal. Borra para dejarla pendiente.',true);return;}
-    saving=true;dirty=true;document.querySelectorAll('#grades input').forEach(i=>i.disabled=true);$('course').disabled=true;notice('Guardando nota…');
+    saving=true;dirty=true;document.querySelectorAll('#grades input,#activityOptions input').forEach(i=>i.disabled=true);$('course').disabled=true;notice('Guardando nota…');
     const requestId=input.dataset.requestId||crypto.randomUUID();input.dataset.requestId=requestId;
     try{
       const result=await request('save',{course:data.course,n:Number(input.dataset.n),activity:input.dataset.activity,grade,expectedVersion:Number(input.dataset.version),requestId});
       saving=false;dirty=false;data=result;render();notice('Nota guardada y confirmada.');
     }catch(e){saving=false;if(e.status===409){dirty=false;delete input.dataset.requestId;try{data=await request('list');render();}catch(_){}notice(e.message,true);}else{input.disabled=false;input.classList.add('invalid');notice(e.message+' Tu cambio sigue en la casilla. Pulsa Enter para reintentar.',true);}}
     finally{if(dirty)lockEditing(input);else unlockEditing();}
+  }
+  async function setActivity(input){
+    if(!data?.canEdit||saving||dirty){render();return;}
+    const activity=data.activities.find(a=>a.id===input.dataset.task),enabled=input.checked;
+    saving=true;document.querySelectorAll('#grades input,#activityOptions input').forEach(i=>i.disabled=true);$('course').disabled=true;notice('Guardando selección de tareas…');
+    try{
+      data=await request('set-activity',{course:data.course,activity:activity.id,enabled,expectedVersion:activity.version,requestId:crypto.randomUUID()});
+      saving=false;render();notice(`Tarea ${enabled?'activada':'desactivada'} para este curso. Las notas se conservan.`);
+    }catch(e){
+      // Puede haberse confirmado la escritura aunque se haya perdido la respuesta.
+      try{data=await request('list');}catch(_){}
+      saving=false;render();notice(e.message+' Revisa la selección y vuelve a intentarlo.',true);
+    }finally{unlockEditing();}
   }
   function sessionChanged(){
     if(ready<2)return;
@@ -67,6 +82,7 @@
   for(const auth of [studentAuth,teacherAuth]){let first=true;auth.onAuthStateChanged(()=>{if(first){ready++;first=false;}sessionChanged();});}
   $('login').addEventListener('submit',async event=>{event.preventDefault();const form=event.target,button=form.querySelector('button');button.disabled=true;$('loginMessage').textContent='Ingresando…';try{await teacherAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);await teacherAuth.signInWithEmailAndPassword(form.email.value.trim(),form.password.value);form.password.value='';$('loginMessage').textContent='';}catch(_){$('loginMessage').textContent='No se pudo ingresar. Revisa tu correo y contraseña.';}finally{button.disabled=false;}});
   $('logout').addEventListener('click',()=>teacherAuth.signOut());
+  $('activityOptions').addEventListener('change',event=>{if(event.target.matches('input[type="checkbox"]'))setActivity(event.target);});
   $('discard').addEventListener('click',()=>{if(pendingInput)pendingInput.value=pendingInput.dataset.grade===''?'':format(Number(pendingInput.dataset.grade));dirty=false;unlockEditing();render();notice('Cambio descartado. Se conserva la nota registrada.');});
   $('course').addEventListener('change',load);$('search').addEventListener('input',filter);
   $('grades').addEventListener('input',event=>{if(event.target.matches('input')){dirty=true;delete event.target.dataset.requestId;}});

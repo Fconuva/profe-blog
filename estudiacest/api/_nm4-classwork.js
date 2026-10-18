@@ -16,8 +16,9 @@ const ACTIVITIES = [
 const fail=(status,message)=>Object.assign(new Error(message),{status});
 const validGrade=n=>n===null || typeof n==='number'&&Number.isFinite(n)&&n>=1&&n<=7&&Math.abs(n*10-Math.round(n*10))<1e-8;
 const normalizeCourse=c=>String(c||'').replace(/[^A-Z0-9]/gi,'').toUpperCase();
-function project(course, roster, cells, snapshots, canEdit) {
-  const activities=ACTIVITIES.map(a=>({...a,applicable:!a.except?.includes(course)}));
+const isEnabled=(activity,course,settings)=>typeof settings?.[activity.id]?.enabled==='boolean'?settings[activity.id].enabled:!activity.except?.includes(course);
+function project(course, roster, cells, snapshots, canEdit, settings={}) {
+  const activities=ACTIVITIES.map(a=>({...a,applicable:isEnabled(a,course,settings),version:settings?.[a.id]?.version||0}));
   return {course,canEdit,activities,rows:roster.map(s=>{
     const auto=evidence({course,n:s.n},snapshots),grades={};
     for(const a of activities){
@@ -46,17 +47,35 @@ function createHandler({db,auth,roster=ROSTER,base=BASE}){
       const [admin,teacher,student]=await Promise.all(['admins','docentes','estudiantes'].map(p=>db.ref(`plataforma_estudiantes/${p}/${actor.uid}`).once('value')));
       const canEdit=admin.val()===true&&teacher.val()?.superadmin===true;
       if(!canEdit&&!Object.hasOwn(roster,normalizeCourse(student.val()?.curso)))throw fail(403,'Esta planilla corresponde a estudiantes de NM4 y a su docente.');
-      const cellPath=`${base}/cursos/${course}/celdas`;
+      const coursePath=`${base}/cursos/${course}`,cellPath=`${coursePath}/celdas`,settingsPath=`${coursePath}/actividades`;
       const versions=Object.entries(CONFIG).filter(([,c])=>c[2].includes(course));
       const read=async()=>{
-        const [cells,...sources]=await Promise.all([cellPath,...versions.map(([,c])=>`plataforma_nm4/${c[0]}`)].map(p=>db.ref(p).once('value')));
-        return project(course,roster[course],cells.val(),Object.fromEntries(versions.map(([v],i)=>[v,sources[i].val()||{}])),canEdit);
+        const [courseData,...sources]=await Promise.all([coursePath,...versions.map(([,c])=>`plataforma_nm4/${c[0]}`)].map(p=>db.ref(p).once('value')));
+        const current=courseData.val()||{};
+        return project(course,roster[course],current.celdas,Object.fromEntries(versions.map(([v],i)=>[v,sources[i].val()||{}])),canEdit,current.actividades);
       };
+      if(action==='set-activity'){
+        if(req.method!=='POST')throw fail(405,'Usa el control de tareas para guardar.');
+        if(!canEdit)throw fail(403,'Solo el docente puede activar o desactivar tareas.');
+        const {activity,enabled,expectedVersion,requestId}=body,target=ACTIVITIES.find(a=>a.id===activity);
+        if(!target||typeof enabled!=='boolean'||!Number.isInteger(expectedVersion)||expectedVersion<0||!/^[A-Za-z0-9_-]{12,100}$/.test(requestId||''))throw fail(400,'Revisa la tarea y el curso.');
+        const ref=db.ref(`${settingsPath}/${activity}`),now=Date.now();
+        const tx=await ref.transaction(current=>{
+          if(current===null&&expectedVersion>0)return current;
+          if(current?.history?.[requestId])return current;
+          if((current?.version||0)!==expectedVersion)return;
+          return {enabled,version:expectedVersion+1,updatedAt:now,updatedBy:actor.uid,history:{...(current?.history||{}),[requestId]:{enabled,previous:current?.enabled??!target.except?.includes(course),by:actor.uid,at:now}}};
+        },undefined,false);
+        const confirmed=(await ref.once('value')).val();
+        if(!tx.committed||confirmed?.history?.[requestId]?.by!==actor.uid||confirmed.version!==expectedVersion+1||confirmed.enabled!==enabled)throw fail(409,'La selección de tareas cambió en otra ventana. Actualiza y vuelve a intentarlo.');
+        return res.status(200).json({ok:true,...await read()});
+      }
       if(action==='save'){
         if(req.method!=='POST')throw fail(405,'Usa Guardar para registrar una nota.');
         if(!canEdit)throw fail(403,'Solo el docente puede modificar notas.');
         const {n,activity,grade,expectedVersion,requestId}=body;
-        const target=ACTIVITIES.find(a=>a.id===activity&&!a.except?.includes(course));
+        const settings=(await db.ref(settingsPath).once('value')).val();
+        const target=ACTIVITIES.find(a=>a.id===activity&&isEnabled(a,course,settings));
         if(!Number.isInteger(n)||!roster[course].some(s=>s.n===n)||!target||!validGrade(grade)||!Number.isInteger(expectedVersion)||expectedVersion<0||!/^[A-Za-z0-9_-]{12,100}$/.test(requestId||''))throw fail(400,'Revisa el estudiante, la actividad y la nota (1,0 a 7,0).');
         const ref=db.ref(`${cellPath}/${n}/${activity}`),now=Date.now();
         const tx=await ref.transaction(current=>{
@@ -74,7 +93,7 @@ function createHandler({db,auth,roster=ROSTER,base=BASE}){
       // La suscripción se sirve autenticada, sin abrir reglas de Firebase ni poner tokens en URLs.
       res.setHeader('Content-Type','text/event-stream; charset=utf-8');res.setHeader('X-Accel-Buffering','no');res.flushHeaders?.();
       let closed=false,running=false,again=false,timer;
-      const refs=[cellPath,...versions.map(([,c])=>`plataforma_nm4/${c[0]}`)].map(p=>db.ref(p));
+      const refs=[coursePath,...versions.map(([,c])=>`plataforma_nm4/${c[0]}`)].map(p=>db.ref(p));
       const close=()=>{if(closed)return;closed=true;clearInterval(heartbeat);clearTimeout(deadline);clearTimeout(timer);refs.forEach(r=>r.off('value',changed));res.end();};
       const send=async()=>{if(closed)return;if(running){again=true;return;}running=true;try{const data=await read();if(!closed)res.write(`data: ${JSON.stringify(data)}\n\n`);}catch(_){close();}finally{running=false;if(again&&!closed){again=false;timer=setTimeout(send,80);}}};
       const changed=()=>{clearTimeout(timer);timer=setTimeout(send,80);};

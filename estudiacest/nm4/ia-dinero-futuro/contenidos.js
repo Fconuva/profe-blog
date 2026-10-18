@@ -25,5 +25,14 @@ window.IA_CLASE = {
  ['Oportunidades y riesgos','Un beneficio y un problema posibles. ¿A quiénes afectan? Señalen la fuente.'],
  ['Contraste de fuentes','¿En qué coinciden las dos lecturas? ¿Qué diferencia o información nueva aporta cada una?']
  ],
+ filasPantalla:[
+ ['Fuentes y confiabilidad','Título, medio y fecha de ambas fuentes. ¿Son confiables?'],
+ ['Cambio principal','¿Qué cambia o podría cambiar con la IA?'],
+ ['Propósito y postura','¿Qué busca y sostiene cada fuente? ¿Desde qué papel habla?'],
+ ['Argumento y evidencia','Una razón + un dato o ejemplo + su fuente.'],
+ ['Declaración y límite','¿Quién habla? ¿Hecho, opinión o pronóstico? ¿Qué falta comprobar?'],
+ ['Oportunidades y riesgos','Un beneficio y un riesgo. ¿A quiénes afectan?'],
+ ['Contraste de fuentes','¿Coinciden, difieren o se complementan las dos lecturas?']
+ ],
  reflexion:'¿Cómo podrían afectar estos cambios tu vida y tu futuro laboral? ¿Qué sientes al respecto y por qué? ¿Te sientes preparado para enfrentarlos? Explica qué sabes hacer y qué necesitas aprender.'
 };

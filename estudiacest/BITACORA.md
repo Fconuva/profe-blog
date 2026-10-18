@@ -1,5 +1,12 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-18, NM4: ilustraciones, color y organizador completo para proyectar
+
+- Francisco solicita decorar con imágenes de IA, quitar el contenido docente de la portada, separar las lecturas y mostrar el organizador entero en una página de la presentación. Se retira el acceso a la planificación del recorrido estudiantil; el archivo histórico queda sin enlace en la portada. Las cuatro lecturas por pareja, los dos temas, el trabajo en el cuaderno y la reflexión individual se conservan.
+- Tres ilustraciones originales creadas con image_gen: IA/dinero/trabajo, contraste de fuentes y futuro laboral. Originales PNG, versiones WebP y prompts/procedencia guardados en nm4/ia-dinero-futuro/assets/. No se usan como evidencia de las noticias. Portada y siete pantallas ilustradas; lecturas en su página con cada fuente en un bloque separado. Azul para tema A, verde para tema B y amarillo para la relación entre ambos. Preguntas de reflexión separadas visualmente.
+- Las tres pantallas parciales del organizador se sustituyen por una sola, la 14: siete filas de análisis y tres de relación visibles juntas. La secuencia queda en 20 pantallas; acceso directo al organizador desde portada y menú. Planificación histórica sincronizada con la numeración actual. Sin cambios en fuentes, cuentas, respuestas ni notas.
+- Validación local: 521 controles en 320/390/1366/1440/1920/3840; diez filas completas dentro de una pantalla desde 1366×768, imágenes reales cargadas, navegación y panel compartido disponibles, sin errores ni desbordes. Se corrige el ancho mínimo del selector en móvil al detectar que el texto largo ampliaba el control. Capturas de portada, organizador y reflexión abiertas y revisadas; lectura completa del contenido como estudiante. Build integral aprobado con 829 recursos críticos. Publicación y comprobación final se registran al cierre.
+
 ## 2026-10-18, NM4: investigación sobre IA, dinero y futuro laboral
 
 - Francisco pide presentación paso a paso y publicación con todos los recursos para trabajar. Se conserva su decisión: parejas, dos temas, dos publicaciones por tema, un organizador comparativo en cada cuaderno y reflexión individual sobre impacto, emociones y preparación. Manual terminado en una clase por confirmación docente; no se programa su continuación.

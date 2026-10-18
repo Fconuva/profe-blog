@@ -16,6 +16,8 @@
   });
   content.append(make('p',`Para contrastar: ${topic.contraste}`,'note'));item.append(content);topics.append(item);
  });
+ const compact=document.querySelector('[data-organizer-compact]');
+ if(compact)data.filasPantalla.forEach(([title,prompt])=>{const row=make('tr'),h=make('th',title);h.scope='row';row.append(h,make('td',prompt),make('td',prompt));compact.append(row);});
  const organizer=document.querySelector('[data-organizer-rows]');
  if(organizer)data.filas.forEach(([title,prompt])=>{const row=make('tr'),h=make('th',title);h.scope='row';row.append(h,make('td',prompt),make('td',prompt));organizer.append(row);});
  const slides=[...document.querySelectorAll('.slide')];if(!slides.length)return;

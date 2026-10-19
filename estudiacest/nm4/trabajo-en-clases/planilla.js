@@ -2,9 +2,12 @@
 (()=>{
   const config={apiKey:'AIzaSyCuDQ_iHDHmTd8bPeqUbsXQqdxw2SObt8w',authDomain:'estudiacest.firebaseapp.com',databaseURL:'https://estudiacest-default-rtdb.firebaseio.com',projectId:'estudiacest',storageBucket:'estudiacest.firebasestorage.app',messagingSenderId:'999002169815',appId:'1:999002169815:web:51203237bc77c2e74deb92'};
   const $=id=>document.getElementById(id),esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const defaultApp=firebase.apps.find(a=>a.name==='[DEFAULT]')||firebase.initializeApp(config);
   const teacherApp=firebase.apps.find(a=>a.name==='estudiacest-admin')||firebase.initializeApp(config,'estudiacest-admin');
-  const studentAuth=defaultApp.auth(),teacherAuth=teacherApp.auth();
+  const teacherAuth=teacherApp.auth(),sessionKey='estudiacest-nm4-consulta';
+  let studentSession=null;
+  try{studentSession=JSON.parse(sessionStorage.getItem(sessionKey));if(studentSession?.exp<=Date.now())studentSession=null;}catch(_){}
+  if(studentSession?.course)$('course').value=studentSession.course;
+  const studentUser=()=>studentSession?{uid:'nm4-consulta',getIdToken:async()=>studentSession.token}:null;
   let user=null,data=null,controller=null,retry=null,epoch=0,saving=false,dirty=false,ready=0,pendingInput=null;
   const format=n=>n===null?'':Number(n).toFixed(1).replace('.',',');
   const notice=(text,error=false)=>{$('notice').textContent=text;$('notice').classList.toggle('error',error);};
@@ -37,7 +40,7 @@
     controller=new AbortController();
     try{
       const response=await fetch(url('watch'),{headers:{Authorization:'Bearer '+await user.getIdToken()},signal:controller.signal,cache:'no-store'});
-      if(!response.ok){const error=await response.json();throw new Error(error.error||'No se pudo conectar.');}
+      if(!response.ok){const error=await response.json();if(response.status===401&&studentSession){studentSession=null;sessionStorage.removeItem(sessionKey);sessionChanged();$('rutMessage').textContent=error.error||'Ingresa nuevamente tu RUT.';return;}throw new Error(error.error||'No se pudo conectar.');}
       const reader=response.body.getReader(),decoder=new TextDecoder();let buffer='';
       while(true){const {done,value}=await reader.read();if(done)break;buffer+=decoder.decode(value,{stream:true});let split;
         while((split=buffer.indexOf('\n\n'))>=0){const event=buffer.slice(0,split);buffer=buffer.slice(split+2);if(event.startsWith('data: ')&&id===epoch){accept(JSON.parse(event.slice(6)));if(!saving&&!dirty&&!/^(Nota guardada|Tarea activada|Tarea desactivada)/.test($('notice').textContent))notice('Actualizado · conexión en vivo');}}
@@ -45,7 +48,7 @@
     }catch(e){if(e.name==='AbortError')return;if(id===epoch&&!saving&&!dirty)notice('Sin conexión en vivo. Reintentando…',true);}
     if(id===epoch)retry=setTimeout(()=>watch(id),2000);
   }
-  async function load(){stop();data=null;dirty=false;$('grades').querySelector('tbody').replaceChildren();notice('Cargando planilla…');const id=epoch;try{const next=await request('list');if(id!==epoch)return;accept(next);notice('Planilla actualizada');watch(id);}catch(e){if(id===epoch)notice(e.message,true);}}
+  async function load(){stop();data=null;dirty=false;$('grades').querySelector('tbody').replaceChildren();notice('Cargando planilla…');const id=epoch;try{const next=await request('list');if(id!==epoch)return;accept(next);notice('Planilla actualizada');watch(id);}catch(e){if(id===epoch){notice(e.message,true);if(e.status===401&&studentSession){studentSession=null;sessionStorage.removeItem(sessionKey);sessionChanged();$('rutMessage').textContent=e.message;}}}}
   async function save(input){
     if(!data?.canEdit||saving)return;
     const text=input.value.trim().replace(',','.');const grade=text===''?null:Number(text),before=input.dataset.grade===''?null:Number(input.dataset.grade);
@@ -73,14 +76,16 @@
     }finally{unlockEditing();}
   }
   function sessionChanged(){
-    if(ready<2)return;
-    const next=teacherAuth.currentUser||studentAuth.currentUser;if(next?.uid===user?.uid&&next)return;stop();user=next;data=null;dirty=false;
-    $('sheet').hidden=!user;$('studentLogin').hidden=Boolean(user);$('logout').hidden=!teacherAuth.currentUser;
-    $('teacherAccess').hidden=Boolean(teacherAuth.currentUser);$('session').textContent=user?'Sesión iniciada. Selecciona un curso para consultar la planilla.':'Ingresa con tu cuenta para ver las notas de tu curso.';
+    if(ready<1)return;
+    const next=studentUser()||teacherAuth.currentUser;if(next?.uid===user?.uid&&next)return;stop();user=next;data=null;dirty=false;
+    $('sheet').hidden=!user;$('studentLogin').hidden=Boolean(studentSession);$('studentLogout').hidden=!studentSession;$('logout').hidden=!teacherAuth.currentUser||Boolean(studentSession);
+    $('teacherAccess').hidden=Boolean(teacherAuth.currentUser)&&!studentSession;$('session').textContent=studentSession?'Consulta con RUT iniciada. Selecciona un curso para ver las notas.':user?'Sesión docente iniciada. Selecciona un curso.':'Ingresa tu RUT para ver las notas. No necesitas correo ni contraseña.';
     if(user)load();
   }
-  for(const auth of [studentAuth,teacherAuth]){let first=true;auth.onAuthStateChanged(()=>{if(first){ready++;first=false;}sessionChanged();});}
-  $('login').addEventListener('submit',async event=>{event.preventDefault();const form=event.target,button=form.querySelector('button');button.disabled=true;$('loginMessage').textContent='Ingresando…';try{await teacherAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);await teacherAuth.signInWithEmailAndPassword(form.email.value.trim(),form.password.value);form.password.value='';$('loginMessage').textContent='';}catch(_){$('loginMessage').textContent='No se pudo ingresar. Revisa tu correo y contraseña.';}finally{button.disabled=false;}});
+  {let first=true;teacherAuth.onAuthStateChanged(()=>{if(first){ready++;first=false;}sessionChanged();});}
+  $('studentLogin').addEventListener('submit',async event=>{event.preventDefault();const button=event.target.querySelector('button');button.disabled=true;$('rutMessage').textContent='Buscando tu curso…';try{const response=await fetch('/api/economista?modulo=planilla-nm4&action=rut-login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({rut:$('rutInput').value}),cache:'no-store'}),result=await response.json();if(!response.ok)throw Error(result.error||'No se pudo ingresar. Vuelve a intentarlo.');studentSession={token:result.token,course:result.course,exp:Date.now()+8*3600000};sessionStorage.setItem(sessionKey,JSON.stringify(studentSession));$('course').value=result.course;$('rutInput').value='';$('rutMessage').textContent='';sessionChanged();}catch(e){$('rutMessage').textContent=e.message;}finally{button.disabled=false;}});
+  $('studentLogout').addEventListener('click',()=>{studentSession=null;sessionStorage.removeItem(sessionKey);sessionChanged();});
+  $('login').addEventListener('submit',async event=>{event.preventDefault();const form=event.target,button=form.querySelector('button');button.disabled=true;$('loginMessage').textContent='Ingresando…';try{await teacherAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);await teacherAuth.signInWithEmailAndPassword(form.email.value.trim(),form.password.value);studentSession=null;sessionStorage.removeItem(sessionKey);sessionChanged();form.password.value='';$('loginMessage').textContent='';}catch(_){$('loginMessage').textContent='No se pudo ingresar. Revisa tu correo y contraseña.';}finally{button.disabled=false;}});
   $('logout').addEventListener('click',()=>teacherAuth.signOut());
   $('activityOptions').addEventListener('change',event=>{if(event.target.matches('input[type="checkbox"]'))setActivity(event.target);});
   $('discard').addEventListener('click',()=>{if(pendingInput)pendingInput.value=pendingInput.dataset.grade===''?'':format(Number(pendingInput.dataset.grade));dirty=false;unlockEditing();render();notice('Cambio descartado. Se conserva la nota registrada.');});

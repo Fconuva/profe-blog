@@ -1,10 +1,13 @@
 'use strict';
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),http=require('node:http');
-const {createHandler,project,BASE}=require('../api/_nm4-classwork'),E=require('../api/_nm4-classwork-evidence');
+const {createHandler,project,BASE,IDENTITY_ROWS}=require('../api/_nm4-classwork'),E=require('../api/_nm4-classwork-evidence');
 const {mockDb}=require('./audit-simce-reopen');
 const ROOT=path.resolve(__dirname,'..');let checks=0;const check=(v,m)=>{assert.ok(v,m);checks++;};
 const roster={"4ATP":[{n:1,nombre:'ESTUDIANTE FICTICIO A'},{n:2,nombre:'ESTUDIANTE FICTICIO B'}],"4DTP":[{n:1,nombre:'ESTUDIANTE FICTICIO D'}]};
 const auth={verifyIdToken:async t=>{if(t==='invalid')throw Error('invalid');return{uid:t};}};
+const crypto=require('node:crypto'),{SALT}=require('../api/_roster_nm4_informe');
+const sessionSecret='secreto-exclusivo-de-pruebas-no-produccion';
+const identityRows=[['11111111-1','4ATP',1],['22222222-2','4DTP',1],['33333333-3','PRUEBA',1]].map(([rut,c,n])=>[crypto.createHash('sha256').update(SALT+rut.replace('-','')).digest('hex').slice(0,24),c,n]);
 function database(){
  const state={plataforma_estudiantes:{admins:{docente:true,limitado:true},docentes:{docente:{superadmin:true},limitado:{superadmin:false}},estudiantes:{estudiante:{curso:'4A-TP'},ajeno:{curso:'3A-HC'}}}};
  const db=mockDb(state),ref=db.ref.bind(db),listeners=new Map();
@@ -13,7 +16,7 @@ function database(){
 }
 async function call(db,body={},token='docente',action='save',course='4ATP'){
  let status=200,data;const res={setHeader(){},status(v){status=v;return this;},json(v){data=v;}};
- await createHandler({db,auth,roster})({method:['save','set-activity'].includes(action)?'POST':'GET',headers:{authorization:token?'Bearer '+token:''},query:{course,action},body},res);return{status,data};
+ await createHandler({db,auth,roster,sessionSecret,identityRows})({method:['save','set-activity','rut-login'].includes(action)?'POST':'GET',headers:{authorization:token?'Bearer '+token:''},query:{course,action},body},res);return{status,data};
 }
 const request={n:1,activity:'manual',grade:5.4,expectedVersion:0,requestId:'solicitud-ficticia-0001'};
 function answered(version,count){
@@ -25,6 +28,22 @@ function answered(version,count){
 }
 async function apiAudit(){
  const db=database(),before=JSON.stringify(db.state.plataforma_estudiantes);
+ const fullRoster=require('../api/_roster_nm4');
+ for(const [course,students] of Object.entries(fullRoster))check(students.every(s=>IDENTITY_ROWS.filter(r=>r[1]===course&&r[2]===s.n).length===1),'cada estudiante de la planilla tiene una identidad RUT en '+course);
+ check(new Set(IDENTITY_ROWS.map(r=>r[0])).size===IDENTITY_ROWS.length,'sin hashes de identidad duplicados');
+ for(const rut of ['', '123', '11111111-2', '33333333-3', '../11111111-1'])check((await call(db,{rut},'','rut-login','')).status===400,'RUT desconocido o fuera de nómina rechazado');
+ for(const [rut,course] of [['11.111.111-1','4ATP'],['222222222','4DTP']]){
+  const login=await call(db,{rut,canEdit:true},'','rut-login','');check(login.status===200&&login.data.course===course,'RUT reconoce curso sin cuenta SIMCE');
+  check(!JSON.stringify(login.data).includes(rut),'no devuelve ni guarda RUT');
+  const token=login.data.token,read=await call(db,{},token,'list',course);check(read.status===200&&!read.data.canEdit,'sesión RUT solo lectura');
+  check((await call(db,{},token,'list',course==='4ATP'?'4DTP':'4ATP')).status===200,'conserva filtro por curso autorizado');
+  check((await call(db,request,token)).status===403,'RUT no puede editar notas');
+  check((await call(db,{activity:'manual',enabled:false},token,'set-activity')).status===403,'RUT no puede desactivar tareas');
+  const parts=token.split('.'),claims=JSON.parse(Buffer.from(parts[2],'base64url').toString());claims.n=999;parts[2]=Buffer.from(JSON.stringify(claims)).toString('base64url');
+  check((await call(db,{},parts.join('.'),'list')).status===401,'rechaza sesión manipulada');
+  claims.n=1;claims.exp=Date.now()-1;parts[2]=Buffer.from(JSON.stringify(claims)).toString('base64url');parts[3]=crypto.createHmac('sha256',crypto.createHash('sha256').update('nm4-classwork-session:'+sessionSecret).digest()).update(parts[2]).digest('base64url');
+  check((await call(db,{},parts.join('.'),'list')).status===401,'sesión vencida rechazada');
+ }
  check((await call(db,request,'')).status===401,'anónimo rechazado');check((await call(db,request,'invalid')).status===401,'token inválido');
  for(const token of ['estudiante','limitado','ajeno'])check((await call(db,request,token)).status===403,'solo superadmin propietario edita');
  check((await call(db,{},'estudiante','list')).status===200,'NM4 puede leer');check((await call(db,{},'ajeno','list')).status===403,'otro nivel no lee');
@@ -86,9 +105,9 @@ async function apiAudit(){
  const html=fs.readFileSync(path.join(ROOT,'nm4/index.html'),'utf8');check(html.includes('Nota de trabajo en clases')&&html.includes('/nm4/trabajo-en-clases/'),'portal enlaza nota correcta');
  return db;
 }
-function firebaseStub(identity){return `(()=>{const user={uid:${JSON.stringify(identity)},getIdToken:async()=>${JSON.stringify(identity)}};const apps=[];const auth=()=>({currentUser:user,onAuthStateChanged:f=>setTimeout(()=>f(user),0),setPersistence:async()=>{}});auth.Auth={Persistence:{LOCAL:'local'}};window.firebase={apps,auth,initializeApp:(config,name='[DEFAULT]')=>{const a={name,auth};apps.push(a);return a;}};})();`;}
+function firebaseStub(identity){return `(()=>{const user=${identity==='estudiante'?'null':`{uid:'docente',getIdToken:async()=>'docente'}`};const apps=[];const auth=()=>({currentUser:user,onAuthStateChanged:f=>setTimeout(()=>f(user),0),setPersistence:async()=>{}});auth.Auth={Persistence:{LOCAL:'local'}};window.firebase={apps,auth,initializeApp:(config,name='[DEFAULT]')=>{const a={name,auth};apps.push(a);return a;}};})();`;}
 async function serve({db=database(),handler,realAuth=false}={}){
- const handle=handler||createHandler({db,auth,roster});
+ const handle=handler||createHandler({db,auth,roster,sessionSecret,identityRows});
  const server=http.createServer(async(req,res)=>{
   const u=new URL(req.url,'http://local');
   if(u.pathname==='/api/economista'){
@@ -108,7 +127,13 @@ async function browserAudit(){
   browser=await chromium.launch({channel:'chrome',headless:true});const teacher=await browser.newPage(),student=await browser.newPage(),errors=[];
   for(const p of [teacher,student])p.on('pageerror',e=>errors.push(e.message));
   await teacher.goto(url+'/nm4/trabajo-en-clases/');await student.goto(url+'/nm4/trabajo-en-clases/?student=1');
+  await student.locator('#rutInput').fill('11111111-2');await student.locator('#studentLogin button').click();await student.getByText(/No encontramos ese RUT/).waitFor();check(await student.locator('#sheet').isHidden(),'RUT erróneo conserva formulario sin datos');
+  await student.locator('#rutInput').fill('11.111.111-1');await student.locator('#studentLogin button').click();
   await teacher.locator('#grades tbody tr').first().waitFor();await student.locator('#grades tbody tr').first().waitFor();
+  check(student.url().includes('/nm4/trabajo-en-clases/')&&!student.url().includes('/lecturas/'),'ingreso RUT permanece en planilla');
+  check(await student.locator('#rutInput').inputValue()==='','RUT no queda en formulario');
+  check(!await student.evaluate(()=>Boolean(firebase.apps.find(a=>a.name==='[DEFAULT]'))),'no abre sesión SIMCE');
+  await student.reload();await student.locator('#grades tbody tr').first().waitFor();check(await student.locator('#studentLogin').isHidden(),'recarga recupera consulta RUT');
   check(await student.locator('#grades input').count()===0,'estudiante sin editor');
   const input=teacher.locator('input[data-n="1"][data-activity="manual"]');await input.fill('6,4');await input.press('Enter');
   await teacher.getByText('Nota guardada y confirmada.',{exact:true}).waitFor();
@@ -137,6 +162,9 @@ async function browserAudit(){
    await student.setViewportSize({width,height:900});check(await student.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'sin desborde '+width);
   }
   await student.selectOption('#course','4DTP');await student.waitForFunction(()=>document.querySelector('#grades tbody').textContent.includes('FICTICIO D'));check(await student.locator('td.na').count()===2,'4D sin actividades ajenas');
+  await student.locator('#studentLogout').click();await student.locator('#rutInput').waitFor({state:'visible'});check(await student.locator('#sheet').isHidden(),'cerrar consulta retira las notas');
+  await student.locator('#rutInput').fill('22222222-2');await student.locator('#studentLogin button').click();await student.waitForFunction(()=>document.querySelector('#grades tbody').textContent.includes('FICTICIO D'));check(await student.locator('#course').inputValue()==='4DTP','RUT abre su propio curso');
+  await student.reload();await student.waitForFunction(()=>document.querySelector('#grades tbody').textContent.includes('FICTICIO D'));check(await student.locator('#course').inputValue()==='4DTP','recarga conserva curso de ingreso');
   check(errors.length===0,'sin errores de navegador');
  }finally{if(browser)await browser.close();server.closeAllConnections();await new Promise(r=>server.close(r));}
 }

@@ -72,7 +72,7 @@
       else if (q.type === 'number') control = `<input ${common} type="text" inputmode="decimal" autocomplete="off" maxlength="${q.max}" value="${esc(value)}">`;
       else control = `<input ${common} type="text" maxlength="${q.max}" autocomplete="off" value="${esc(value)}">`;
       if (opts.inline) return `<span class="fill-inline" data-wrap="${id}">${control}${opts.unit ? `<span class="unit">${opts.unit}</span>` : ''}<span class="sr" id="h-${id}">${esc(q.label)}. ${esc(hint)}</span></span>`;
-      const tag = REQUIRED.has(id) ? 'Obligatorio' : 'Ampliación';
+      const tag = REQUIRED.has(id) ? 'Prioritario' : 'Ampliación';
       return `<div class="fill" data-wrap="${id}"><label for="q-${id}"><span class="fill-tag">${tag}</span> ${esc(opts.label || q.label)}</label>${control}<span class="fill-help" id="h-${id}">${esc(hint)}</span></div>`;
     };
   }

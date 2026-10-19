@@ -162,7 +162,7 @@ const industrialAudit = auditSpecialty({
   assets: ['i1-conjunto-motor-bomba.png', 'i2-acoplamiento-fuga.png', 'i3-medicion-vibracion.png']
 });
 const industrialStudent = read('nm4/u3-clase6-informe-industrial/informe/index.html');
-expect((api.match(/allowPartialSubmit: true/g) || []).length === 2 && api.includes('submit && !version.allowPartialSubmit'), 'Solo Industrial y Automotriz deben permitir entrega sin mínimo.');
+expect((api.match(/allowPartialSubmit: true/g) || []).length === 3 && api.includes('submit && !version.allowPartialSubmit'), 'Industrial, Automotriz y Electrónica deben permitir entregar el avance sin mínimo.');
 ['PREVIEW_TEACHERS', "versions: ['industrial', 'automotriz']", "role: 'docente'", 'previewOnly: true', "action !== 'get-guia-state'", 'La vista docente es solo de lectura.', 'previewExample', 'PREVIEW_MODELS'].forEach(token =>
   expect(api.includes(token), `Vista docente: falta el permiso acotado de servidor ${token}.`));
 ['industrial', 'automotriz'].forEach(version => {
@@ -215,9 +215,9 @@ expect(estudente.includes("'informeNM4elec.rut'") && !estudente.includes("'infor
 expect(portal.includes('/nm4/u3-clase6-informe-electronica/informe/'), 'La tarjeta de la Clase 6 no enlaza al informe de Electrónica.');
 expect(/electronica:[\s\S]*?base: 'plataforma_nm4\/informe_electronica_2026'[\s\S]*?cursos: \['4ETP', 'PRUEBA'\]/.test(api), 'La API no separa la base y el curso de Electrónica.');
 expect(api.includes("'4ETP': 'electronica'"), 'La API no dirige 4°E a su versión canónica de Electrónica.');
-expect(Array.isArray(ECAMPOS.activity.requiredForSubmit) && ECAMPOS.activity.requiredForSubmit.length === 20, 'Electrónica no define las 20 partes mínimas para entregar.');
-expect(api.includes('requiredForSubmit') && estudente.includes('requiredForSubmit'), 'El mínimo obligatorio no se valida en cliente y servidor.');
-['Obligatorio para entregar:', 'páginas 6, 8, 9 y 11', 'Ampliación', 'de ${REQUIRED_TOTAL} mínimos'].forEach(token => expect((edeck + estudente + erenderer).includes(token), `Electrónica: falta la instrucción de trabajo «${token}».`));
+expect(Array.isArray(ECAMPOS.activity.requiredForSubmit) && ECAMPOS.activity.requiredForSubmit.length === 20, 'Electrónica no conserva las 20 partes prioritarias de la actividad.');
+expect(/electronica:\s*\{[^}]*allowPartialSubmit: true/.test(api) && !estudente.includes('Completa primero las'), 'Electrónica todavía bloquea la entrega por apartados incompletos.');
+['Prioriza estas partes:', 'páginas 6, 8, 9 y 11', 'Ampliación', 'de ${REQUIRED_TOTAL} prioritarias', 'Puedes entregar aunque queden casillas sin completar'].forEach(token => expect((edeck + estudente + erenderer).includes(token), `Electrónica: falta la instrucción de trabajo «${token}».`));
 ['supportsPairs: true', '/_claims', '/_teams', '_pairBackups', 'workMode', 'validatePair', 'migratePair', 'join-pair', 'admin-pair', 'changedFields', 'revision', 'lastEditor'].forEach(token => expect(api.includes(token), `Electrónica: la API de parejas no contiene ${token}.`));
 ['id="pairMode"', 'id="partnerRut"', 'id="addPartner"', 'validate-partner', 'join-pair', 'Trabajo compartido:', 'sin perder lo que ya escribiste', 'Ambos compartirán el mismo borrador', 'syncFromServer', 'setInterval', 'changedFields', 'sincronización está activa'].forEach(token => expect(estudente.includes(token), `Electrónica: la interfaz de parejas no contiene ${token}.`));
 ['individualmente o con un compañero', 'Trabajo individual o en pareja', 'ambos comparten el borrador y la entrega'].forEach(token => expect(edeck.includes(token), `Electrónica: la presentación no explica «${token}».`));

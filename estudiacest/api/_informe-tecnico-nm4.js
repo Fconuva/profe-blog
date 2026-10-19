@@ -63,6 +63,7 @@ const VERSIONS = {
     base: 'plataforma_nm4/informe_electronica_2026',
     cursos: ['4ETP', 'PRUEBA'],
     nombre: 'informe de Electrónica (4°E)',
+    allowPartialSubmit: true,
     ruta: '/nm4/u3-clase6-informe-electronica/informe/',
     supportsPairs: true
   }

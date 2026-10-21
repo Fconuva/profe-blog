@@ -10,21 +10,26 @@
   menu.querySelectorAll('a').forEach(function (link) { link.addEventListener('click', closeMenu); });
   document.addEventListener('keydown', function (event) { if (event.key === 'Escape' && menu.classList.contains('is-open')) { closeMenu(); menuButton.focus(); } });
   var reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
-  if (!reduced.matches && 'IntersectionObserver' in window) {
-    document.documentElement.classList.add('motion-enabled');
-    var reveals = new IntersectionObserver(function (entries) {
-      entries.forEach(function (entry) { if (entry.isIntersecting) { entry.target.classList.remove('is-pending'); entry.target.classList.add('is-revealed'); reveals.unobserve(entry.target); } });
-    }, { threshold: 0.08 });
-    document.querySelectorAll('.reveal').forEach(function (element) { element.classList.add('is-pending'); reveals.observe(element); });
-    reduced.addEventListener('change', function (event) { if (event.matches) { document.documentElement.classList.remove('motion-enabled'); reveals.disconnect(); } });
+  var motionToggle = document.getElementById('motion-toggle');
+  motionToggle.addEventListener('click', function () {
+    var paused = document.documentElement.classList.toggle('motion-paused');
+    motionToggle.setAttribute('aria-pressed', String(paused));
+    motionToggle.textContent = paused ? 'Activar movimiento' : 'Detener movimiento';
+    window.dispatchEvent(new CustomEvent('profe:motionchange', { detail: { active: !paused } }));
+  });
+  if (!reduced.matches && !(navigator.connection && navigator.connection.saveData)) {
+    var interactions = document.createElement('script');
+    interactions.src = '/js/home-interactions.bundle.js?v=20261021b';
+    interactions.defer = true;
+    document.head.appendChild(interactions);
   }
   function idle(fn) { if ('requestIdleCallback' in window) requestIdleCallback(fn, { timeout: 1800 }); else setTimeout(fn, 500); }
   idle(function () {
     // La imagen y todos los textos funcionan sin descargar el motor 3D.
     var connection = navigator.connection;
-    if (!reduced.matches && window.innerWidth >= 900 && !(connection && connection.saveData)) {
+    if (!reduced.matches && !(connection && connection.saveData)) {
       var motion = document.createElement('script');
-      motion.src = '/js/home-motion.bundle.js?v=20261021';
+      motion.src = '/js/home-motion.bundle.js?v=20261021b';
       motion.defer = true;
       document.head.appendChild(motion);
     }

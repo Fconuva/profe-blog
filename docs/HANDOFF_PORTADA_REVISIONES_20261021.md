@@ -48,3 +48,5 @@ Publicación por GitHub hacia Vercel, proyecto `profefconuva`, scope `fconuvas-p
 Las capturas y el original generado están en `C:/dev/artifacts/profefranciscopancho-20261021/`. El usuario ya autorizó retirar el video y rediseñar la plataforma actual. No hace falta volver a preguntar esos puntos.
 
 **Pendiente real:** esta última corrección de precios, contenido y movimiento todavía no está implementada ni publicada. Este documento registra el estado; no acredita su terminación.
+
+Actualización posterior del mismo 21 de octubre: Francisco reabrió el encargo porque faltaban efectos. La ampliación de escena, galería, contenido y revisiones está implementada y contrastada; el documento vigente para sus decisiones y pruebas es `PORTADA_MEJORAS_20261021.md`. La publicación se comprueba sobre el dominio público al cerrar el bloque.

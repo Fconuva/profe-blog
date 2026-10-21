@@ -27,5 +27,10 @@ require('esbuild').buildSync({
   target: ['es2020'], outfile: 'js/home-motion.bundle.js',
   define: { 'process.env.NODE_ENV': '"production"' },
 });
+require('esbuild').buildSync({
+  entryPoints: ['scripts/home-interactions.js'],
+  bundle: true, minify: true, format: 'iife', platform: 'browser',
+  target: ['es2020'], outfile: 'js/home-interactions.bundle.js',
+});
 run(require.resolve('tailwindcss/lib/cli.js'), ['-i', './css/tailwind.css', '-o', './css/tw.css', '--minify']);
 run(require.resolve('@11ty/eleventy/cmd.js'));

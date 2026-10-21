@@ -973,6 +973,7 @@ const SIMCE_U3S12 = require('./_simce-u3s12.js');
 const SIMCE_U4 = require('./_simce-u4.js');
 const SIMCE_ADMIN_ATTEMPTS = require('./_simce-admin-attempts.js');
 const SIMCE_ADMIN_GRADES = require('./_simce-admin-grades.js');
+const SIMCE_HONOR = require('./_simce-honor.js');
 
 module.exports = async (req, res) => {
     res.setHeader('Access-Control-Allow-Origin', resolveAllowedOrigin(req));
@@ -987,6 +988,7 @@ module.exports = async (req, res) => {
         const action = String(req.query.action || (req.body && req.body.action) || '');
 
         if (action === 'simce-admin-grade') return await SIMCE_ADMIN_GRADES.manejar(req, res, db, auth);
+        if (action === 'simce-honor') return await SIMCE_HONOR.manejar(req, res, db, auth);
         if (action.startsWith('simce-admin-')) return await SIMCE_ADMIN_ATTEMPTS.manejar(req, res, action.slice('simce-admin-'.length), db, auth);
         if (action.startsWith('simce-u3s7-')) return await handleU3S7(req, res, action);
         if (action.startsWith('simce-u3s8-')) return await handleU3S8(req, res, action);

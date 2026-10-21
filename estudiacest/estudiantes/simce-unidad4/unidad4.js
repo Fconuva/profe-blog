@@ -15,7 +15,7 @@
  function remember(){if(submitted)return;try{localStorage.setItem(localKey(),JSON.stringify({answers,reopenedAt,savedAt:Date.now()}));}catch(_){}}
  function clearLocal(){try{localStorage.removeItem(localKey());}catch(_){}}
  function controls(disabled){document.querySelectorAll('#readings input').forEach(el=>{el.disabled=disabled;});$('submit').disabled=disabled;}
- function update(){const count=activity.texts.flatMap(t=>t.questions).filter(q=>answers[q.id]).length;$('progressText').textContent=`${count}/18 preguntas`;$('progressFill').value=count;}
+ function update(){const questions=activity.texts.flatMap(t=>t.questions),count=questions.filter(q=>answers[q.id]).length;$('progressText').textContent=count+'/'+questions.length+' preguntas';$('progressFill').max=questions.length;$('progressFill').value=count;$('activitySummary').textContent=activity.texts.length+' textos · '+questions.length+' preguntas';}
  async function api(action,method='GET',body=null){
   const token=await user.getIdToken();
   const response=await fetch(`/api/estudiantes?action=${action}&ensayo=${number}`,{method,headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});

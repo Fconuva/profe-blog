@@ -281,11 +281,18 @@ exams.forEach((exam,index)=>exam.texts.flatMap(t=>t.questions).forEach((item,i)=
   item.errors=item.errors.slice(offset).concat(item.errors.slice(0,offset));
   item.key=keyOrders[index][i];
 }));
-function publicExam(number) {
-  const value = exams[number - 1];
+const legacyExam2 = structuredClone(exams[1]);
+exams[1].texts.push(require('./_simce-u4-extension'));
+exams[1].contentVersion='simce-u4-2-24-v2';
+function examForAttempt(number,record) {
+  if(Number(number)===2 && record && record.version!=='simce-u4-2-24-v2' && (record.total===18 || record.version==='simce-u4-2026-v1' || Object.keys(record.answers||{}).length))return legacyExam2;
+  return exams[Number(number)-1];
+}
+function publicExam(number, selected) {
+  const value = selected || exams[number - 1];
   if (!value) return null;
   return { number:value.number, sessionId:value.sessionId, date:value.date, title:value.title,
     texts:value.texts.map(t => ({ title:t.title, genre:t.genre, paragraphs:t.paragraphs, source:t.source,
       ...(t.table ? {table:t.table} : {}), questions:t.questions.map(q => ({id:q.id,prompt:q.prompt,options:q.options})) })) };
 }
-module.exports = { exams, dates, publicExam };
+module.exports = { exams, dates, publicExam, examForAttempt, legacyExam2 };

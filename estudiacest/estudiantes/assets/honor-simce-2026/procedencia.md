@@ -1,0 +1,5 @@
+# Fondo del diploma de honor
+
+Ilustración original generada el 21 de octubre de 2026 con la herramienta integrada image_gen. Revisada abierta: marco dorado, fondo marfil, libro y laureles; sin nombres, letras, firmas ni personas. El diploma compone los nombres y avatares reales únicamente tras la autorización del servidor. La insignia CEST se conserva desde estudiantes/assets/insignia_talca_1.png y se superpone sin alterarla.
+
+Prompt: Create a refined landscape 3:2 honor diploma background for Chilean high-school reading achievement, 2026. Ivory paper texture, thin precise double gold border, restrained navy corner flourishes, a small golden laurel with an open book at bottom center. Sophisticated contemporary academic celebration, warm light, tasteful subtle gold particles at far outer edges. The central 75 percent must be completely clean ivory negative space for real student names and avatars to be overlaid by the application. No text, letters, numbers, people, faces, signatures, logos or watermark. Avoid crowded decoration. Crisp gold engraving and symmetrical balanced frame.

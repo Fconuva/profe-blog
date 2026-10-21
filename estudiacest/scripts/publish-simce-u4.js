@@ -3,12 +3,12 @@ const fs=require('fs'),os=require('os'),path=require('path');
 const {exams}=require('../api/_simce-u4-catalog');
 const {getAccessToken,requestJson}=require('./firebase-maintenance-db');
 function standardSession(exam){return {
- titulo:`Unidad 4 · Miniensayo ${exam.number} — ${exam.title}`,descripcion:'3 textos y 18 preguntas. Aciertos y puntaje simulado CEST al entregar.',
+ titulo:`Unidad 4 · Miniensayo ${exam.number} — ${exam.title}`,descripcion:`${exam.texts.length} textos y ${exam.texts.flatMap(t=>t.questions).length} preguntas. Aciertos y puntaje simulado CEST al entregar.`,
  orden:400+exam.number,programa:'simce',activa:true,respuestas_bloqueadas:false,
  resultados_visibles:true,retroalimentacion_visible:false,notas_evaluadas:false,
  panel_unidad:'u4',panel_seccion:'plan',panel_orden:exam.number,fecha_aplicacion:exam.date,
  link_guia:`/estudiantes/simce-unidad4/?ensayo=${exam.number}`,prefer_guia:true,
- asignados:['2A-HC','2B-HC'],total_preguntas:18,formato_panel:'simce-mini-u4',
+ asignados:['2A-HC','2B-HC'],total_preguntas:exam.texts.flatMap(t=>t.questions).length,formato_panel:'simce-mini-u4',
  fecha_cierre:'2026-11-10',cierre_at:Date.parse('2026-11-11T00:00:00-03:00')
 };}
 async function main(){

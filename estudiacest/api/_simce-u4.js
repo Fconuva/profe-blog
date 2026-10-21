@@ -1,5 +1,5 @@
 'use strict';
-const {exams, publicExam} = require('./_simce-u4-catalog');
+const {exams, publicExam, examForAttempt} = require('./_simce-u4-catalog');
 const BASE = 'plataforma_estudiantes';
 const COURSES = new Set(['2A-HC','2B-HC']);
 const CLOSE_AT = Date.parse('2026-11-11T00:00:00-03:00');
@@ -57,7 +57,7 @@ async function manejar(req,res,action,db,auth) {
     if (typeof body === 'string') { try {body=JSON.parse(body);} catch (_) {throw fail(400,'Solicitud inválida.');} }
     const number = String(req.query?.ensayo || body.ensayo || '');
     if (!/^[1-5]$/.test(number)) throw fail(400,'Selecciona un miniensayo de la Unidad 4.');
-    const exam = exams[Number(number)-1];
+    let exam = exams[Number(number)-1];
     const token = String(req.headers.authorization || '').replace(/^Bearer\s+/i,'');
     if (!token) throw fail(401,'Inicia sesión para continuar.');
     let decoded;
@@ -108,13 +108,14 @@ async function manejar(req,res,action,db,auth) {
     if (!student || student.activo === false || !COURSES.has(student.curso) || !assigned(session,uid,student.curso)) {
       throw fail(403,'Este miniensayo no está asignado a tu curso.');
     }
+    exam=examForAttempt(number,current);
     validateIdentity(current,exam,uid,student.curso);
     if (req.method === 'GET' && action === 'simce-u4-state') {
       const completed = current?.submitted === true && current?.completada === true;
       const active = available(session,uid,Date.now());
       return res.status(200).json({ok:true,student:{nombre:student.nombre || '',curso:student.curso},
         session:{active,title:session.titulo,date:exam.date},
-        exam:active || completed ? publicExam(Number(number)) : null,
+        exam:active || completed ? publicExam(Number(number),exam) : null,
         attempt:current ? {answers:cleanAnswers(current.answers,exam),submitted:current.submitted === true,
           completada:current.completada === true,startedAt:current.startedAt,updatedAt:current.updatedAt,
           submittedAt:current.submittedAt,reopenedAt:current.reopenedAt || 0} : null,
@@ -124,7 +125,7 @@ async function manejar(req,res,action,db,auth) {
     const isFinal = action === 'simce-u4-submit';
     const answers = cleanAnswers(body.answers,exam);
     const QUESTIONS=exam.texts.flatMap(t=>t.questions);
-    if (isFinal && Object.keys(answers).length !== QUESTIONS.length) throw fail(400,'Responde las 18 preguntas antes de entregar.');
+    if (isFinal && Object.keys(answers).length !== QUESTIONS.length) throw fail(400,`Responde las ${QUESTIONS.length} preguntas antes de entregar. Si no ves todas, recarga: tu avance guardado se conserva.`);
     const now=Date.now();
     if(!available(session,uid,now))throw fail(423,'Este miniensayo está cerrado.');
     const responseRef=db.ref(`${BASE}/respuestas/${exam.sessionId}/${uid}`);
@@ -140,7 +141,7 @@ async function manejar(req,res,action,db,auth) {
       previousForRollback=previous || null;
       const startedAt=previous?.startedAt || now;
       const record={...(previous || {}),uid,sessionId:exam.sessionId,nombre:student.nombre || '',curso:student.curso,
-        answers,startedAt,updatedAt:now,last_save:now,submitted:false,completada:false,total:QUESTIONS.length,version:'simce-u4-2026-v1'};
+        answers,startedAt,updatedAt:now,last_save:now,submitted:false,completada:false,total:QUESTIONS.length,version:exam.contentVersion || 'simce-u4-2026-v1'};
       record.revision=Number(previous?.revision || 0)+1;
       if (isFinal) Object.assign(record,scoreAnswers(answers,exam),{submitted:true,completada:true,
         submittedAt:now,completadaAt:now,submitted_at:now});

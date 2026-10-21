@@ -19,8 +19,9 @@ async function call(db,action,token='student',body={},number='1',method=action.e
 function measure(){
  const stats=[];
  for(const exam of exams){
-  check(exam.texts.length===3,'Tres textos');const questions=exam.texts.flatMap(t=>t.questions);check(questions.length===18,'18 preguntas');
-  check(new Set(questions.map(q=>q.id)).size===18,'IDs únicos');
+  const expected=exam.number===2?24:18;
+  check(exam.texts.length===(exam.number===2?4:3),'Cantidad de textos de la versión vigente');const questions=exam.texts.flatMap(t=>t.questions);check(questions.length===expected,'Cantidad de preguntas de la versión vigente');
+  check(new Set(questions.map(q=>q.id)).size===expected,'IDs únicos');
   const skills={},keys={},words=[],optionWords=[];
   for(const text of exam.texts){words.push(text.paragraphs.join(' ').trim().split(/\s+/u).length);for(const q of text.questions){
    skills[q.skill]=(skills[q.skill]||0)+1;keys[q.key]=(keys[q.key]||0)+1;
@@ -28,12 +29,12 @@ function measure(){
    const lengths=q.options.map(o=>o.split(/\s+/u).length);optionWords.push(lengths);
    const k='ABCD'.indexOf(q.key);check(lengths[k]<=Math.max(...lengths.filter((_,i)=>i!==k))*1.5,'Clave no destaca por longitud');
   }}
-  const auditedCounts=[[4,8,6],[4,9,5],[5,8,5],[4,10,4],[4,8,6]][exam.number-1];
+  const auditedCounts=[[4,8,6],[4,12,8],[5,8,5],[4,10,4],[4,8,6]][exam.number-1];
   check(['LOCALIZAR','INTERPRETAR','REFLEXIONAR'].every((s,i)=>skills[s]===auditedCounts[i]),'Distribución por demanda auditada, sin imponer cuota a la etiqueta');
   questions.forEach(q=>{check(q.demandAudit && q.demandAudit.rationale.length>90,'Fundamento específico de demanda');check(q.demandAudit.assessedSkill===q.skill,'Eje corresponde a la tarea auditada');});
   check(!JSON.stringify(publicExam(exam.number)).includes('demandAudit'),'Auditoría privada, sin pistas durante el intento');
   check(exam.writtenPractice.rubric.length===4 && exam.writtenPractice.evidence.length===2,'Respuesta redactada con pauta y evidencia de ambos textos');
-  check(Object.values(keys).every(n=>n>=4 && n<=5),'Claves 4–5 por letra');
+  check(Object.values(keys).every(n=>exam.number===2?n===6:n>=4&&n<=5),'Distribución de claves equilibrada');
   const seq=questions.map(q=>q.key).join('');check(!/(.)\1\1|(.{2})\2\2|(.{4})\3/u.test(seq),'Sin ciclos ni rachas de tres');
   const visible=JSON.stringify(publicExam(exam.number));check(!/"(?:key|errors|evidence|skill|demand|operation)":/.test(visible),'Sin pauta en vista estudiante');
   const totalWords=words.reduce((a,b)=>a+b,0)+questions.reduce((sum,q)=>sum+(q.prompt+' '+q.options.join(' ')).split(/\s+/u).length,0);
@@ -58,12 +59,12 @@ async function apiTests(){
   check((await call(db,'simce-u4-save','student',{answers:{q1:'A'},score:999,startedAt:1},n)).status===200,'Guarda borrador');
   const draft=await call(db,'simce-u4-state','student',{},n);check(draft.data.attempt.startedAt>1,'Inicio en servidor');check(draft.data.result===null,'No puntaje en borrador');
   check((await call(db,'simce-u4-submit','student',{answers,score:0,simulatedScore:999},n)).status===200,'Entrega válida');
-  const final=await call(db,'simce-u4-state','student',{},n);check(final.data.attempt.submitted && final.data.attempt.completada,'Dos marcas confirmadas');check(final.data.result.score===18 && final.data.result.simulatedScore===350,'Puntaje en servidor');
-  check(final.data.result.total===18,'Total fijo por catálogo');
+  const final=await call(db,'simce-u4-state','student',{},n);check(final.data.attempt.submitted && final.data.attempt.completada,'Dos marcas confirmadas');check(final.data.result.score===questions.length && final.data.result.simulatedScore===350,'Puntaje en servidor');
+  check(final.data.result.total===questions.length,'Total de la versión por catálogo');
   check((await call(db,'simce-u4-save','student',{answers:{}},n)).status===409,'Borrador tardío no revierte entrega');
   check((await call(db,'simce-u4-submit','student',{answers},n)).status===409,'Entrega duplicada inmutable');
   check(api.scoreAnswers({},exam).simulatedScore===150,'Cero aciertos: índice CEST 150');
-  check(api.scoreAnswers(Object.fromEntries(questions.map((q,i)=>[q.id,i<9?q.key:'ABCD'[('ABCD'.indexOf(q.key)+1)%4]])),exam).simulatedScore===250,'Nueve aciertos: índice CEST 250');
+  check(api.scoreAnswers(Object.fromEntries(questions.map((q,i)=>[q.id,i<questions.length/2?q.key:'ABCD'[('ABCD'.indexOf(q.key)+1)%4]])),exam).simulatedScore===250,'Mitad de aciertos: índice CEST 250');
  }
  const review=await call(db,'simce-u4-review','teacherB');check(review.data.results.length===0,'Resultados docentes filtrados por curso');
  const before=clone(db.state[BASE].respuestas['sesion-u4-1'].student);
@@ -160,7 +161,7 @@ async function browserTests(stats){
   running.db.state[BASE].sesiones['sesion-2']={activa:false,contenido:{textos:Array.from({length:7},(_,i)=>({id:'t'+(i+1),titulo:'Texto ficticio '+(i+1),fuente:'Fixture',parrafos:[{texto:'Texto de prueba.'}]})),preguntas:Array.from({length:7},(_,i)=>({id:i+1,textoRef:'t'+(i+1),enunciado:'Pregunta de prueba',opciones:[{texto:'A'},{texto:'B'},{texto:'C'},{texto:'D'}]}))}};
   await page.goto(running.url+'/estudiantes/simce-unidad4/forma-p.html');await page.waitForFunction(()=>document.getElementById('status').textContent.includes('Referencia cargada'));check(await page.getByText('Respuesta redactada:',{exact:false}).count()===2,'Dos abiertas de referencia renderizadas');check(!await overflow(),'Referencia con abiertas sin desborde');
   for(const n of [2,3,4,5]){
-   await page.setViewportSize({width:390,height:900});await page.goto(running.url+`/estudiantes/simce-unidad4/?ensayo=${n}`);await page.getByRole('button',{name:'Comenzar miniensayo'}).click();check(await page.locator('input[type=radio]').count()===72,'Alternativas en cada miniensayo');check(!await overflow(),'Cada miniensayo sin desborde');
+   await page.setViewportSize({width:390,height:900});await page.goto(running.url+`/estudiantes/simce-unidad4/?ensayo=${n}`);await page.getByRole('button',{name:'Comenzar miniensayo'}).click();check(await page.locator('input[type=radio]').count()===(n===2?96:72),'Alternativas en cada miniensayo');check(!await overflow(),'Cada miniensayo sin desborde');
    stats[n-1].renderedOptionLines={390:await page.locator('.question').evaluateAll(fields=>fields.map(field=>[...field.querySelectorAll('.option span')].map(span=>Math.round(span.getBoundingClientRect().height/parseFloat(getComputedStyle(span).lineHeight)))))};
   }
   await page.goto(running.url+'/estudiantes/simce-unidad4/presentacion.html');check(await page.locator('section:visible').count()===1,'Aperturas separadas');await page.getByRole('button',{name:'Siguiente'}).click();check(await page.locator('#rules').isVisible(),'Normas segunda pantalla');await page.getByRole('button',{name:'Siguiente'}).click();check(await page.locator('#objective').isVisible(),'Objetivo tercera pantalla');
@@ -169,6 +170,6 @@ async function browserTests(stats){
   fs.writeFileSync(path.join(evidence,'measurement.json'),JSON.stringify({checks,stats,errors,failed},null,2));console.log('Evidencia local: '+evidence);
  }finally{await browser.close();await new Promise(resolve=>running.server.close(resolve));}
 }
-async function main(){const stats=measure();await apiTests();if(process.argv.includes('--browser'))await browserTests(stats);console.log(`SIMCE U4: ${checks} comprobaciones aprobadas; 5 miniensayos, 15 textos, 90 preguntas, demanda individual, claves privadas, entrega, reapertura y permisos. Solo fixtures.`);if(process.argv.includes('--details'))console.log(JSON.stringify(stats,null,2));}
+async function main(){const stats=measure();await apiTests();if(process.argv.includes('--browser'))await browserTests(stats);console.log(`SIMCE U4: ${checks} comprobaciones aprobadas; 5 miniensayos, 16 textos, 96 preguntas, demanda individual, claves privadas, entrega, reapertura y permisos. Solo fixtures.`);if(process.argv.includes('--details'))console.log(JSON.stringify(stats,null,2));}
 if(require.main===module){if(process.argv.includes('--serve'))serve().then(({url})=>console.log(url));else main().catch(e=>{console.error(e.stack);process.exitCode=1;});}
 module.exports={fixture,mockDb,serve,measure};

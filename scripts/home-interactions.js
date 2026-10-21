@@ -3,11 +3,9 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 gsap.registerPlugin(ScrollTrigger);
 const reduce=matchMedia('(prefers-reduced-motion: reduce)');
-const control=document.getElementById('motion-toggle');
 let media, played=false;
 function setup(){
-  if(reduce.matches||document.documentElement.classList.contains('motion-paused'))return;
-  control.hidden=false;
+  if(reduce.matches)return;
   media=gsap.matchMedia();
   media.add({desktop:'(min-width: 900px)',all:'(min-width: 0px)'},context=>{
     const cleanups=[];
@@ -79,8 +77,6 @@ function setup(){
   });
 }
 function cleanup(){if(media){media.revert();media=null;}}
-function changed(e){cleanup();if(e.detail.active)setup();}
-window.addEventListener('profe:motionchange',changed);
-reduce.addEventListener('change',()=>{cleanup();if(!reduce.matches)setup();else control.hidden=true;});
+reduce.addEventListener('change',()=>{cleanup();if(!reduce.matches)setup();});
 window.addEventListener('pagehide',e=>{if(!e.persisted)cleanup();});
 setup();

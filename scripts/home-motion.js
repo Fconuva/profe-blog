@@ -1,7 +1,8 @@
 import {
   WebGLRenderer, Scene, PerspectiveCamera, PlaneGeometry, BoxGeometry, CylinderGeometry,
-  Mesh, Group, MeshStandardMaterial, FrontSide, BackSide, AmbientLight, PointLight,
-  BufferGeometry, Float32BufferAttribute, Points, ShaderMaterial, CanvasTexture, SRGBColorSpace, AdditiveBlending
+  Mesh, Group, MeshStandardMaterial, FrontSide, BackSide, DoubleSide, AmbientLight, PointLight,
+  CanvasTexture, SRGBColorSpace,
+  InstancedMesh, SphereGeometry, Object3D
 } from 'three';
 
 // Campos abreviados del formato de Portabot y del panel propio. Siempre vacíos.
@@ -12,7 +13,7 @@ const pages=[
   {title:'Trabajo colaborativo',short:'M3 · Trabajo colaborativo',module:'MÓDULO 3',fields:['Problema o necesidad','Diálogo pedagógico','Evaluación conjunta','Aprendizajes profesionales']}
 ];
 const canvas=document.getElementById('hero-canvas'),hero=document.getElementById('inicio');
-const controls=document.getElementById('book-controls'),label=document.getElementById('book-label');
+const preview=document.getElementById('book-preview'),label=document.getElementById('book-label');
 const reduced=matchMedia('(prefers-reduced-motion: reduce)');
 let renderer;
 try{renderer=new WebGLRenderer({canvas,alpha:true,antialias:innerWidth>=768,powerPreference:'low-power'});}catch{}
@@ -52,6 +53,20 @@ async function start(){
   const book=new Group();scene.add(book);
   const textures=pages.map(makeTexture),backs=textures.map(texture=>{const back=texture.clone();back.repeat.x=-1;back.offset.x=1;return back;});
   const w=1.4,h=2.1;
+  const assembly={progress:{value:0},time:{value:0}};
+  function assemble(m){
+    m.onBeforeCompile=shader=>{
+      shader.uniforms.uFormation=assembly.progress;shader.uniforms.uFlowTime=assembly.time;
+      shader.vertexShader='varying vec2 vAssemblyUv;\n'+shader.vertexShader.replace('#include <uv_vertex>','#include <uv_vertex>\nvAssemblyUv=uv;');
+      shader.fragmentShader='uniform float uFormation,uFlowTime;varying vec2 vAssemblyUv;\n'+shader.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
+        float flow=vAssemblyUv.y+sin(vAssemblyUv.x*13.+uFlowTime*1.8)*.025+sin(vAssemblyUv.x*29.-uFlowTime)*.012;
+        float front=uFormation*1.25-.15;
+        if(flow>front)discard;
+        float rim=exp(-abs(flow-front)*70.);
+        diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.67,.82,.91),rim*.9);`).replace('#include <emissivemap_fragment>','#include <emissivemap_fragment>\ntotalEmissiveRadiance+=vec3(.35,.65,.8)*rim*.55;');
+    };
+    m.customProgramCacheKey=()=> 'fluid-assembly-v1';return m;
+  }
   const coverMaterial=new MeshStandardMaterial({color:0x174466,roughness:.33,metalness:.38,transparent:true});
   const edgeMaterial=new MeshStandardMaterial({color:0xe2ebf1,roughness:.6,transparent:true});
   [-1,1].forEach(side=>{
@@ -61,7 +76,7 @@ async function start(){
   const spine=new Mesh(new CylinderGeometry(.045,.045,h+.06,12),coverMaterial);spine.position.z=-.03;book.add(spine);
   function geometry(left=false){
     const geo=new PlaneGeometry(w,h,mobile?18:28,mobile?10:16),p=geo.attributes.position,uv=geo.attributes.uv;
-    for(let i=0;i<p.count;i++){const u=(p.getX(i)+w/2)/w;p.setXYZ(i,(left?-1:1)*u*w,p.getY(i),Math.sin(u*Math.PI)*.055);if(left)uv.setX(i,1-uv.getX(i));}
+    for(let i=0;i<p.count;i++){const u=(p.getX(i)+w/2)/w;p.setXYZ(i,(left?-1:1)*u*w,p.getY(i),Math.sin(u*Math.PI)*.055+u*.13);if(left)uv.setX(i,1-uv.getX(i));}
     geo.computeVertexNormals();return geo;
   }
   const material=(map,side=FrontSide)=>new MeshStandardMaterial({map,side,roughness:.67,metalness:.02,transparent:true});
@@ -74,28 +89,55 @@ async function start(){
   const turnMaterials=[material(textures[1]),material(backs[1],BackSide)];
   const turning=new Mesh(turningGeometry,turnMaterials);turning.position.z=.014;book.add(turning);
   const flat=turningGeometry.attributes.position.array.slice();
-  const count=mobile?1400:3200,positions=[],seeds=[];
-  const random=n=>{const r=Math.sin(n*127.1+311.7)*43758.5453;return r-Math.floor(r);};
-  for(let i=0;i<count;i++){const u=(i%80)/79,v=Math.floor(i/80)/Math.ceil(count/80);positions.push((u-.5)*w*2,(v-.5)*h,.045+Math.sin(u*Math.PI)*.04);seeds.push(random(i));}
-  const nanoGeometry=new BufferGeometry();nanoGeometry.setAttribute('position',new Float32BufferAttribute(positions,3));nanoGeometry.setAttribute('seed',new Float32BufferAttribute(seeds,1));
-  const uniforms={time:{value:0},formation:{value:0},burst:{value:0},size:{value:mobile?2.5:3.5}};
-  const nanoMaterial=new ShaderMaterial({uniforms,transparent:true,depthWrite:false,blending:AdditiveBlending,
-    vertexShader:`attribute float seed;uniform float time,formation,burst,size;varying float vSeed;varying float vAlpha;
-      void main(){vSeed=seed;float f=smoothstep(0.,1.,clamp(formation*1.3-seed*.3,0.,1.));float a=seed*50.+time*.45;
-      vec3 cloud=vec3(cos(a)*(2.+seed*1.8),sin(a*1.3)*(1.1+seed),sin(a*.8)*1.6);
-      vec3 p=mix(cloud,position,f);float stream=step(.86,seed);p+=vec3(sin(a*2.),cos(a*1.8),sin(a))*sin(burst*3.14159)*stream*.8;
-      vAlpha=(1.-f)*.95+stream*.4*burst;vec4 mv=modelViewMatrix*vec4(p,1.);gl_Position=projectionMatrix*mv;gl_PointSize=size*(1.+(1.-f)*.45);}`,
-    fragmentShader:`varying float vSeed;varying float vAlpha;void main(){vec2 p=abs(gl_PointCoord-.5);if(max(p.x,p.y)>.47)discard;float edge=step(.22,max(p.x,p.y));vec3 c=mix(vec3(.3,.7,1.),vec3(.9,.97,1.),vSeed);gl_FragColor=vec4(c,vAlpha*(.3+edge*.7));}`
-  });
-  const nanos=new Points(nanoGeometry,nanoMaterial);book.add(nanos);
-  let frame=0,active=!document.documentElement.classList.contains('motion-paused'),visible=true,destroyed=false,prepared=false;
-  let time=0,previous=0,x=0,y=0,px=0,py=0,progress=0,current=0,flipping=false,direction=1,next=0,turnStart=0,lastFlip=0,burstStart=-10;
+  [coverMaterial,edgeMaterial,left.material,right.material,...turnMaterials].forEach(assemble);
+  const liquid=new Group();book.add(liquid);
+  // Reflejo de estudio analítico: evita generar mapas de entorno al arrancar en móvil.
+  const metal=new MeshStandardMaterial({color:0xb9d0df,metalness:.6,roughness:.23,side:DoubleSide,transparent:true,depthWrite:false});
+  metal.onBeforeCompile=shader=>{shader.fragmentShader=shader.fragmentShader.replace('#include <emissivemap_fragment>','#include <emissivemap_fragment>\nfloat studioReflection=pow(.5+.5*sin(normal.x*5.+normal.y*2.+normal.z*4.),6.);\ntotalEmissiveRadiance+=vec3(.32,.42,.48)*studioReflection;');};
+  const segments=mobile?32:56,ribbons=[];
+  for(let lane=0;lane<4;lane++){
+    const geometry=new PlaneGeometry(1,1,segments,1),mesh=new Mesh(geometry,metal);mesh.frustumCulled=false;liquid.add(mesh);ribbons.push(mesh);
+  }
+  const droplets=new InstancedMesh(new SphereGeometry(1,8,6),metal,mobile?24:48);droplets.frustumCulled=false;liquid.add(droplets);
+  const droplet=new Object3D();
+  let frame=0,visible=true,destroyed=false,prepared=false;
+  let time=0,previous=0,x=0,y=0,px=0,py=0,progress=0,current=0,flipping=false,next=0,turnStart=0,lastFlip=0;
   function maps(){left.material.map=textures[current];right.material.map=textures[(current+2)%4];turnMaterials[0].map=textures[(current+1)%4];turnMaterials[1].map=backs[(current+1)%4];turning.rotation.y=0;label.textContent=pages[(current+1)%4].short;}
-  function flip(dir){
-    if(!active){flipping=false;current=(current+dir+4)%4;turningGeometry.attributes.position.array.set(flat);turningGeometry.attributes.position.needsUpdate=true;turningGeometry.computeVertexNormals();uniforms.burst.value=0;maps();renderer.render(scene,camera);return;}
+  function flip(){
     if(flipping)return;
-    direction=dir;next=(current+dir+4)%4;flipping=true;turnStart=time;burstStart=time;
-    if(dir<0){left.material.map=textures[next];turnMaterials[0].map=textures[current];turnMaterials[1].map=backs[current];right.material.map=textures[(current+1)%4];}
+    next=(current+1)%4;flipping=true;turnStart=time;
+  }
+  function flowPoint(u,lane,formation,turn){
+    const side=flipping?1:lane<2?-1:1;
+    const phase=time*2.2+lane*1.7;
+    const front=(flipping?turn:formation)*2.625-1.365,fieldU=side<0?1-u:u;
+    const wave=-Math.sin(fieldU*13+time*1.8)*.0525-Math.sin(fieldU*29-time)*.0252;
+    return [side*u*w,front+wave+(lane%2-.5)*.024,.055+u*.13+Math.sin(u*Math.PI)*(.055+(1-formation)*.35+(flipping?Math.sin(turn*Math.PI)*.38:0))+Math.sin(u*7-phase)*.008];
+  }
+  function updateLiquid(formation,turn){
+    assembly.progress.value=formation;assembly.time.value=time;
+    const presence=formation<1?Math.sin(Math.PI*formation)**.45:flipping?Math.sin(turn*Math.PI)*.65:0;
+    liquid.visible=presence>.01;metal.opacity=presence;
+    if(!liquid.visible)return;
+    liquid.rotation.y=flipping?turning.rotation.y:0;
+    ribbons.forEach((mesh,lane)=>{
+      const p=mesh.geometry.attributes.position;
+      for(let i=0;i<p.count;i++){
+        const u=(i%(segments+1))/segments,edge=i>segments?1:-1;
+        const point=flowPoint(u,lane,formation,turn);
+        point[1]+=edge*Math.sin(Math.PI*u)*(.012+.009*Math.sin(u*8+time+lane));
+        point[2]+=edge*.012;
+        p.setXYZ(i,...point);
+      }
+      p.needsUpdate=true;mesh.geometry.computeVertexNormals();
+    });
+    for(let i=0;i<droplets.count;i++){
+      const u=(i/droplets.count+time*.12)%1,lane=i%4,point=flowPoint(u,lane,formation,turn);
+      point[1]+=Math.sin(i*7.17+time*2)*.045;point[2]+=.025+Math.cos(i*3.7)*.025;
+      droplet.position.set(...point);droplet.rotation.set(.1,i*.7,time*.3);
+      const size=.005+(Math.sin(i*4.5)+1)*.003;droplet.scale.set(size*2.5,size,size*.7);droplet.updateMatrix();droplets.setMatrixAt(i,droplet.matrix);
+    }
+    droplets.instanceMatrix.needsUpdate=true;
   }
   function resize(){
     const width=hero.clientWidth,height=hero.clientHeight;renderer.setPixelRatio(Math.min(devicePixelRatio,width<768?1.25:1.5));renderer.setSize(width,height,false);
@@ -104,48 +146,46 @@ async function start(){
     book.position.set(width<768?0:width<1100?1.3:1.95,width<768?-1.4:0,0);
   }
   function draw(now){
-    frame=0;if(destroyed||!active||!visible||document.hidden)return;
+    frame=0;if(destroyed||!visible||document.hidden)return;
     if(now-previous>=1000/(innerWidth<768?28:40)){
       time+=Math.min((now-previous)/1000,.06);previous=now;px+=(x-px)*.05;py+=(y-py)*.05;
-      book.rotation.set(-.1+py*.13,-.16+Math.sin(time*.3)*.12+px*.3,-.055+Math.sin(time*.4)*.025-progress*.1);
+      book.rotation.set(.12+py*.13,-.32+Math.sin(time*.3)*.15+px*.3,-.055+Math.sin(time*.4)*.025-progress*.1);
       book.position.y=(innerWidth<768?-1.4:0)+Math.sin(time*.65)*.07;
-      const formation=Math.min(1,time/3.8+progress*.25),opacity=Math.max(0,Math.min(1,(formation-.25)/.65));
-      [coverMaterial,edgeMaterial,left.material,right.material,...turnMaterials].forEach(m=>m.opacity=opacity);
-      uniforms.time.value=time;uniforms.formation.value=formation;uniforms.burst.value=Math.max(0,1-(time-burstStart)/1.5);
-      if(!flipping&&formation===1&&time-lastFlip>8)flip(1);
+      const formation=Math.min(1,time/2.8+progress*.25);
+      if(!flipping&&formation===1&&time-lastFlip>4.5)flip();
+      let turn=0;
       if(flipping){
-        const t=Math.min(1,(time-turnStart)/1.5),ease=t*t*(3-2*t);
-        turning.rotation.y=direction>0?-Math.PI*ease:-Math.PI*(1-ease);
+        const t=Math.min(1,(time-turnStart)/1.85),ease=t*t*(3-2*t);turn=t;
+        turning.rotation.y=-Math.PI*ease;
         const p=turningGeometry.attributes.position;
         for(let i=0;i<p.count;i++){const u=flat[i*3]/w;p.setZ(i,flat[i*3+2]+Math.sin(u*Math.PI)*Math.sin(t*Math.PI)*.38);}
         p.needsUpdate=true;turningGeometry.computeVertexNormals();
         if(t===1){current=next;flipping=false;lastFlip=time;maps();}
       }
+      updateLiquid(formation,turn);
       renderer.render(scene,camera);
     }
     frame=requestAnimationFrame(draw);
   }
-  function resume(){if(prepared&&!frame&&active&&visible&&!document.hidden&&!destroyed){previous=performance.now();frame=requestAnimationFrame(draw);}}
+  function resume(){if(prepared&&!frame&&visible&&!document.hidden&&!destroyed){previous=performance.now();frame=requestAnimationFrame(draw);}}
   function stop(){cancelAnimationFrame(frame);frame=0;}
   function move(e){const r=hero.getBoundingClientRect();x=(e.clientX-r.left)/r.width*2-1;y=(e.clientY-r.top)/r.height*2-1;}
-  function motion(e){active=e.detail.active;if(active)resume();else stop();}
   function visibility(){if(document.hidden)stop();else resume();}
   function scroll(e){progress=e.detail.progress;}
-  function page(e){flip(e.detail.direction);}
   function reduce(e){if(e.matches)destroy();}
   const resizeObserver=new ResizeObserver(resize),observer=new IntersectionObserver(entries=>{visible=entries[0].isIntersecting;if(visible)resume();else stop();});
   function destroy(){
     if(destroyed)return;destroyed=true;stop();resizeObserver.disconnect();observer.disconnect();
     hero.removeEventListener('pointermove',move);document.removeEventListener('visibilitychange',visibility);
-    window.removeEventListener('profe:motionchange',motion);window.removeEventListener('profe:heroprogress',scroll);window.removeEventListener('profe:bookpage',page);reduced.removeEventListener('change',reduce);
+    window.removeEventListener('profe:heroprogress',scroll);reduced.removeEventListener('change',reduce);
     const mats=new Set();scene.traverse(o=>{o.geometry?.dispose();if(o.material)(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>mats.add(m));});mats.forEach(m=>m.dispose());[...textures,...backs].forEach(t=>t.dispose());renderer.dispose();
-    canvas.classList.remove('ready');hero.classList.remove('has-sculpture');controls.hidden=true;
+    canvas.classList.remove('ready');hero.classList.remove('has-sculpture');preview.hidden=true;
   }
   hero.addEventListener('pointermove',move,{passive:true});document.addEventListener('visibilitychange',visibility);
-  window.addEventListener('profe:motionchange',motion);window.addEventListener('profe:heroprogress',scroll);window.addEventListener('profe:bookpage',page);reduced.addEventListener('change',reduce);
+  window.addEventListener('profe:heroprogress',scroll);reduced.addEventListener('change',reduce);
   window.addEventListener('pagehide',e=>{if(e.persisted)stop();else destroy();});window.addEventListener('pageshow',e=>{if(e.persisted)resume();});
   canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();destroy();},{once:true});
   resizeObserver.observe(hero);observer.observe(hero);resize();maps();
   try{await renderer.compileAsync(scene,camera);}catch{destroy();return;}
-  if(destroyed)return;prepared=true;controls.hidden=false;canvas.classList.add('ready');hero.classList.add('has-sculpture');resume();
+  if(destroyed)return;prepared=true;preview.hidden=false;canvas.classList.add('ready');hero.classList.add('has-sculpture');resume();
 }

@@ -10,19 +10,9 @@
   menu.querySelectorAll('a').forEach(function (link) { link.addEventListener('click', closeMenu); });
   document.addEventListener('keydown', function (event) { if (event.key === 'Escape' && menu.classList.contains('is-open')) { closeMenu(); menuButton.focus(); } });
   var reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
-  document.querySelectorAll('[data-book-direction]').forEach(function (button) {
-    button.addEventListener('click', function () { window.dispatchEvent(new CustomEvent('profe:bookpage', { detail: { direction: Number(button.dataset.bookDirection) } })); });
-  });
-  var motionToggle = document.getElementById('motion-toggle');
-  motionToggle.addEventListener('click', function () {
-    var paused = document.documentElement.classList.toggle('motion-paused');
-    motionToggle.setAttribute('aria-pressed', String(paused));
-    motionToggle.textContent = paused ? 'Activar movimiento' : 'Detener movimiento';
-    window.dispatchEvent(new CustomEvent('profe:motionchange', { detail: { active: !paused } }));
-  });
   if (!reduced.matches && !(navigator.connection && navigator.connection.saveData)) {
     var interactions = document.createElement('script');
-    interactions.src = '/js/home-interactions.bundle.js?v=20261021b';
+    interactions.src = '/js/home-interactions.bundle.js?v=20261021d';
     interactions.defer = true;
     document.head.appendChild(interactions);
   }
@@ -34,7 +24,7 @@
       var connection = navigator.connection;
       if (!reduced.matches && !(connection && connection.saveData)) {
         var motion = document.createElement('script');
-        motion.src = '/js/home-motion.bundle.js?v=20261021c';
+        motion.src = '/js/home-motion.bundle.js?v=20261021d';
         motion.defer = true;
         document.head.appendChild(motion);
       }

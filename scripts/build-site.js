@@ -21,5 +21,11 @@ function run(scriptPath, args = []) {
   }
 }
 
+require('esbuild').buildSync({
+  entryPoints: ['scripts/home-motion.js'],
+  bundle: true, minify: true, format: 'iife', platform: 'browser',
+  target: ['es2020'], outfile: 'js/home-motion.bundle.js',
+  define: { 'process.env.NODE_ENV': '"production"' },
+});
 run(require.resolve('tailwindcss/lib/cli.js'), ['-i', './css/tailwind.css', '-o', './css/tw.css', '--minify']);
 run(require.resolve('@11ty/eleventy/cmd.js'));

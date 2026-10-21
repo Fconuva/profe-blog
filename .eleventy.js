@@ -6,6 +6,8 @@ module.exports = function(eleventyConfig) {
   eleventyConfig.addPassthroughCopy("audio");
   eleventyConfig.addPassthroughCopy("_redirects");
   eleventyConfig.addPassthroughCopy("site.webmanifest");
+  eleventyConfig.addPassthroughCopy("sw-home.js");
+  eleventyConfig.addPassthroughCopy("offline.html");
 
   // App pages (standalone HTML - not processed by Eleventy)
   eleventyConfig.addPassthroughCopy({ "cuenta/crear-cuenta.html": "cuenta/crear-cuenta.html" });

@@ -19,3 +19,12 @@ Validación: `node --test tests/marketing-metrics.test.js`. La verificación de 
 En GA4, `sign_up` está marcado como evento clave sin asignarle un valor monetario. Se creó la dimensión de evento **Ubicación del botón** (`location`) para comparar los enlaces de cada sección. La recogida mejorada está desactivada; los eventos se emiten desde la integración controlada.
 
 Tag Manager abrió una pantalla vacía con la cuenta correcta, incluso después de recargar y fijar `authuser=0`. La medición se implementó con la etiqueta oficial directa de GA4 para no dejarla detenida ni duplicar etiquetas. No hay un contenedor GTM instalado.
+
+## Comprobado en producción, 21 de octubre
+
+- Despliegue `dpl_F9skivprjv2SUnsvVtFMHjg15W7r`, estado READY, código `45c549bae2819cd869c800032a5513bdb5fe21d8`.
+- El dominio público devuelve la configuración y los dos puntos de registro (Google y correo); el acceso Google espera a que termine la persistencia.
+- GA4 en tiempo real muestra la visita consentida de comprobación y `page_view=1`, `pricing_viewed=1`. No son visitantes comerciales: es la prueba de esta sesión. No se creó ninguna cuenta ni pago ficticio para generar una conversión.
+- Nueve pruebas locales: consentimiento, filtrado de datos y rutas, conteo, continuidad sin etiqueta y Google nuevo/existente/fallido.
+- Evidencia local: `C:/dev/artifacts/profefranciscopancho-20261021/ga4-tiempo-real.jpg`.
+- Panel: <https://analytics.google.com/analytics/web/#/a361737299p559976412/reports/realtime>.

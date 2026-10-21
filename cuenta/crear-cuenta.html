@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="es" class="scroll-smooth">
 <head>
+    <script src="/js/marketing-config.js?v=20261021" defer></script>
+    <script src="/js/marketing-metrics.js?v=20261021" defer></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Solicita tu Portafolio — Portafolios Docentes 2026</title>
@@ -184,7 +186,7 @@
                                     createdAt: new Date().toISOString()
                                 });
                             }).then(function() {
-                                return { role: 'cliente' };
+                                return { role: 'cliente', isNewRegistration: true };
                             });
                         }
                         return snap.val();
@@ -195,7 +197,9 @@
                     if (userData.role === 'admin') {
                         window.location.href = '/admin/';
                     } else {
-                        window.location.href = '/dashboard/';
+                        var next = function() { window.location.href = '/dashboard/'; };
+                        if (userData.isNewRegistration && window.profeMetrics) window.profeMetrics.registrationComplete('google', next);
+                        else next();
                     }
                 })
                 .catch(function(error) {
@@ -344,7 +348,9 @@
                     });
                 })
                 .then(function() {
-                    window.location.href = '/dashboard/';
+                    var next = function() { window.location.href = '/dashboard/'; };
+                    if (window.profeMetrics) window.profeMetrics.registrationComplete('email', next);
+                    else next();
                 })
                 .catch(function(error) {
                     isRegistering = false;

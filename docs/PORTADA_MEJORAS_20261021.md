@@ -53,3 +53,9 @@ Comparar durante dos semanas vistas de precios, clics a inscripción y WhatsApp,
 - Movimiento reducido: no se carga el motor y el contenido sigue visible. Las entradas de sección no ocultan contenido si el observador no se ejecuta.
 - PWA instalada/activada en localhost; en una prueba aislada con fallo real de red, la navegación a `/` mostró **Sin conexión | Profe Francisco**. El modo offline simulado de DevTools no corta por sí solo las peticiones internas de un service worker, por lo que no se usó como prueba de ese resultado.
 - Capturas de escritorio, móvil y página completa en `C:/dev/artifacts/profefranciscopancho-20261021/`.
+
+## Publicado y comprobado
+
+El 21 de octubre quedó publicado el código `2628ec51aa6aa01706cfc9cba16327ea7416ff4e`, despliegue `dpl_DRbCM3GXWzWG8ZngV4PYqJZnDtML`, READY. Se promovió esa versión después de comprobar que un despliegue automático tardío de la documentación de métricas había vuelto a asignar el dominio a una versión anterior. El duplicado automático de las métricas que seguía construyéndose se canceló; la nueva portada conserva toda su integración.
+
+Comprobación en `https://www.profefranciscopancho.com/`: título nuevo, seis secciones, cero videos; enlaces de precios e inscripción correctos y sin errores de JavaScript en Chrome. Los SHA-256 de JavaScript, configuración, imagen, service worker y página offline coinciden con lo revisado. CSS coincide con el blob de Git y con la fuente local al normalizar los finales de línea. Captura de producción: `C:/dev/artifacts/profefranciscopancho-20261021/portada-publicada.jpg`.

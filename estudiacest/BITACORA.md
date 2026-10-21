@@ -1,5 +1,11 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-21, dashboard: reducir descargas y mostrar primero las clases actuales
+
+- Francisco informa carga lenta del contenido. Diagnóstico en código y navegador autenticado: el panel consultaba ranking y avatares completos para una sección oculta, esperaba todas las respuestas históricas y después iniciaba el avatar personal, las misiones y los mensajes. Medición con cuenta técnica: 749.725 bytes en las lecturas observadas. Las colecciones ocultas suman unos 479 KB de transferencia innecesaria.
+- Se eliminan solo esas consultas y cálculos ocultos; identidad, avatar propio, avisos y tareas cargan de forma independiente. La unidad actual se pinta antes de consultar el resto del historial. Las tarjetas aún sin consultar muestran «Consultando tu entrega…»; no se presentan como pendientes. Las notas siguen saliendo del libro canónico y se concilian con las respuestas vivas antes de mostrarse. Se conservan enlaces, asignaciones, bloqueos, estados y reconocimiento CEST.
+- Candidato con Firebase real y cuenta técnica: 270.764 bytes, nota ficticia 7,0 conservada, cinco tarjetas U4, sin errores JS ni desborde en celular. La latencia entre ejecuciones varía y no se atribuye una reducción temporal fija. Nueva comprobación de red diferida asegura que una consulta histórica bloqueada no retrase las tarjetas actuales ni permita mostrar notas antes de conciliarlas. Auditorías focalizadas de notas, regularización y reapertura aprobadas; build completo con 837 recursos aprobado. Ninguna nota ni entrega real se modifica. Publicación y comprobación final se registran al cierre.
+
 ## 2026-10-21, SIMCE: honor con insignia CEST y Miniensayo 2 ampliado
 
 - Francisco solicita reconocer durante siete días a tres estudiantes de 2A-HC y tres de 2B-HC, con nombres, avatares existentes, diploma, podio e insignia oficial CEST. Criterio comunicado: Ensayo N.º 3 y Miniensayo 1 de Unidad 4; no se presenta como promedio anual. Se respetan los empates: un primero y dos segundos en 2A; tres primeros en 2B. Identidades y configuración solo en Firebase privado, sin nómina ni notas en archivos públicos o Git. API autenticada restringida al curso, caducidad del servidor y descargas PNG. Marco original con image_gen, procedencia registrada y copia en el banco IA; insignia oficial superpuesta sin alterarla.

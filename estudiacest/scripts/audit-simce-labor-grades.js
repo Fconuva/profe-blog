@@ -177,4 +177,30 @@ async function verifyDeliveryStore() {
   }
   console.log('Guardado SIMCE probado: carga fallida protegida, entrega atómica, reintento, confirmación, borrador tardío y nota desactualizada.');
 }
-verifyDeliveryStore().catch(error=>{console.error(error);process.exitCode=1;});
+async function verifyDashboardPriority() {
+  const vm=require('vm');
+  const begin=dashboard.indexOf('        async function loadDashboard(');
+  const end=dashboard.indexOf('        // ==================== AVATAR SYSTEM',begin);
+  const sessions=[{id:'now',panel_unidad:'u4'},{id:'past',panel_unidad:'u3'}];
+  const nodes={},reads=[];let release,gradeRendered=false;
+  const oldNetwork=new Promise(resolve=>{release=resolve;});
+  const snap=value=>({val:()=>value,exists:()=>value!=null,forEach:fn=>sessions.forEach(s=>fn({key:s.id,val:()=>s}))});
+  const context={console,BASE:'fixture',STATIC_SESSION_FALLBACKS:{},CURRENT_PANEL_UNIT:'u3',
+    document:{getElementById:id=>nodes[id]||(nodes[id]={innerHTML:'',textContent:'',open:false})},
+    db:{ref:p=>({once:async()=>{reads.push(p);if(p==='fixture/sesiones')return snap(sessions);if(p.includes('/respuestas/past/'))await oldNetwork;return snap(null);}})},
+    isSessionAssignedToStudent:()=>true,inferPanelUnit:s=>s.panel_unidad,
+    renderSessionGroups:(all,responses)=>({unit4:{html:'current-ready',totalCount:1},current:{html:responses.past?.__loading?'history-loading':'history-ready',totalCount:1},archive:{html:'',totalCount:0},byUnit:{u4:{plan:[{session:sessions[0]}]}}}),
+    syncUnitShell(){},renderLaborGrades(){gradeRendered=true;},classifySubmissionStatus:()=>({completed:false})};
+  vm.createContext(context);vm.runInContext(dashboard.slice(begin,end),context);
+  const pending=context.loadDashboard('fixture','2A-HC','simce');
+  for(let i=0;i<12;i++)await Promise.resolve();
+  assert.strictEqual(nodes.unit4SessionList.innerHTML,'current-ready','La unidad actual debe mostrarse con el historial bloqueado por red');
+  assert.strictEqual(nodes.currentSessionList.innerHTML,'history-loading','La espera no debe presentarse como entrega pendiente');
+  assert.strictEqual(gradeRendered,false,'Las notas deben conservar la conciliación con la evidencia viva');
+  release();await pending;
+  assert.strictEqual(gradeRendered,true);
+  assert.strictEqual(nodes.currentSessionList.innerHTML,'history-ready');
+  assert(!reads.some(p=>p==='fixture/ranking'||p==='fixture/avatar'),'No descargar colecciones ocultas');
+  console.log('Carga del panel probada: unidad actual independiente del historial lento y notas conciliadas al terminar.');
+}
+Promise.all([verifyDeliveryStore(),verifyDashboardPriority()]).catch(error=>{console.error(error);process.exitCode=1;});

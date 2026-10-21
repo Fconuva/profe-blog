@@ -1119,11 +1119,11 @@
 
                 const programa = student.programa || 'simce';
                 SimceHonor.mount(user);
-                await loadDashboard(user.uid, student.curso, programa);
                 loadAvatar(user.uid, student.nombre, student.curso);
                 renderSideMissions(user.uid, student.curso);
                 loadLogrosPreview(user.uid);
                 listenForMessages(student.curso, programa);
+                await loadDashboard(user.uid, student.curso, programa);
 
             } catch(e) { console.error(e); }
         });
@@ -1296,6 +1296,9 @@
         }
 
         function renderSessionCard(ses, displayIndex, sectionKey, myResp, myResult, myLaborGrade) {
+            if (myResp && myResp.__loading) {
+                return `<div class="session-card" aria-busy="true"><h3>${escapeDashboardHtml(ses.titulo || 'Clase')}</h3><p>Consultando tu entrega…</p></div>`;
+            }
             if (myResp && myResp.__readError) {
                 return `<div class="session-card"><h3>${escapeDashboardHtml(ses.titulo || 'Clase')}</h3><p>No pudimos consultar tu entrega. Esto no significa que esté sin entregar.</p><button type="button" onclick="window.location.reload()">Reintentar</button></div>`;
             }
@@ -1466,10 +1469,9 @@
             const archiveContainer = document.getElementById('sessionList');
             const currentContainer = document.getElementById('currentSessionList');
             try {
-                // Single batch: fetch sessions, this student's results+responses, and ranking in parallel
-                const [sesSnap, rankSnap, laborGradeSnap] = await Promise.all([
-                    db.ref(BASE + '/sesiones').orderByChild('orden').once('value'),
-                    db.ref(BASE + '/ranking').once('value'),
+                // El ranking oculto no forma parte de la carga del panel.
+                const [sesSnap, laborGradeSnap] = await Promise.all([
+                    db.ref(BASE + '/sesiones').once('value'),
                     db.ref(BASE + '/calificaciones_clase/' + uid).once('value').catch(() => null)
                 ]);
                 const laborGrades = laborGradeSnap && laborGradeSnap.exists() ? laborGradeSnap.val() : {};
@@ -1495,7 +1497,8 @@
                 // Read only this student's respuestas and resultados per session (parallel)
                 const respuestas = {};
                 const resultados = {};
-                await Promise.all(sesiones.map(async (ses) => {
+                const loadedSessions = new Set();
+                async function readSession(ses) {
                     try {
                         const myRespSnap = await db.ref(BASE + '/respuestas/' + ses.id + '/' + uid).once('value');
                         if (myRespSnap.exists()) respuestas[ses.id] = myRespSnap.val();
@@ -1509,6 +1512,29 @@
                             }
                         }
                     } catch(e) { respuestas[ses.id] = { __readError:true }; }
+                    loadedSessions.add(ses.id);
+                }
+
+                // Mostrar primero la unidad actual; el historial no bloquea sus tarjetas.
+                const activeUnit = sesiones.some(s => inferPanelUnit(s) === 'u4') ? 'u4' : CURRENT_PANEL_UNIT;
+                let priority = sesiones.filter(s => inferPanelUnit(s) === activeUnit);
+                if (!priority.length) priority = sesiones;
+                await Promise.all(priority.map(readSession));
+                const pendingResponses = Object.fromEntries(sesiones.map(s => [s.id,
+                    loadedSessions.has(s.id) ? respuestas[s.id] : { __loading:true }
+                ]));
+                const initial = renderSessionGroups(sesiones, pendingResponses, resultados, laborGrades);
+                currentContainer.innerHTML = initial.current.html;
+                archiveContainer.innerHTML = initial.archive.html;
+                syncUnitShell(initial.current.totalCount > 0);
+                document.getElementById('unit4SessionList').innerHTML = initial.unit4.html || '<p>Los miniensayos aún no están asignados a tu curso.</p>';
+                if (initial.unit4.totalCount > 0) {
+                    document.getElementById('unit4Accordion').open = true;
+                    document.getElementById('unit3Accordion').open = false;
+                }
+
+                await Promise.all(sesiones.map(async (ses) => {
+                    if (!loadedSessions.has(ses.id)) await readSession(ses);
                 }));
                 renderLaborGrades(laborGrades, respuestas);
 
@@ -1518,17 +1544,12 @@
                 archiveContainer.innerHTML = rendered.archive.html || '<div style="text-align:center;padding:40px;color:#94a3b8;">No hay sesiones archivadas aún.</div>';
                 syncUnitShell(rendered.current.totalCount > 0);
                 document.getElementById('unit4SessionList').innerHTML = rendered.unit4.html || '<p>Los miniensayos aún no están asignados a tu curso.</p>';
-                if (rendered.unit4.totalCount > 0) {
-                    document.getElementById('unit4Accordion').open = true;
-                    document.getElementById('unit3Accordion').open = false;
-                }
 
                 const primaryUnit = rendered.unit4.totalCount > 0 ? rendered.byUnit.u4 : rendered.current.totalCount > 0 ? rendered.byUnit[CURRENT_PANEL_UNIT] : rendered.byUnit.u1;
                 const trackedSesiones = (primaryUnit.plan.length
                     ? primaryUnit.plan.map(entry => entry.session)
                     : flattenSessionGroups(primaryUnit))
                     .filter(ses => ses.requiere_entrega !== false);
-                const trackedSessionIds = new Set(trackedSesiones.map(ses => ses.id));
 
                 // === STATS (reuse fetched data) ===
                 let totalSesiones = 0, completadas = 0, totalPct = 0, conResultados = 0;
@@ -1547,83 +1568,6 @@
                 document.getElementById('statTotal').textContent = 'de ' + totalSesiones + ' del plan';
                 document.getElementById('statAvg').textContent = conResultados > 0 ? Math.round(totalPct / conResultados) + '%' : '-';
 
-                // === RANKING (reuse fetched data) ===
-                const rankingData = rankSnap.val() || {};
-
-                // Ranking position for this student
-                const studentAvgs = {};
-                for (const [sesId, cursos] of Object.entries(rankingData)) {
-                    if (!trackedSessionIds.has(sesId)) continue;
-                    if (!cursos[curso]) continue;
-                    for (const [euid, data] of Object.entries(cursos[curso])) {
-                        if (!studentAvgs[euid]) { studentAvgs[euid] = { total: 0, count: 0 }; }
-                        studentAvgs[euid].total += (data.porcentaje || 0);
-                        studentAvgs[euid].count++;
-                    }
-                }
-                const scores = Object.entries(studentAvgs).map(([euid, info]) => ({
-                    uid: euid, avg: info.count > 0 ? info.total / info.count : 0
-                }));
-                scores.sort((a, b) => b.avg - a.avg);
-                const pos = scores.findIndex(s => s.uid === uid);
-                document.getElementById('statRank').textContent = pos >= 0 ? '#' + (pos + 1) : '-';
-                document.getElementById('statRankCurso').textContent = 'de ' + scores.length + ' en ' + (CURSO_LABELS[curso] || curso);
-
-                // Ranking preview (top 5 per course)
-                // Ranking preview — dynamic per programa
-                const myCursos = PROGRAMA_CURSOS[programa] || [curso];
-                const courseScores = {};
-                myCursos.forEach(c => courseScores[c] = []);
-                for (const [sesId, cursos] of Object.entries(rankingData)) {
-                    if (!trackedSessionIds.has(sesId)) continue;
-                    for (const [c, studs] of Object.entries(cursos)) {
-                        if (!courseScores[c]) continue;
-                        for (const [euid, data] of Object.entries(studs)) {
-                            const existing = courseScores[c].find(s => s.uid === euid);
-                            if (existing) { existing.total += (data.porcentaje || 0); existing.count++; }
-                            else courseScores[c].push({ uid: euid, nombre: data.nombre || 'Estudiante', total: data.porcentaje || 0, count: 1 });
-                        }
-                    }
-                }
-                const colors = ['a','b','a','b'];
-                let barsHtml = '';
-                myCursos.forEach((c, ci) => {
-                    const arr = courseScores[c] || [];
-                    arr.forEach(s => s.avg = s.count > 0 ? s.total / s.count : 0);
-                    arr.sort((a, b) => b.avg - a.avg);
-                    const avg = arr.length ? Math.round(arr.reduce((s,x) => s + x.avg, 0) / arr.length) : 0;
-                    const h = Math.max(20, avg * 1.2);
-                    barsHtml += `<div class="rank-bar"><div class="bar ${colors[ci % 4]}" style="height:${h}px"></div><div class="label">${CURSO_LABELS[c] || c}</div><div class="score">${avg}%</div></div>`;
-                });
-                document.getElementById('rankingBars').innerHTML = barsHtml;
-
-                // Load all avatars for ranking emoji
-                let allAvatarsData = {};
-                try {
-                    const avSnap = await db.ref(BASE + '/avatar').once('value');
-                    allAvatarsData = avSnap.val() || {};
-                } catch(e) {}
-                function rankEmoji(euid) {
-                    const av = allAvatarsData[euid];
-                    if (!av || !AvatarSystem.totalXP(av)) return '';
-                    return AvatarSystem.getLevel(AvatarSystem.totalXP(av)).emoji;
-                }
-
-                let rankListHtml = '';
-                for (const [c, arr] of Object.entries(courseScores)) {
-                    arr.sort((a, b) => b.avg - a.avg);
-                    const top5 = arr.slice(0, 5);
-                    if (top5.length === 0) continue;
-                    rankListHtml += `<div style="margin-bottom:10px"><strong>${CURSO_LABELS[c] || c}</strong></div>`;
-                    top5.forEach((s, i) => {
-                        const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '  ';
-                        const isMe = s.uid === uid ? ' style="font-weight:700;color:#1e40af"' : '';
-                        const avEm = rankEmoji(s.uid);
-                        rankListHtml += `<div${isMe}>${medal} ${i + 1}. ${avEm ? avEm + ' ' : ''}${s.nombre} — ${Math.round(s.avg)}%</div>`;
-                    });
-                }
-                const rankEl = document.getElementById('rankingList');
-                if (rankEl) rankEl.innerHTML = rankListHtml || '<div style="color:#94a3b8">Sin datos aún</div>';
 
             } catch(e) {
                 console.error(e);

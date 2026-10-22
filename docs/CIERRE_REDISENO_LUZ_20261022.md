@@ -86,10 +86,15 @@ Se verificó con Puppeteer sin ventana, con gráficos por software, en cuatro ta
 - Con movimiento reducido, el script no se descarga y quedan las ilustraciones.
 - Las pruebas de marketing dan 9/9.
 
+### Publicación
+
+Francisco dio el OK el 22-oct («publica , ok»). Se publicó con el merge 2e05de15 en `main`, que
+incluye el ajuste de Estudia CEST que ya estaba en `main` (8d6b5748, solo `estudiacest/`). En
+producción, con capturas a 1440 y 390 px, la figura carga, el paso activo calza, no hay desborde y no
+hay errores.
+
 ## Pendiente
 
-- **Publicar la figura 3D**: solo con el OK de Francisco, después de que vea la vista previa de la
-  rama.
 - `three` 0.182.0 sigue en `package.json`, aunque la portada ya no lo usa. Quitarlo solo si Francisco
   lo aprueba y tras revisar que ninguna otra página lo importe.
 - `css/tw.css` queda modificado localmente porque el build lo regenera. No se sube: Vercel lo

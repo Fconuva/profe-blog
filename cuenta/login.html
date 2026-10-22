@@ -81,12 +81,17 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
     <script src="/js/firebase-config.js"></script>
+    <script src="/js/errores-auth.js?v=20261022"></script>
 
     <script>
     (function() {
         firebase.initializeApp(FIREBASE_CONFIG);
         var auth = firebase.auth();
         var db = firebase.database();
+
+        // Mientras el alta con Google escribe /users y /portafolios, el listener de sesión no redirige:
+        // navegar antes cortaba esas escrituras (Portabot, REGLA_ALTA_CON_GOOGLE_PIERDE_EL_REGISTRO).
+        var isSigningIn = false;
 
         // Google Sign-In
         auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
@@ -101,6 +106,7 @@
                 browserError.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 return;
             }
+            isSigningIn = true;
             var provider = new firebase.auth.GoogleAuthProvider();
             var googleBtn = document.getElementById('google-signin-btn');
             googleBtn.disabled = true;
@@ -146,21 +152,14 @@
                     }
                 })
                 .catch(function(error) {
+                    isSigningIn = false;
                     googleBtn.disabled = false;
                     googleBtn.textContent = 'Continuar con Google';
                     console.error('Google Sign-In error:', error.code, error.message);
                     var errorMsg = document.getElementById('error-msg');
                     if (errorMsg) {
                         errorMsg.classList.remove('hidden');
-                        if (error.code === 'auth/popup-closed-by-user') {
-                            errorMsg.textContent = 'La ventana de Google fue cerrada. Intenta de nuevo.';
-                        } else if (error.code === 'auth/popup-blocked') {
-                            errorMsg.textContent = 'El navegador bloqueó la ventana de Google. Activa pop-ups.';
-                        } else if (error.code === 'auth/account-exists-with-different-credential') {
-                            errorMsg.textContent = 'Esta cuenta Google ya está registrada con otro método. Intenta con tu correo y contraseña.';
-                        } else {
-                            errorMsg.textContent = 'Error al conectar con Google. Intenta nuevamente.';
-                        }
+                        errorMsg.textContent = mensajeError(error, 'Error al conectar con Google. Intenta nuevamente.');
                     }
                 });
         }
@@ -173,7 +172,7 @@
 
         // Check if already logged in
         auth.onAuthStateChanged(function(user) {
-            if (user) {
+            if (user && !isSigningIn) {
                 // Check if admin
                 db.ref('users/' + user.uid + '/role').once('value').then(function(snap) {
                     if (snap.val() === 'admin') {
@@ -236,7 +235,7 @@
                         return;
                     }
                     if (error.code !== 'auth/user-not-found' && error.code !== 'auth/wrong-password' && error.code !== 'auth/invalid-credential') {
-                        errorMsg.textContent = 'Error al ingresar. Intenta nuevamente.';
+                        errorMsg.textContent = mensajeError(error, 'Error al ingresar. Intenta nuevamente.');
                         return;
                     }
 

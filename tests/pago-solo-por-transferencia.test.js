@@ -48,11 +48,12 @@ test('la cuenta suspendida de Mercado Pago no aparece en ninguna parte', () => {
 });
 
 test('el dashboard ya no puede crear un pago con tarjeta', () => {
-  // Seis botones distintos llamaban a iniciarPagoMP. La funcion se dejo con el mismo nombre
-  // justamente para que ninguno quedara vivo, pero sin pedirle una preferencia a la pasarela.
+  // Seis botones llamaban a iniciarPagoMP. Desde el 22-oct-2026 se llama mostrarDatosTransferencia
+  // y abre los datos de Banco Falabella; ningun boton puede quedar llamando al nombre viejo.
   const dashboard = PAGINAS['dashboard/index.html'];
   assert.ok(!dashboard.includes('create_preference'), 'el dashboard aun pide una preferencia de pago');
-  assert.match(dashboard, /function iniciarPagoMP\(/, 'iniciarPagoMP desaparecio y sus 6 botones quedarian sueltos');
+  assert.ok(!dashboard.includes('iniciarPagoMP'), 'queda un boton llamando a iniciarPagoMP');
+  assert.match(dashboard, /function mostrarDatosTransferencia\(/, 'falta la funcion que muestra los datos de transferencia');
 });
 
 test('donde se pide plata estan los datos de Banco Falabella', () => {

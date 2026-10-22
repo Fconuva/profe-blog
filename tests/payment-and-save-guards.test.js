@@ -157,8 +157,8 @@ test('payment flow never redirects to an unlinked static payment URL', () => {
 });
 
 test('portfolio payment endpoints require the authenticated Firebase session', () => {
-  assert.match(dashboard, /currentUser\.getIdToken\(\)/);
-  assert.match(dashboard, /idToken:\s*idToken/);
+  // Desde el 22-oct-2026 el panel ya no llama a estas rutas: el pago es solo por transferencia.
+  assert.doesNotMatch(dashboard, /\/api\/mercadopago\//);
   assert.match(verifySource, /verifyIdToken\(idToken\)/);
   assert.match(verifySource, /decoded\.uid\s*!==\s*uid/);
   assert.match(verifySource, /!linkedUid\s*&&\s*!linkedEmail/);
@@ -197,8 +197,8 @@ test('webhook balance payments must match an actual pending instalment', () => {
   );
 });
 
-test('second instalment uses a server-created preference instead of a static link', () => {
-  assert.match(dashboard, /iniciarPagoMP\('saldo'/);
+test('second instalment opens the transfer data instead of a static link', () => {
+  assert.match(dashboard, /mostrarDatosTransferencia\('saldo'\)/);
   assert.match(preferenceSource, /portfolio\.saldoPendiente/);
   assert.match(preferenceSource, /tipo:\s*esSaldo\s*\?\s*'saldo'/);
 });

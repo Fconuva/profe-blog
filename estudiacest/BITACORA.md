@@ -1,5 +1,10 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-22, Guía 24: tiempo ilimitado para 4.º A HC
+
+- Francisco solicita ampliar a ilimitado el tiempo de la Guía 24 para 4.º A HC. El servidor devuelve ausencia de plazo para ese curso y elimina el vencimiento de sus intentos abiertos antes de comprobar expiración. Conserva inicio, respuestas e incidencias; no reabre entregas confirmadas. Los otros cursos regulares conservan 50 minutos y el recorrido guiado sigue sin reloj.
+- Auditoría G24: 130 controles aprobados, incluidos intento nuevo, abierto con plazo anterior ya transcurrido, conservación exacta salvo `expiresAt`, guardado que no reinstala reloj, entrega inmutable y 4B con 50 minutos. Navegador con funciones y base ficticia: 36 controles, «Sin límite de tiempo», contador oculto y respuesta persistente al recargar en 4A. Captura abierta. Build completo aprobado con 845 recursos. Publicación y relectura de intentos abiertos pendientes.
+
 ## 2026-10-22, Mi espacio: rechazo incorrecto al colocar muebles propios
 
 - Francisco confirma el mensaje «No puedes colocar un mueble que no tienes ni duplicar un premio». Consulta de solo lectura: hay unidades repetidas en distribuciones anteriores. Se reproduce con funciones reales y base ficticia: dos unidades ya guardadas impiden añadir otro mueble propio, porque la validación revisa toda la habitación con el límite nuevo de una unidad.

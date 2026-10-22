@@ -19,6 +19,7 @@ Referencia oficial verificada el 21-10-2026: [Temario DEMRE regular Admisión 20
 - Extensión de prosa por conjunto: T1: 335 palabras; T2: 318 palabras; T3: 326 palabras. Se documenta la excepción por género discontinuo: unidades, notas, requisitos y bifurcaciones añaden lectura integrada; no se rellena hasta 500 palabras. No se usa esta guía para medir resistencia continua equivalente a un simulacro.
 - Habilidades: {"Localizar":3,"Interpretar":7,"Evaluar":8}. Tareas presentes: a, b, c, d, h, j, k, m, n. No pretende agotar las catorce tareas ni todos los conocimientos en un instrumento. Los códigos de conocimiento y N1/N2/N3 son etiquetas internas de planificación, no dificultad empírica ni categorías oficiales.
 - Tiempo: hoja de ruta de 90 minutos; 7 de inicio, 18 de explicación/modelamiento/comprobación, 50 de resolución, 5 de confirmación y 10 de cierre. La resolución incluye lectura de cerca de mil palabras más recursos, 18 decisiones y revisión. Estimación didáctica para calibrar con aula, sin espera obligatoria. Reloj de 50 minutos desde Comenzar; preparación fuera de él.
+- Excepción autorizada por Francisco el 22-oct-2026: 4.º A HC queda sin límite de tiempo, incluidos los intentos abiertos. Se elimina su vencimiento conservando inicio, respuestas e incidencias. Las entregas confirmadas permanecen cerradas; los otros cursos regulares conservan 50 minutos y el recorrido guiado sigue sin temporizador.
 
 ## Fórmula completa y claridad
 

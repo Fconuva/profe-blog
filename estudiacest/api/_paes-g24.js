@@ -7,9 +7,9 @@ const clean=v=>String(v||'').replace(/[^0-9A-Z]/gi,'').toUpperCase();
 const error=(status,message)=>Object.assign(new Error(message),{status});
 const delivered=r=>r?.submitted===true&&r?.completada===true;
 const TIME_LIMIT_MS=50*60*1000;
-const timeLimitFor=()=>TIME_LIMIT_MS;
-const timedActivity=(c,g)=>({...c.publicActivity(g),suggestedMinutes:g?null:50,timeLimitMinutes:g?null:50});
-const extendOpen=r=>r;
+const timeLimitFor=course=>clean(course)==='4AHC'?null:TIME_LIMIT_MS;
+const timedActivity=(c,g,course)=>({...c.publicActivity(g),suggestedMinutes:g||timeLimitFor(course)===null?null:50,timeLimitMinutes:g||timeLimitFor(course)===null?null:50});
+const extendOpen=(r,course=r?.curso)=>!r||r.resetAt||delivered(r)||timeLimitFor(course)!==null||r.expiresAt===null?r:{...r,expiresAt:null};
 const expired=(r,now)=>Boolean(r&&!r.resetAt&&!delivered(r)&&Number.isFinite(r.expiresAt)&&r.expiresAt<=now);
 function finishExpired(r,now,g){return {...r,submitted:true,completada:true,submittedAt:now,completadaAt:now,updatedAt:now,endedBy:'time',...catalogFor(r).grade(r.answers||{},g)};}
 async function closeExpired(ref,r,g,now=Date.now(),course=r?.curso){
@@ -41,7 +41,7 @@ function validate(input,g,c=C){
 }
 function form(uid,version=C.VERSION){let seed=2166136261;for(const c of uid+version)seed=Math.imul(seed^c.charCodeAt(0),16777619)>>>0;const map={};for(const q of C.questionsFor(false)){let a=['A','B','C','D'];for(let i=3;i>0;i--){seed=(Math.imul(seed,1664525)+1013904223)>>>0;const j=seed%(i+1);[a[i],a[j]]=[a[j],a[i]];}map[q.id]=a;}return map;}
 async function publicAttempt(db,r,i){if(!r||r.resetAt)return null;const {answers,reflection,startedAt,updatedAt,submittedAt,completadaAt,sessionId,strikes,incidents,endedBy,timerStartedAt,expiresAt}=r;
- const out={answers:answers||{},reflection:reflection||{},startedAt,updatedAt,submittedAt,completadaAt,sessionId,timerStartedAt:timerStartedAt||null,expiresAt:expiresAt||null,timeLimitMinutes:timerStartedAt&&expiresAt?(expiresAt-timerStartedAt)/60000:i.guided?null:50,integrityEpoch:r.integrityEpoch||0,strikes:strikes||0,incidents:incidents||{},endedBy:endedBy||null,submitted:r.submitted===true,completada:r.completada===true};
+ const out={answers:answers||{},reflection:reflection||{},startedAt,updatedAt,submittedAt,completadaAt,sessionId,timerStartedAt:timerStartedAt||null,expiresAt:expiresAt||null,timeLimitMinutes:timerStartedAt&&expiresAt?(expiresAt-timerStartedAt)/60000:i.guided||timeLimitFor(i.curso)===null?null:50,integrityEpoch:r.integrityEpoch||0,strikes:strikes||0,incidents:incidents||{},endedBy:endedBy||null,submitted:r.submitted===true,completada:r.completada===true};
  const pub=(await db.ref(CONFIG+'/publicacion').once('value')).val()||{};
  if(delivered(r)&&(pub.cursos?.[i.curso]===true||pub.estudiantes?.[i.uid]===true)){const c=catalogFor(r);out.performance=performance(r,i.guided);out.result=c.grade(answers||{},i.guided);out.review=c.questionsFor(i.guided);}
  return out;
@@ -105,7 +105,8 @@ async function handle(action,req,res,{db,auth,adminUid}){
    if((current?.integrityEpoch||0)!==(b.integrityEpoch||0))return;
    current=extendOpen(current,i.curso);
    if(expired(current,now))return finishExpired(current,now,i.guided);
-   const timerStartedAt=i.guided?null:(current?.timerStartedAt||now),expiresAt=i.guided?null:(current?.expiresAt||timerStartedAt+TIME_LIMIT_MS);
+   const sinLimite=i.guided||timeLimitFor(i.curso)===null;
+   const timerStartedAt=sinLimite?(current?.timerStartedAt||null):(current?.timerStartedAt||now),expiresAt=sinLimite?null:(current?.expiresAt||timerStartedAt+TIME_LIMIT_MS);
    if(action==='mini-start'&&current&&!current.resetAt)return {...current,timerStartedAt,expiresAt};
    if(isIncident&&(current?.incidents?.[b.eventId]||current?.forgivenIncidents?.[b.eventId]))return current;
    const incidents={...(current?.incidents||{})};if(isIncident&&!incidents[b.eventId]&&Object.keys(incidents).length<3)incidents[b.eventId]={reason:b.reason,at:now};

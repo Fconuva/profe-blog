@@ -13,6 +13,7 @@ const PREMIOS_PAES = require('./_premios-paes');
 const CARTAS = require('./_paes-cartas');
 const MINI_INVIERNO = require('./_paes-mini-invierno');
 const MINI_OCTUBRE = require('./_paes-mini-octubre');
+const G24 = require('./_paes-g24');
 const PROGRESS = require('./_paes-progress');
 Object.assign(GUIDED_GUIDE_KEYS, FOUNDATIONS.GUIDED_KEYS);
 Object.assign(GUIDED_GUIDE_FEEDBACK, FOUNDATIONS.GUIDED_FEEDBACK);
@@ -1113,6 +1114,7 @@ module.exports = async (req, res) => {
         }
 
         // Public actions
+        if (['g24-state','g24-start','g24-save','g24-submit','g24-incident'].includes(action)) return await G24.handle(action.replace('g24-','mini-'), req, res, { db, auth });
         if (['mini2-state','mini2-start','mini2-save','mini2-submit','mini2-incident'].includes(action)) return await MINI_OCTUBRE.handle(action.replace('mini2-','mini-'), req, res, { db, auth });
         if (['mini-state','mini-start','mini-save','mini-submit','mini-incident'].includes(action)) return await MINI_INVIERNO.handle(action, req, res, { db, auth });
         if (['cards-preview', 'cards-state', 'cards-save', 'cards-submit'].includes(action) || String(action).startsWith('cards-room-')) return await CARTAS.handle(action, req, res, { db, auth });
@@ -1155,6 +1157,7 @@ module.exports = async (req, res) => {
 
         // Admin actions (Token verification required)
         const decoded = await verifyAdmin(req);
+        if (String(action).startsWith('admin-g24-')) return await G24.handle(action.replace('admin-g24-','admin-mini-'), req, res, { db, auth, adminUid: decoded.uid });
         if (String(action).startsWith('admin-mini2-')) return await MINI_OCTUBRE.handle(action.replace('admin-mini2-','admin-mini-'), req, res, { db, auth, adminUid: decoded.uid });
         if (String(action).startsWith('admin-mini-')) return await MINI_INVIERNO.handle(action, req, res, { db, auth, adminUid: decoded.uid });
         if (String(action).startsWith('admin-cards-')) return await CARTAS.handle(action, req, res, { db, auth, adminUid: decoded.uid });

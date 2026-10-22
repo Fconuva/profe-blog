@@ -117,10 +117,13 @@ const card18 = portal.indexOf('id="cardGuia18"');
 const card19 = portal.indexOf('id="cardGuia19"');
 assert(card16 >= 0 && card16 < card17 && card17 < card18 && card18 < card19, 'El portal no ordena las tarjetas G16 → G17 → G18 → G19.');
 assert((portal.match(/<span class="ensayo-tag">Sesión actual<\/span>/g) || []).length === 1, 'Debe existir una sola tarjeta marcada como Sesión actual.');
+const currentCard24 = portal.match(/<article\b[^>]*id="guia24Card"[^>]*>([\s\S]*?)<\/article>/);
+assert(currentCard24 && /href="guia24\/"/.test(currentCard24[1]), 'G24 debe tener su tarjeta publicada y destino regular.');
+assert(!/<article\b[^>]*class="upcoming-card"[^>]*data-guided-guide="24"/.test(portal), 'G24 no debe duplicarse como futura.');
 const currentCard23 = portal.match(/<article\b[^>]*id="miniOctubreCard"[^>]*>([\s\S]*?)<\/article>/);
 assert(currentCard23 && /Miniensayo N.º 23/.test(currentCard23[1]) && /href="mini-octubre-2026\/"/.test(currentCard23[1]), 'N.º 23 debe conservar su tarjeta y acceso al miniensayo.');
 assert(!/<article\b[^>]*class="upcoming-card"[^>]*data-guided-guide="23"/.test(portal), 'N.º 23 no debe duplicarse como futura.');
-for (let guide = 24; guide <= 31; guide += 1) {
+for (let guide = 25; guide <= 31; guide += 1) {
   if (guide === 21) continue;
   assert(portal.includes(`Guía ${guide}</span>`), `Falta la tarjeta futura gris de la Guía ${guide}.`);
 }

@@ -30,4 +30,12 @@ const g21=fs.readFileSync(path.join(root,'paes/guia21.html'),'utf8');
 assert(g21.indexOf('id="loginSection"')<g21.indexOf('PAES_TEACHING_START'));
 assert(g21.indexOf('PAES_TEACHING_END')<g21.indexOf('<form id="loginForm">'));
 assert(fs.readFileSync(path.join(root,'paes/css/guia-teaching.css'),'utf8').includes('summary:focus-visible'));
-console.log(`PAES: apertura didáctica homogénea en ${count} páginas (21 regulares y 14 guiadas), cuatro capítulos y preparación de ensayos separada: OK.`);
+for(const page of ['index.html','guiada.html']){
+ const html=fs.readFileSync(path.join(root,'paes/guia24',page),'utf8');
+ for(const chapter of ['1. Comprende los conceptos','2. Aplica la estrategia paso a paso','3. ATENCIÓN · Sigue un ejemplo razonado','4. Comprueba y prepara la práctica'])assert(html.includes(chapter),`G24 ${page}: falta ${chapter}`);
+ assert(html.indexOf('class="preparation"')<html.indexOf('id="begin"'),'G24 enseña antes de Comenzar');
+ assert(html.includes('responde la comprobación en tu cuaderno'),'G24 distingue preparación de respuestas evaluadas');
+ assert(!html.includes('<details open'),'G24 mantiene el modelo formativo cerrado');
+ count++;
+}
+console.log(`PAES: apertura didáctica en ${count} páginas, cuatro capítulos y preparación separada de las preguntas evaluadas: OK.`);

@@ -70,4 +70,17 @@ La política automática existente de treinta días permanece vigente.
 - Auditorías de Mi Espacio, integración PAES y social aprobadas.
 - Patrón de caché probado con imágenes y fuentes; HTML, JS y API excluidos.
 - Build integral aprobado con 845 recursos críticos.
-- Publicación y comprobaciones de producción se registran en `BITACORA.md`.
+- Publicación mediante `npm run deploy:prod:safe`, proceso terminado con código
+  cero: `dpl_F1C57XzQHwpSu4cMTbjqfrCjvPpD` READY y alias público al commit
+  `8d6b57489672d6d94b99ee2c84e74ce7041e1982`.
+- Encabezados públicos comprobados: imágenes/fuentes con `max-age=3600`,
+  HTML/JS con revalidación y API anónima 401 con `no-store`. JS idéntico por SHA-256.
+- Navegación normal: tres recursos repetidos se sirven del caché del navegador
+  sin transferencia de red; no hay errores ni desbordes en 390/1440/3840.
+- Sala compartida con Firebase/API reales y cuatro cuentas técnicas: tres
+  participantes, reto/chat, aislamiento por curso y regreso a casa; cuatro
+  recursos públicos coinciden con la fuente. 390/1200/3840 sin errores.
+  Cuentas y registros de prueba retirados con relectura de limpieza.
+- Cinco dominios personalizados responden HTTP 200. Capturas públicas y de las
+  cuentas técnicas abiertas y revisadas. Cambios concurrentes de la portada
+  integrados antes del cierre documental, sin otro despliegue académico.

@@ -77,6 +77,16 @@ const academic=JSON.stringify(fixture.state.datos.plataforma_paes),legacyCasa=JS
   let loseResponse=true;
   await page.route('**/api/estudiantes',async route=>{if(loseResponse&&route.request().postDataJSON()?.action==='salas-pasar-puerta'){loseResponse=false;await route.fetch();await route.abort('failed');}else await route.continue();});
   await page.locator('#espPuerta').click();await room('Estudio');await page.locator('.esp-aviso').filter({hasText:'Entrada recuperada'}).waitFor();assert.equal(av.studentA.habitaciones.actual,'estudio');
+  // Distribución antigua: colocar otro mueble propio y mover desde el catálogo.
+  av.studentA.pieza=[{id:'playStation5',col:1,fila:1,dir:'SE'},{id:'playStation5',col:3,fila:3,dir:'SE'}];
+  av.studentA.regalos.laptop={tipo:'docente',de:'Profe',ts:1};av.studentA.habitaciones.actual='principal';
+  await page.reload();await loaded();await room('Principal');
+  await page.locator('#espRejilla [data-id="laptop"]').click();await page.locator('#espLienzo').click({position:await tile(0,1)});
+  await until(()=>av.studentA.pieza.some(p=>p.id==='laptop'),'Se guarda el mueble propio junto a unidades históricas');await waitSaved();
+  await page.locator('#espRejilla [data-id="playStation5"]').click();await page.locator('.esp-aviso').filter({hasText:'Seleccionado'}).waitFor();
+  await page.locator('#espLienzo').click({position:await tile(3,4)});await until(()=>av.studentA.pieza.some(p=>p.id==='playStation5'&&p.col===3&&p.fila===4),'Se mueve la unidad existente sin intentar duplicarla');
+  assert.equal(av.studentA.pieza.filter(p=>p.id==='playStation5').length,2);
+  await page.reload();await loaded();assert.equal(av.studentA.pieza.filter(p=>p.id==='laptop').length,1);assert.equal(av.studentA.pieza.filter(p=>p.id==='playStation5').length,2);
   assert.ok(actions.some(a=>a.action==='salas-pasar-puerta'));assert.ok(actions.filter(a=>a.action==='salas-guardar-pieza').every(a=>['principal','estudio'].includes(a.habitacion)));
   assert.equal(JSON.stringify(fixture.state.datos.plataforma_paes),academic);assert.deepEqual(errors,[]);
   console.log('Navegador/funciones: puertas apoyadas en ambos muros, perspectiva y clic en puerta/letrero; ida/vuelta en 390/1200/3840, retarget/parada, cola de guardado, PS5 única trasladada, recarga, visita sin edición, chat, fallo/reintento y respuesta perdida recuperada. Sin errores; solo datos ficticios.');

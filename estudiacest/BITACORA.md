@@ -1,9 +1,16 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-22, Mi espacio: rechazo incorrecto al colocar muebles propios
+
+- Francisco confirma el mensaje «No puedes colocar un mueble que no tienes ni duplicar un premio». Consulta de solo lectura: hay unidades repetidas en distribuciones anteriores. Se reproduce con funciones reales y base ficticia: dos unidades ya guardadas impiden añadir otro mueble propio, porque la validación revisa toda la habitación con el límite nuevo de una unidad.
+- La transacción permite conservar o reducir las cantidades históricas del servidor, sin aumentarlas ni copiarlas a otra sala. Mantiene la comprobación de propiedad por premio/tarea. Los errores distinguen inventario no confirmado, unidades disponibles, otra habitación y distribución inválida. Elegir un mueble propio ya colocado desde el catálogo selecciona esa unidad para moverla.
+- Regresión: colocar otro objeto propio, mover y retirar unidades históricas, relectura y recarga; rechazo al aumentar cantidades, copiar entre salas, reintroducir unidades retiradas o colocar un objeto no recibido. Navegador con API y base ficticia aprobado, incluidas las pruebas de puertas, visitas, guardado y móvil/escritorio/4K. Build completo aprobado con 845 recursos críticos. Sin cambios en inventarios ni datos reales durante las verificaciones. Publicación conjunta y comprobación pública pendientes.
+
 ## 2026-10-22, Mi espacio: perspectiva y acceso de las puertas
 
 - Francisco informa que las puertas están invertidas. El dibujo usaba una inclinación fija y un umbral desplazado hacia el suelo. Se apoya ahora sobre el borde real de la baldosa, con perspectiva según el lado y altura hacia arriba. Se mejora marco, contraste y letrero de destino (Principal/Estudio); puerta y letrero permiten cruzar. Se conservan las casillas de acceso, las habitaciones y las reglas del servidor.
 - Cambio acotado a `estudiantes/js/mi-espacio.js` y regresión en `scripts/preview-house-rooms.js`. Navegador con funciones reales y base ficticia: umbral y perspectiva en ambos muros, clic en puerta y letrero, ida/vuelta en 390/1200/3840, visitas, recarga, chat, guardado pendiente, fallo/reintento y respuesta perdida. Sin errores ni desborde; capturas de ambos lados y móvil abiertas y revisadas. No se escriben datos de producción. Build completo aprobado, 845 recursos críticos. Publicación y comprobación pública pendientes.
+- Primera publicación: código `912ea09b542dccbf60c676feb3824cd59bf60d21`, deploy seguro terminado con código 0 y `dpl_8YWSrnnCr2BA4DXFb5rnxJa5mSbE` READY. Se incorpora a continuación la corrección de muebles propios que Francisco comunica durante el despliegue; la comprobación final cubre ambas correcciones.
 
 ## 2026-10-22, PAES: entrega manual de premios hasta la Guía 24
 

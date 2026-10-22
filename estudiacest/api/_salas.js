@@ -167,7 +167,7 @@ function muebleEnSuelo(casa, col, fila) {
         col < max.cols && fila < max.filas && (!mapa || MAPAS_CASA.haySuelo(tamano, col, fila));
 }
 
-function validarPieza(raw, casa, regalos, desbloqueados) {
+function validarPieza(raw, casa, regalos, desbloqueados, anterior = []) {
     if (!Array.isArray(raw) || raw.length > 80) return null;
     const veces = new Map();
     const limpia = [];
@@ -176,8 +176,15 @@ function validarPieza(raw, casa, regalos, desbloqueados) {
         if (!ficha || ficha.acabado) return null;
         const n = (veces.get(ficha.id) || 0) + 1;
         veces.set(ficha.id, n);
-        if (Number(ficha.xp || 0) > 0 &&
-            (!(regalos && regalos[ficha.id]) && !(desbloqueados && desbloqueados[ficha.id]) || n > 1)) return null;
+        if (Number(ficha.xp || 0) > 0) {
+            if (!(regalos && regalos[ficha.id]) && !(desbloqueados && desbloqueados[ficha.id])) {
+                throw Object.assign(new Error(`No se pudo confirmar «${ficha.nom}» en tu inventario. Actualiza tus muebles y vuelve a intentar.`), {status:409});
+            }
+            // Conservar o reducir unidades ya guardadas por versiones anteriores.
+            // La transacción toma el límite del servidor, nunca del navegador.
+            const limite = Math.max(1, anterior.filter(item => item.id === ficha.id).length);
+            if (n > limite) throw Object.assign(new Error(`Ya colocaste las unidades disponibles de «${ficha.nom}». Mueve una de las que ya tienes puestas.`), {status:409});
+        }
         if (p.pared) {
             if(ficha.fam==='terraza')return null;
             if (!['izq', 'der'].includes(p.pared) || !Number.isInteger(p.pos) || p.pos < 0 || p.pos > 6 ||
@@ -233,14 +240,22 @@ async function guardarPieza(req, res, db, yo) {
     const h=idHabitacion(req);
     const inventario = await inventarioPorTareas(db, yo);
     const ref = db.ref(`${BASE}/avatar/${yo.uid}`);
-    let motivo = 'No puedes colocar un mueble que no tienes ni duplicar un premio.';
+    let motivo = 'No se pudo guardar la distribución. Revisa el espacio y la posición de los muebles.';
     const resultado = await ref.transaction(actual => {
         const avatar = actual && typeof actual === 'object' ? actual : {};
         const room=MAPAS_CASA.habitacion(avatar,h);
-        const pieza = validarPieza(req.body.pieza, room.casa, avatar.regalos, inventario.desbloqueados);
+        const pieza = validarPieza(req.body.pieza, room.casa, avatar.regalos, inventario.desbloqueados, room.pieza);
         if (!pieza) return;
         const otro=MAPAS_CASA.habitacion(avatar,h==='principal'?'estudio':'principal').pieza;
-        if(pieza.some(p=>Number(CATALOGO_POR_ID.get(p.id)?.xp||0)>0&&otro.some(o=>o.id===p.id)))return;
+        for (const id of new Set(pieza.map(p=>p.id))) {
+            if (Number(CATALOGO_POR_ID.get(id)?.xp||0)<=0) continue;
+            const otras=otro.filter(p=>p.id===id).length;
+            const limite=Math.max(1,room.pieza.filter(p=>p.id===id).length+otras);
+            if(pieza.filter(p=>p.id===id).length+otras>limite){
+                motivo=`«${CATALOGO_POR_ID.get(id).nom}» ya está en la otra habitación. Guárdalo allí antes de moverlo aquí.`;
+                return;
+            }
+        }
         motivo = '';
         return conHabitacion(avatar,h,{...room,pieza});
     }, undefined, false);

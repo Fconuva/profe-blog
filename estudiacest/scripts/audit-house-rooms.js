@@ -61,6 +61,20 @@ async function check(){
  av.studentA.regalos.bookcaseOpen={tipo:'estudiante',de:'Compañero',ts:1};
  av.studentA.habitaciones.estudio.pieza=[{id:'bookcaseOpen',col:2,fila:2,dir:'SE'}];
  r=await ask('regalar',{para:'studentB',mueble:'bookcaseOpen'});assert.ok(r.data.ok);assert.equal(av.studentA.regalos.bookcaseOpen,null);assert.equal(av.studentA.habitaciones.estudio.pieza.length,0,'Transferir quita el objeto de la sala interior.');
+ // Una distribución anterior puede tener varias unidades del mismo premio.
+ // Eso no debe bloquear la colocación de otro mueble propio ni permitir copias nuevas.
+ const anteriores=[{...ps5,col:1,fila:1},{...ps5,col:3,fila:3}];
+ av.studentA.pieza=anteriores;
+ av.studentA.regalos.laptop={tipo:'docente',de:'Profe',ts:1};
+ const propio={id:'laptop',col:0,fila:0,dir:'SE'};
+ r=await ask('guardar-pieza',{pieza:[...anteriores,propio]});assert.equal(r.status,200,'Colocar un mueble propio no rechaza unidades históricas.');
+ assert.equal((await ask('guardar-pieza',{pieza:[...anteriores,propio,{...ps5,col:4,fila:4}]})).status,409,'No aumentar duplicados históricos.');
+ assert.equal((await ask('guardar-pieza',{habitacion:'estudio',pieza:[{...ps5,col:0,fila:0}]})).status,409,'La compatibilidad no permite copiar a otra habitación.');
+ assert.equal((await ask('guardar-pieza',{pieza:[{...anteriores[0],col:2},anteriores[1],propio]})).status,200,'Mover una unidad existente se guarda.');
+ assert.equal((await ask('guardar-pieza',{pieza:[propio]})).status,200,'Guardar las unidades históricas en el cajón.');
+ assert.equal((await ask('guardar-pieza',{pieza:[propio,ps5]})).status,200);
+ assert.equal((await ask('guardar-pieza',{pieza:[propio,...anteriores]})).status,409,'Una vez retiradas, las copias no reaparecen.');
+ assert.match((await ask('guardar-pieza',{pieza:[propio,{id:'statueMessi',col:4,fila:4,dir:'SE'}]})).data.error,/inventario/,'No atribuir a duplicación un mueble no recibido.');
  await ask('configurar',{enabled:false},'teacherA');assert.equal(state.datos.plataforma_estudiantes.salas.studentA.presentes,null);assert.equal(state.datos.plataforma_estudiantes.salas.studentA.habitaciones.estudio.presentes,null);
  for(const action of ['entrar','pasar-puerta','habitaciones','guardar-posicion','guardar-pieza'])assert.equal((await ask(action,{sala:'studentA'})).data.disabled,true,'El bloqueo docente cubre '+action);
  assert.equal(JSON.stringify(state.datos.plataforma_paes),academics);

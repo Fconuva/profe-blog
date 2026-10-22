@@ -1415,6 +1415,11 @@
         if(Number(m.xp||0)>0 && colocados(m.id) && !S.pieza.some(function(p){return p.id===m.id;})){avisar('Guárdalo primero en la otra habitación para moverlo aquí');return;}
         modoDecorar(true);
         DIRS.forEach(function (d) { cargar_(m.id + '_' + d); });
+        var existente=Number(m.xp||0)>0 ? S.pieza.findIndex(function(p){return p.id===m.id;}) : -1;
+        if(existente>=0){
+          S.elegido=null;S.sel=existente;botones();pintarMuebles();verPanel('pieza');dibujar();
+          avisar(esDePared(m.id)?'Seleccionado. Toca otro punto del muro para moverlo':'Seleccionado. Toca otra baldosa para moverlo');return;
+        }
         S.elegido = (S.elegido === m.id) ? null : m.id;
         S.sel = -1; botones(); pintarMuebles();
         if (S.elegido) { verPanel('pieza'); avisar(esDePared(S.elegido) ? 'Toca un punto del muro' : 'Ahora toca una baldosa del piso'); }

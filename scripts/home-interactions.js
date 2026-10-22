@@ -31,28 +31,10 @@ function setup(){
       gsap.fromTo(heading.querySelectorAll('.motion-word'),{opacity:.4},{opacity:1,stagger:.12,ease:'none',scrollTrigger:{trigger:heading,start:'top 88%',end:'top 52%',scrub:true}});
     });
     gsap.fromTo('.trust-visual img',{yPercent:-9,scale:1.2},{yPercent:9,scale:1.12,ease:'none',scrollTrigger:{trigger:'.trust-visual',start:'top bottom',end:'bottom top',scrub:.5}});
+    // La figura 3D del proceso alarga la sección al partir: hay que recalcular los disparadores de abajo.
+    const relayout=()=>ScrollTrigger.refresh();
+    window.addEventListener('process3d:ready',relayout);cleanups.push(()=>window.removeEventListener('process3d:ready',relayout));
     if(context.conditions.desktop){
-      const section=document.querySelector('#proceso');
-      const viewport=section.querySelector('.process-viewport');
-      const track=section.querySelector('.process-track');
-      section.classList.add('has-gallery');
-      const distance=()=>Math.max(0,track.scrollWidth-viewport.clientWidth);
-      const pan=gsap.to(track,{x:()=>-distance(),ease:'none',scrollTrigger:{id:'process-gallery',trigger:section,start:'top top',end:()=>'+='+distance(),pin:true,scrub:.75,invalidateOnRefresh:true,onUpdate:self=>{
-        const index=Math.min(3,Math.round(self.progress*3));
-        document.querySelector('.process-count').textContent=String(index+1).padStart(2,'0')+' / 04';
-        gsap.set('.process-progress span',{scaleX:self.progress});
-      }}});
-      track.querySelectorAll('.step img').forEach(image=>gsap.fromTo(image,{scale:1.12,rotation:.7},{scale:1,rotation:0,ease:'none',scrollTrigger:{trigger:image.closest('.step'),containerAnimation:pan,start:'left right',end:'center center',scrub:true}}));
-      const focus=e=>{
-        const step=e.target.closest('.step');
-        if(!step||!e.target.matches(':focus-visible'))return;
-        const offset=step.getBoundingClientRect().left-track.getBoundingClientRect().left;
-        const position=Math.max(0,Math.min(distance(),offset-(viewport.clientWidth-step.clientWidth)/2));
-        window.scrollTo({top:pan.scrollTrigger.start+position,behavior:'instant'});
-        ScrollTrigger.update();pan.scrollTrigger.getTween()?.progress(1);
-      };
-      track.addEventListener('focusin',focus);cleanups.push(()=>track.removeEventListener('focusin',focus));
-      cleanups.push(()=>section.classList.remove('has-gallery'));
       if(matchMedia('(hover:hover) and (pointer:fine)').matches){
         const aura=document.createElement('div');aura.className='pointer-aura';aura.setAttribute('aria-hidden','true');document.body.append(aura);
         const ax=gsap.quickTo(aura,'x',{duration:.22,ease:'power3'}),ay=gsap.quickTo(aura,'y',{duration:.22,ease:'power3'});

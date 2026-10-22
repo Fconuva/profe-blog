@@ -49,10 +49,47 @@ libro de luz con partículas).
 - En 320 px «CLP» se caía a otra línea: el precio va con `nowrap` y baja a 2,55rem bajo 360 px.
 - El menú abierto en el celular dejaba ver el titular detrás: ahora tiene fondo opaco y sombra.
 
+## Publicado
+
+El rediseño está en producción desde el commit 15a8095a, con el OK de Francisco («Hazlo tiene smi ok»).
+
+## Segunda vuelta: figura 3D en «Así trabajamos contigo» (22-oct-2026)
+
+Francisco: «me gusto , la primera parte me encanta , pero siento que podriamos agregar algo en 3D , el
+asi trabajmos contigo». Eligió **«Partículas que cambian»**.
+
+- `js/home-process3d.js`: una figura de partículas de luz en WebGL puro, sin Three.js. Usa 6.000
+  puntos en escritorio y 3.500 en celular. La forma cambia con el scroll:
+  1. Globo de WhatsApp con tres puntos.
+  2. Libro abierto con cinta ámbar.
+  3. Rúbrica con visto bueno ámbar.
+  4. Escalera con el último peldaño encendido.
+- **En escritorio**, la figura queda fija a la derecha y los pasos pasan por la izquierda. El paso
+  activo va en opacidad plena y los demás en 0,38. **En celular**, la figura ocupa la franja entre la
+  barra y la tarjeta del paso; la tarjeta tiene fondo opaco.
+- **Cuándo carga**: el script se pide a 600 px de la sección y solo dibuja mientras la sección está
+  visible y la pestaña abierta.
+- **Cuándo no carga**, y quedan las tarjetas con sus ilustraciones:
+  - con movimiento reducido o ahorro de datos;
+  - en equipos con menos de 4 núcleos o menos de 3 GB de memoria;
+  - si WebGL no parte o pierde el contexto.
+- **Lo que se quitó**: la galería horizontal fijada de escritorio (GSAP), el contador «01 / 04» y la
+  barra de avance. La figura ocupa su lugar.
+- **Lo que no cambió**: textos, enlaces, `data-event`/`data-location`, imágenes y precios.
+
+### Verificación
+
+Se verificó con Puppeteer sin ventana, con gráficos por software, en cuatro tamaños: 1440×900,
+1024×768, 390×844 y 320×640.
+- Las cuatro figuras se reconocen. El paso activo coincide con la figura.
+- No hay desborde horizontal ni errores de consola.
+- Con movimiento reducido, el script no se descarga y quedan las ilustraciones.
+- Las pruebas de marketing dan 9/9.
+
 ## Pendiente
 
-- **Publicar en producción**: pasar la rama a `main` despliega en Vercel. Solo con el OK de
-  Francisco, después de que vea las capturas.
+- **Publicar la figura 3D**: solo con el OK de Francisco, después de que vea la vista previa de la
+  rama.
 - `three` 0.182.0 sigue en `package.json`, aunque la portada ya no lo usa. Quitarlo solo si Francisco
   lo aprueba y tras revisar que ninguna otra página lo importe.
 - `css/tw.css` queda modificado localmente porque el build lo regenera. No se sube: Vercel lo

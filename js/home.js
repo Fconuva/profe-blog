@@ -12,9 +12,22 @@
   var reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
   if (!reduced.matches && !(navigator.connection && navigator.connection.saveData)) {
     var interactions = document.createElement('script');
-    interactions.src = '/js/home-interactions.bundle.js?v=20261022a';
+    interactions.src = '/js/home-interactions.bundle.js?v=20261022b';
     interactions.defer = true;
     document.head.appendChild(interactions);
+  }
+  // La figura de partículas del proceso se pide al acercarse; en equipos modestos quedan las ilustraciones.
+  var process = document.getElementById('proceso');
+  var modest = (navigator.deviceMemory && navigator.deviceMemory < 3) || (navigator.hardwareConcurrency && navigator.hardwareConcurrency < 4);
+  if (process && 'IntersectionObserver' in window && !reduced.matches && !modest && !(navigator.connection && navigator.connection.saveData)) {
+    var near = new IntersectionObserver(function (entries) {
+      if (!entries[0].isIntersecting) return;
+      near.disconnect();
+      var particles = document.createElement('script');
+      particles.src = '/js/home-process3d.js?v=20261022b';
+      document.head.appendChild(particles);
+    }, { rootMargin: '600px 0px' });
+    near.observe(process);
   }
   function idle(fn) { if ('requestIdleCallback' in window) requestIdleCallback(fn, { timeout: 1800 }); else setTimeout(fn, 500); }
   // El loop de luz llega después del póster; sin él (movimiento reducido o ahorro de datos) queda la imagen fija.

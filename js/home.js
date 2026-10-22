@@ -12,24 +12,40 @@
   var reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
   if (!reduced.matches && !(navigator.connection && navigator.connection.saveData)) {
     var interactions = document.createElement('script');
-    interactions.src = '/js/home-interactions.bundle.js?v=20261021d';
+    interactions.src = '/js/home-interactions.bundle.js?v=20261022a';
     interactions.defer = true;
     document.head.appendChild(interactions);
   }
   function idle(fn) { if ('requestIdleCallback' in window) requestIdleCallback(fn, { timeout: 1800 }); else setTimeout(fn, 500); }
+  // El loop de luz llega después del póster; sin él (movimiento reducido o ahorro de datos) queda la imagen fija.
   var image = document.getElementById('hero-image');
-  var imageReady = image && image.decode ? image.decode().catch(function () {}) : Promise.resolve();
-  Promise.all([imageReady, document.fonts.ready]).then(function () {
-    setTimeout(function () { idle(function () {
-      var connection = navigator.connection;
-      if (!reduced.matches && !(connection && connection.saveData)) {
-        var motion = document.createElement('script');
-        motion.src = '/js/home-motion.bundle.js?v=20261021d';
-        motion.defer = true;
-        document.head.appendChild(motion);
-      }
-    }); }, 600);
-  });
+  var video = document.getElementById('hero-video');
+  var vertical = window.matchMedia('(max-aspect-ratio: 1/1)');
+  var heroVisible = true;
+  function loadVideo() {
+    var name = vertical.matches ? 'luz-movil' : 'luz-escritorio';
+    if (video.dataset.name === name) return;
+    video.dataset.name = name;
+    video.classList.remove('is-playing');
+    video.innerHTML = '<source src="/imagenes/portada-2026/' + name + '.webm" type="video/webm"><source src="/imagenes/portada-2026/' + name + '.mp4" type="video/mp4">';
+    video.load();
+    if (heroVisible) video.play().catch(function () {});
+  }
+  if (video && !reduced.matches && !(navigator.connection && navigator.connection.saveData)) {
+    video.addEventListener('playing', function () { video.classList.add('is-playing'); });
+    var imageReady = image && image.decode ? image.decode().catch(function () {}) : Promise.resolve();
+    imageReady.then(function () { setTimeout(function () { idle(loadVideo); }, 300); });
+    if (vertical.addEventListener) vertical.addEventListener('change', function () { if (video.dataset.name) loadVideo(); });
+    if ('IntersectionObserver' in window) new IntersectionObserver(function (entries) {
+      heroVisible = entries[0].isIntersecting;
+      if (!video.dataset.name) return;
+      if (heroVisible && !document.hidden) video.play().catch(function () {}); else video.pause();
+    }).observe(video);
+    document.addEventListener('visibilitychange', function () {
+      if (!video.dataset.name) return;
+      if (document.hidden) video.pause(); else if (heroVisible) video.play().catch(function () {});
+    });
+  }
   idle(function () {
     // Mantener el estado de sesión existente sin retrasar el primer render.
     function script(src) { return new Promise(function (resolve, reject) { var el = document.createElement('script'); el.src = src; el.onload = resolve; el.onerror = reject; document.head.appendChild(el); }); }

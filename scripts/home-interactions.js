@@ -15,7 +15,7 @@ function setup(){
       gsap.fromTo('.hero-lead,.hero .button-row',{y:30,opacity:.25},{y:0,opacity:1,duration:1,delay:.32,stagger:.12,ease:'power3.out',clearProps:'transform,opacity'});
       played=true;
     }
-    gsap.to('.hero-art',{yPercent:19,scale:1.12,ease:'none',scrollTrigger:{trigger:'#inicio',start:'top top',end:'bottom top',scrub:true,onUpdate:self=>window.dispatchEvent(new CustomEvent('profe:heroprogress',{detail:{progress:self.progress}}))}});
+    gsap.to('.hero-media',{yPercent:14,scale:1.06,ease:'none',scrollTrigger:{trigger:'#inicio',start:'top top',end:'bottom top',scrub:true}});
     gsap.to('.hero-content',{y:110,opacity:.18,ease:'none',scrollTrigger:{trigger:'#inicio',start:'top top',end:'bottom top',scrub:true}});
     document.querySelectorAll('.reveal').forEach(element=>{
       gsap.fromTo(element,{y:52,opacity:.35},{y:0,opacity:1,duration:.9,ease:'power3.out',clearProps:'transform,opacity',immediateRender:false,scrollTrigger:{trigger:element,start:'top 92%',once:true}});

@@ -22,12 +22,6 @@ function run(scriptPath, args = []) {
 }
 
 require('esbuild').buildSync({
-  entryPoints: ['scripts/home-motion.js'],
-  bundle: true, minify: true, format: 'iife', platform: 'browser',
-  target: ['es2020'], outfile: 'js/home-motion.bundle.js',
-  define: { 'process.env.NODE_ENV': '"production"' },
-});
-require('esbuild').buildSync({
   entryPoints: ['scripts/home-interactions.js'],
   bundle: true, minify: true, format: 'iife', platform: 'browser',
   target: ['es2020'], outfile: 'js/home-interactions.bundle.js',

@@ -3,7 +3,6 @@
 (function (root) {
     var PRECIOS = {
         completo: 200000,
-        sobrecupo: 240000,
         modulo1: 79990,
         modulo2: 99990,
         modulo3: 79990,
@@ -34,7 +33,7 @@
         return modulos.reduce(function (total, m) { return total + PRECIOS[m]; }, 0);
     }
 
-    // Rellena los textos marcados con data-precio="completo|sobrecupo|modulo1|…" y data-precio="cuotas".
+    // Rellena los textos marcados con data-precio="completo|modulo1|…" y data-precio="cuotas".
     function pintar(doc) {
         var nodos = (doc || root.document).querySelectorAll('[data-precio]');
         Array.prototype.forEach.call(nodos, function (el) {

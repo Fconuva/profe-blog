@@ -7,7 +7,7 @@ const { mensajeError } = require('../js/errores-auth.js');
 
 test('los precios del panel son los de la portada', () => {
   const portada = fs.readFileSync(path.join(__dirname, '../index.njk'), 'utf8');
-  for (const monto of [Precios.PRECIOS.completo, Precios.PRECIOS.sobrecupo, Precios.PRECIOS.modulo1, Precios.PRECIOS.modulo2, Precios.PRECIOS.modulo3]) {
+  for (const monto of [Precios.PRECIOS.completo, Precios.PRECIOS.modulo1, Precios.PRECIOS.modulo2, Precios.PRECIOS.modulo3]) {
     assert.ok(portada.includes(monto.toLocaleString('es-CL')), 'falta ' + monto + ' en la portada');
   }
 });

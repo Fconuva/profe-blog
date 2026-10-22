@@ -1,5 +1,7 @@
 # Portada: corrección de oferta y movimiento pendiente
 
+> **Documento histórico.** Para continuar desde el estado publicado y comprobado, leer [el traspaso a Claude del 22 de octubre](HANDOFF_CLAUDE_REDISENO_WEB_20261022.md). Los pendientes y controles descritos abajo corresponden a una etapa anterior.
+
 Estado al 21 de octubre de 2026. Este archivo permite continuar el mismo encargo en una sesión nueva, conforme a la regla de ritmo de trabajo de Francisco cuando la conversación se compacta.
 
 ## Última instrucción de Francisco

@@ -1,5 +1,7 @@
 # Portada comercial: análisis y plan de mejora
 
+Traspaso consolidado para Claude, con las tres referencias, implementación final y evidencias: [HANDOFF_CLAUDE_REDISENO_WEB_20261022.md](HANDOFF_CLAUDE_REDISENO_WEB_20261022.md). Preparado el 22-oct-2026; este documento conserva la bitácora de las iteraciones del 21.
+
 Encargo de Francisco, 21 de octubre: quitar el video y responder qué ofrecemos, cómo lo hacemos, cuánto cuesta y dónde inscribirse. Referencias elegidas: [Active Theory](https://activetheory.net/), [Fitosauna](https://fitosauna.com/) y [Mubien](https://mubien.com/). Francisco confirmó conservar la plataforma actual; no migrar cuentas, pagos ni paneles a WordPress/WooCommerce.
 
 ## Diagnóstico de la portada anterior

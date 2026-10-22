@@ -1,5 +1,11 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-22, Vercel: limpieza y reducción de solicitudes
+
+- Francisco autoriza ejecutar el plan. Equipo y proyectos comprobados por API autenticada: retirados once despliegues sobrantes y siete proyectos sin uso comprobado (dos temporales con un despliegue cada uno y cinco vacíos), trece despliegues retirados en total. Se conservan versiones activas y dos respaldos de producción de ambas webs, la rama previa no integrada de ortografía y un despliegue nuevo de otro agente. Relectura: seis proyectos, dieciséis despliegues y ocho alias personalizados con su destino conservado. Inventarios y configuraciones previas en scratch/vercel-clean-20261022 del clon, fuera de Git; detalle en docs/OPERACION_VERCEL_20261022.md.
+- Mi Espacio pausa sólo las consultas de estado e inventario con la pestaña oculta, actualiza al regresar y comparte peticiones pendientes. Latido, presencia, movimiento, guardados y datos académicos conservados. Imágenes y fuentes estáticas permiten caché del navegador por una hora; HTML, JS, JSON, PDF y API mantienen su comportamiento. La política automática existente de treinta días se conserva.
+- Nueve controles de visibilidad/concurrencia/error en la auditoría existente, regresiones de Mi Espacio, social e integración PAES aprobadas; patrón de caché probado y build integral con 845 recursos aprobado. El aviso actual corresponde a solicitudes CDN; la limpieza no descuenta consumo pasado y el ahorro futuro no se presenta como medido. Publicación y comprobación de producción se agregan al cierre.
+
 ## 2026-10-21, dashboard: reducir descargas y mostrar primero las clases actuales
 
 - Francisco informa carga lenta del contenido. Diagnóstico en código y navegador autenticado: el panel consultaba ranking y avatares completos para una sección oculta, esperaba todas las respuestas históricas y después iniciaba el avatar personal, las misiones y los mensajes. Medición con cuenta técnica: 749.725 bytes en las lecturas observadas. Las colecciones ocultas suman unos 479 KB de transferencia innecesaria.

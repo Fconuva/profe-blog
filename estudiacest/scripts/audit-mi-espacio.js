@@ -538,7 +538,77 @@ async function probarRegalos() {
     'El cupo diario vive en regalos_log y se descuenta con una transacción.');
 }
 
+async function probarLecturasVisibles() {
+  const llamadas = [], pendientes = [], intervalos = [], eventos = new Map();
+  let ahora = 0, inventariosAplicados = 0;
+  const contexto = {
+    S: { auth: {}, db: {}, sala: 'sala-ficticia', housesEnabled: false },
+    document: { hidden: false, addEventListener(tipo, callback) {
+      if (!eventos.has(tipo)) eventos.set(tipo, new Set());
+      eventos.get(tipo).add(callback);
+    } },
+    api(accion) {
+      llamadas.push(accion);
+      return new Promise((resolve, reject) => pendientes.push({ resolve, reject }));
+    },
+    aplicarDisponibilidad() {}, irACasa() {}, escucharRegalos() {}, anunciar() {}, pintarMuebles() {},
+    aplicarInventario() { inventariosAplicados++; },
+    setInterval(callback, cada) { intervalos.push({ callback, cada, siguiente: ahora + cada }); return intervalos.length; }
+  };
+  vm.createContext(contexto);
+  // Se ejecutan las funciones y la instalación de intervalos reales, aislando
+  // únicamente la API, el reloj y el dibujo de la casa.
+  const fuente = espacio.replace(/\r\n/g, '\n');
+  const funciones = ['sincronizarDisponibilidad', 'sincronizarInventario', 'reanudarLecturas']
+    .map(nombre => { const i = fuente.indexOf('function ' + nombre + '('); return fuente.slice(i, fuente.indexOf('\n  }\n', i)) + '\n  }'; }).join('\n');
+  const inicio = fuente.lastIndexOf('    if (S.auth && S.db) {');
+  const instalacion = fuente.slice(inicio, fuente.indexOf('\n    }', inicio) + 6);
+  vm.runInContext('var disponibilidadEnCurso = null, inventarioEnCurso = null;\n' + funciones + '\n' + instalacion, contexto);
+  async function resolver(error) {
+    pendientes.splice(0).forEach(p => error ? p.reject(new Error('Red ficticia')) : p.resolve({ enabled: true, ok: true }));
+    for (let i = 0; i < 6; i++) await Promise.resolve();
+  }
+  function avanzar(ms) {
+    const hasta = ahora + ms;
+    while (true) {
+      const siguiente = Math.min(...intervalos.map(i => i.siguiente));
+      if (siguiente > hasta) break;
+      ahora = siguiente;
+      intervalos.filter(i => i.siguiente === ahora).forEach(i => { i.siguiente += i.cada; i.callback(); });
+    }
+    ahora = hasta;
+  }
+  function visibilidad(oculta) {
+    contexto.document.hidden = oculta;
+    (eventos.get('visibilitychange') || []).forEach(callback => callback());
+  }
+  exigir(llamadas.join(',') === 'estado,inventario', 'La carga visible debe consultar estado e inventario una sola vez.');
+  avanzar(60000);
+  visibilidad(false);
+  exigir(llamadas.length === 2, 'Intervalos y foco no deben superponer consultas que siguen pendientes.');
+  await resolver();
+  exigir(contexto.S.housesEnabled && inventariosAplicados === 1, 'Las lecturas visibles deben aplicar la respuesta del servidor.');
+  visibilidad(true);
+  avanzar(120000);
+  exigir(llamadas.length === 2, 'Dos minutos con la pestaña oculta no deben emitir lecturas de estado o inventario.');
+  visibilidad(false);
+  visibilidad(false);
+  exigir(llamadas.slice(2).join(',') === 'estado,inventario', 'Volver a la pestaña debe actualizar ambas lecturas sin duplicarlas.');
+  exigir(intervalos.length === 2, 'Volver a la pestaña no debe instalar intervalos nuevos.');
+  await resolver();
+  avanzar(60000);
+  exigir(llamadas.filter(a => a === 'estado').length === 3 && llamadas.filter(a => a === 'inventario').length === 3,
+    'Los intervalos visibles deben seguir activos y agrupar llamadas mientras la red está pendiente.');
+  await resolver(true);
+  avanzar(60000);
+  exigir(llamadas.filter(a => a === 'estado').length === 4 && llamadas.filter(a => a === 'inventario').length === 4,
+    'Un error debe liberar las consultas para que el siguiente intervalo pueda reintentar.');
+  await resolver();
+  exigir(inventariosAplicados === 3, 'El inventario debe volver a aplicar resultados después del reintento.');
+}
+
 (async () => {
+  await probarLecturasVisibles();
   await probarRegalos();
   if (fallos.length) {
     console.error('Auditoría de Mi espacio incumplida:\n- ' + fallos.slice(0, 40).join('\n- '));

@@ -1602,15 +1602,20 @@
     if (!S.housesEnabled) desconectarSala();
   }
 
+  var disponibilidadEnCurso = null, inventarioEnCurso = null;
   function sincronizarDisponibilidad() {
-    return api('estado').then(function (state) {
+    if (document.hidden) return Promise.resolve();
+    if (disponibilidadEnCurso) return disponibilidadEnCurso;
+    disponibilidadEnCurso = api('estado').then(function (state) {
       var enabled = !!(state && state.enabled);
       var changed = enabled !== S.housesEnabled;
       S.housesEnabled = enabled;
       aplicarDisponibilidad();
       if (enabled && !S.sala) { irACasa(S.uid); escucharRegalos(); }
       if (changed) anunciar(enabled ? '🔓 Casas y decoración habilitadas.' : '🔒 Casas y decoración deshabilitadas.');
-    }).catch(function () { S.housesEnabled = false; aplicarDisponibilidad(); });
+    }).catch(function () { S.housesEnabled = false; aplicarDisponibilidad(); })
+      .finally(function () { disponibilidadEnCurso = null; });
+    return disponibilidadEnCurso;
   }
 
   function aplicarInventario(data) {
@@ -1640,12 +1645,21 @@
   }
 
   function sincronizarInventario() {
-    return api('inventario').then(function (data) {
+    if (document.hidden) return Promise.resolve();
+    if (inventarioEnCurso) return inventarioEnCurso;
+    inventarioEnCurso = api('inventario').then(function (data) {
       if (data && data.ok) aplicarInventario(data);
     }).catch(function () {
       S.recompensas = {}; S.requisitos = {}; S.inventoryReady = false;
       pintarMuebles();
-    });
+    }).finally(function () { inventarioEnCurso = null; });
+    return inventarioEnCurso;
+  }
+
+  function reanudarLecturas() {
+    if (document.hidden) return;
+    sincronizarDisponibilidad();
+    sincronizarInventario();
   }
 
   function punto(ev) {
@@ -1923,6 +1937,7 @@
       sincronizarInventario();
       S.stateTimer = setInterval(sincronizarDisponibilidad, 15000);
       S.inventoryTimer = setInterval(sincronizarInventario, 60000);
+      document.addEventListener('visibilitychange', reanudarLecturas);
     }
   }
 

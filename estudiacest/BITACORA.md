@@ -1,5 +1,10 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-22, Mi espacio: perspectiva y acceso de las puertas
+
+- Francisco informa que las puertas están invertidas. El dibujo usaba una inclinación fija y un umbral desplazado hacia el suelo. Se apoya ahora sobre el borde real de la baldosa, con perspectiva según el lado y altura hacia arriba. Se mejora marco, contraste y letrero de destino (Principal/Estudio); puerta y letrero permiten cruzar. Se conservan las casillas de acceso, las habitaciones y las reglas del servidor.
+- Cambio acotado a `estudiantes/js/mi-espacio.js` y regresión en `scripts/preview-house-rooms.js`. Navegador con funciones reales y base ficticia: umbral y perspectiva en ambos muros, clic en puerta y letrero, ida/vuelta en 390/1200/3840, visitas, recarga, chat, guardado pendiente, fallo/reintento y respuesta perdida. Sin errores ni desborde; capturas de ambos lados y móvil abiertas y revisadas. No se escriben datos de producción. Build completo aprobado, 845 recursos críticos. Publicación y comprobación pública pendientes.
+
 ## 2026-10-22, PAES: entrega manual de premios hasta la Guía 24
 
 - Francisco informa que el panel de premios llega solo a la 21. Se encuentran dos límites fijos en el cliente y uno en el servidor. El selector y la lista de entregas llegan ahora a la 24. Las guías 22, 23 y 24 se consultan en sus nodos vigentes por UID, sesión y curso; solo cuentan ambas marcas de entrega, sin borrador ni reapertura. Los botones de revisión abren el panel docente correspondiente.

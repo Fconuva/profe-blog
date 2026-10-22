@@ -732,13 +732,31 @@
   function pintarPuerta(){
     if(S.comun){S.cajaPuerta=null;return;}
     var puerta=puertaActual();S.cajaPuerta=null;if(!puerta)return;
-    var p=celda(puerta.col,puerta.fila),cx=S.cx,x=p.x+47,y=p.y-65;
-    cx.save();cx.fillStyle='#26374b';cx.strokeStyle='#94a3b8';cx.lineWidth=3;
-    cx.beginPath();cx.moveTo(x,y+45);cx.lineTo(x+48,y+77);cx.lineTo(x+48,y+163);cx.lineTo(x,y+131);cx.closePath();cx.fill();cx.stroke();
-    cx.fillStyle='#67e8f9';cx.beginPath();cx.arc(x+36,y+111,4,0,Math.PI*2);cx.fill();
-    cx.fillStyle='#164e63';cx.fillRect(p.x+TW/2-43,y+6,86,28);
-    cx.font='bold 16px sans-serif';cx.textAlign='center';cx.fillStyle='#e0f2fe';cx.fillText(S.habitacion==='estudio'?'Casa':'Estudio',p.x+TW/2,y+27);cx.restore();
-    S.cajaPuerta={x:x,y:y+45,w:48,h:118};
+    var p=celda(puerta.col,puerta.fila),cx=S.cx;
+    var n={x:p.x+TW/2,y:p.y},e={x:p.x+TW,y:p.y+ROMBO/2},
+        s={x:p.x+TW/2,y:p.y+ROMBO},w={x:p.x,y:p.y+ROMBO/2},a,b;
+    // El umbral sigue el borde real de la baldosa, con el alto hacia arriba.
+    // Priorizar los muros posteriores; conservar también las salidas de borde heredadas.
+    if(!haySuelo(puerta.col,puerta.fila-1)){a=n;b=e;}
+    else if(!haySuelo(puerta.col-1,puerta.fila)){a=w;b=n;}
+    else if(!haySuelo(puerta.col+1,puerta.fila)){a=s;b=e;}
+    else {a=w;b=s;}
+    var x=a.x+(b.x-a.x)*.15,y=a.y+(b.y-a.y)*.15,
+        ancho=(b.x-a.x)*.7,pendiente=(b.y-a.y)/(b.x-a.x),alto=112;
+    cx.save();cx.transform(1,pendiente,0,1,x,y);
+    cx.fillStyle='#cbd5e1';cx.fillRect(-3,-alto-3,ancho+6,alto+6);
+    cx.fillStyle='#172b40';cx.fillRect(0,-alto,ancho,alto);
+    cx.strokeStyle='#4b7892';cx.lineWidth=2;cx.strokeRect(6,-alto+8,ancho-12,alto-16);
+    cx.fillStyle='#67e8f9';cx.beginPath();cx.arc(ancho-11,-49,3.5,0,Math.PI*2);cx.fill();
+    cx.fillStyle='#67e8f9';cx.fillRect(0,-3,ancho,3);cx.restore();
+    var centro=x+ancho/2,rotuloY=Math.min(y,y+pendiente*ancho)-alto-34,
+        texto=S.habitacion==='estudio'?'Principal':'Estudio';
+    cx.save();cx.font='bold 16px sans-serif';cx.textAlign='center';
+    var rotuloAncho=Math.max(86,cx.measureText(texto).width+24);
+    cx.fillStyle='#164e63';cx.beginPath();cx.roundRect(centro-rotuloAncho/2,rotuloY,rotuloAncho,28,6);cx.fill();
+    cx.fillStyle='#e0f2fe';cx.fillText(texto,centro,rotuloY+20);cx.restore();
+    var minX=Math.min(x-3,centro-rotuloAncho/2),maxX=Math.max(x+ancho+3,centro+rotuloAncho/2);
+    S.cajaPuerta={x:minX,y:rotuloY,w:maxX-minX,h:Math.max(y,y+pendiente*ancho)+4-rotuloY};
   }
   function bloqueada(col, fila) {
     return !haySuelo(col, fila) || S.pieza.some(function (m) {

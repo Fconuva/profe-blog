@@ -1,5 +1,11 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-22, PAES: entrega manual de premios hasta la Guía 24
+
+- Francisco informa que el panel de premios llega solo a la 21. Se encuentran dos límites fijos en el cliente y uno en el servidor. El selector y la lista de entregas llegan ahora a la 24. Las guías 22, 23 y 24 se consultan en sus nodos vigentes por UID, sesión y curso; solo cuentan ambas marcas de entrega, sin borrador ni reapertura. Los botones de revisión abren el panel docente correspondiente.
+- Se conserva la entrega manual con simulación, confirmación, relectura y protección contra duplicados, además del kit automático existente de G15–21. No se asignan nuevos muebles automáticos ni se entregan regalos reales durante las pruebas. Respuestas, calificaciones e inventarios previos permanecen fuera de las mutaciones de verificación.
+- Auditorías de casas y premios automáticos aprobadas; regresión de G22–G24 con identidad/curso/sesión incorrectos, borradores, reapertura, rutas guiadas y conservación de datos. Build completo aprobado con 845 recursos. Navegador con API y base ficticia: selector 22–24 y destinatario confirmado, cero escrituras, sin errores JS ni desborde a 390/1440/3840. Publicación y comprobación final pendientes.
+
 ## 2026-10-22, Vercel: limpieza y reducción de solicitudes
 
 - Francisco autoriza ejecutar el plan. Equipo y proyectos comprobados por API autenticada: retirados once despliegues sobrantes y siete proyectos sin uso comprobado (dos temporales con un despliegue cada uno y cinco vacíos), trece despliegues retirados en total. Se conservan versiones activas y dos respaldos de producción de ambas webs, la rama previa no integrada de ortografía y un despliegue nuevo de otro agente. Relectura: seis proyectos, dieciséis despliegues y ocho alias personalizados con su destino conservado. Inventarios y configuraciones previas en scratch/vercel-clean-20261022 del clon, fuera de Git; detalle en docs/OPERACION_VERCEL_20261022.md.

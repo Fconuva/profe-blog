@@ -74,7 +74,7 @@ async function checkUI() {
         return {ok:true,json:async () => ({ok:true,errores:0,destinatarios:[{uid:'studentA',confirmado:true,faltan:['playStation5']}]})};
       }
       if (readbackFails && owned) return {ok:false,json:async () => ({error:'Sin conexión al inventario.'})};
-      return {ok:true,json:async () => ({ok:true,destinatarios:[{uid:'studentA',nombre:students[0].nombre,faltan:owned ? [] : body.muebles,yaTiene:owned ? body.muebles : []}],catalogo:furniture})};
+      return {ok:true,json:async () => ({ok:true,destinatarios:[{uid:'studentA',nombre:students[0].nombre,faltan:owned ? [] : body.muebles,yaTiene:owned ? body.muebles : []}],catalogo:furniture,guiasEntregadas:['22','24']})};
     }
   };
   vm.runInNewContext(source, context);
@@ -88,12 +88,14 @@ async function checkUI() {
     getGuideData:() => ({17:{111111111:{status:'sent'}},18:{111111111:{status:'draft'}}}),
     refreshGuides:async () => {}, reviewGuide:() => {}});
   await panel.load();
+  assert.deepEqual(Array.from(elements.houseGuide.options.slice(-3),o=>o.value),['22','23','24'],'El selector llega a la última guía publicada.');
   assert.equal(elements.houseCatalog.children.length,2,'Las imágenes se ven incluso antes de seleccionar un estudiante.');
   assert.equal(elements.houseStudent.options.length, 3);
   elements.houseCourse.value = '3B-HC'; await elements.houseCourse.fire('change');
   assert.equal(elements.houseStudent.options.length, 2);
   elements.houseStudent.value = 'studentA'; await elements.houseStudent.fire('change');
-  assert.equal(elements.houseDeliveries.children.length, 1);
+  assert.equal(elements.houseDeliveries.children.length, 3);
+  assert.ok(elements.houseDeliveries.children.some(button=>button.textContent.includes('Guía 24')),'La ficha muestra la entrega reciente confirmada por API.');
   assert.equal(elements.houseCatalog.children.length, 2);
   const pick = card => card.children[3];
   assert.equal(pick(elements.houseCatalog.children[1]).disabled, true);
@@ -199,6 +201,38 @@ async function checkBatch() {
   response = await fresh.request(confirm); assert.equal(response.data.errores,1,'Un fallo de relectura no informa éxito.');
 }
 
+async function checkRecentGuides() {
+  const rewards=require('../api/_premios-paes'),fixture=createHouseFixture();
+  const {datos}=fixture.state;
+  for(const [guia,spec] of Object.entries(rewards.GUIAS_RECIENTES)) {
+    datos.plataforma_paes[spec.base]={
+      [spec.session]:{
+        studentA:{uid:'studentA',curso:'3B-HC',sessionId:spec.session,submitted:true,completada:true},
+        studentB:{uid:'studentB',curso:'3B-HC',sessionId:spec.session,submitted:true,completada:false},
+        studentC:{uid:'studentC',curso:'3B-HC',sessionId:spec.session,submitted:true,completada:true,resetAt:1}
+      },[spec.session+'-guiada']:{studentD:{uid:'studentD',curso:'4B-HC',sessionId:spec.session+'-guiada',submitted:true,completada:true}}
+    };
+    const before=JSON.stringify(datos.plataforma_paes),writes=fixture.state.writes;
+    const plan=await fixture.request({curso:'3B-HC',guia,muebles:['desk']});
+    assert.equal(plan.status,200);assert.deepEqual(plan.data.destinatarios.map(p=>p.uid),['studentA']);
+    assert.equal(fixture.state.writes,writes,'Consultar una guía reciente no otorga premios.');
+    const row=datos.plataforma_paes[spec.base][spec.session].studentA;
+    for(const invalid of [{uid:'otro'},{curso:'4B-HC'},{sessionId:'otra'},{status:'draft'}]) {
+      const original={...row};Object.assign(row,invalid);
+      assert.equal((await fixture.request({curso:'3B-HC',guia,muebles:[]})).data.destinatarios.length,0,'Excluir identidad, curso o sesión incorrectos y borradores.');
+      for(const key of Object.keys(row))delete row[key];Object.assign(row,original);
+    }
+    const request={curso:'3B-HC',guia,muebles:['desk'],confirmar:true,destinatarios:['studentA']};
+    const confirmed=await fixture.request(request);assert.equal(confirmed.status,200);assert.equal(confirmed.data.errores,0);
+    const stableWrites=fixture.state.writes;await fixture.request(request);assert.equal(fixture.state.writes,stableWrites,'Reintentar no duplica un premio.');
+    assert.equal(JSON.stringify(datos.plataforma_paes),before,'Premiar no cambia intentos ni notas.');
+    assert.equal((await fixture.request({estudiante:'studentD',guia,muebles:[]},'teacherB')).data.destinatarios.length,1,'La ruta guiada también cuenta.');
+  }
+  const individual=await fixture.request({estudiante:'studentA',muebles:[]});
+  assert.deepEqual(individual.data.guiasEntregadas,['22','23','24']);
+  assert.equal((await fixture.request({curso:'3B-HC',guia:'25',muebles:[]})).status,400,'No habilitar guías futuras.');
+}
+
 async function checkScope() {
   const handler = apiSource.slice(apiSource.indexOf('async function handleAdminHouseStudents'),apiSource.indexOf('async function handleAdminGetResults'));
   for (const [teacher, expected] of [[{cursos:['3B-HC']},['studentA']], [{cursos:{'4B-HC':true}},['studentB']], [{cursos:[]},[]], [{superadmin:true},['studentA','studentB']]]) {
@@ -232,5 +266,5 @@ async function checkAdminRecovery() {
   }
 }
 module.exports = {createHouseFixture};
-if (require.main === module) (async () => { await checkUI(); await checkBatch(); await checkScope(); await checkAdminRecovery(); console.log('Admin casas PAES: vista previa y cuatro giros, set individual/curso/tarea, simulación sin escrituras, alcance, borradores, nómina exacta, doble clic, relectura, entrega parcial y reintento sin duplicación aprobados.'); })()
+if (require.main === module) (async () => { await checkUI(); await checkBatch(); await checkRecentGuides(); await checkScope(); await checkAdminRecovery(); console.log('Admin casas PAES: guías 1–24, entregas recientes regulares/guiadas, identidad y curso, simulación sin escrituras, conservación, relectura y reintento sin duplicación aprobados.'); })()
   .catch(error => { console.error(error); process.exit(1); });

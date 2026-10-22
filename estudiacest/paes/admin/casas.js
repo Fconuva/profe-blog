@@ -17,6 +17,7 @@
     const el = id => document.getElementById('house' + id);
     let students = [], catalog = [], selected = [], preview = null, recipients = [], checked = null, run = 0, busy = false;
     let automaticPlan = null;
+    let recentDeliveries = {uid:'',guias:[]};
     const avatarPrizes = global.PaesPremiosAdmin ? global.PaesPremiosAdmin.mount({api,student:()=>students.find(item=>item.uid===el('Student').value),enabled:()=>!busy && el('Mode').value==='student'}) : null;
     const teacherXp = global.PaesExperienciaAdmin ? global.PaesExperienciaAdmin.mount({api,student:()=>students.find(item=>item.uid===el('Student').value),enabled:()=>!busy && el('Mode').value==='student'}) : null;
     async function api(action, payload = {}, paes = false) {
@@ -53,8 +54,8 @@
       const student = students.find(item => item.uid === el('Student').value);
       if (!student) return;
       const guides = getGuideData() || {};
-      for (let id = 1; id <= 21; id++) {
-        if (!delivered(id, guides[id]?.[student.rut])) continue;
+      for (let id = 1; id <= 24; id++) {
+        if (id >= 22 ? recentDeliveries.uid!==student.uid || !recentDeliveries.guias.includes(String(id)) : !delivered(id, guides[id]?.[student.rut])) continue;
         const button = document.createElement('button');
         button.type = 'button'; button.textContent = '✓ Guía ' + id + ' · Revisar';
         button.addEventListener('click', () => reviewGuide(student.rut, String(id)));
@@ -106,6 +107,7 @@
       if (!el('Catalog').children.length) { const empty = document.createElement('p'); empty.className = 'house-note'; empty.textContent = 'No hay muebles que coincidan con este filtro.'; el('Catalog').append(empty); }
     }
     function applyData(data) {
+      recentDeliveries = {uid:target().estudiante,guias:data.guiasEntregadas || []};
       catalog = (Array.isArray(data.catalogo) ? data.catalogo : []).filter(item => /^[A-Za-z0-9_-]+$/.test(item.id));
       recipients = data.destinatarios || [];
       el('Summary').textContent = recipients.length + ' destinatario(s)' + (el('Guide').value ? ' con Guía ' + el('Guide').value + ' entregada' : '') + ' · ' + (data.excluidos || 0) + ' sin la entrega requerida.';
@@ -176,7 +178,7 @@
       } catch (error) { invalidate(); status(error.message, true); }
       finally { lock(false); }
     }
-    for (let id = 1; id <= 21; id++) el('Guide').add(new Option('Guía ' + id, String(id)));
+    for (let id = 1; id <= 24; id++) el('Guide').add(new Option('Guía ' + id, String(id)));
     el('Mode').addEventListener('change', () => { if (!busy) { el('StudentField').hidden = el('Mode').value === 'course'; el('Course').options[0].textContent = el('Mode').value === 'course' ? 'Selecciona un curso…' : 'Todos los cursos HC'; return consult(); } });
     el('Course').addEventListener('change', () => { if (!busy) { automaticPlan=null;if(el('AutoConfirm'))el('AutoConfirm').hidden=true;el('Student').value = ''; renderStudents(); return consult(); } });
     el('Student').addEventListener('change', () => { if (!busy) return consult(); });

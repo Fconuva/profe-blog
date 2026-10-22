@@ -343,7 +343,7 @@ async function regalosPaesPorLote(req, res, db, yo) {
     if (!yo.esAdmin) return res.status(403).json({ error:'Solo el profesor.' });
     const { curso, estudiante, guia, confirmar } = req.body;
     const courses = ['3A-HC', '3B-HC', '4A-HC', '4B-HC'];
-    if ((!estudiante && !courses.includes(curso)) || (guia && !/^(?:[1-9]|1[0-9]|2[01])$/.test(String(guia)))) {
+    if ((!estudiante && !courses.includes(curso)) || (guia && !/^(?:[1-9]|1[0-9]|2[0-4])$/.test(String(guia)))) {
         return res.status(400).json({ error:'Selecciona un curso HC y una guía válida.' });
     }
     const raw = req.body.muebles;
@@ -354,7 +354,7 @@ async function regalosPaesPorLote(req, res, db, yo) {
     const [profilesSnap, docenteSnap, entregaSnap] = await Promise.all([
         db.ref(`${BASE}/estudiantes`).once('value'),
         db.ref(`${BASE}/docentes/${yo.uid}`).once('value'),
-        guia ? db.ref(`plataforma_paes/guia_respuestas/${guia}`).once('value') : Promise.resolve(null)
+        guia && !PREMIOS_PAES.GUIAS_RECIENTES[guia] ? db.ref(`plataforma_paes/guia_respuestas/${guia}`).once('value') : Promise.resolve(null)
     ]);
     const docente = docenteSnap.val();
     const assigned = docente && (Array.isArray(docente.cursos) ? docente.cursos : Object.keys(docente.cursos || {}).filter(id => docente.cursos[id] === true));
@@ -373,7 +373,10 @@ async function regalosPaesPorLote(req, res, db, yo) {
     if (guia && todos.some((perfil, index) => perfil.rut && todos.some((otro, otroIndex) => otroIndex !== index && otro.rut === perfil.rut))) {
         return res.status(409).json({ error:'Hay cuentas duplicadas en la nómina. Revisa los perfiles antes de premiar por tarea.' });
     }
-    const elegibles = todos.filter(perfil => !guia || (perfil.rut && entregaPaesParaPremio(guia, entregas[perfil.rut])));
+    const recientes = estudiante || PREMIOS_PAES.GUIAS_RECIENTES[guia]
+        ? await PREMIOS_PAES.entregasRecientes(db,todos,estudiante ? undefined : [String(guia)]) : {};
+    const elegibles = todos.filter(perfil => !guia || (PREMIOS_PAES.GUIAS_RECIENTES[guia]
+        ? recientes[perfil.uid]?.includes(String(guia)) : perfil.rut && entregaPaesParaPremio(guia, entregas[perfil.rut])));
     if (confirmar === true) {
         const esperados = req.body.destinatarios;
         const actuales = elegibles.map(item => item.uid).sort();
@@ -414,6 +417,7 @@ async function regalosPaesPorLote(req, res, db, yo) {
     res.setHeader('Cache-Control', 'private, no-store');
     return res.status(200).json({ ok:true, confirmar:confirmar === true, totalCurso:todos.length,
         excluidos:todos.length - elegibles.length, destinatarios:resultados, catalogo,
+        guiasEntregadas:estudiante ? recientes[estudiante] || [] : [],
         errores:resultados.filter(item => item.error).length });
 }
 

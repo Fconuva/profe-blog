@@ -5,6 +5,29 @@ const catalogo = require('../estudiantes/js/catalogo-casa.js');
 const BASE = 'plataforma_estudiantes';
 const CURSOS = ['3A-HC','3B-HC','4A-HC','4B-HC'];
 const PREMIOS = Object.freeze({15:'chairDesk',16:'desk',17:'computerScreen',18:'loungeSofa',19:'lampSquareFloor',20:'pottedPlant',21:'televisionModern'});
+const GUIAS_RECIENTES = Object.freeze({
+  22:{base:'mini_invierno_intentos',session:require('./_paes-mini-invierno-catalog').SESSION},
+  23:{base:'mini_octubre_intentos',session:require('./_paes-mini-octubre-catalog').SESSION},
+  24:{base:'guia24_intentos',session:require('./_paes-g24-catalog').SESSION}
+});
+const cursoNormalizado=value=>String(value||'').replace(/[^0-9A-Z]/gi,'').toUpperCase();
+async function entregasRecientes(db, estudiantes, guias=Object.keys(GUIAS_RECIENTES)) {
+  const entregadas=Object.fromEntries(estudiantes.map(p=>[p.uid,[]]));
+  if(!estudiantes.length)return entregadas;
+  const individual=estudiantes.length===1 ? estudiantes[0].uid : null;
+  await Promise.all(guias.map(async guia=>{
+    const spec=GUIAS_RECIENTES[guia];if(!spec)return;
+    const sesiones=[spec.session,spec.session+'-guiada'];
+    const registros=await Promise.all(sesiones.map(async sid=>(await db.ref('plataforma_paes/'+spec.base+'/'+sid+(individual?'/'+individual:'')).once('value')).val()||{}));
+    for(const perfil of estudiantes)if(sesiones.some((sid,i)=>{
+      const r=individual ? registros[i] : registros[i][perfil.uid];
+      return r && !r.resetAt && r.status!=='draft' && r.uid===perfil.uid && r.sessionId===sid &&
+        cursoNormalizado(r.curso)===cursoNormalizado(perfil.curso) && r.submitted===true && r.completada===true;
+    }))entregadas[perfil.uid].push(String(guia));
+  }));
+  for(const guias of Object.values(entregadas))guias.sort((a,b)=>Number(a)-Number(b));
+  return entregadas;
+}
 const nombres = new Map(catalogo.map(item=>[item.id,item.nom]));
 const normalizarRut = value=>String(value||'').replace(/[.\s-]/g,'').toUpperCase();
 const visible = perfil=>perfil && perfil.ocultarDeCasas!==true && CURSOS.includes(perfil.curso);
@@ -76,4 +99,4 @@ async function planCurso(db, curso) {
   const firma=crypto.createHash('sha256').update(JSON.stringify(destinatarios.map(row=>[row.uid,row.premios.map(item=>[item.guia,item.mueble,item.yaTiene])]).sort((a,b)=>a[0].localeCompare(b[0])))).digest('hex');
   return{curso,totalCurso:targets.length,destinatarios,firma,pendientes:destinatarios.reduce((total,row)=>total+row.premios.filter(item=>!item.yaTiene).length,0),asignaciones:fichas()};
 }
-module.exports={CURSOS,PREMIOS,completada,fichas,requisitos,sincronizarUid,alEntregar,planCurso,entregar};
+module.exports={CURSOS,PREMIOS,GUIAS_RECIENTES,entregasRecientes,completada,fichas,requisitos,sincronizarUid,alEntregar,planCurso,entregar};

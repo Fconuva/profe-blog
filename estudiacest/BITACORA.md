@@ -1,5 +1,11 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-26, vlog NM3: guía mejorada y abierta en PDF
+
+- Francisco pide ver la guía mejorada en PDF. La versión anterior descargable tenía seis páginas y no contenía aún el desarrollo del referente SM. Se actualiza el generador del proyecto en preparación y se produce una guía de diez páginas: explicación y ejemplos de los conceptos audiovisuales, contenido sobre coherencia y guion, análisis con evidencia, planificación, revisión, cuidados y dos láminas de planos y ángulos. Se conserva el formato institucional. Se corrige la altura de las láminas, que tenía un estilo en línea que prevalecía sobre el ajuste de impresión.
+- Verificación: HTML 200, fuentes e imágenes decodificadas; diez hojas con contenido antes del pie; PDF de diez páginas A4, cada pie con su número correcto, sin páginas de error. Todas las páginas renderizadas y abiertas en dos contactos visuales: sin cortes ni superposición. PDF de revisión archivado junto a su HTML e imágenes en referencias/metodo-gdd-sm/ejemplo-vlog, fuera del despliegue. SHA-256 80c53e6079b9f206599048c3abaf7802f9106a113efc61e9023b96bd1bde6288; copiado a Descargas, huella comparada y abierto en Adobe Acrobat, con título de ventana confirmado.
+- Entrega de este bloque: PDF local listo para que el docente lo revise. El proyecto web y sus videos siguen en preparación; no se afirma publicación ni se cambian registros académicos. La planificación y el generador en continuidad quedan actualizados a diez páginas.
+
 ## 2026-10-26, método de creación: guías docentes SM de 3.º y 4.º medio
 
 - Francisco aporta los dos tomos y pide analizar estructura, lenguaje, conceptos, consignas e intervención docente, y dejarlos como forma de trabajo para crear guías y material. Se identifican autoría SM y edición ©2024; el tomo 1 corresponde a NM3 y el segundo a NM4, aunque ambos nombres de archivo recibidos incluyen 3M. Se extraen las 514 páginas y se inspecciona una muestra visual de 24 páginas distribuida entre las ocho unidades; no se declara resolución de todos sus ejercicios ni lectura visual de todas las páginas.

@@ -112,3 +112,19 @@ mantener la misma pregunta y conceptos en guía/presentación y comprobar que la
 rúbrica valore comunicación y revisión, sin premiar el costo de equipos o las
 condiciones materiales de la rutina. La ficha es un ejemplo de diseño, no un
 registro de aprendizaje ya observado.
+
+## Guía preparada para revisión del docente
+
+El [PDF de diez páginas](ejemplo-vlog/assets/guia-vlog-nm3.pdf) y su
+[fuente imprimible](ejemplo-vlog/guia.html) incorporan desarrollo conceptual
+sobre género, enunciador, audiencia, tema, mensaje y propósito, ejemplos de
+decisiones audiovisuales, coherencia y guion visual; organizadores, revisión,
+grabación y entrega, y dos láminas de tamaños de plano y ángulos.
+
+La revisión digital del 26-oct-2026 comprobó diez páginas A4, numeración
+continua, fuentes e imágenes cargadas y contenido dentro de cada pie. Se
+abrieron las diez páginas renderizadas. SHA-256 del PDF:
+`80c53e6079b9f206599048c3abaf7802f9106a113efc61e9023b96bd1bde6288`.
+Se abrió una copia idéntica en Adobe Acrobat para Francisco. Es un artefacto
+local de revisión; no acredita despliegue del proyecto ni prueba física de
+impresora. Esta referencia y sus archivos se mantienen excluidos del sitio.

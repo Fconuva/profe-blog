@@ -1,5 +1,7 @@
 # Bitácora de Estudia CEST
 
+- 26-oct-2026, ajuste menor solicitado: identificación solo en la primera página de la guía de clase 1; retirados Nombre y apellido/Curso de las páginas 2–7. PDF mantiene siete páginas, primera página idéntica por comparación visual de píxeles y demás texto idéntico salvo esos seis bloques. Paginación y márgenes conservados; segunda página renderizada abierta. PDF actualizado: SHA-256 843c1c7a6a3334f16adf9de8ab626d7081215d8526529eecc82e80af20d99d42; copia v2 en Descargas y apertura en Acrobat. Excepción específica autorizada por Francisco, sin cambiar la regla general de otras guías.
+
 ## 2026-10-26, vlog NM3: solo clase 1, lectura del libro e imágenes aplicadas
 
 - Francisco retira de la guía las clases siguientes y pide ilustraciones IA, ejercicios y aplicación de planos; precisa que se respete el hilo conductor del libro y se busque una lectura pertinente. Se releen GDD 88–90 (PDF 94–96), sobre imagen, libreto, storyboard y planos, y el taller audiovisual GDD 105–106 / TE 57–58 (PDF 111–112) del tomo 1, Unidad 2 «Identidad». Se abre la página GDD 89 para contrastar la fuente. La lectura nueva adapta esas orientaciones sobre novela gráfica, con referencia explícita y aplicación CEST al vlog; no se presenta como cita literal ni como una consigna original SM sobre vlogs.

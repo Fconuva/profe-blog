@@ -9,7 +9,7 @@ const membrete=template.slice(template.indexOf('  <div class="membrete-banner">'
 const ficha=template.slice(template.indexOf('  <table class="info-table"'),template.indexOf('  <section class="instructions"')).replaceAll('[Asignatura]','Lengua y Literatura').replace('[Objetivo de la clase, en infinitivo]',objetivo).replace('[Habilidades que se trabajan]','Analizar, interpretar, fundamentar y aplicar planos.').replaceAll('class="placeholder"','').replace('Semestre</td><td class="value write-in"></td>','Semestre</td><td class="value write-in">II</td>').replace('Puntaje</td><td class="value write-in" colspan="2"></td>','Puntaje</td><td class="value write-in" colspan="2">Formativa</td>');
 const table=(heads,rows,cls='')=>`<table class="work-table ${cls}"><thead><tr>${heads.map(x=>`<th>${x}</th>`).join('')}</tr></thead><tbody>${rows.map(row=>`<tr>${row.map(x=>`<td>${x}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
 const lines=n=>'<div class="writing-line"></div>'.repeat(n);
-const id=t=>`<h1 class="page-title">${t}</h1><table class="short-id"><tr><td>Nombre y apellido:</td><td>Curso:</td></tr></table>`;
+const id=t=>`<h1 class="page-title">${t}</h1>`;
 const instruct=t=>`<section class="instructions"><strong>INSTRUCCIONES</strong><p>${t}</p></section>`;
 const question=(t,n=2)=>`<p class="question">${t}</p>${lines(n)}`;
 const photo=(file,alt,cls='')=>`<figure class="${cls}"><img src="assets/${file}.webp" alt="${alt}"><figcaption>Ilustración didáctica creada con IA · escena ficticia.</figcaption></figure>`;

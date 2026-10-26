@@ -136,6 +136,8 @@ const baseB = {
     assert.strictEqual((await call(tardia, 'inscribir', baseA, false)).code, 403, 'También se comprueba el plazo dentro de la transacción.');
     assert.deepStrictEqual(tardia.state, estadoAntes);
   } finally { Date.now = relojReal; }
+  // El resto simula el periodo abierto: la auditoría debe pasar también después del cierre real.
+  Date.now = () => cierre - 60000;
 
   function comprobarEstadoPrivado(publico) {
     assert.deepStrictEqual(Object.keys(publico).sort(), ['actualizado', 'asientos', 'capacidad', 'cierreInscripcion', 'inscripcionAbierta']);

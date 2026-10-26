@@ -16,7 +16,9 @@ const ACTIVITIES = [
   {id:'informe',title:'Informe técnico',mode:'Digital',except:['4DTP']},
   {id:'manual',title:'Manual ilustrado',mode:'Papel'},
   {id:'correo',title:'Correo formal',mode:'Papel',except:['4ATP','4BTP','4CTP','4ETP']},
-  {id:'ia-futuro',title:'IA, dinero y futuro',mode:'Cuaderno'}
+  {id:'ia-futuro',title:'IA, dinero y futuro',mode:'Cuaderno'},
+  // Nota propia del cuaderno completo (Francisco, 26-oct-2026): pesa como una actividad más.
+  {id:'cuaderno-orden',title:'Orden, organización y limpieza del cuaderno',mode:'Cuaderno completo',highlight:'cuaderno'}
 ];
 const fail=(status,message)=>Object.assign(new Error(message),{status});
 const validGrade=n=>n===null || typeof n==='number'&&Number.isFinite(n)&&n>=1&&n<=7&&Math.abs(n*10-Math.round(n*10))<1e-8;

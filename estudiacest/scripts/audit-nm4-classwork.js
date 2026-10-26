@@ -102,6 +102,8 @@ async function apiAudit(){
  const empty=project('4ATP',roster['4ATP'],{},snapshots,false,settings).rows[0];check(empty.total===0&&empty.average===null&&!empty.partial,'sin tareas activas no crea un cero ni pendientes');
  const digital=project('4ATP',roster['4ATP'],{},snapshots,false,{informe:{enabled:false,version:1}}).rows[0];check(digital.grades.informe.grade===null&&digital.count===0,'también excluye nota digital automática');
  result=await call(db,{...toggle,activity:'correo',enabled:true,requestId:'activar-excepcion-por-curso'},'docente','set-activity');check(result.status===200&&result.data.activities.find(a=>a.id==='correo').applicable,'permite activar una tarea excluida inicialmente');
+ for(const course of Object.keys(roster)){const a=project(course,roster[course],{},{},false).activities.find(x=>x.id==='cuaderno-orden');check(a&&a.applicable&&a.highlight==='cuaderno','nota de cuaderno activa y destacada en '+course);}
+ const notebook=project('4ATP',roster['4ATP'],{1:{'oferta-contrato':{version:1,grade:4},'cuaderno-orden':{version:1,grade:7}}},{},false).rows[0];check(notebook.average===5.5&&notebook.count===2,'nota de cuaderno cuenta en el promedio');
  const html=fs.readFileSync(path.join(ROOT,'nm4/index.html'),'utf8');check(html.includes('Nota de trabajo en clases')&&html.includes('/nm4/trabajo-en-clases/'),'portal enlaza nota correcta');
  return db;
 }
@@ -153,7 +155,7 @@ async function browserAudit(){
   await student.waitForFunction(()=>document.querySelector('#grades thead').textContent.includes('Manual ilustradoNo cuenta'));
   check(await teacher.locator('#grades input[data-activity="manual"]').count()===0,'sin editor en tarea desactivada');
   check(await student.locator('#activitySettings').isHidden(),'alumno sin control de tareas');
-  check((await student.locator('#grades tbody tr').first().textContent()).includes('0/7 actividades'),'tarea con nota excluida también en vista alumno');
+  check((await student.locator('#grades tbody tr').first().textContent()).includes('0/8 actividades'),'tarea con nota excluida también en vista alumno');
   await teacher.reload();await teacher.locator('#grades tbody tr').first().waitFor();await teacher.locator('#activitySettings summary').click();check(!(await teacher.locator('#activityOptions [data-task="manual"]').isChecked()),'desactivación persiste tras recargar');
   await teacher.selectOption('#course','4DTP');await teacher.waitForFunction(()=>document.querySelector('#grades tbody').textContent.includes('FICTICIO D'));check(await teacher.locator('#activityOptions [data-task="manual"]').isChecked(),'selección independiente por curso');
   await teacher.selectOption('#course','4ATP');await teacher.waitForFunction(()=>document.querySelector('#grades tbody').textContent.includes('FICTICIO A'));await teacher.locator('#activityOptions [data-task="manual"]').check();
@@ -165,6 +167,8 @@ async function browserAudit(){
   await student.locator('#studentLogout').click();await student.locator('#rutInput').waitFor({state:'visible'});check(await student.locator('#sheet').isHidden(),'cerrar consulta retira las notas');
   await student.locator('#rutInput').fill('22222222-2');await student.locator('#studentLogin button').click();await student.waitForFunction(()=>document.querySelector('#grades tbody').textContent.includes('FICTICIO D'));check(await student.locator('#course').inputValue()==='4DTP','RUT abre su propio curso');
   await student.reload();await student.waitForFunction(()=>document.querySelector('#grades tbody').textContent.includes('FICTICIO D'));check(await student.locator('#course').inputValue()==='4DTP','recarga conserva curso de ingreso');
+  check(await teacher.locator('#grades thead th.notebook').count()===1&&await teacher.locator('#grades tbody td.notebook input[data-activity="cuaderno-orden"]').count()>0,'docente edita la columna del cuaderno');
+  check(await student.locator('#grades tbody td.notebook').count()>0&&await student.evaluate(()=>getComputedStyle(document.querySelector('#grades td.notebook')).backgroundColor!==getComputedStyle(document.querySelector('#grades td.average')).backgroundColor),'columna del cuaderno con color propio');
   check(errors.length===0,'sin errores de navegador');
  }finally{if(browser)await browser.close();server.closeAllConnections();await new Promise(r=>server.close(r));}
 }

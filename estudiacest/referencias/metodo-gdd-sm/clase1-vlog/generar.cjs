@@ -95,5 +95,3 @@ const html=`<!doctype html><html lang="es"><head><meta charset="utf-8"><meta nam
 fs.writeFileSync(path.join(dir,'guia.html'),html.split('\n').map(line=>line.trimEnd()).join('\n')+'\n','utf8');
 fs.writeFileSync(path.join(dir,'diseno.json'),JSON.stringify({objetivo,pregunta,paginas:pages.length,clase:1,lectura:{tipo:'Adaptación didáctica, no cita literal',obra:'Guía Digital del Docente, Lengua y Literatura, SM, tomo 1',unidad:'Identidad',paginasGDD:[89,90],paginasPDF:[95,96],aplicacionVlog:'Diseño CEST; no se atribuye como consigna literal a SM'},video:{url:'https://www.youtube.com/watch?v=h23SJatDO74',duracion:740}},null,2)+'\n');
 console.log('Guía exclusiva de clase 1 generada: '+pages.length+' páginas.');
-
-

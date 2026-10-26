@@ -41,4 +41,24 @@ y medios históricos conservados; introducción antigua archivada en un
 desplegable para distinguirla del proyecto actual. Calendarios NM3 alineados
 con el inicio del 30-octubre, sin atribuir aplicación ni entrega a esa fecha.
 
-Publicación y comprobaciones públicas se registran tras el despliegue seguro.
+## Cierre de publicación
+
+Publicada mediante `npm run deploy:prod:safe`, proceso terminado con código 0.
+Despliegue `dpl_F1BgdnApfDMLf9YK2cBTuPJt5Kf8` READY, proyecto
+`prj_v2yUaXflcSoBgunqmn1rAEfh0KMR`, commit
+`ba6ca16ab1133d3eff2f3184ed3833b801b21905` y alias
+`www.estudiacest.com` releídos por API autenticada de Vercel.
+
+213 comprobaciones públicas aprobadas: doce recursos idénticos por SHA-256,
+PDF aprobado intacto, tres tarjetas antiguas ausentes y tres nuevas presentes,
+ingreso desde NM3 a la presentación, 33 diapositivas en 390/1366/3840 sin
+desborde horizontal y sin contenido cortado en escritorio, reloj real,
+pausa, conservación entre pantallas, pantalla completa, panel de pizarra,
+dibujo, aislamiento de trazos por diapositiva y recuperación al volver,
+ampliación de imagen, video original integrado, enlace directo tras recarga y
+calendarios actualizados. Referencia interna con 404; cero errores JS.
+Captura pública de la portada revisada visualmente. La navegación pública no
+requiere sesión; no se usaron datos de estudiantes ni se escribieron registros.
+
+Acceso docente: `https://www.estudiacest.com/nm3/vlog-mi-vida/presentacion.html`.
+Seleccionar Pantalla completa y usar Iniciar tiempo al comenzar cada bloque.

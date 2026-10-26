@@ -122,7 +122,16 @@ async function handle(action,req,res,{db,auth,adminUid}){
  }catch(e){return res.status(e.status||500).json({error:e.status?e.message:'No se pudo guardar. Tu avance se conserva.'});}
 }
 return {handle,BASE,CONFIG,identity,validate,form,performance,TIME_LIMIT_MS,timeLimitFor};}
-let pdfCache,pdfPending;async function officialSource(url){if(pdfCache)return pdfCache;if(!pdfPending)pdfPending=(async()=>{const r=await fetch(url,{signal:AbortSignal.timeout(25000)});if(!r.ok)throw Error('Fuente no disponible');const b=Buffer.from(await r.arrayBuffer());if(b.length>20000000||b.subarray(0,5).toString()!=='%PDF-'||require('node:crypto').createHash('sha256').update(b).digest('hex')!=='9dcf3206de8aef35b52b0a3f5a493713fc5e72b0e25c54a504052a7bc27e9a41')throw Error('Fuente inválida');return pdfCache=b;})().finally(()=>{pdfPending=null;});return pdfPending;}
+let pdfCache;
+async function officialSource(){
+ if(!pdfCache){
+  const file=require.resolve('./_paes-tp-assets/invierno-oficial.pdf');
+  const bytes=require('node:fs').readFileSync(file);
+  if(require('node:crypto').createHash('sha256').update(bytes).digest('hex')!=='9dcf3206de8aef35b52b0a3f5a493713fc5e72b0e25c54a504052a7bc27e9a41')throw Error('Fuente oficial distinta.');
+  pdfCache=bytes;
+ }
+ return pdfCache;
+}
 const handlers=Object.fromEntries(['1','2','3'].map(n=>[n,create(T.catalog(n))]));
 async function handle(action,req,res,ctx){const h=handlers[String(req.query?.sesion)];if(!h)return res.status(400).json({error:'Sesión no válida.'});return h.handle(action.replace('admin-tp-','admin-mini-').replace(/^tp-/,'mini-'),req,res,ctx);}
 module.exports={handle,handlers};

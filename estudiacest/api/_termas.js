@@ -4,7 +4,7 @@
 // No es una función de Vercel por sí misma: el plan Hobby admite 12 y ya están
 // ocupadas. Se enruta desde api/estudiantes.js con las acciones `termas-estado`,
 // `termas-mia`, `termas-inscribir`, `termas-admin-lista`,
-// `termas-admin-guardar`, `termas-admin-quitar` y `termas-admin-restaurar`.
+// `termas-admin-guardar`, `termas-admin-baja`, `termas-admin-quitar` y `termas-admin-restaurar`.
 //
 // Los datos viven en `eventos_docentes/termas_2026`, fuera de
 // `plataforma_estudiantes`. La raíz de firebase-rules.json niega lectura y
@@ -296,7 +296,7 @@ async function adminLista(req, res, db, auth) {
     const base = snap.val() || {};
     const todas = base.inscripciones || {};
     const filas = Object.values(todas)
-        .map(i => ({ ...inscripcionPropia(i), creado: i.creado || null, gestionAdmin: !!i.gestionAdmin }))
+        .map(i => ({ ...inscripcionPropia(i), creado: i.creado || null, gestionAdmin: !!i.gestionAdmin, baja: i.baja || null }))
         .sort((a, b) => `${a.apellido} ${a.nombre}`.localeCompare(`${b.apellido} ${b.nombre}`, 'es'));
     const eliminadas = Object.entries(base.papelera || {})
         .map(([id, i]) => ({ id, ...inscripcionPropia(i), eliminado: i.eliminado || null }))
@@ -354,7 +354,10 @@ async function adminGuardar(req, res, db, auth) {
         const ahora = Date.now();
         if (claveOriginal && claveOriginal !== claveNueva) delete todas[claveOriginal];
         todas[claveNueva] = {
+            ...(previa || {}),
             ...datos,
+            ...(previa && previa.baja && !previa.baja.anulada && datos.asiste === 'si'
+                ? { baja: { ...previa.baja, anulada: ahora } } : {}),
             llave: previa ? previa.llave : hashLlave(crypto.randomBytes(18).toString('base64url')),
             ...(previa && previa.llaveRecuperacion ? { llaveRecuperacion: previa.llaveRecuperacion } : {}),
             creado: previa ? previa.creado : ahora,
@@ -372,6 +375,47 @@ async function adminGuardar(req, res, db, auth) {
     }
     const todas = resultado.snapshot.val() || {};
     return res.status(200).json({ ok: true, inscripcion: inscripcionPropia(todas[claveNueva]), ...estadoAdmin(todas) });
+}
+
+async function adminBaja(req, res, db, auth) {
+    await verificarAdmin(req, db, auth);
+    const body = cuerpo(req);
+    const correo = validarCorreo(body.correo);
+    const clave = claveDe(correo);
+    const version = Number(body.actualizado);
+    if (!Number.isSafeInteger(version) || version <= 0) throw fallo(400, 'Actualiza la lista antes de anotar la baja.');
+    const invitado = texto(body.invitado, 160);
+    const nota = texto(body.nota, 500);
+    let motivo = '';
+    const resultado = await db.ref(INSCRIPCIONES).transaction(actual => {
+        motivo = '';
+        if (actual === null) { motivo = 'no-encontrada'; return null; }
+        const previa = actual[clave];
+        if (!previa) { motivo = 'no-encontrada'; return; }
+        if (Number(previa.actualizado) !== version) { motivo = 'cambio'; return; }
+        const ahora = Date.now();
+        const anterior = previa.baja && !previa.baja.anulada ? previa.baja : null;
+        actual[clave] = {
+            ...previa, asiste: 'no', transporte: '', asiento: null, comida: '',
+            gestionAdmin: true, actualizado: Math.max(ahora, version + 1),
+            baja: {
+                registrada: anterior ? anterior.registrada : ahora,
+                respuestaAnterior: anterior ? anterior.respuestaAnterior : {
+                    asiste: previa.asiste || '', transporte: previa.transporte || '',
+                    asiento: previa.asiento || null, comida: previa.comida || ''
+                },
+                invitado, nota, actualizado: ahora
+            }
+        };
+        return actual;
+    }, undefined, false);
+    if (!resultado.committed || motivo) {
+        if (motivo === 'no-encontrada') throw fallo(404, 'La inscripción ya no existe. Actualiza la lista.');
+        if (motivo === 'cambio') throw fallo(409, 'La inscripción cambió. Actualiza la lista y revisa antes de guardar.');
+        throw fallo(500, 'No se pudo guardar la baja.');
+    }
+    const guardada = resultado.snapshot.val()[clave];
+    return res.status(200).json({ ok: true, baja: guardada.baja, actualizado: guardada.actualizado });
 }
 
 async function adminRestaurar(req, res, db, auth) {
@@ -425,6 +469,7 @@ async function manejar(req, res, accion, db, auth) {
         if (accion === 'recuperar') return await recuperar(req, res, db);
         if (accion === 'inscribir') return await inscribir(req, res, db);
         if (accion === 'admin-guardar') return await adminGuardar(req, res, db, auth);
+        if (accion === 'admin-baja') return await adminBaja(req, res, db, auth);
         if (accion === 'admin-quitar') return await adminQuitar(req, res, db, auth);
         if (accion === 'admin-restaurar') return await adminRestaurar(req, res, db, auth);
         return res.status(400).json({ error: 'Acción no válida.' });

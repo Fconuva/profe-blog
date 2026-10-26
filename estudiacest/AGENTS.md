@@ -28,6 +28,8 @@ Al cerrar una tarea que cambie comportamiento, datos, contenido académico,
 administración o producción, agregar una entrada a `BITACORA.md`. No registrar
 RUT, notas individuales, correos, credenciales ni otros datos personales.
 
+Termas: `/termas/admin` registra bajas e invitado opcional mediante `termas-admin-baja`, solo con sesión administrativa. Conserva la inscripción y la respuesta anterior, marca no asistencia y libera el asiento; anotar un invitado no crea una inscripción. Reconfirmar asistencia desde Editar anula la baja conservando su antecedente.
+
 SIMCE Unidad 4 usa `/estudiantes/simce-unidad4/`, las acciones `simce-u4-*`
 de la API y claves solo en servidor. Su panel docente exige admin y alcance de
 curso. El puntaje simulado CEST no asigna niveles oficiales de SIMCE.

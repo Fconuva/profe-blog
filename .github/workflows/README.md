@@ -7,6 +7,8 @@ history is recorded only in `estudiacest/BITACORA.md`. This workflow applies to
 the student platform and excludes portfolio, client, payment, and collection
 operations.
 
+Termas: al cambiar bajas y reemplazos en `/termas/admin`, verificar `termas-admin-baja` con base ficticia y la auditoría `node scripts/audit-termas-admin.js --browser`. Preservar inscripción y respuesta anterior; el invitado es solo una anotación opcional, privada y sin alta automática. Confirmar el guardado por relectura antes de comunicar éxito.
+
 ## Mandatory Multi-Agent Sync Before Push or Deploy
 
 Every agent must continue from the latest `origin/main` so changes from NM3, NM4, PAES, SIMCE, and other sections remain intact.

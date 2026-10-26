@@ -80,6 +80,7 @@ minor corrections.
 - If no writing is stored, report that a retroactive combined grade is not honest without external input.
 
 ## Admin Audit Checklist
+- Termas: las bajas y el invitado opcional se gestionan en `/termas/admin` por `termas-admin-baja`, con sesión, control de versión y relectura. Conservan inscripción y respuesta anterior, liberan asiento y no inscriben automáticamente al invitado. Prueba focalizada: `node scripts/audit-termas-admin.js --browser`, solo con base ficticia.
 - SIMCE Results: `Reabrir` preserves responses and archives the previous delivery through `simce-admin-reopen`, with server-side course scope, atomic update, idempotent request and readback. It grants individual access even when the class is closed. The prior labor grade remains pending review until publication; reopening does not assign a new grade.
 - Open admin gate and check that only the configured owner email is accepted.
 - Verify section switching: overview, students, lecturas, reports, planilla.

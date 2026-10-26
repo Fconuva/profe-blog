@@ -297,6 +297,53 @@ const baseB = {
   assert.ok(getAt(db.state, 'eventos_docentes/termas_2026/inscripciones/uno,nuevo@example,test'));
   assert.strictEqual(Object.keys(getAt(db.state, 'eventos_docentes/termas_2026/papelera') || {}).length, 0);
 
+  // Bajas: una persona exacta, asiento liberado e historial y seguimiento privados.
+  const bajas = mockDb(true);
+  await call(bajas, 'admin-guardar', baseA);
+  await call(bajas, 'admin-guardar', baseB);
+  const rutaBaja = 'eventos_docentes/termas_2026/inscripciones/uno@example,test';
+  const previaBaja = clone(getAt(bajas.state, rutaBaja));
+  const ajenaBaja = clone(getAt(bajas.state, 'eventos_docentes/termas_2026/inscripciones/dos@example,test'));
+  const solicitudBaja = { correo: baseA.correo, actualizado: previaBaja.actualizado };
+  const antesBaja = clone(bajas.state);
+  assert.strictEqual((await call(bajas, 'admin-baja', solicitudBaja, false)).code, 401);
+  assert.strictEqual((await call(bajas, 'admin-baja', { ...solicitudBaja, actualizado: 0 })).code, 400);
+  assert.strictEqual((await call(bajas, 'admin-baja', { ...solicitudBaja, correo: 'ausente@example.test' })).code, 404);
+  assert.deepStrictEqual(bajas.state, antesBaja);
+  const bajaGuardada = await call(bajas, 'admin-baja', solicitudBaja);
+  assert.strictEqual(bajaGuardada.code, 200, 'Registrar sin invitado funciona después del cierre y con caché fría.');
+  let insBaja = getAt(bajas.state, rutaBaja);
+  assert.strictEqual(insBaja.asiste, 'no');
+  assert.strictEqual(insBaja.asiento, null);
+  assert.strictEqual(insBaja.baja.invitado, '');
+  assert.strictEqual(insBaja.llave, previaBaja.llave);
+  assert.strictEqual(insBaja.creado, previaBaja.creado);
+  assert.strictEqual(insBaja.baja.respuestaAnterior.asiento, 7);
+  assert.deepStrictEqual(bajaGuardada.payload.baja, insBaja.baja);
+  assert.strictEqual(bajaGuardada.cacheControl, 'no-store');
+  const despuesBaja = clone(bajas.state);
+  assert.strictEqual((await call(bajas, 'admin-baja', solicitudBaja)).code, 409, 'Un formulario viejo no sobrescribe cambios.');
+  assert.deepStrictEqual(bajas.state, despuesBaja);
+  assert.strictEqual((await call(bajas, 'estado', null, false)).payload.asientos['7'], undefined);
+  assert.ok(!JSON.stringify((await call(bajas, 'estado', null, false)).payload).includes('baja'));
+  const primeraBaja = clone(insBaja.baja);
+  assert.strictEqual((await call(bajas, 'admin-baja', { ...solicitudBaja, actualizado: insBaja.actualizado, invitado: ' María   Muñoz ', nota: 'Avisó por WhatsApp' })).code, 200);
+  insBaja = getAt(bajas.state, rutaBaja);
+  assert.strictEqual(insBaja.baja.registrada, primeraBaja.registrada);
+  assert.deepStrictEqual(insBaja.baja.respuestaAnterior, primeraBaja.respuestaAnterior);
+  assert.strictEqual(insBaja.baja.invitado, 'María Muñoz');
+  const listadoBajas = (await call(bajas, 'admin-lista')).payload;
+  assert.strictEqual(listadoBajas.totales.asisten, 1);
+  assert.strictEqual(listadoBajas.filas.find(f => f.correo === baseA.correo).baja.invitado, 'María Muñoz');
+  const propioBaja = (await call(bajas, 'recuperar', { correo: baseA.correo, telefono: baseA.telefono }, false)).payload;
+  assert.ok(!JSON.stringify(propioBaja).includes('María Muñoz'), 'El pase propio no expone notas ni al invitado.');
+  assert.strictEqual((await call(bajas, 'admin-guardar', { ...baseA, originalCorreo: baseA.correo, asiste: 'no' })).code, 200);
+  assert.strictEqual(getAt(bajas.state, rutaBaja).baja.invitado, 'María Muñoz', 'Editar datos conserva seguimiento.');
+  assert.strictEqual((await call(bajas, 'admin-guardar', { ...baseA, originalCorreo: baseA.correo, asiento: 8 })).code, 409, 'Reactivar sigue protegiendo asientos ocupados.');
+  assert.strictEqual((await call(bajas, 'admin-guardar', { ...baseA, originalCorreo: baseA.correo })).code, 200);
+  assert.ok(getAt(bajas.state, rutaBaja).baja.anulada, 'Reconfirmar asistencia conserva el antecedente y anula la baja.');
+  assert.deepStrictEqual(getAt(bajas.state, 'eventos_docentes/termas_2026/inscripciones/dos@example,test'), ajenaBaja);
+
   const html = fs.readFileSync(path.join(ROOT, 'termas', 'admin.html'), 'utf8');
   const inlineScripts = [...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)].map(match => match[1]).filter(script => script.trim());
   assert.strictEqual(inlineScripts.length, 1, 'El panel debe tener un único script inline auditable.');
@@ -333,7 +380,66 @@ const baseB = {
   const vercelIgnore = fs.readFileSync(path.join(ROOT, '.vercelignore'), 'utf8');
   assert.ok(vercelIgnore.includes('!scripts/audit-termas-admin.js'), 'Vercel excluiría la auditoría del prebuild.');
 
-  console.log('Termas: totales y contactos privados, nombre breve por asiento autorizado; recuperación correo + teléfono, conservación de acceso y reserva, plazo de Santiago, pase después del cierre, edición, conflictos, papelera y restauración correctos, también con caché fría.');
+  if (process.argv.includes('--browser')) {
+    const { chromium } = require('playwright');
+    const fixture = mockDb(true);
+    await call(fixture, 'admin-guardar', baseA);
+    await call(fixture, 'admin-guardar', baseB);
+    const authFicticia = `<script>const usuarioFicticio={getIdToken:async()=> 'token-ficticio'};const authFicticia=()=>({currentUser:usuarioFicticio,setPersistence:async()=>{},onAuthStateChanged:fn=>fn(usuarioFicticio)});authFicticia.Auth={Persistence:{LOCAL:'local'}};window.firebase={initializeApp(){},auth:authFicticia};</script>`;
+    const paginaPrueba = html.replace(/<script src="https:\/\/www.gstatic.com\/firebasejs\/[^\"]*firebase-app-compat.js"><\/script>/, authFicticia).replace(/<script src="https:\/\/www.gstatic.com\/firebasejs\/[^\"]*firebase-auth-compat.js"><\/script>/, '');
+    const servidor = http.createServer(async (req, out) => {
+      const url = new URL(req.url, 'http://localhost');
+      if (url.pathname === '/api/estudiantes') {
+        let raw = ''; for await (const trozo of req) raw += trozo;
+        req.body = raw ? JSON.parse(raw) : {};
+        const res = { code: 200, setHeader: (k,v) => out.setHeader(k,v), status(code) { this.code=code;return this; }, json(data) { out.writeHead(this.code, {'Content-Type':'application/json'});out.end(JSON.stringify(data)); } };
+        return termas.manejar(req, res, url.searchParams.get('action').replace('termas-', ''), fixture, { verifyIdToken: async () => ({ uid:'admin-1' }) });
+      }
+      if (url.pathname === '/termas/admin') { out.setHeader('Content-Type','text/html;charset=utf-8'); return out.end(paginaPrueba); }
+      if (/^\/termas\/assets\/[\w.-]+$/.test(url.pathname) && fs.existsSync(path.join(ROOT,url.pathname))) return out.end(fs.readFileSync(path.join(ROOT,url.pathname)));
+      out.writeHead(404);out.end();
+    });
+    await new Promise(resolve => servidor.listen(0,'127.0.0.1',resolve));
+    const browser = await chromium.launch({headless:true});
+    try {
+      const page = await browser.newPage({viewport:{width:1440,height:1000}});
+      const errores=[];page.on('pageerror',e=>errores.push(e.message));
+      await page.goto(`http://127.0.0.1:${servidor.address().port}/termas/admin`);
+      await page.getByText('Todavía no hay bajas registradas.').waitFor();
+      const primera = page.locator('#filas tr').filter({hasText:baseA.correo});
+      await primera.getByRole('button',{name:'Anotar baja',exact:true}).click();
+      await page.getByRole('button',{name:'Guardar baja',exact:true}).click();
+      await page.locator('#editorBaja').waitFor({state:'hidden'});
+      await page.locator('#bajas').getByText('Sin invitación anotada').waitFor();
+      assert.strictEqual(getAt(fixture.state,rutaBaja).asiste,'no');
+      await page.reload();
+      await page.locator('#bajas').getByText('Sin invitación anotada').waitFor();
+      await page.locator('#bajas').getByRole('button',{name:'Editar baja',exact:true}).click();
+      await page.getByLabel('Invitado en su lugar (opcional)').fill('María Muñoz');
+      await page.getByLabel('Observaciones (opcional)').fill('Invitación pendiente de respuesta');
+      await page.getByRole('button',{name:'Guardar baja',exact:true}).click();
+      await page.locator('#editorBaja').waitFor({state:'hidden'});
+      await page.reload();
+      await page.locator('#bajas').getByText('Invitado en su lugar: María Muñoz').waitFor();
+      await page.locator('#filtro').selectOption('bajas');
+      assert.strictEqual(await page.locator('#filas tr').count(),1);
+      const carpeta = process.env.TERMAS_QA_OUTPUT;
+      if (carpeta) fs.mkdirSync(carpeta,{recursive:true});
+      for (const width of [320,390,1440,3840]) {
+        await page.setViewportSize({width,height:1000});
+        assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),`Desborde en ${width}`);
+        await page.locator('#bajas').getByRole('button',{name:'Editar baja',exact:true}).click();
+        assert.ok(await page.locator('#btnGuardarBaja').isVisible());
+        if(carpeta && [390,1440].includes(width)) await page.screenshot({path:path.join(carpeta,`baja-${width}.png`)});
+        await page.getByRole('button',{name:'Cancelar',exact:true}).filter({visible:true}).click();
+      }
+      assert.deepStrictEqual(errores,[]);
+      assert.strictEqual(Object.keys(getAt(fixture.state,'eventos_docentes/termas_2026/inscripciones')).length,2,'Anotar invitado no crea inscripción.');
+      console.log('Navegador Termas: guardar baja sin invitado, recargar, completar invitado y observaciones, releer, filtrar y abrir editor en 320/390/1440/3840; sin desbordes ni errores JS. Base e identidad ficticias con función HTTP real.');
+    } finally { await browser.close(); await new Promise(resolve=>servidor.close(resolve)); }
+  }
+
+  console.log('Termas: privacidad, acceso, plazo, edición, conflictos, papelera, restauración y bajas con invitado opcional, conservación de datos y control de cambios correctos, también con caché fría.');
 })().catch(error => {
   console.error(error.stack || error.message);
   process.exit(1);

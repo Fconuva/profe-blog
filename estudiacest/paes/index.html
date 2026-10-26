@@ -1019,6 +1019,7 @@
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
           </button>
         </form>
+        <p><a href="/paes/tp/">4.º A–E TP: ingresar a las tres semanas de práctica</a></p>
       </div>
     </section>
 
@@ -1607,8 +1608,15 @@
       passwordInput.required = required;
     }
     rutInput.addEventListener('input', updatePasswordField);
+    function isPaesTpStudent(student) {
+      return /^4[A-E]TP$/.test(String(student && student.curso || '').replace(/[^0-9A-Z]/gi, '').toUpperCase());
+    }
     function enterPortal(student) {
       sessionStorage.setItem('paes_student', JSON.stringify(student));
+      if (isPaesTpStudent(student)) {
+        window.location.replace('/paes/tp/');
+        return;
+      }
       if (nextPath && (next !== 'mi-espacio' || PaesStudentSession.hasSpace(student))) {
         window.location.replace(nextPath);
         return;
@@ -1942,6 +1950,16 @@
         if (entryParams.get('logout') === '1') {
           await PaesStudentSession.signOut();
           window.history.replaceState(null, '', '/paes/');
+        }
+        // El acceso HC no restaura cuentas TP. Resolver su perfil autenticado
+        // antes de recuperar la selección histórica del portal general.
+        const { auth, db } = await PaesStudentSession.client();
+        if (auth.currentUser) {
+          const profile = (await db.ref('plataforma_estudiantes/estudiantes/' + auth.currentUser.uid).once('value')).val();
+          if (profile && profile.activo !== false && isPaesTpStudent(profile)) {
+            window.location.replace('/paes/tp/');
+            return;
+          }
         }
         const session = await PaesStudentSession.restore();
         if (session) { PaesStudentSession.remember(session); enterPortal(session.student); return; }

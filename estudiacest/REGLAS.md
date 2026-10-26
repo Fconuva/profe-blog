@@ -654,3 +654,4 @@ juntos. Opciones A-D e identificadores de corrección se conservan.
 
 
 - PAES TP, actualización del 26-oct-2026: las tres sesiones no tienen límite de tiempo. No se cierran por tiempo; quitar el plazo de un intento abierto conserva respuestas, inicio e incidencias. Las entregas anteriores permanecen intactas y pueden reiniciarse deliberadamente desde el panel. Alta y recuperación de contraseña usan la administración canónica de estudiantes, con 4A–E TP disponibles.
+- PAES TP, acceso histórico: al entrar por `/paes/`, los cuartos A–E TP van a `/paes/tp/` y ven solo las tres semanas; se resuelve tanto la cuenta autenticada como la selección anterior del RUT. Los enlaces antiguos a guías no prevalecen sobre ese destino. El catálogo HC conserva sus contenidos y comportamiento.

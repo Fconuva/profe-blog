@@ -1,5 +1,10 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-26, PAES TP: corregir el acceso desde el portal antiguo
+
+- Francisco informa que al ingresar un cuarto TP ve todas las guías HC. Causa localizada en `/paes/`: aceptaba las nóminas históricas TP y llamaba al dashboard general; el cambio de destino anterior solo cubría el ingreso común. Se redirigen los cinco cuartos a `/paes/tp/` antes de mostrar tarjetas o seguir un enlace antiguo a guía, recuperando primero el curso desde el perfil autenticado. También se cubre el RUT seleccionado anteriormente y se agrega un acceso TP explícito en el formulario HC.
+- Cambio acotado al enrutamiento de portada, sin escrituras en estudiantes, intentos, claves, notas ni contenidos HC. Prueba local: 25 condiciones, cinco cursos, enlace antiguo, sesión guardada, tres semanas y 390/1440/3840 sin desbordes ni errores JS; las 27 tarjetas HC se conservan. Build integral aprobado con 877 recursos críticos. Publicación y verificación con cuenta ficticia en producción pendientes.
+
 
 ## 2026-10-26, PAES TP: sin límite de tiempo y administración de accesos
 

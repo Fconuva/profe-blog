@@ -9,6 +9,12 @@ SHA-256 del HTML original, leído sin modificar:
 
 `plantilla-guia.html` conserva la estructura del membrete, el texto institucional, las clases CSS, tipografías, línea inferior, título centrado y distribución de la ficha. Se vacían todos los valores académicos del solucionario y sus respuestas; el nombre del profesor se conserva completo. El espacio de escritura se amplía a 8 mm, conforme a REGLAS.md. Objetivo e instrucciones se presentan en cuadros separados según la regla de impresión vigente. Los campos académicos de ejemplo están marcados para sustituirlos; no son una clase ni un instrumento listo para entregar.
 
+Actualización aprobada por Francisco el 26-oct-2026: la identificación y la
+ficha van solo en la primera página; no repetir nombre y curso en las hojas
+siguientes. Se conservan sus títulos de actividad y numeración. Modelo de
+aplicación: [guía de clase 1 del vlog](../metodo-gdd-sm/clase1-vlog/guia.html).
+El membrete institucional sigue siendo el de esta plantilla.
+
 Los dos logos de Estudia CEST son idénticos a los archivos originales de `Lengua y Literatura 2026/FORMATO INSTITUCIONAL/`:
 
 | Archivo | SHA-256 |

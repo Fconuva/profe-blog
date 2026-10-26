@@ -3,6 +3,10 @@
 Completar para la sesión concreta. Quitar indicaciones entre corchetes antes
 de entregar. No fija una duración, una cantidad de páginas ni una plataforma.
 Deriva del [análisis de las GDD SM](ANALISIS.md) y aplica REGLAS §§13 y 15.
+Modelo aprobado de guía: [clase 1 del vlog](clase1-vlog/guia.html), con
+identificación solo en la primera página. Se reutiliza su articulación entre
+contenido, lectura, imágenes, ejercicios y aplicación, adaptada al objetivo;
+no su tema ni su cantidad de páginas.
 
 ## Datos de diseño
 
@@ -91,7 +95,7 @@ se completa con lo ocurrido realmente, no con logros supuestos].
 |---|---|---|
 | Planificación | Conducir y responder a dificultades | Hoja de ruta, preguntas, criterios, apoyos y tiempos viables. |
 | Presentación | Explicar, mostrar y modelar | Misma secuencia; consignas visibles; activación, normas y objetivo separados. |
-| Guía | Leer, trabajar y conservar evidencia | Formato institucional; contenido y recursos suficientes; espacio real de respuesta. |
+| Guía | Leer, trabajar y conservar evidencia | Formato institucional; identificación solo en la primera página; contenido y recursos suficientes; espacio real de respuesta. |
 | Pauta docente | Interpretar evidencias y retroalimentar | Respuestas cerradas y criterios de las abiertas; no exigir una redacción única. |
 
 Comparar objetivo, nombres de tareas, numeración, preguntas, recursos y entrega

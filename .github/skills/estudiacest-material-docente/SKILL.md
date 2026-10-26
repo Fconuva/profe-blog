@@ -22,6 +22,12 @@ Para el proyecto audiovisual de NM3 está el
 [`ejemplo del vlog`](../../../estudiacest/referencias/metodo-gdd-sm/EJEMPLO_VLOG_NM3.md).
 No copiar de ese ejemplo el tema, las duraciones ni la entrega a otras tareas.
 
+El modelo de guía aprobado por Francisco el 26-oct-2026 es
+[`clase1-vlog/guia.html`](../../../estudiacest/referencias/metodo-gdd-sm/clase1-vlog/guia.html),
+con PDF y pauta docente en la misma carpeta. Aplicar la articulación didáctica
+y la identificación solo en la primera página conforme a REGLAS §13;
+adaptar extensión, recursos y actividades al objetivo de cada clase.
+
 ## Decisiones que debe tomar quien construye
 
 1. Identificar el nivel y OA, una pregunta central y la evidencia esperada.

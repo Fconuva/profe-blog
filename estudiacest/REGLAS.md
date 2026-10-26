@@ -412,8 +412,11 @@ autoriza a rehacer automáticamente materiales o evaluaciones ya publicados.
 
 - La **primera página** lleva identificación en un cuadro: nombre y apellido,
   curso y fecha; si es grupal, espacio para cada integrante y número de grupo.
-  No dejar la identificación únicamente en una hoja posterior. Las hojas
-  siguientes llevan una identificación breve para reconocerlas si se separan.
+  Por decisión de Francisco (26-oct-2026), la identificación va **solo en la
+  primera página**: no repetir nombre, apellido, curso ni la ficha en las
+  páginas siguientes. Estas conservan sus títulos de actividad y numeración.
+  Esto sustituye la indicación anterior de identificar cada hoja; una excepción
+  requiere una solicitud explícita del docente.
 - Incluir al comienzo el **objetivo** y las **instrucciones**, en cuadros
   separados, antes de la lectura o las actividades.
 - Usar el **formato institucional oficial**, fijado por Francisco el
@@ -490,6 +493,14 @@ autoriza a rehacer automáticamente materiales o evaluaciones ya publicados.
 
 ### Referencia editable aprobada
 
+- `referencias/metodo-gdd-sm/clase1-vlog/guia.html` y su
+  `assets/guia-clase1-vlog-nm3.pdf`: modelo de guía aprobado por Francisco el
+  26-oct-2026, con identificación solo en la primera página. Se adopta la
+  articulación entre pregunta central, lectura pertinente con fuente,
+  explicación conceptual, imágenes didácticas IA, ejercicios de reconocimiento
+  y fundamentación, aplicación y cierre que vuelve a la pregunta inicial.
+  Se adaptan al objetivo de cada clase; no se copia el tema ni se fijan siete
+  páginas para todas las guías. Conserva el formato institucional oficial.
 - `referencias/formato-institucional/plantilla-guia.html`: patrón oficial de
   membrete, título y ficha institucional; tiene prioridad para el formato de
   los documentos imprimibles. Fuente y hashes en

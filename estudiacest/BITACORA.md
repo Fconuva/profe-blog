@@ -1,5 +1,10 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-26, guía aprobada como modelo canónico
+
+- Francisco aprueba la guía de clase 1 y pide dejarla canónica. Se incorpora como referencia editable/PDF en REGLAS §13 y se enlaza desde la skill de material docente, la plantilla de clases y la procedencia del formato institucional. Se adopta la relación entre pregunta central, lectura con fuente, contenido explicado, imágenes IA, ejercicios con fundamento, aplicación y cierre; se adaptan tema, carga y extensión a cada clase, sin imponer siete páginas.
+- Se generaliza la corrección de identificación: solo en la primera página; las siguientes mantienen títulos y numeración. Se sustituye expresamente la regla anterior que pedía identificar cada hoja. Rige las próximas guías y revisiones solicitadas; no implica rehacer otras publicaciones. Revisión de enlaces y diff documental; sin cambios del PDF aprobado, del sitio desplegado ni de datos académicos.
+
 - 26-oct-2026, ajuste menor solicitado: identificación solo en la primera página de la guía de clase 1; retirados Nombre y apellido/Curso de las páginas 2–7. PDF mantiene siete páginas, primera página idéntica por comparación visual de píxeles y demás texto idéntico salvo esos seis bloques. Paginación y márgenes conservados; segunda página renderizada abierta. PDF actualizado: SHA-256 843c1c7a6a3334f16adf9de8ab626d7081215d8526529eecc82e80af20d99d42; copia v2 en Descargas y apertura en Acrobat. Excepción específica autorizada por Francisco, sin cambiar la regla general de otras guías.
 
 ## 2026-10-26, vlog NM3: solo clase 1, lectura del libro e imágenes aplicadas

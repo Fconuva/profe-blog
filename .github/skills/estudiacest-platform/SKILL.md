@@ -121,3 +121,5 @@ no se convierte a puntaje oficial PAES. Orden estable por UID y versión de
 lecturas y preguntas dentro de cada lectura; opciones A-D conservadas.
 Recorrido acompañado aislado y panel docente autenticado en `/paes/tp/panel.html`.
 No se cambian los intentos ni las publicaciones HC históricas.
+
+PAES TP, ajuste del mismo 26-oct: las tres actividades son sin límite de tiempo. El alta manual y la recuperación de contraseña usan /estudiantes/adminprofe/index.html, con cursos 4A–E TP; el panel TP enlaza esa administración. Reiniciar desde cero archiva el intento anterior.

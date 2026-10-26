@@ -17,7 +17,7 @@
  }
  const completed=r=>r.submitted===true&&r.completada===true;
  const state=r=>r.resetAt?'Reiniciada':completed(r)?r.endedBy==='strikes'?'Cerrada por strikes':r.endedBy==='time'?'Tiempo agotado':'Completada':'En progreso';
- function remaining(r){if(r.resetAt)return 'Sin comenzar';if(completed(r))return 'Finalizado';if(!r.expiresAt)return 'Sin reloj';const seconds=Math.max(0,Math.ceil((r.expiresAt-now())/1000));return `${Math.floor(seconds/60)}:${String(seconds%60).padStart(2,'0')}`;}
+ function remaining(r){if(r.resetAt)return 'Sin comenzar';if(completed(r))return 'Finalizado';if(!r.expiresAt)return 'Sin límite de tiempo';const seconds=Math.max(0,Math.ceil((r.expiresAt-now())/1000));return `${Math.floor(seconds/60)}:${String(seconds%60).padStart(2,'0')}`;}
  function detail(r){
   const summary=r.performance?`Aciertos: ${r.performance.correct}/${r.performance.total} (${r.performance.percentage} %). Nota: ${r.performance.nota.toFixed(1)}. Logro CEST: ${r.performance.nivel}.
 `:'';
@@ -32,15 +32,15 @@
   $('rows').innerHTML=rows.length?rows.map((r,i)=>`<tr><td>${esc(r.nombre)}</td><td>${state(r)}</td><td>${r.performance?`${r.performance.correct}/${r.performance.total}`:'Pendiente'}</td><td>${r.performance?`${r.performance.percentage} % · Nota ${r.performance.nota.toFixed(1)}`:'Pendiente'}</td><td>${r.strikes||0}/3</td><td data-remaining="${r.expiresAt||0}" data-finished="${completed(r)||Boolean(r.resetAt)}">${remaining(r)}</td><td><div class="row-actions"><button type="button" data-detail="${i}">Ver</button><button type="button" data-clear-strikes="${i}" ${r.resetAt||!(r.strikes||0)?'disabled':''}>Quitar strikes</button><button type="button" data-reset="${i}">Reiniciar desde cero</button></div></td></tr>`).join(''):'<tr><td colspan="7">Sin intentos que coincidan con estos filtros.</td></tr>';
   document.querySelectorAll('[data-detail]').forEach(b=>b.onclick=()=>detail(rows[Number(b.dataset.detail)]));
   document.querySelectorAll('[data-clear-strikes]').forEach(b=>b.onclick=()=>perform(async()=>{
-   const r=rows[Number(b.dataset.clearStrikes)],reason=prompt('Motivo para quitar los strikes (3 a 240 caracteres). Se conservan las respuestas guardadas y el reloj. Si cerró por strikes y queda tiempo, podrá continuar.');
+   const r=rows[Number(b.dataset.clearStrikes)],reason=prompt('Motivo para quitar los strikes (3 a 240 caracteres). Se conservan las respuestas guardadas. Si cerró por strikes, podrá continuar.');
    if(reason===null)return;if(reason.trim().length<3||reason.trim().length>240)throw Error('Escribe un motivo de 3 a 240 caracteres.');
    const requestId=crypto.randomUUID();await api('admin-tp-clear-strikes',{uid:r.uid,sessionId:r.sessionId,integrityEpoch:r.integrityEpoch||0,requestId,reason:reason.trim()});
    await refresh();const saved=data.rows.find(x=>x.uid===r.uid&&x.sessionId===r.sessionId);
    if(!saved?.strikeAdjustments?.[requestId])throw Error('La corrección no está confirmada. Actualiza el panel.');
-   detail(saved);$('adminStatus').textContent=completed(saved)?'Corrección confirmada. Las respuestas y el resultado se conservan; la entrega permanece finalizada.':'Corrección confirmada. Respuestas y reloj conservados. El estudiante debe recargar para continuar.';
+   detail(saved);$('adminStatus').textContent=completed(saved)?'Corrección confirmada. Las respuestas y el resultado se conservan; la entrega permanece finalizada.':'Corrección confirmada. Respuestas conservadas; sin límite de tiempo. El estudiante debe recargar para continuar.';
   }));
   document.querySelectorAll('[data-reset]').forEach(b=>b.onclick=()=>perform(async()=>{
-   const r=rows[Number(b.dataset.reset)];if(!confirm('¿Reiniciar desde cero? El intento actual se archiva y el estudiante comenzará sin respuestas, con un reloj nuevo. Para conservar su trabajo, usa Quitar strikes.'))return;
+   const r=rows[Number(b.dataset.reset)];if(!confirm('¿Reiniciar desde cero? El intento actual se archiva y el estudiante comenzará sin respuestas, sin límite de tiempo. Para conservar su trabajo, usa Quitar strikes.'))return;
    await api('admin-tp-reset',{uid:r.uid,sessionId:r.sessionId});await refresh();
   }));
   document.querySelectorAll('[data-detail],[data-clear-strikes],[data-reset]').forEach(b=>b.disabled=b.disabled||busy);

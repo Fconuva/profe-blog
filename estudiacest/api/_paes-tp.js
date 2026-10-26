@@ -7,11 +7,11 @@ const BASE='plataforma_paes/tp_intentos',CONFIG='plataforma_paes/tp_config/'+C.S
 const clean=v=>String(v||'').replace(/[^0-9A-Z]/gi,'').toUpperCase();
 const error=(status,message)=>Object.assign(new Error(message),{status});
 const delivered=r=>r?.submitted===true&&r?.completada===true;
-const TIME_LIMIT_MS=C.minutes*60*1000;
+const TIME_LIMIT_MS=null;
 const timeLimitFor=()=>TIME_LIMIT_MS;
-const timedActivity=(c,g)=>({...c.publicActivity(g),suggestedMinutes:g?null:C.minutes,timeLimitMinutes:g?null:C.minutes});
-const extendOpen=r=>r;
-const expired=(r,now)=>Boolean(r&&!r.resetAt&&!delivered(r)&&Number.isFinite(r.expiresAt)&&r.expiresAt<=now);
+const timedActivity=(c,g)=>({...c.publicActivity(g),suggestedMinutes:C.minutes,timeLimitMinutes:null});
+const extendOpen=r=>r&&!r.resetAt&&!delivered(r)&&r.expiresAt!=null?{...r,expiresAt:null}:r;
+const expired=()=>false;
 function finishExpired(r,now,g){return {...r,submitted:true,completada:true,submittedAt:now,completadaAt:now,updatedAt:now,endedBy:'time',...catalogFor(r).grade(r.answers||{},g)};}
 async function closeExpired(ref,r,g,now=Date.now(),course=r?.curso){
  if(extendOpen(r,course)===r&&!expired(r,now))return r;
@@ -42,7 +42,7 @@ function validate(input,g,c=C){
 }
 function form(uid,version=C.VERSION){return T.order(uid,version,C.questionsFor(false));}
 async function publicAttempt(db,r,i){if(!r||r.resetAt)return null;const {answers,reflection,startedAt,updatedAt,submittedAt,completadaAt,sessionId,strikes,incidents,endedBy,timerStartedAt,expiresAt}=r;
- const out={answers:answers||{},reflection:reflection||{},startedAt,updatedAt,submittedAt,completadaAt,sessionId,timerStartedAt:timerStartedAt||null,expiresAt:expiresAt||null,timeLimitMinutes:timerStartedAt&&expiresAt?(expiresAt-timerStartedAt)/60000:i.guided?null:C.minutes,integrityEpoch:r.integrityEpoch||0,strikes:strikes||0,incidents:incidents||{},endedBy:endedBy||null,submitted:r.submitted===true,completada:r.completada===true};
+ const out={answers:answers||{},reflection:reflection||{},startedAt,updatedAt,submittedAt,completadaAt,sessionId,timerStartedAt:timerStartedAt||null,expiresAt:delivered(r)?expiresAt||null:null,timeLimitMinutes:null,integrityEpoch:r.integrityEpoch||0,strikes:strikes||0,incidents:incidents||{},endedBy:endedBy||null,submitted:r.submitted===true,completada:r.completada===true};
  if(delivered(r)){const c=catalogFor(r);out.performance=performance(r,i.guided);out.result=c.grade(answers||{},i.guided);out.review=c.questionsFor(i.guided);}
  return out;
 }
@@ -105,7 +105,7 @@ async function handle(action,req,res,{db,auth,adminUid}){
    if((current?.integrityEpoch||0)!==(b.integrityEpoch||0))return;
    current=extendOpen(current,i.curso);
    if(expired(current,now))return finishExpired(current,now,i.guided);
-   const timerStartedAt=i.guided?null:(current?.timerStartedAt||now),expiresAt=i.guided?null:(current?.expiresAt||timerStartedAt+TIME_LIMIT_MS);
+   const timerStartedAt=current?.timerStartedAt||null,expiresAt=null;
    if(action==='mini-start'&&current&&!current.resetAt)return {...current,timerStartedAt,expiresAt};
    if(isIncident&&(current?.incidents?.[b.eventId]||current?.forgivenIncidents?.[b.eventId]))return current;
    const incidents={...(current?.incidents||{})};if(isIncident&&!incidents[b.eventId]&&Object.keys(incidents).length<3)incidents[b.eventId]={reason:b.reason,at:now};

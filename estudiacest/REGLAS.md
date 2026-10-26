@@ -651,3 +651,6 @@ retroalimentación por pregunta y nota chilena de 1,0 a 7,0 con exigencia del
 acompañados; no altera las publicaciones HC. Los textos se mezclan por UID y
 versión y las preguntas solo dentro de su lectura; se mantienen anclados
 juntos. Opciones A-D e identificadores de corrección se conservan.
+
+
+- PAES TP, actualización del 26-oct-2026: las tres sesiones no tienen límite de tiempo. No se cierran por tiempo; quitar el plazo de un intento abierto conserva respuestas, inicio e incidencias. Las entregas anteriores permanecen intactas y pueden reiniciarse deliberadamente desde el panel. Alta y recuperación de contraseña usan la administración canónica de estudiantes, con 4A–E TP disponibles.

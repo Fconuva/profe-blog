@@ -1,5 +1,14 @@
 # Bitácora de Estudia CEST
 
+
+## 2026-10-26, PAES TP: sin límite de tiempo y administración de accesos
+
+- Francisco pregunta por las pruebas de RUT, alta manual y restablecimiento, y ordena quitar el tiempo. Se precisa que el ingreso se probó con cuentas ficticias y que las 202 cuentas reales se comprobaron en perfil/Auth; no se entró como cada estudiante. Sin cambios a sus contraseñas.
+- Las tres actividades dejan de iniciar plazos o cerrar por tiempo. Un intento abierto heredado pierde solo expiresAt al recuperar su estado, conservando respuestas, inicio, incidencias y demás campos; entregas y archivos anteriores permanecen intactos. Se conserva la duración de 90 minutos como planificación de aula y se sincronizan instrucciones, portada y presentación. Simulación privada actual: cero intentos abiertos con plazo por retirar.
+- El alta canónica general crea Auth y perfil real; el antiguo alta de nómina PAES no lo sustituye. Se incorporan los cinco cursos TP a alta, edición y filtro de estudiantes, sin cambiar el servicio de creación ni contraseñas existentes. Panel TP enlaza la administración canónica para inscribir/restablecer clave. Restablecer ensayo usa Reiniciar desde cero, con confirmación y archivo; quitar strikes permite continuar conservando respuestas.
+- Verificación local: 1.991 condiciones de servidor/contenido, incluida conservación exacta salvo expiresAt y entrega después de treinta días, y 255 de navegador; auditoría de altas canónicas y build integral con 877 recursos aprobados. La prueba real de cierre incluye alta manual de una cuenta ficticia, restablecimiento de contraseña, ingreso con ese RUT y reinicio de una entrega ficticia. Publicación y comprobación final pendientes.
+
+
 ## 2026-10-26, PAES: ingreso y ciclo de tres semanas para cuartos TP
 
 - Francisco solicita preparar 4.º A, B, C, D y E TP para tres clases de 90 minutos. Confirma prueba oficial DEMRE de junio de 2026 al inicio, dos estrategias con práctica, miniensayo final, acceso por RUT, puntaje, retroalimentación y nota con exigencia del 60 %. Orden personal de textos y preguntas dentro de cada lectura, manteniendo texto y preguntas juntos y alternativas A–D sin alterar.

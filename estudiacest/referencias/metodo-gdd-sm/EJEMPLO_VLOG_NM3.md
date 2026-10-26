@@ -115,6 +115,14 @@ registro de aprendizaje ya observado.
 
 ## Guía preparada para revisión del docente
 
+**Versión vigente para la próxima aplicación: solo clase 1**, por indicación
+posterior de Francisco. Abrir el [PDF de clase 1](clase1-vlog/assets/guia-clase1-vlog-nm3.pdf)
+y su [planificación y pauta docente](clase1-vlog/DOCENTE.md). Tiene siete páginas,
+lectura adaptada de GDD 89–90, ejemplos IA, análisis del vlog, ejercicios y
+aplicación de planos, articulados por una pregunta central. La versión de diez
+páginas siguiente se conserva como antecedente de revisión, no como la guía
+vigente que se entrega al curso.
+
 El [PDF de diez páginas](ejemplo-vlog/assets/guia-vlog-nm3.pdf) y su
 [fuente imprimible](ejemplo-vlog/guia.html) incorporan desarrollo conceptual
 sobre género, enunciador, audiencia, tema, mensaje y propósito, ejemplos de

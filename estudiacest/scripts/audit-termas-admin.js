@@ -392,7 +392,11 @@ const baseB = {
       if (url.pathname === '/api/estudiantes') {
         let raw = ''; for await (const trozo of req) raw += trozo;
         req.body = raw ? JSON.parse(raw) : {};
-        const res = { code: 200, setHeader: (k,v) => out.setHeader(k,v), status(code) { this.code=code;return this; }, json(data) { out.writeHead(this.code, {'Content-Type':'application/json'});out.end(JSON.stringify(data)); } };
+        const res = { code: 200, setHeader: (k,v) => out.setHeader(k,v), status(code) { this.code=code;return this; }, json(data) {
+          // Firebase puede enumerar campos en otro orden entre transacción y lectura.
+          if (data.filas) data.filas.forEach(f => { if (f.baja) f.baja=Object.fromEntries(Object.entries(f.baja).reverse()); });
+          out.writeHead(this.code, {'Content-Type':'application/json'});out.end(JSON.stringify(data));
+        } };
         return termas.manejar(req, res, url.searchParams.get('action').replace('termas-', ''), fixture, { verifyIdToken: async () => ({ uid:'admin-1' }) });
       }
       if (url.pathname === '/termas/admin') { out.setHeader('Content-Type','text/html;charset=utf-8'); return out.end(paginaPrueba); }

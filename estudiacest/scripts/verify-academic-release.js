@@ -302,7 +302,7 @@ async function validateProduction(manifest) {
     const url = new URL(entry.url, manifest.project.productionOrigin);
     try {
       const response = await fetchWithRetry(url, {
-        method: entry.path.endsWith(".html") ? "GET" : "HEAD",
+        method: entry.probeMethod === "GET" || entry.path.endsWith(".html") ? "GET" : "HEAD",
         redirect: "follow",
         headers: {
           "cache-control": "no-cache"

@@ -17,7 +17,7 @@ y eligiendo planos adecuados para una escena cotidiana.
 | Minuto estimado | Recurso en mano | Qué hace el docente | Qué hacen los estudiantes |
 |---|---|---|---|
 | 0–8 | Guía p. 1; pizarra con la pregunta central | Recupera una situación cotidiana; recoge dos respuestas y distingue mostrar una rutina de construir una idea. Comunica acuerdos y objetivo. | Responden brevemente la activación y comparten una observación. |
-| 8–20 | Lectura y ejemplo visual, p. 2 | Lee con el curso, comprueba libreto/guion visual y modela cómo imagen y palabras aportan información. Vincula las decisiones con el mensaje. | Leen, explican la utilidad del guion visual y comparan contexto, acción y detalle. |
+| 8–20 | Conceptos de p. 1; lectura y ejemplo visual, p. 2 | Lee con el curso, comprueba libreto/guion visual y modela cómo imagen y palabras aportan información. Vincula las decisiones con el mensaje. | Leen, explican la utilidad del guion visual y comparan contexto, acción y detalle. |
 | 20–32 | Láminas, pp. 3–4 | Explica plano frente a ángulo. Modela principalmente general, primer plano y detalle, y normal/picado. Usa los demás como referencia, sin exigir memorización de toda la clasificación. | Identifican qué información muestra cada encuadre y justifican una elección. |
 | 32–47 | Video original de Leo Bascuñán, 12:20; guía p. 5 | Proyecta; pide observar cómo se selecciona y organiza la experiencia. Repite un fragmento breve si hace falta. | Observan y registran pistas para el análisis. |
 | 47–65 | Organizador de ocho aspectos, p. 5, y cuaderno | Monitorea dos filas por pareja; pregunta qué escena sostiene la interpretación. | Copian y completan el organizador, contrastan dos filas y corrigen. |

@@ -28,7 +28,7 @@ const required = [
   ['confirmación visible', /Entrega confirmada/g, 2],
   ['diálogo accesible', /role=["']dialog["'][^>]*aria-modal=["']true["']/g, 1],
   ['estado accesible', /role=["']status["'][^>]*aria-live=["']polite["']/g, 1],
-  ['regreso al panel o ruta personal', /\/estudiantes\/dashboard\.html|href=["']#inicio["']|href=["']\/paes\/["']|href=["']\/estudiantes\/apoyo-personal\/["']/g, 1],
+  ['regreso al panel o ruta personal', /\/estudiantes\/dashboard\.html|href=["']#inicio["']|href=["']\/paes\/(?:tp\/)?["']|href=["']\/estudiantes\/apoyo-personal\/["']/g, 1],
   ['manejo de error', /catch\s*\(/g, 1]
 ];
 

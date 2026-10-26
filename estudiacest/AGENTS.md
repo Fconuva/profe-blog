@@ -41,3 +41,17 @@ Los audios de estas interrogaciones se revisan desde los mismos paneles. Para
 una revisión técnica asistida se usa `npm run review:interrogaciones --
 --instrumento nm3` o `--instrumento nm4`; el token vive únicamente en el archivo
 local indicado por `REGLAS.md`. Ningún análisis asistido asigna la nota final.
+
+
+## PAES TP · 26 de octubre de 2026
+
+4A-TP, 4B-TP, 4C-TP, 4D-TP y 4E-TP tienen entrada por defecto
+en `/paes/tp/` desde el acceso general. `/nm4/` sigue accesible por enlace
+explícito. Tres sesiones independientes en `plataforma_paes/tp_intentos`,
+con ingreso habitual por RUT y contraseña. Resultados, retroalimentación y nota
+con exigencia del 60 % al entregar por instrucción expresa del docente.
+El diagnóstico usa una selección de la prueba oficial de junio de 2026;
+no se convierte a puntaje oficial PAES. Orden estable por UID y versión de
+lecturas y preguntas dentro de cada lectura; opciones A-D conservadas.
+Recorrido acompañado aislado y panel docente autenticado en `/paes/tp/panel.html`.
+No se cambian los intentos ni las publicaciones HC históricas.

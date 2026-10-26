@@ -640,3 +640,14 @@ mediante la skill `../.github/skills/estudiacest-material-docente/SKILL.md`.
   Los análisis y plantillas propios quedan como referencia interna. La decisión
   no autoriza rehacer automáticamente materiales publicados ni reemplaza las
   reglas de validez, revisión y publicación de PAES o SIMCE.
+
+
+### PAES TP · decisión del 26 de octubre de 2026
+
+Por instrucción expresa de Francisco, las tres sesiones de `/paes/tp/` para
+4.º A–E TP muestran, tras entrega confirmada, aciertos/total, porcentaje,
+retroalimentación por pregunta y nota chilena de 1,0 a 7,0 con exigencia del
+60 %. Excepción limitada a `paes-tp-2026-s1`, `s2` y `s3` y sus recorridos
+acompañados; no altera las publicaciones HC. Los textos se mezclan por UID y
+versión y las preguntas solo dentro de su lectura; se mantienen anclados
+juntos. Opciones A-D e identificadores de corrección se conservan.

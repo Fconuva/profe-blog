@@ -275,3 +275,14 @@ Antecedentes pedagógicos de solo consulta, bajo `C:/Users/franc/OneDrive/Deskto
 - `06 - Recursos Digitales/_OCR_y_extraccion/PuntajeNacional_CL_textocompleto.txt`: índice y organización de lecturas cotejados para contextos y diversidad textual.
 
 También se revisaron la skill histórica `paes-competencia-lectora`, sus instrucciones especializadas y los workflows `formato-pruebas-paes.md` y `validacion-claridad-reactivos.md`. Sus procedimientos pedagógicos fundamentan este plan; las rutas, despliegues y reglas de resultados antiguos no sustituyen las reglas canónicas actuales. Los OCR sirven para cotejo metodológico, no como originales listos para republicar.
+
+
+## Ciclo breve para cuartos TP · 26 de octubre de 2026
+
+Tres clases de 90 minutos para 4.º A–E TP, sin fechas de aplicación declaradas.
+Entrada `/paes/tp/`: selección oficial de invierno (20 preguntas), estrategias
+con práctica CEST (18) y miniensayo final CEST (18). La planificación y la
+pauta se consultan en `/paes/tp/docente.html` y `/paes/tp/panel.html`.
+No renumera ni sustituye la serie de 32 guías HC. Incluye acompañamiento
+individual, orden por lectura/preguntas y nota con exigencia del 60 % al
+entregar, por decisión expresa de Francisco.

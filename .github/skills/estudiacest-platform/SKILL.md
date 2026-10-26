@@ -50,7 +50,7 @@ Never force-push, hard-reset, restore an older copy over current work, delete an
 
 ## Current Routing Rules
 - NM3 TP: `3A-TP`, `3B-TP`, `3D-TP` -> `/lecturas/dashboard`
-- NM4 TP: `4A-TP`, `4B-TP`, `4C-TP`, `4D-TP`, `4E-TP` -> `/nm4/`
+- NM4 TP: `4A-TP`, `4B-TP`, `4C-TP`, `4D-TP`, `4E-TP` -> `/paes/tp/` durante el ciclo de tres semanas; `/nm4/` sigue enlazado
 - PAES HC: `3A-HC`, `3B-HC`, `4A-HC`, `4B-HC` -> `/paes/`
 - Student-specific PAES invariant: every new interactive instrument also includes Dylan Abaca's guided route for normalized RUN `229327739`; it must remain isolated from the regular attempt and use the same Firebase/admin release lifecycle.
 - Remaining students: `/estudiantes/dashboard.html`
@@ -106,3 +106,17 @@ minor corrections.
 - Keep the hidden rule in docs and code: Text 2 checks posture + support, Text 3 checks objection + response. Do not expose activation or scoring language in student-facing copy.
 ## Deploy Command
 - From `C:\dev\profe-blog\estudiacest`: `npm run deploy:prod:safe`. Do not invoke Vercel directly.
+
+
+## PAES TP · 26 de octubre de 2026
+
+4A-TP, 4B-TP, 4C-TP, 4D-TP y 4E-TP tienen entrada por defecto
+en `/paes/tp/` desde el acceso general. `/nm4/` sigue accesible por enlace
+explícito. Tres sesiones independientes en `plataforma_paes/tp_intentos`,
+con ingreso habitual por RUT y contraseña. Resultados, retroalimentación y nota
+con exigencia del 60 % al entregar por instrucción expresa del docente.
+El diagnóstico usa una selección de la prueba oficial de junio de 2026;
+no se convierte a puntaje oficial PAES. Orden estable por UID y versión de
+lecturas y preguntas dentro de cada lectura; opciones A-D conservadas.
+Recorrido acompañado aislado y panel docente autenticado en `/paes/tp/panel.html`.
+No se cambian los intentos ni las publicaciones HC históricas.

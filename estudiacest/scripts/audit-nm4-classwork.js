@@ -169,6 +169,21 @@ async function browserAudit(){
   await student.reload();await student.waitForFunction(()=>document.querySelector('#grades tbody').textContent.includes('FICTICIO D'));check(await student.locator('#course').inputValue()==='4DTP','recarga conserva curso de ingreso');
   check(await teacher.locator('#grades thead th.notebook').count()===1&&await teacher.locator('#grades tbody td.notebook input[data-activity="cuaderno-orden"]').count()>0,'docente edita la columna del cuaderno');
   check(await student.locator('#grades tbody td.notebook').count()>0&&await student.evaluate(()=>getComputedStyle(document.querySelector('#grades td.notebook')).backgroundColor!==getComputedStyle(document.querySelector('#grades td.average')).backgroundColor),'columna del cuaderno con color propio');
+  await teacher.unroute('**/api/economista?**action=save**');
+  await teacher.route('**/api/economista?**action=save**',async route=>{await new Promise(r=>setTimeout(r,400));await route.continue();});
+  const row2=teacher.locator('#grades tbody tr').nth(1).locator('input'),ids=await row2.evaluateAll(list=>list.map(i=>i.dataset.activity));check(ids.length>=4,'fila con casillas para avanzar');
+  const active=()=>teacher.evaluate(()=>document.activeElement?.dataset?.n+'|'+document.activeElement?.dataset?.activity);
+  await row2.nth(0).focus();await teacher.keyboard.type('6,0');await teacher.keyboard.press('Enter');check(await active()==='2|'+ids[1],'Enter pasa a la casilla de la derecha del mismo estudiante');
+  await teacher.keyboard.type('5,0');await teacher.keyboard.press('Tab');check(await active()==='2|'+ids[2],'Tab también avanza, aunque la nota anterior se esté guardando');
+  await teacher.keyboard.type('4,0');await teacher.keyboard.press('Enter');check(await active()==='2|'+ids[3],'tercera nota seguida sin esperar al servidor');
+  await teacher.keyboard.press('Shift+Tab');check(await active()==='2|'+ids[2],'Mayús+Tab vuelve a la izquierda');
+  await teacher.waitForFunction(()=>!document.querySelector('#grades input[data-edited]')&&document.getElementById('notice').textContent==='Nota guardada y confirmada.');
+  check(await active()==='2|'+ids[2],'el guardado no saca a la docente de su casilla');
+  await teacher.keyboard.type('9');await teacher.keyboard.press('Enter');check(await active()==='2|'+ids[2]&&(await teacher.locator('#notice').textContent()).includes('1,0 a 7,0'),'nota inválida no avanza');
+  await teacher.keyboard.press('Control+A');await teacher.keyboard.type('4,0');await teacher.keyboard.press('Enter');check(await active()==='2|'+ids[3],'corregida, avanza');
+  const row1=teacher.locator('#grades tbody tr').nth(0).locator('input');await row1.last().focus();await teacher.keyboard.press('Enter');check(await active()==='2|'+ids[0],'al final de la fila sigue con el próximo estudiante');
+  await teacher.reload();await teacher.locator('#grades tbody tr').nth(1).locator('input').first().waitFor();
+  check(JSON.stringify(await teacher.locator('#grades tbody tr').nth(1).locator('input').evaluateAll(list=>list.slice(0,3).map(i=>i.value)))==='["6,0","5,0","4,0"]','las tres notas tecleadas seguidas quedan guardadas');
   check(errors.length===0,'sin errores de navegador');
  }finally{if(browser)await browser.close();server.closeAllConnections();await new Promise(r=>server.close(r));}
 }

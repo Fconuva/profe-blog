@@ -597,3 +597,35 @@ palabras no se copian aquí.
   que no se entendería y todo elemento que no ayuda a hacer la tarea. Lo anota
   en la bitácora. No hay guarda automática: `npm run build` no revisa esta
   sección.
+
+## 16. Método de creación a partir de las guías docentes SM
+
+Por decisión de Francisco (26-oct-2026), las Guías Digitales del Docente SM
+aportadas para 3.º y 4.º medio son un referente de estructura, lenguaje,
+consignas y mediación para las próximas clases y materiales de Lengua y
+Literatura, adaptados a cada nivel. Aplicar el análisis con páginas de evidencia
+en [`referencias/metodo-gdd-sm/ANALISIS.md`](referencias/metodo-gdd-sm/ANALISIS.md)
+y su [`PLANTILLA_CLASE.md`](referencias/metodo-gdd-sm/PLANTILLA_CLASE.md),
+mediante la skill `../.github/skills/estudiacest-material-docente/SKILL.md`.
+
+- Diseñar desde una pregunta central, el OA y una evidencia observable;
+  explicitar en cada clase las dimensiones conceptual, procedimental y
+  actitudinal, su enseñanza y sus evidencias. Desarrollar teoría, conceptos,
+  contenidos y relaciones con explicación, ejemplos y comprobación de
+  comprensión, en lugar de limitarse a nombrarlos en el objetivo;
+  articular activación, contenido enseñado, modelamiento, trabajo, revisión y
+  cierre. Las secciones 13 y 15 conservan su vigencia y el formato institucional.
+- La planificación explicita qué pregunta el docente, qué debe demostrar una
+  respuesta y cómo interviene ante una dificultad probable. Las respuestas
+  abiertas admiten variantes justificadas; «respuesta variable» no reemplaza
+  el criterio.
+- Distinguir la voz de mediación docente de las consignas directas del
+  estudiante. Enseñar los conceptos y pedir relaciones con evidencias, no
+  únicamente reconocer etiquetas o completar pasos sin propósito.
+- Identificar tomo, nivel y páginas consultadas; distinguir lo que propone SM
+  de la adaptación CEST. El tomo 1 corresponde a NM3 y el tomo 2 a NM4 aunque
+  los nombres de los archivos recibidos incluyan ambos «3M».
+- No copiar ejercicios, solucionarios ni los tomos completos al sitio público.
+  Los análisis y plantillas propios quedan como referencia interna. La decisión
+  no autoriza rehacer automáticamente materiales publicados ni reemplaza las
+  reglas de validez, revisión y publicación de PAES o SIMCE.

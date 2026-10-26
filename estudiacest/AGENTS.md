@@ -20,6 +20,9 @@ Para las próximas planificaciones, presentaciones y guías de todos los cursos,
 aplicar el estándar de `REGLAS.md`, sección 13, basado en el formato NM4 aprobado.
 La planificación de cada sesión abre con una hoja de ruta de una página, y el
 lenguaje y la limpieza de lo que ve el estudiante se revisan con la sección 15.
+Para crear o revisar contenido de clases, guías, presentaciones y pautas,
+aplicar también `../.github/skills/estudiacest-material-docente/SKILL.md`,
+que remite al análisis y la plantilla de las guías docentes SM en la sección 16.
 
 Al cerrar una tarea que cambie comportamiento, datos, contenido académico,
 administración o producción, agregar una entrada a `BITACORA.md`. No registrar

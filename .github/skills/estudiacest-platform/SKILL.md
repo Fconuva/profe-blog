@@ -57,6 +57,12 @@ Never force-push, hard-reset, restore an older copy over current work, delete an
 - Incomplete profile: `/estudiantes/perfil.html?next=...`
 
 ## Procedure
+For new or revised lessons, printed guides, presentations, and teacher answer
+guides, apply `../estudiacest-material-docente/SKILL.md`. It routes to the
+canonical SM teacher-guide analysis and working template in `estudiacest/`.
+Keep the existing PAES/SIMCE instrument requirements and the fast path for
+minor corrections.
+
 1. Complete the mandatory multi-agent publish gate and read the latest `origin/main` changes.
 2. Start from the active surface in `profefconuva/estudiacest`.
 3. If the task changes routing or access, update both behavior and documentation in the same turn.

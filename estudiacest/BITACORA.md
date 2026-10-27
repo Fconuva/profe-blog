@@ -1,6 +1,7 @@
 # Bitácora de Estudia CEST
 
 - 2026-10-27, acceso PAES: por solicitud de Francisco, se retira el enlace textual TP y se muestran dos botones principales, PAES TP y PAES HC. TP abre directamente sus tres semanas; HC despliega su formulario habitual con foco en RUT. Enlaces HC a guías y recuperación de sesión conservados. Ajustado el recorrido del script existente a la elección TP. Build integral aprobado, 877 recursos; comprobación visual y publicación se registran al cierre. Sin cambios en preguntas, cuentas ni resultados.
+- Cierre de botones: fc96fda2ce313d8d69b14c7db59554565cc0557d publicado mediante deploy seguro, proceso 0; dpl_BToTRMkbx8pEJDdkznfUvm7RMmGA READY, proyecto/alias/SHA exactos e igualdad del HTML público comprobados. Veintiocho comprobaciones previas y veintiocho públicas: ambos botones, formulario HC/foco, tres semanas TP, ingreso por RUT en la actividad, enlace HC directo y 320/390/1440/3840 sin desbordes ni errores JS. Capturas móvil/escritorio abiertas y revisadas. Sin escrituras en cuentas ni intentos; evidencia privada en C:/dev/paes-tp-qa-20261027. Se entrega /paes/ con PAES TP y PAES HC. Cierre documental sin nuevo despliegue.
 
 ## 2026-10-27, PAES TP: prueba completa desde la portada y primer ingreso
 

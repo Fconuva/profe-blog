@@ -1,5 +1,7 @@
 # Bitácora de Estudia CEST
 
+- 2026-10-27, admin central PAES TP: Francisco pide encontrar los resultados y quitar strikes desde /admin. Se agrega una tarjeta «Admin PAES TP · Cuartos medios» junto a PAES HC, con tres botones para las semanas 1/2/3. Conserva los seis paneles y destinos anteriores y reutiliza la sesión docente aislada; no cambia APIs ni permisos, respuestas o notas. Validación y publicación se registran al cierre.
+
 ## 2026-10-27, PAES TP: cuatro textos en las tres semanas
 
 - Francisco solicita un texto adicional en cada instrumento. Semana 1 agrega la lectura oficial 4 completa (PDF 26–28) y preguntas 26–31, con claves cotejadas en el clavijero DEMRE: 26 ítems. Semana 2 agrega «Reservar no es retirar», con tabla y seis preguntas; semana 3 agrega «Una solicitud puede volver atrás», con recorrido de decisiones y seis preguntas: 24 ítems en cada una. Ambos originales CEST reutilizados de G24, sin alterar esa guía HC ni sus datos. Se conservan los veinte/dieciocho ítems anteriores, sus alternativas e identificadores.

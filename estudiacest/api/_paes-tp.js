@@ -1,7 +1,7 @@
 'use strict';
 const T=require('./_paes-tp-catalog');
 function create(C){
-const catalogFor=()=>C;
+const catalogFor=r=>r&&!r.resetAt&&r.version===C.LEGACY?.VERSION?C.LEGACY:C;
 // Nodo aislado, accesible por API autenticada. Resultados tras entrega confirmada.
 const BASE='plataforma_paes/tp_intentos',CONFIG='plataforma_paes/tp_config/'+C.SESSION;
 const clean=v=>String(v||'').replace(/[^0-9A-Z]/gi,'').toUpperCase();
@@ -18,7 +18,7 @@ async function closeExpired(ref,r,g,now=Date.now(),course=r?.curso){
  const tx=await ref.transaction(current=>{const adjusted=extendOpen(current,course);return expired(adjusted,now)?finishExpired(adjusted,now,g):adjusted!==current?adjusted:undefined;},undefined,false);
  return tx.snapshot.val();
 }
-function performance(r,g){if(!r||r.resetAt||!delivered(r))return null;const {correct,total}=C.grade(r.answers||{},g);return {correct,total,percentage:Math.round(correct/total*1000)/10,nota:T.gradeNote(correct,total),nivel:T.achievement(correct,total)};}
+function performance(r,g){if(!r||r.resetAt||!delivered(r))return null;const {correct,total}=catalogFor(r).grade(r.answers||{},g);return {correct,total,percentage:Math.round(correct/total*1000)/10,nota:T.gradeNote(correct,total),nivel:T.achievement(correct,total)};}
 const courses=new Set(['4ATP','4BTP','4CTP','4DTP','4ETP']);
 async function identity(req,db,auth){
  const token=String(req.headers?.authorization||'').replace(/^Bearer\s+/i,'').trim();if(!token)throw error(401,'Ingresa con tu cuenta de Estudia CEST.');
@@ -40,7 +40,7 @@ function validate(input,g,c=C){
  for(const id of ['comprendi','evidencia','mejorare'])reflection[id]=String(input.reflection?.[id]||'').trim().slice(0,1500);
  return {answers,reflection};
 }
-function form(uid,version=C.VERSION){return T.order(uid,version,C.questionsFor(false));}
+function form(uid,version=C.VERSION){return T.order(uid,version,(version===C.LEGACY?.VERSION?C.LEGACY:C).questionsFor(false));}
 async function publicAttempt(db,r,i){if(!r||r.resetAt)return null;const {answers,reflection,startedAt,updatedAt,submittedAt,completadaAt,sessionId,strikes,incidents,endedBy,timerStartedAt,expiresAt}=r;
  const out={answers:answers||{},reflection:reflection||{},startedAt,updatedAt,submittedAt,completadaAt,sessionId,timerStartedAt:timerStartedAt||null,expiresAt:delivered(r)?expiresAt||null:null,timeLimitMinutes:null,integrityEpoch:r.integrityEpoch||0,strikes:strikes||0,incidents:incidents||{},endedBy:endedBy||null,submitted:r.submitted===true,completada:r.completada===true};
  if(delivered(r)){const c=catalogFor(r);out.performance=performance(r,i.guided);out.result=c.grade(answers||{},i.guided);out.review=c.questionsFor(i.guided);}
@@ -89,24 +89,26 @@ async function handle(action,req,res,{db,auth,adminUid}){
   if(action==='mini-source'){if(req.method!=='GET'||C.SESSION.slice(-1)!=='1'||i.guided)throw error(403,'Fuente no disponible.');const pdf=await officialSource(C.PDF);res.setHeader('Content-Type','application/pdf');return res.status(200).send(pdf);}
   if(i.preview){if(action!=='mini-state')throw error(403,'La vista docente no crea ni entrega intentos.');return res.status(200).json({success:true,preview:true,identity:i,activity:timedActivity(C,req.query?.mode==='guided'),form:form(i.uid),resetAt:null,attempt:null,serverNow:Date.now()});}
   if(action==='mini-state'){
+   const prior=(await ref.once('value')).val();
+   if(req.query?.client!=='4'&&prior?.version===C.VERSION)throw error(409,'La actividad ahora tiene cuatro textos. Recarga la página para continuar.');
    if((req.query?.mode==='guided')!==i.guided)return res.status(200).json({success:true,redirect:i.guided?'/paes/tp/guiada.html?sesion='+C.SESSION.slice(-1):'/paes/tp/actividad.html?sesion='+C.SESSION.slice(-1)});
-   const raw=await closeExpired(ref,(await ref.once('value')).val(),i.guided,Date.now(),i.curso),c=catalogFor(raw);return res.status(200).json({success:true,identity:{uid:i.uid,nombre:i.nombre,curso:i.curso},activity:timedActivity(c,i.guided,i.curso),form:i.guided?{}:form(i.uid,c.VERSION),resetAt:raw?.resetAt||raw?.resetAtAcknowledged||null,attempt:await publicAttempt(db,raw,i),serverNow:Date.now()});
+   const raw=await closeExpired(ref,prior,i.guided,Date.now(),i.curso),c=delivered(raw)?catalogFor(raw):req.query?.client==='4'?C:C.LEGACY||C;return res.status(200).json({success:true,identity:{uid:i.uid,nombre:i.nombre,curso:i.curso},activity:timedActivity(c,i.guided,i.curso),form:i.guided?{}:form(i.uid,c.VERSION),resetAt:raw?.resetAt||raw?.resetAtAcknowledged||null,attempt:await publicAttempt(db,raw,i),serverNow:Date.now()});
   }
   if(!['mini-start','mini-save','mini-submit','mini-incident'].includes(action))throw error(400,'Acción no válida.');
-  if(req.method!=='POST')throw error(405,'Usa POST para guardar.');const b=req.body||{},c=C,data=validate(b,i.guided,c);
+  if(req.method!=='POST')throw error(405,'Usa POST para guardar.');const b=req.body||{},c=b.version===C.LEGACY?.VERSION?C.LEGACY:C,data=validate(b,i.guided,c);
   const isIncident=action==='mini-incident';
   if(isIncident&&(!/^[\w-]{8,100}$/.test(b.eventId||'')||!['hidden','blur','fullscreen','geometry'].includes(b.reason)))throw error(400,'Incidencia no válida.');
   const now=Date.now();
   const tx=await ref.transaction(current=>{
    if(delivered(current))return;
-   if(catalogFor(current).VERSION!==b.version)return;
+   if(current&&!current.resetAt&&catalogFor(current).VERSION!==b.version&&!(current.version===C.LEGACY?.VERSION&&b.version===C.VERSION))return;
    if(current===null&&b.resetAt)return null;
    if((current?.resetAt||current?.resetAtAcknowledged||null)!==(b.resetAt||null))return;
    if((current?.integrityEpoch||0)!==(b.integrityEpoch||0))return;
    current=extendOpen(current,i.curso);
    if(expired(current,now))return finishExpired(current,now,i.guided);
    const timerStartedAt=current?.timerStartedAt||null,expiresAt=null;
-   if(action==='mini-start'&&current&&!current.resetAt)return {...current,timerStartedAt,expiresAt};
+   if(action==='mini-start'&&current&&!current.resetAt)return {...current,version:c.VERSION,timerStartedAt,expiresAt};
    if(isIncident&&(current?.incidents?.[b.eventId]||current?.forgivenIncidents?.[b.eventId]))return current;
    const incidents={...(current?.incidents||{})};if(isIncident&&!incidents[b.eventId]&&Object.keys(incidents).length<3)incidents[b.eventId]={reason:b.reason,at:now};
    const strikes=Object.keys(incidents).length,final=action==='mini-submit'||strikes>=3;

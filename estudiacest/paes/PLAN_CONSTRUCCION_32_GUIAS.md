@@ -280,9 +280,12 @@ También se revisaron la skill histórica `paes-competencia-lectora`, sus instru
 ## Ciclo breve para cuartos TP · 26 de octubre de 2026
 
 Tres clases de 90 minutos para 4.º A–E TP, sin fechas de aplicación declaradas.
-Entrada `/paes/tp/`: selección oficial de invierno (20 preguntas), estrategias
-con práctica CEST (18) y miniensayo final CEST (18). La planificación y la
+Entrada `/paes/tp/`: cuatro textos por sesión desde la ampliación del 27 de octubre;
+selección oficial de invierno (26 preguntas), estrategias con práctica CEST (24)
+y miniensayo final CEST (24). La planificación y la
 pauta se consultan en `/paes/tp/docente.html` y `/paes/tp/panel.html`.
 No renumera ni sustituye la serie de 32 guías HC. Incluye acompañamiento
 individual, orden por lectura/preguntas y nota con exigencia del 60 % al
 entregar, por decisión expresa de Francisco.
+Los intentos abiertos incorporan el cuarto texto al recargar conservando las
+respuestas. Las entregas anteriores mantienen su catálogo, total y resultado.

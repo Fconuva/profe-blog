@@ -125,3 +125,9 @@ Recorrido acompañado aislado y panel docente autenticado en `/paes/tp/panel.htm
 No se cambian los intentos ni las publicaciones HC históricas.
 
 PAES TP, ajuste del mismo 26-oct: las tres actividades son sin límite de tiempo. El alta manual y la recuperación de contraseña usan /estudiantes/adminprofe/index.html, con cursos 4A–E TP; el panel TP enlaza esa administración. Reiniciar desde cero archiva el intento anterior.
+
+Ampliación del 27-oct: cuatro textos regulares, 26/24/24 preguntas. Catálogo v1
+conservado para entregas previas; borradores se amplían al continuar con el
+cliente actualizado sin perder respuestas. Cliente anterior y actual conviven
+sin permitir que una cola vieja rebaje la versión. Panel calcula con el catálogo
+de cada intento; la ruta acompañada permanece aislada y con seis preguntas.

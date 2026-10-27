@@ -6,6 +6,55 @@
  MiniIntegrity.protectSelection($('workspace'));
  let session,activity,identity,form={},preview=false,resetAt=null,attempt={answers:{},reflection:{}},saveQueue=Promise.resolve(),saveTimer,revision=0,busy=false,running=false,guard=null,section=1,step=0,pending=[];
  let clockServer=0,clockLocal=0,timerLoop=null,timeExpired=false,lastExpiryTry=-Infinity;
+ let closingSession=false;
+ let shownUid=null;
+ const logoutButtons=()=>document.querySelectorAll('[data-student-logout]');
+ function logoutMessage(message){document.querySelectorAll('[data-logout-message]').forEach(el=>el.textContent=message);}
+ function showStudentSession(user){if(!user||closingSession)return;shownUid=user.uid||null;$('studentSessionTools').hidden=false;$('studentSessionName').textContent=identity?identity.nombre+' · '+identity.curso:user.displayName||'Sesión iniciada';}
+ async function closeStudentSession(){
+  if(closingSession)return;
+  if(busy){logoutMessage('Espera a que termine el guardado y vuelve a cerrar sesión.');return;}
+  closingSession=true;busy=true;clearTimeout(saveTimer);guard?.suspend(60000);window.speechSynthesis?.cancel();logoutMessage('');
+  logoutButtons().forEach(b=>{b.disabled=true;b.textContent='Cerrando…';});
+  try{
+   if(identity&&running&&!done()&&!preview){
+    store();await saveQueue;await flushIncidents();
+    if(!done()){
+     const expected=payload();
+     try{await api('tp-save',expected);}catch(error){if(error.status!==409)throw error;await load();if(!done())throw error;}
+     if(!done()){
+      const saved=await api('tp-state');
+      if(!saved.attempt||!Object.entries(expected.answers).every(([id,value])=>saved.attempt.answers?.[id]===value)||!Object.entries(expected.reflection).every(([id,value])=>String(saved.attempt.reflection?.[id]||'')===String(value).trim().slice(0,1500)))throw Error('No se pudo confirmar el avance guardado.');
+     }
+    }
+   }
+   await MiniSession.signOut();running=false;guard?.destroy();guard=null;clearInterval(timerLoop);document.body.classList.remove('obscured');$('guard').hidden=true;
+   if(identity&&!done())store();
+   $('workspace').hidden=true;$('ready').hidden=true;$('studentSessionTools').hidden=true;
+   $('reading').innerHTML='';$('results').innerHTML='';$('confirmedScore').innerHTML='';$('studentSessionName').textContent='';$('identity').textContent='';$('readyIdentity').textContent='';
+   if($('confirmation').open)$('confirmation').close();
+   if(document.fullscreenElement)await document.exitFullscreen().catch(()=>{});
+   location.replace('/paes/');
+  }catch(error){
+   closingSession=false;busy=false;logoutButtons().forEach(b=>{b.disabled=false;b.textContent='Cerrar sesión';});
+   logoutMessage('No se cerró la sesión. '+(error.status?error.message:'No se pudo confirmar el guardado o cerrar la cuenta.')+' Tu avance se conserva; revisa la conexión y reintenta.');
+   if(identity){update();if(!$('workspace').hidden)render();}
+   if(!$('confirmation').open&&$('guard').hidden)$('logoutStatus').scrollIntoView({block:'center'});
+   guard?.suspend(0);guard?.check();
+  }
+ }
+ logoutButtons().forEach(b=>b.onclick=closeStudentSession);
+ MiniSession.restore().then(s=>{if(s)showStudentSession(s.user);}).catch(()=>{});
+ MiniSession.onChange?.(user=>{
+  if(closingSession)return;
+  if(shownUid&&user?.uid!==shownUid){
+   if(identity&&!done())store();running=false;clearTimeout(saveTimer);clearInterval(timerLoop);guard?.destroy();document.body.classList.remove('obscured');$('guard').hidden=true;
+   $('workspace').hidden=true;$('ready').hidden=true;$('studentSessionTools').hidden=true;$('reading').innerHTML='';sessionStorage.removeItem('paes_student');
+   location.replace('/paes/');return;
+  }
+  if(user)showStudentSession(user);else $('studentSessionTools').hidden=true;
+ }).catch(()=>{});
+ window.addEventListener('pageshow',event=>{if(event.persisted)location.reload();});
  function tickTime(){
   const visible=!preview&&Number.isFinite(attempt.expiresAt);$('timer').hidden=!visible;if(!visible||done()){$('timer').hidden=true;return;}
   const seconds=Math.max(0,Math.ceil((attempt.expiresAt-(clockServer+performance.now()-clockLocal))/1000));
@@ -19,13 +68,13 @@
  const key=()=>`paes-mini:${identity.uid}:${activity.sessionId}:${activity.version}:${resetAt||0}${attempt.integrityEpoch?':strikes-'+attempt.integrityEpoch:''}`;
  const payload=()=>({version:activity.version,resetAt,integrityEpoch:attempt.integrityEpoch||0,answers:{...attempt.answers},reflection:{...attempt.reflection}});
  function accessWait(work){let timer;return Promise.race([work,new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error('La conexión está demorando. Revisa tu internet y vuelve a ingresar.')),20000);})]).finally(()=>clearTimeout(timer));}
- async function api(action,data){const token=await session.user.getIdToken(),r=await fetch('/api/paes?action='+action+'&sesion='+lesson+'&client=4&mode='+(guided?'guided':'regular'),{method:data?'POST':'GET',headers:{Authorization:'Bearer '+token,...(data?{'Content-Type':'application/json'}:{})},...(data?{body:JSON.stringify(data)}:{})});const json=await r.json();if(!r.ok)throw Object.assign(new Error(json.error||'No se pudo guardar.'),{status:r.status});if(Number.isFinite(json.serverNow)){clockServer=json.serverNow;clockLocal=performance.now();}return json;}
+ async function api(action,data){const active=await MiniSession.restore();if(!active||active.user.uid!==session.user.uid)throw Error('La sesión cambió. Vuelve a ingresar con tu RUT.');const token=await session.user.getIdToken(),r=await fetch('/api/paes?action='+action+'&sesion='+lesson+'&client=4&mode='+(guided?'guided':'regular'),{method:data?'POST':'GET',headers:{Authorization:'Bearer '+token,...(data?{'Content-Type':'application/json'}:{})},...(data?{body:JSON.stringify(data)}:{})});const json=await r.json();if(!r.ok)throw Object.assign(new Error(json.error||'No se pudo guardar.'),{status:r.status});if(Number.isFinite(json.serverNow)){clockServer=json.serverNow;clockLocal=performance.now();}return json;}
  function store(){try{localStorage.setItem(key(),JSON.stringify({...payload(),pending,localUpdatedAt:Date.now()}));}catch(_){$('saveStatus').textContent='No se pudo conservar la copia local. Mantén esta página abierta.';}}
- function update(){const n=activity.questions.filter(q=>attempt.answers[q.id]).length;document.querySelectorAll('[data-count]').forEach(el=>el.textContent=activity.questions.length+' preguntas');$('progress').textContent=`${n} de ${activity.questions.length} respondidas`;$('strikes').textContent=preview?'Vista docente · sin registro':`Strikes: ${Math.min(3,(attempt.strikes||0)+pending.length)} de 3`;$('submit').disabled=preview||busy||done();$('submit').textContent=preview?'Vista docente · sin entrega':done()?'Miniensayo entregado':busy?'Entregando…':'Entregar miniensayo';}
+ function update(){logoutButtons().forEach(b=>b.disabled=busy||closingSession);const n=activity.questions.filter(q=>attempt.answers[q.id]).length;document.querySelectorAll('[data-count]').forEach(el=>el.textContent=activity.questions.length+' preguntas');$('progress').textContent=`${n} de ${activity.questions.length} respondidas`;$('strikes').textContent=preview?'Vista docente · sin registro':`Strikes: ${Math.min(3,(attempt.strikes||0)+pending.length)} de 3`;$('submit').disabled=preview||busy||done();$('submit').textContent=preview?'Vista docente · sin entrega':done()?'Miniensayo entregado':busy?'Entregando…':'Entregar miniensayo';}
  async function load(restoreLocal=false){const previousEpoch=attempt.integrityEpoch||0,d=await api('tp-state');if(d.redirect){location.replace(d.redirect);return false;}identity=d.identity;activity=d.activity;document.querySelectorAll('[data-text-count]').forEach(el=>el.textContent=activity.texts.length+' textos');form=d.form||{};if(!guided&&form.texts){d.activity.texts.sort((a,b)=>form.texts.indexOf(a.id)-form.texts.indexOf(b.id));d.activity.questions.sort((a,b)=>form.texts.indexOf(a.textId)-form.texts.indexOf(b.textId)||form.questions[a.textId].indexOf(a.id)-form.questions[b.textId].indexOf(b.id));}preview=d.preview===true;resetAt=d.resetAt;attempt=d.attempt||{answers:{},reflection:{}};if(previousEpoch!==(attempt.integrityEpoch||0))pending=[];
   if(restoreLocal&&!done()){try{const local=JSON.parse(localStorage.getItem(key())||(activity.previousVersion&&localStorage.getItem(key().replace(activity.version,activity.previousVersion)))||'null');if(local){pending=(local.pending||[]).filter(e=>!attempt.incidents?.[e.eventId]);if(local.localUpdatedAt>(attempt.updatedAt||0)){attempt.answers=local.answers||{};attempt.reflection=local.reflection||{};}}}catch(_){}}
   if(done()){pending=[];running=false;try{localStorage.removeItem(key());}catch(_){}guard?.destroy();guard=null;document.body.classList.remove('obscured');$('guard').hidden=true;}
-  $('identity').textContent=identity.nombre+' · '+identity.curso;$('readyIdentity').textContent=$('identity').textContent;document.querySelectorAll('[data-time-limit]').forEach(el=>el.textContent=activity.timeLimitMinutes===null?'Sin límite de tiempo':activity.timeLimitMinutes+' minutos');$('courseSchedule').hidden=activity.source!=='official';$('courseSchedule').textContent='En pantallas pequeñas, desliza la fuente oficial hacia los lados para leerla ampliada. La lectura permanece disponible junto a sus preguntas.';document.querySelectorAll('[data-activity-title]').forEach(el=>el.textContent=activity.title);if(activity.source==='official'&&!guided)await OfficialPages.prepare(session.user,lesson,activity);update();startTimer();return true;
+  showStudentSession(session.user);$('identity').textContent=identity.nombre+' · '+identity.curso;$('readyIdentity').textContent=$('identity').textContent;document.querySelectorAll('[data-time-limit]').forEach(el=>el.textContent=activity.timeLimitMinutes===null?'Sin límite de tiempo':activity.timeLimitMinutes+' minutos');$('courseSchedule').hidden=activity.source!=='official';$('courseSchedule').textContent='En pantallas pequeñas, desliza la fuente oficial hacia los lados para leerla ampliada. La lectura permanece disponible junto a sus preguntas.';document.querySelectorAll('[data-activity-title]').forEach(el=>el.textContent=activity.title);if(activity.source==='official'&&!guided)await OfficialPages.prepare(session.user,lesson,activity);update();startTimer();return true;
  }
  function tabs(){const parts=guided?[[1,'Lectura y preguntas'],[99,'Revisión y entrega']]:[...activity.texts.map((t,i)=>[i+1,'Texto '+(i+1)]),[99,'Revisión y entrega']];$('tabs').innerHTML=parts.map(([n,title])=>`<button type="button" data-tab="${n}" ${section===n?'aria-current="page"':''}>${title}</button>`).join('');$('tabs').querySelectorAll('button').forEach(b=>b.onclick=()=>{section=Number(b.dataset.tab);render();});}
  function tableMarkup(t){if(!t.table)return '';const b=t.table;return `<div class="tableWrap"><table><caption>${esc(b.caption)}</caption><thead><tr>${b.headers.map(v=>`<th scope="col">${esc(v)}</th>`).join('')}</tr></thead><tbody>${b.rows.map(row=>`<tr><th scope="row">${esc(row[0])}</th>${row.slice(1).map(v=>`<td>${esc(v)}</td>`).join('')}</tr>`).join('')}</tbody></table></div><p class="source">${esc(b.note)}</p>`;}

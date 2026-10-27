@@ -12,5 +12,7 @@
   if(!credential)credential=await auth.signInWithEmailAndPassword(normalized.toLowerCase()+'@est.estudiacest.com',password);
   return {user:credential.user};
  }
- global.MiniSession={restore,signIn};
+ async function signOut(){await PaesStudentSession.signOut();}
+ async function onChange(listener){const {auth}=await PaesStudentSession.client();return auth.onAuthStateChanged(listener);}
+ global.MiniSession={restore,signIn,signOut,onChange};
 })(window);

@@ -52,6 +52,7 @@ Never force-push, hard-reset, restore an older copy over current work, delete an
 - NM3 TP: `3A-TP`, `3B-TP`, `3D-TP` -> `/lecturas/dashboard`
 - NM4 TP: `4A-TP`, `4B-TP`, `4C-TP`, `4D-TP`, `4E-TP` -> `/paes/tp/` durante el ciclo de tres semanas; `/nm4/` sigue enlazado
 - La entrada histórica `/paes/` también envía a esos cinco cursos a `/paes/tp/`, resolviendo primero el perfil autenticado y después la selección histórica. Nunca muestra el catálogo HC para un cuarto TP, aunque el enlace incluya `next=guia...`.
+- El primer ingreso TP desde la tarjeta PAES de la portada valida RUT y contraseña contra Auth/perfil canónico; no exige que el RUT esté en `NOMINAS_PAES`. La prueba de publicación comienza con un navegador nuevo en `/`, no con una sesión autenticada previamente en una actividad.
 - PAES HC: `3A-HC`, `3B-HC`, `4A-HC`, `4B-HC` -> `/paes/`
 - Student-specific PAES invariant: every new interactive instrument also includes Dylan Abaca's guided route for normalized RUN `229327739`; it must remain isolated from the regular attempt and use the same Firebase/admin release lifecycle.
 - Remaining students: `/estudiantes/dashboard.html`

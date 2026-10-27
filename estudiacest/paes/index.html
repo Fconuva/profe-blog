@@ -995,9 +995,9 @@
     <section class="login-section" id="loginSection" style="display:none">
       <div class="login-card">
         <div class="login-header">
-          <span class="login-badge">Ensayo Oficial</span>
-          <h1>Portal PAES HC</h1>
-          <p>Área de entrenamiento para 3° y 4° Medio Humanista Científico</p>
+          <span class="login-badge">Competencia Lectora</span>
+          <h1>Portal PAES</h1>
+          <p>Práctica para estudiantes HC y cuartos medios TP</p>
         </div>
 
         <div class="error-box" id="errorBox"></div>
@@ -1603,7 +1603,8 @@
     function updatePasswordField() {
       const student = typeof NOMINAS_PAES === 'undefined' ? null
         : NOMINAS_PAES.find(item => cleanRut(item.rut) === cleanRut(rutInput.value));
-      const required = !!window.PaesStudentSession && PaesStudentSession.hasSpace(student);
+      const required = !!window.PaesStudentSession && (PaesStudentSession.hasSpace(student)
+        || isPaesTpStudent(student) || (!student && validateRut(rutInput.value)));
       document.getElementById('passwordGroup').hidden = !required;
       passwordInput.required = required;
     }
@@ -1648,17 +1649,24 @@
       }
 
       const student = NOMINAS_PAES.find(s => s.rut === rutClean);
-      if (!student) {
-        showError('Este RUT no está registrado en las nóminas de 3° y 4° Medio HC. Si crees que es un error, contacta a tu profesor.');
-        return;
-      }
 
       updatePasswordField();
       const button = document.getElementById('btnSubmit');
       if (button.disabled) return;
       button.disabled = true;
       try {
-        if (PaesStudentSession.hasSpace(student)) {
+        if (!student || isPaesTpStudent(student)) {
+          if (!passwordInput.value) { showError('Ingresa tu contraseña para abrir las tres semanas de PAES.'); passwordInput.focus(); return; }
+          const session = await MiniSession.signIn(rutClean, passwordInput.value);
+          const { db } = await PaesStudentSession.client();
+          const profile = (await db.ref('plataforma_estudiantes/estudiantes/' + session.user.uid).once('value')).val();
+          if (!profile || profile.activo === false || cleanRut(profile.rut) !== rutClean || !isPaesTpStudent(profile)) {
+            await PaesStudentSession.signOut();
+            throw new Error('Esta cuenta no tiene habilitado el ciclo de cuartos medios TP. Consulta a tu profesor.');
+          }
+          passwordInput.value = '';
+          enterPortal(profile);
+        } else if (PaesStudentSession.hasSpace(student)) {
           if (!passwordInput.value) { showError('Ingresa tu contraseña para abrir PAES y Mi espacio.'); passwordInput.focus(); return; }
           const session = await PaesStudentSession.signIn(student.rut, passwordInput.value);
           passwordInput.value = '';

@@ -1,5 +1,12 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-27, PAES TP: prueba completa desde la portada y primer ingreso
+
+- Francisco pide probar la secuencia estudiacest.com → PAES → RUT → tres semanas → primer ensayo, incluidos alternativas, resultados y puntaje. La prueba real con una cuenta ficticia nueva de 4A-TP reproduce el rechazo por no pertenecer a la nómina HC. La verificación anterior sí cubría la recuperación de cuentas ya autenticadas, pero no este primer ingreso; se precisa esa limitación y se corrige la causa en el formulario antiguo.
+- El ingreso TP valida RUT y contraseña habitual con Auth y perfil canónico, comprueba identidad/curso/actividad, y abre las tres semanas sin depender de la nómina pública HC. Cubre también las altas manuales y conserva el acceso HC y las selecciones anteriores. Título del formulario y marca del manifiesto sincronizados; el script de prueba permanente ahora comienza en la portada con cuenta ficticia y navegador nuevo.
+- Clavijero oficial y fuente PDF cotejados de nuevo: veinte claves coincidentes, reactivos piloto excluidos, cuatro alternativas y figuras conservadas. Auditoría focalizada: 1.991 condiciones aprobadas; regresión de rutas: 25, con las 27 tarjetas HC conservadas. Build integral aprobado con 877 recursos tras repetir un proceso local interrumpido; ninguna guarda desactivada. Prueba de entrega, publicación y verificación final pendientes.
+- Prueba previa con formulario corregido y servicios reales: 98 comprobaciones, primer ingreso con clave inicial de seis números, tres semanas, veinte ítems, guardado/recarga, 20/20 = 100 % y nota 7,0, retroalimentación de cada pregunta por ID, confirmación y relectura en Firebase. El automatismo pulsaba el botón de la actividad antes de cargar su controlador; se corrige esa espera de prueba sin cambiar la actividad. Cuenta ficticia e intento retirados con ausencia releída. Publicación y prueba integral desde el HTML público pendientes.
+
 ## 2026-10-26, PAES TP: corregir el acceso desde el portal antiguo
 
 - Francisco informa que al ingresar un cuarto TP ve todas las guías HC. Causa localizada en `/paes/`: aceptaba las nóminas históricas TP y llamaba al dashboard general; el cambio de destino anterior solo cubría el ingreso común. Se redirigen los cinco cuartos a `/paes/tp/` antes de mostrar tarjetas o seguir un enlace antiguo a guía, recuperando primero el curso desde el perfil autenticado. También se cubre el RUT seleccionado anteriormente y se agrega un acceso TP explícito en el formulario HC.

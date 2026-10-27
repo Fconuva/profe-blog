@@ -16,6 +16,7 @@ const MINI_OCTUBRE = require('./_paes-mini-octubre');
 const G24 = require('./_paes-g24');
 const TP = require('./_paes-tp');
 const PROGRESS = require('./_paes-progress');
+const RANKING = require('./_paes-ranking');
 Object.assign(GUIDED_GUIDE_KEYS, FOUNDATIONS.GUIDED_KEYS);
 Object.assign(GUIDED_GUIDE_FEEDBACK, FOUNDATIONS.GUIDED_FEEDBACK);
 
@@ -1097,6 +1098,21 @@ async function handleAdminSetGuiaRelease(req, res, forcedGuideId) {
 }
 
 
+function scoreRankingLegacy(guideId, record) {
+    if (record.variant === GUIDED_VARIANT || (FOUNDATIONS.KEYS[guideId] && record.contentVersion !== FOUNDATIONS.VERSION)) return null;
+    const answers = normalizeStoredAnswers(record.answers);
+    if (guideId === '14') {
+        if (!isCurrentGuia14Record(record)) return null;
+        const result = scoreGuia14(answers, record.rut || '');
+        return { correct: result.correct, total: result.total };
+    }
+    const key = FOUNDATIONS.KEYS[guideId] || INTERACTIVE_GUIDE_KEYS[guideId];
+    if (!key) return null;
+    let ids = Object.keys(key);
+    if (guideId === '16' && [15, 20].includes(Number(record.total))) ids = ids.slice(0, Number(record.total));
+    return { correct: ids.filter(id => answers[id] === key[id]).length, total: ids.length };
+}
+
 module.exports = async (req, res) => {
     res.setHeader('Access-Control-Allow-Origin', resolveAllowedOrigin(req));
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -1113,6 +1129,8 @@ module.exports = async (req, res) => {
             res.setHeader('Cache-Control', 'private, no-store');
             return res.status(404).json({ error: 'Recurso no disponible' });
         }
+
+        if (action === 'ranking') return await RANKING.handle(req, res, { db, auth, scoreLegacy: scoreRankingLegacy });
 
         // Public actions
         if (['tp-state','tp-start','tp-save','tp-submit','tp-incident','tp-source'].includes(action)) return await TP.handle(action, req, res, { db, auth });

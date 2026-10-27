@@ -656,3 +656,25 @@ juntos. Opciones A-D e identificadores de corrección se conservan.
 - PAES TP, actualización del 26-oct-2026: las tres sesiones no tienen límite de tiempo. No se cierran por tiempo; quitar el plazo de un intento abierto conserva respuestas, inicio e incidencias. Las entregas anteriores permanecen intactas y pueden reiniciarse deliberadamente desde el panel. Alta y recuperación de contraseña usan la administración canónica de estudiantes, con 4A–E TP disponibles.
 - PAES TP, acceso histórico: al entrar por `/paes/`, los cuartos A–E TP van a `/paes/tp/` y ven solo las tres semanas; se resuelve tanto la cuenta autenticada como la selección anterior del RUT. Los enlaces antiguos a guías no prevalecen sobre ese destino. El catálogo HC conserva sus contenidos y comportamiento.
 - PAES TP, ampliación del 27-oct-2026: cuatro textos por sesión regular, con 26/24/24 preguntas. Los borradores pueden continuar en la versión ampliada conservando respuestas y metadatos; las entregas anteriores conservan su versión y denominador. Las páginas cargadas antes del cambio siguen operativas hasta actualizar; una vez ampliado el intento, una página anterior debe recargar antes de escribir. Se conserva la ruta acompañada de seis preguntas.
+
+
+### Rankings de resultados PAES HC y TP · 27-oct-2026
+
+Francisco autoriza publicar un ranking académico separado dentro de cada portal,
+actualizado automáticamente desde las entregas confirmadas. El acceso exige
+Firebase Auth y curso del programa consultado, o permiso administrativo en
+servidor. Solo muestra nombre visible abreviado, curso, puesto, porcentaje de
+logro y cantidad de guías; nunca RUT, UID, respuestas, claves ni notas privadas.
+Esta autorización publica únicamente ese resumen; no cambia las publicaciones
+individuales ni las pautas de los instrumentos.
+
+El general promedia los porcentajes por guía, una vez por guía, con el mejor
+reenvío confirmado conservado. Los borradores y archivos de restablecimiento no
+compiten. Las formas o versiones diferentes usan su clave y denominador propio;
+las rutas de apoyo no se mezclan con las actividades comparadas. Se excluyen
+cuentas administrativas, pruebas e inactivas. Empata primero el promedio a una
+décima, luego la cantidad completada; si siguen iguales comparten puesto.
+La interfaz consulta cada minuto mientras la pestaña está visible. La API usa
+una caché interna breve y privada, sin escribir ni recalificar los registros.
+Las próximas guías se agregan al catálogo de ranking junto a su fuente de
+corrección de servidor, sin duplicar ni publicar claves.

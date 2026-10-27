@@ -959,6 +959,11 @@
       .welcome-actions .student-badge { align-self: flex-start; }
     }
 
+    .paes-entry-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
+    .paes-entry-actions a { text-decoration: none; }
+    .paes-entry-actions .tp-access { background: #176b73; border-color: #12575e; }
+    .paes-entry-actions .tp-access:hover { background: #12575e; }
+    .paes-entry-actions :focus-visible { outline: 3px solid #e6ad27; outline-offset: 3px; }
   </style>
   
   <!-- Inyección de nóminas oficiales -->
@@ -997,12 +1002,16 @@
         <div class="login-header">
           <span class="login-badge">Competencia Lectora</span>
           <h1>Portal PAES</h1>
-          <p>Práctica para estudiantes HC y cuartos medios TP</p>
+          <p>Elige tu modalidad para ingresar.</p>
         </div>
 
+        <div class="paes-entry-actions" aria-label="Accesos PAES">
+          <a id="paesTpAccess" class="btn-submit tp-access" href="/paes/tp/">PAES TP</a>
+          <button id="paesHcAccess" class="btn-submit" type="button" aria-controls="loginForm" aria-expanded="false">PAES HC</button>
+        </div>
         <div class="error-box" id="errorBox"></div>
 
-        <form id="loginForm">
+        <form id="loginForm" hidden>
           <div class="form-group">
             <label for="rutInput">RUT del Estudiante</label>
             <input type="text" id="rutInput" placeholder="Ej: 22.456.789-K" maxlength="12" inputmode="text" autocapitalize="characters" autocomplete="username" required>
@@ -1019,7 +1028,6 @@
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
           </button>
         </form>
-        <p><a href="/paes/tp/">4.º A–E TP: ingresar a las tres semanas de práctica</a></p>
       </div>
     </section>
 
@@ -1595,6 +1603,12 @@
 
     // ============ LOGIN SUBMIT ============
     const loginForm = document.getElementById('loginForm');
+    function openHcLogin() {
+      loginForm.hidden = false;
+      document.getElementById('paesHcAccess').setAttribute('aria-expanded', 'true');
+      rutInput.focus();
+    }
+    document.getElementById('paesHcAccess').addEventListener('click', openHcLogin);
     const passwordInput = document.getElementById('passwordInput');
     const entryParams = new URLSearchParams(window.location.search);
     const next = entryParams.get('next') || '';
@@ -1980,6 +1994,7 @@
       }
       document.getElementById('sessionLoading').hidden = true;
       document.getElementById('loginSection').style.display = '';
+      if (nextPath) openHcLogin();
       updatePasswordField();
     });
   </script>

@@ -1,5 +1,7 @@
 # Bitácora de Estudia CEST
 
+- 2026-10-27, acceso PAES: por solicitud de Francisco, se retira el enlace textual TP y se muestran dos botones principales, PAES TP y PAES HC. TP abre directamente sus tres semanas; HC despliega su formulario habitual con foco en RUT. Enlaces HC a guías y recuperación de sesión conservados. Ajustado el recorrido del script existente a la elección TP. Build integral aprobado, 877 recursos; comprobación visual y publicación se registran al cierre. Sin cambios en preguntas, cuentas ni resultados.
+
 ## 2026-10-27, PAES TP: prueba completa desde la portada y primer ingreso
 
 - Francisco pide probar la secuencia estudiacest.com → PAES → RUT → tres semanas → primer ensayo, incluidos alternativas, resultados y puntaje. La prueba real con una cuenta ficticia nueva de 4A-TP reproduce el rechazo por no pertenecer a la nómina HC. La verificación anterior sí cubría la recuperación de cuentas ya autenticadas, pero no este primer ingreso; se precisa esa limitación y se corrige la causa en el formulario antiguo.

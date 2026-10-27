@@ -185,3 +185,21 @@ Una clase no está terminada hasta que cumple simultáneamente lo siguiente:
 - El admin recibe la entrega en la sesión y curso correctos.
 - Los resultados permanecen ocultos hasta autorización docente.
 - Las verificaciones local, de datos y de producción terminan sin errores.
+
+## 14. Actividad de reemplazo 1D por nombre
+
+Francisco autoriza el 27-oct-2026 el acceso a `/1d/` con nombre completo, sin
+cuenta institucional. La identidad técnica es un UID aleatorio, curso `1D` y
+sesión `reemplazo-1d-amor-20261027`. Una capacidad aleatoria de 256 bits en la
+pestaña autoriza solo ese registro; el servidor conserva su hash. El nombre es
+declarado y nunca se usa para recuperar, unir o sobrescribir otra entrega.
+No modifica el acceso de otros cursos. Los datos quedan en una rama privada
+sin lectura ni escritura directa desde el navegador.
+
+Se conservan las ocho diapositivas recibidas, con siete respuestas abiertas.
+La actividad indica expresamente que se deben completar todas y elegir un
+caso; el servidor aplica la misma validación. La entrega es atómica e inmutable,
+con cola serializada y confirmación por relectura. Su resultado es la evidencia
+escrita para revisión docente: `score: null`, total dinámico, cantidad respondida
+y estado pendiente de revisión, sin nota automática. El panel propio, enlazado
+desde `/admin`, requiere token Firebase y permiso administrativo en servidor.

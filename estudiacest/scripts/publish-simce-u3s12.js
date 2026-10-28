@@ -46,7 +46,7 @@ function personalSession(assigned, publishedAt) {
     retroalimentacion_visible:false,
     notas_evaluadas:false,
     formativa:true,
-    variante:'guided-access-2026',
+    variant:'guided-access-2026',
     fecha_aplicacion:'2026-10-07',
     link_guia:'/estudiantes/apoyo-personal/actividad.html?sesion=12',
     prefer_guia:true,

@@ -145,6 +145,45 @@ const GUIDED_SESSIONS = {
             q5:'Los datos permiten afirmar que hubo algunas coincidencias, no que se resolverán todas las solicitudes.',
             q6:'Los intercambios concretados y las solicitudes pendientes permiten evaluar el funcionamiento real.'
         }
+    },
+    '13': {
+        id: 'personal-u4-13-decidir-evidencia',
+        key: { q1:'C', q2:'B', q3:'A', q4:'D', q5:'B', q6:'C' },
+        skills: { q1:'LOCALIZAR', q2:'LOCALIZAR', q3:'INTERPRETAR', q4:'INTERPRETAR', q5:'REFLEXIONAR', q6:'REFLEXIONAR' },
+        feedback: {
+            q1:'El segundo párrafo dice que, en promedio, llegaron 18 bicicletas por día; 13 y 5 son las que quedaban en cada sector.',
+            q2:'El grupo del gimnasio defiende su sector porque tiene techo; la vigilancia de los inspectores es el argumento de la entrada.',
+            q3:'El conteo registró dónde se dejaban las bicicletas: sirvió para que la votación se apoyara en datos.',
+            q4:'En la entrada quedaban 13 de 18 bicicletas: la mayoría de los bicicleteros se puso donde más se usaban.',
+            q5:'La presidenta reconoce dos fundamentos: los conteos y la lluvia, que explica los tres bicicleteros techados.',
+            q6:'El conteo fue de cinco días; con lluvia, el sector techado podría usarse más y la decisión tendría que ajustarse.'
+        }
+    },
+    '14': {
+        id: 'personal-u4-14-imagenes-memoria',
+        key: { q1:'B', q2:'C', q3:'A', q4:'D', q5:'A', q6:'D' },
+        skills: { q1:'LOCALIZAR', q2:'INTERPRETAR', q3:'INTERPRETAR', q4:'LOCALIZAR', q5:'INTERPRETAR', q6:'REFLEXIONAR' },
+        feedback: {
+            q1:'La tercera estrofa dice que la abuela le servía sopaipillas y té; la canela aparece después, como olor de la casa.',
+            q2:'El barco que «navegaba cada tarde» entre vapor y radio sugiere un espacio con vida propia, que acoge y lleva a quienes están en él.',
+            q3:'Los pájaros evocan suavidad y movimiento; «cansados» agrega años de trabajo. La imagen no habla de heridas ni de fuerza.',
+            q4:'La estrofa dice que la casa es de otra familia y que ya no huele a canela; la ventana, en cambio, «sigue ahí».',
+            q5:'El barco era la cocina de la abuela: al amasar con su hija, el hablante lírico vuelve a vivir esa experiencia, aunque solo por un momento.',
+            q6:'La casa ya no es de la familia, pero el recuerdo vuelve al repetir un gesto con la hija: la memoria se conserva en lo que se hace y se comparte.'
+        }
+    },
+    '15': {
+        id: 'personal-u4-15-decisiones-publicas',
+        key: { q1:'C', q2:'A', q3:'B', q4:'D', q5:'A', q6:'B' },
+        skills: { q1:'LOCALIZAR', q2:'LOCALIZAR', q3:'INTERPRETAR', q4:'INTERPRETAR', q5:'REFLEXIONAR', q6:'REFLEXIONAR' },
+        feedback: {
+            q1:'El primer párrafo informa que la plaza se transformará en un estacionamiento para cuarenta autos.',
+            q2:'La columna dice que solo se consultó a los comerciantes de la avenida, no a quienes usan la plaza.',
+            q3:'La autora admite la dificultad y luego argumenta con «Sin embargo»: reconocer la otra postura hace más razonable su crítica.',
+            q4:'La autora no niega el problema del estacionamiento: se opone a resolverlo eliminando la plaza y sin consulta vecinal.',
+            q5:'El tercer párrafo da el argumento: es el único espacio verde cercano y lo usan niños, adultos mayores y la feria.',
+            q6:'La propuesta depende del sitio eriazo: si no tiene espacio o no puede habilitarse, la solución no resolvería el problema.'
+        }
     }
 };
 

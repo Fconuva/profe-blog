@@ -258,6 +258,80 @@ window.SIMCE_PERSONAL_GUIDED_DATA = {
         { id:'q5', skill:'REFLEXIONAR', prompt:'¿Qué conclusión está mejor respaldada por el texto?', cue:'Elige una idea que no vaya más allá de los datos mencionados.', options:{ A:'El intercambio resolverá todas las necesidades lectoras.', B:'La comparación mostró algunas coincidencias de títulos.', C:'La biblioteca dejó de prestar libros.', D:'Todos los estudiantes participaron del registro.' } },
         { id:'q6', skill:'REFLEXIONAR', prompt:'¿Qué dato adicional permitiría evaluar mejor el proyecto después de iniciarlo?', cue:'Piensa qué resultado debería observarse durante el funcionamiento.', options:{ A:'El color de las cajas usadas.', B:'La edad de quien hizo la entrevista.', C:'La cantidad de intercambios concretados y solicitudes pendientes.', D:'El nombre de cada persona que ofreció un libro.' } }
       ]
+    },
+    '13': {
+      sessionId: 'personal-u4-13-decidir-evidencia',
+      title: 'Decidir con evidencia',
+      objective: 'Relacionar una decisión con los datos que la sostienen y distinguir un dato de una razón.',
+      steps: ['Ubica los datos: cifras, lugares y tiempos.', 'Relaciona cada decisión con el dato que la explica.', 'Descarta opciones que agregan causas que el texto no menciona.'],
+      stimulusLabel: 'Artículo informativo',
+      stimulusTitle: '¿Dónde van los bicicleteros?',
+      stimulus: [
+        'El centro de estudiantes del Liceo Las Acacias debía decidir dónde instalar diez bicicleteros nuevos. Había dos propuestas: junto a la entrada principal o al lado del gimnasio.',
+        'Antes de votar, un grupo de segundo medio contó durante cinco días cuántas bicicletas llegaban y dónde las dejaban. En promedio, llegaron 18 bicicletas por día.',
+        'De ellas, 13 quedaban amarradas a las rejas de la entrada principal y 5 cerca del gimnasio. Varios estudiantes dijeron que preferían la entrada porque ese sector lo ven los inspectores.',
+        'El grupo del gimnasio respondió que su sector tiene techo y que allí las bicicletas no se mojan cuando llueve.',
+        'Finalmente, el centro de estudiantes decidió instalar siete bicicleteros en la entrada y tres en el gimnasio. También acordó revisar en invierno cómo se usan ambos lugares.',
+        'La presidenta explicó: «No elegimos solo por lo que más gente pedía. Usamos los conteos, pero también consideramos la lluvia».'
+      ],
+      visual: { title:'Ruta para decidir', items:['Dato: lo que se contó o se observó', 'Razón: por qué ese dato importa', 'Decisión: lo que se hace y lo que se revisará'] },
+      questions: [
+        { id:'q1', skill:'LOCALIZAR', prompt:'¿Cuántas bicicletas llegaron en promedio por día?', cue:'Busca la cifra en el segundo párrafo.', options:{ A:'13 bicicletas.', B:'5 bicicletas.', C:'18 bicicletas.', D:'10 bicicletas.' } },
+        { id:'q2', skill:'LOCALIZAR', prompt:'¿Qué ventaja tiene el sector del gimnasio, según su grupo?', cue:'Relee el cuarto párrafo.', options:{ A:'Está más cerca de la entrada.', B:'Tiene techo y las bicicletas no se mojan.', C:'Lo vigilan los inspectores.', D:'Tiene espacio para los diez bicicleteros.' } },
+        { id:'q3', skill:'INTERPRETAR', prompt:'¿Para qué contaron las bicicletas antes de votar?', cue:'Piensa qué necesitaban saber para decidir.', options:{ A:'Para decidir con datos dónde se estacionaban realmente.', B:'Para sancionar a quienes amarraban bicicletas en las rejas.', C:'Para demostrar que el gimnasio no se usa.', D:'Para saber cuántos estudiantes tienen bicicleta en su casa.' } },
+        { id:'q4', skill:'INTERPRETAR', prompt:'¿Por qué se instalaron siete bicicleteros en la entrada?', cue:'Relaciona la decisión con el conteo del tercer párrafo.', options:{ A:'Porque en el gimnasio no había espacio.', B:'Porque lo ordenó la dirección del liceo.', C:'Porque en la entrada llueve menos.', D:'Porque allí se dejaba la mayoría de las bicicletas.' } },
+        { id:'q5', skill:'REFLEXIONAR', prompt:'¿Qué muestra la frase final de la presidenta?', cue:'Observa qué tuvieron en cuenta además de los conteos.', options:{ A:'Que la votación no era necesaria.', B:'Que la decisión consideró los datos y también otra razón.', C:'Que los conteos estaban equivocados.', D:'Que el gimnasio ganó la votación.' } },
+        { id:'q6', skill:'REFLEXIONAR', prompt:'¿Por qué es razonable revisar el uso de los bicicleteros en invierno?', cue:'Piensa qué condición podría cambiar la forma de estacionar.', options:{ A:'Porque en invierno no hay clases.', B:'Porque los inspectores cambian de turno.', C:'Porque con lluvia podría cambiar dónde se dejan las bicicletas.', D:'Porque el conteo se hizo solo en el gimnasio.' } }
+      ]
+    },
+    '14': {
+      sessionId: 'personal-u4-14-imagenes-memoria',
+      title: 'Imágenes y memoria',
+      objective: 'Interpretar imágenes poéticas y explicar qué sugieren sobre el recuerdo.',
+      steps: ['Identifica qué se compara en cada imagen.', 'Piensa qué idea o emoción sugiere esa comparación.', 'Comprueba tu interpretación con los versos.'],
+      stimulusLabel: 'Poema',
+      stimulusTitle: 'La cocina de mi abuela',
+      stimulus: [
+        'La cocina de mi abuela / era un barco pequeño / que navegaba cada tarde / entre el vapor y la radio.',
+        'Sus manos, dos pájaros cansados, / doblaban la masa / como quien guarda una carta / que nadie más debe leer.',
+        'Yo llegaba del colegio / con el frío pegado a la mochila / y ella, sin preguntar nada, / me servía sopaipillas y té.',
+        'Hoy la casa es de otra familia. / Pasé por fuera el domingo: / la ventana sigue ahí, / pero ya no huele a canela.',
+        'Cuando amaso con mi hija / y la harina nos llena el pelo, / el barco vuelve a zarpar / por un rato.'
+      ],
+      visual: { title:'Ruta para leer imágenes', items:['Imagen: qué se compara con qué', 'Sentido: qué idea o emoción sugiere', 'Evidencia: los versos que lo muestran'] },
+      questions: [
+        { id:'q1', skill:'LOCALIZAR', prompt:'¿Qué le servía la abuela al hablante lírico cuando llegaba del colegio?', cue:'Relee la tercera estrofa.', options:{ A:'Pan amasado y leche.', B:'Sopaipillas y té.', C:'Una sopa caliente.', D:'Galletas de canela.' } },
+        { id:'q2', skill:'INTERPRETAR', prompt:'¿Qué sugiere comparar la cocina con «un barco pequeño»?', cue:'Piensa en el movimiento y en quienes van a bordo.', options:{ A:'Que la cocina estaba cerca del mar.', B:'Que la casa estaba en mal estado.', C:'Que era un lugar vivo, en movimiento y acogedor.', D:'Que la abuela había trabajado como marinera.' } },
+        { id:'q3', skill:'INTERPRETAR', prompt:'En «sus manos, dos pájaros cansados», ¿qué se destaca de las manos?', cue:'Une las dos ideas: pájaros y cansancio.', options:{ A:'Que eran delicadas y habían trabajado mucho.', B:'Que estaban heridas.', C:'Que eran muy rápidas y fuertes.', D:'Que la abuela criaba pájaros.' } },
+        { id:'q4', skill:'LOCALIZAR', prompt:'¿Qué cambió en la casa, según la cuarta estrofa?', cue:'Busca qué sigue igual y qué ya no está.', options:{ A:'La ventana fue reemplazada.', B:'La radio sigue sonando cada tarde.', C:'La abuela vive ahí con otra familia.', D:'Ahora es de otra familia y ya no huele a canela.' } },
+        { id:'q5', skill:'INTERPRETAR', prompt:'¿Qué significa que «el barco vuelve a zarpar / por un rato»?', cue:'Relaciona el barco de la primera estrofa con lo que ocurre al final.', options:{ A:'Que al amasar con su hija revive por un momento aquel recuerdo.', B:'Que el hablante lírico planea un viaje.', C:'Que la casa vuelve a ser de su familia.', D:'Que la abuela regresa a cocinar.' } },
+        { id:'q6', skill:'REFLEXIONAR', prompt:'¿Qué idea sobre la memoria se desprende del poema?', cue:'Considera el poema completo, no una sola estrofa.', options:{ A:'Que los recuerdos se pierden cuando se vende una casa.', B:'Que solo las fotografías conservan el pasado.', C:'Que es mejor olvidar para no sufrir.', D:'Que los recuerdos pueden revivir en gestos que se comparten.' } }
+      ]
+    },
+    '15': {
+      sessionId: 'personal-u4-15-decisiones-publicas',
+      title: 'Decisiones públicas',
+      objective: 'Reconocer el problema, la postura y la propuesta en un texto que discute una decisión pública.',
+      steps: ['Identifica el problema que se quiere resolver.', 'Distingue la postura de quien escribe y sus argumentos.', 'Evalúa si la propuesta responde al problema.'],
+      stimulusLabel: 'Columna de opinión',
+      stimulusTitle: 'Una plaza para todos',
+      stimulus: [
+        'La municipalidad anunció que transformará la plaza del barrio San Miguel en un estacionamiento para cuarenta autos, porque los vecinos reclaman que no hay dónde estacionar cerca del consultorio.',
+        'El problema existe: quienes llevan a un familiar enfermo a veces dan vueltas durante media hora. Nadie debería negar esa dificultad.',
+        'Sin embargo, la plaza es el único espacio verde en diez cuadras. Allí juegan niños después del colegio, se juntan adultos mayores y se instala una feria de las pulgas los sábados.',
+        'Además, la decisión se tomó sin preguntar a quienes usan la plaza. La municipalidad solo consultó a los comerciantes de la avenida.',
+        'Propongo otra salida: habilitar el sitio eriazo que está detrás del consultorio y hacer una consulta vecinal antes de tocar la plaza.',
+        'Un barrio no mejora cuando se le quita a un grupo lo que necesita para dárselo a otro. Mejora cuando todos pueden opinar antes de decidir. (Columna de una vecina del sector).'
+      ],
+      visual: { title:'Ruta del conflicto', items:['Problema: qué se quiere resolver', 'Postura: qué defiende quien escribe y con qué argumentos', 'Propuesta: qué solución ofrece'] },
+      questions: [
+        { id:'q1', skill:'LOCALIZAR', prompt:'¿Qué quiere construir la municipalidad en la plaza?', cue:'Relee el primer párrafo.', options:{ A:'Un consultorio nuevo.', B:'Una feria permanente.', C:'Un estacionamiento para cuarenta autos.', D:'Una cancha deportiva.' } },
+        { id:'q2', skill:'LOCALIZAR', prompt:'¿A quiénes consultó la municipalidad antes de decidir?', cue:'Busca la información en el cuarto párrafo.', options:{ A:'A los comerciantes de la avenida.', B:'A los adultos mayores del barrio.', C:'A todos los vecinos.', D:'A quienes atienden en el consultorio.' } },
+        { id:'q3', skill:'INTERPRETAR', prompt:'¿Para qué la autora reconoce, en el segundo párrafo, que el problema existe?', cue:'Observa qué viene después de «Sin embargo».', options:{ A:'Para apoyar la construcción del estacionamiento.', B:'Para mostrar que entiende la otra postura antes de discutirla.', C:'Para cambiar de tema.', D:'Para culpar a quienes van al consultorio.' } },
+        { id:'q4', skill:'INTERPRETAR', prompt:'¿Cuál es la postura de la autora?', cue:'Une su crítica con lo que propone.', options:{ A:'Que en el barrio no hace falta estacionamiento.', B:'Que la plaza debería venderse.', C:'Que el consultorio debería trasladarse.', D:'Que no se debe quitar la plaza sin buscar otra solución y consultar a los vecinos.' } },
+        { id:'q5', skill:'REFLEXIONAR', prompt:'¿Qué argumento usa para defender la plaza?', cue:'Busca razones que se puedan comprobar en el texto.', options:{ A:'Que es el único espacio verde en diez cuadras y la usan distintos grupos.', B:'Que los autos contaminan el barrio.', C:'Que ella vive frente a la plaza.', D:'Que el estacionamiento costaría mucho dinero.' } },
+        { id:'q6', skill:'REFLEXIONAR', prompt:'¿Qué dato ayudaría más a evaluar la propuesta de la autora?', cue:'Piensa qué tendría que ser cierto para que su solución funcione.', options:{ A:'El color de los juegos de la plaza.', B:'Si el sitio eriazo tiene espacio suficiente y se puede habilitar.', C:'El nombre del alcalde.', D:'La cantidad de puestos de la feria.' } }
+      ]
     }
   }
 };

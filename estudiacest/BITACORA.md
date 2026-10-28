@@ -1,5 +1,10 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-28, ruta personal: sesión 8 creada; 1D retirada
+
+- Ruta personal SIMCE (2B-HC): un estudiante tenía abiertas la 1–7 y la 9–12, pero la 8 decía no disponible. Causa: faltaba en Firebase el nodo `sesiones/personal-u3-8-mini-ensayo`, aunque la sesión está en el catálogo público y privado. Se creó con los mismos campos de la 7 (variante `guided-access-2026`, activa, asignada solo a su UID, orden 308) y se releyó. `publish-personal-session-11.js` no servía como molde directo porque filtra por `ruta_personal`; la API valida ruta, variante y asignación, y las tres se cumplen. Producción: catálogo con la sesión 8 y página 200 sin errores JS en 390.
+- 1D «Amor, dignidad y compromiso»: aplicada el 27-oct. Antes de retirarla se exportaron las 34 entregas (32 entregadas, 2 borradores) a Word y Excel para la profesora de Religión, con respaldo privado fuera del repositorio. Se retiran la carpeta /1d/, la tarjeta de portada y admin, el módulo de API, su auditoría del prebuild y sus entradas en el manifiesto y el contrato; la sección 14 del contrato queda marcada como retirada. Las entregas siguen en la rama privada de Firebase. Build con 882 recursos aprobado. 9404211b publicado con deploy seguro; dpl_9KUUyAcvFbPmhTVMaW4dk2fpzTfv READY y aliado. /1d/ responde 404, la acción `1d-start` ya no existe, portada (390/1440) y admin sin errores JS ni desbordes.
+
 ## 2026-10-28, SIMCE Unidad 4: cuarto texto en el miniensayo 3
 
 - Francisco pide un cuarto texto en el miniensayo de hoy y dejarlo listo para aplicar. Se agrega la entrevista original CEST «El coro también decide» (liceo, personas y montaje ficticios; Antígona de Sófocles, dominio público) con seis preguntas q19–q24: una de localizar, tres de interpretar y dos de reflexionar, claves B/A/D/C/A/C solo en el servidor. El miniensayo 3 queda con 4 textos y 24 preguntas (6 claves por letra; Localizar 6, Interpretar 11, Reflexionar 7) y un tema nuevo en la retroalimentación. Las 18 preguntas anteriores, sus alternativas e identificadores no cambian. Portada, repaso y pauta docente dicen «Miniensayos 2 y 3 ampliados».

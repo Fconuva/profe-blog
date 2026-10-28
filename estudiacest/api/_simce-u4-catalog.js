@@ -284,8 +284,13 @@ exams.forEach((exam,index)=>exam.texts.flatMap(t=>t.questions).forEach((item,i)=
 const legacyExam2 = structuredClone(exams[1]);
 exams[1].texts.push(require('./_simce-u4-extension'));
 exams[1].contentVersion='simce-u4-2-24-v2';
+const legacyExam3 = structuredClone(exams[2]);
+exams[2].texts.push(require('./_simce-u4-extension-3'));
+exams[2].contentVersion='simce-u4-3-24-v2';
+exams[2].review=[...exams[2].review,'Entrevista: preguntas, respuestas y propósito'];
 function examForAttempt(number,record) {
   if(Number(number)===2 && record && record.version!=='simce-u4-2-24-v2' && (record.total===18 || record.version==='simce-u4-2026-v1' || Object.keys(record.answers||{}).length))return legacyExam2;
+  if(Number(number)===3 && record && record.version!=='simce-u4-3-24-v2' && (record.total===18 || record.version==='simce-u4-2026-v1' || Object.keys(record.answers||{}).length))return legacyExam3;
   return exams[Number(number)-1];
 }
 function publicExam(number, selected) {
@@ -295,4 +300,4 @@ function publicExam(number, selected) {
     texts:value.texts.map(t => ({ title:t.title, genre:t.genre, paragraphs:t.paragraphs, source:t.source,
       ...(t.table ? {table:t.table} : {}), questions:t.questions.map(q => ({id:q.id,prompt:q.prompt,options:q.options})) })) };
 }
-module.exports = { exams, dates, publicExam, examForAttempt, legacyExam2 };
+module.exports = { exams, dates, publicExam, examForAttempt, legacyExam2, legacyExam3 };

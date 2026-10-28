@@ -1,6 +1,7 @@
 'use strict';
 const assert=require('node:assert/strict'),http=require('http'),fs=require('fs'),path=require('path'),os=require('os');
-const {exams,publicExam}=require('../api/_simce-u4-catalog');
+const {exams,publicExam,examForAttempt,legacyExam3}=require('../api/_simce-u4-catalog');
+const EXTENDED=new Set([2,3]);
 const api=require('../api/_simce-u4');
 const attempts=require('../api/_simce-admin-attempts');
 const {standardSession}=require('./publish-simce-u4');
@@ -19,8 +20,8 @@ async function call(db,action,token='student',body={},number='1',method=action.e
 function measure(){
  const stats=[];
  for(const exam of exams){
-  const expected=exam.number===2?24:18;
-  check(exam.texts.length===(exam.number===2?4:3),'Cantidad de textos de la versión vigente');const questions=exam.texts.flatMap(t=>t.questions);check(questions.length===expected,'Cantidad de preguntas de la versión vigente');
+  const expected=EXTENDED.has(exam.number)?24:18;
+  check(exam.texts.length===(EXTENDED.has(exam.number)?4:3),'Cantidad de textos de la versión vigente');const questions=exam.texts.flatMap(t=>t.questions);check(questions.length===expected,'Cantidad de preguntas de la versión vigente');
   check(new Set(questions.map(q=>q.id)).size===expected,'IDs únicos');
   const skills={},keys={},words=[],optionWords=[];
   for(const text of exam.texts){words.push(text.paragraphs.join(' ').trim().split(/\s+/u).length);for(const q of text.questions){
@@ -29,17 +30,20 @@ function measure(){
    const lengths=q.options.map(o=>o.split(/\s+/u).length);optionWords.push(lengths);
    const k='ABCD'.indexOf(q.key);check(lengths[k]<=Math.max(...lengths.filter((_,i)=>i!==k))*1.5,'Clave no destaca por longitud');
   }}
-  const auditedCounts=[[4,8,6],[4,12,8],[5,8,5],[4,10,4],[4,8,6]][exam.number-1];
+  const auditedCounts=[[4,8,6],[4,12,8],[6,11,7],[4,10,4],[4,8,6]][exam.number-1];
   check(['LOCALIZAR','INTERPRETAR','REFLEXIONAR'].every((s,i)=>skills[s]===auditedCounts[i]),'Distribución por demanda auditada, sin imponer cuota a la etiqueta');
   questions.forEach(q=>{check(q.demandAudit && q.demandAudit.rationale.length>90,'Fundamento específico de demanda');check(q.demandAudit.assessedSkill===q.skill,'Eje corresponde a la tarea auditada');});
   check(!JSON.stringify(publicExam(exam.number)).includes('demandAudit'),'Auditoría privada, sin pistas durante el intento');
   check(exam.writtenPractice.rubric.length===4 && exam.writtenPractice.evidence.length===2,'Respuesta redactada con pauta y evidencia de ambos textos');
-  check(Object.values(keys).every(n=>exam.number===2?n===6:n>=4&&n<=5),'Distribución de claves equilibrada');
+  check(Object.values(keys).every(n=>EXTENDED.has(exam.number)?n===6:n>=4&&n<=5),'Distribución de claves equilibrada');
   const seq=questions.map(q=>q.key).join('');check(!/(.)\1\1|(.{2})\2\2|(.{4})\3/u.test(seq),'Sin ciclos ni rachas de tres');
   const visible=JSON.stringify(publicExam(exam.number));check(!/"(?:key|errors|evidence|skill|demand|operation)":/.test(visible),'Sin pauta en vista estudiante');
   const totalWords=words.reduce((a,b)=>a+b,0)+questions.reduce((sum,q)=>sum+(q.prompt+' '+q.options.join(' ')).split(/\s+/u).length,0);
   stats.push({number:exam.number,date:exam.date,textWords:words,totalReadingWords:words.reduce((a,b)=>a+b,0),allVisibleWords:totalWords,skills,keyCounts:keys,optionWords});
  }
+ const modern3=exams[2];check(JSON.stringify(modern3.texts.slice(0,3))===JSON.stringify(legacyExam3.texts),'Miniensayo 3: primeras 18 preguntas intactas');
+ check(examForAttempt(3,{version:'simce-u4-2026-v1',answers:{q1:'A'},total:18})===legacyExam3,'Miniensayo 3: borrador antiguo conserva versión');check(examForAttempt(3,{version:'simce-u4-2026-v1',answers:{},total:18,submitted:true})===legacyExam3,'Miniensayo 3: entrega antigua conserva versión');
+ check(examForAttempt(3,{version:modern3.contentVersion,answers:{q1:'A'},total:24})===modern3 && examForAttempt(3,null)===modern3,'Miniensayo 3: intento nuevo usa la ampliación');
  return stats;
 }
 async function apiTests(){
@@ -66,6 +70,14 @@ async function apiTests(){
   check(api.scoreAnswers({},exam).simulatedScore===150,'Cero aciertos: índice CEST 150');
   check(api.scoreAnswers(Object.fromEntries(questions.map((q,i)=>[q.id,i<questions.length/2?q.key:'ABCD'[('ABCD'.indexOf(q.key)+1)%4]])),exam).simulatedScore===250,'Mitad de aciertos: índice CEST 250');
  }
+ // Un borrador de M3 iniciado antes de la ampliación termina con sus 18 preguntas.
+ const legacyDb=mockDb(),legacyQs=legacyExam3.texts.flatMap(t=>t.questions);
+ legacyDb.state[BASE].respuestas['sesion-u4-3']={student:{uid:'student',sessionId:'sesion-u4-3',nombre:'ESTUDIANTE FICTICIO',curso:'2A-HC',answers:{q1:'A'},startedAt:1,updatedAt:1,submitted:false,completada:false,total:18,version:'simce-u4-2026-v1',revision:1}};
+ check((await call(legacyDb,'simce-u4-state','student',{},'3')).data.exam.texts.length===3,'Borrador antiguo de M3 recibe tres textos');
+ check((await call(legacyDb,'simce-u4-save','student',{answers:{q1:'B',q20:'A'}},'3')).status===200,'Borrador antiguo de M3 sigue guardando');
+ check(legacyDb.state[BASE].respuestas['sesion-u4-3'].student.total===18 && !legacyDb.state[BASE].respuestas['sesion-u4-3'].student.answers.q20,'Borrador antiguo de M3 no adopta la ampliación');
+ check((await call(legacyDb,'simce-u4-submit','student',{answers:Object.fromEntries(legacyQs.map(q=>[q.id,q.key]))},'3')).status===200,'Borrador antiguo de M3 entrega con 18');
+ const legacyFinal=await call(legacyDb,'simce-u4-state','student',{},'3');check(legacyFinal.data.result.total===18 && legacyFinal.data.result.score===18,'Resultado antiguo de M3 sobre 18');
  const review=await call(db,'simce-u4-review','teacherB');check(review.data.results.length===0,'Resultados docentes filtrados por curso');
  const before=clone(db.state[BASE].respuestas['sesion-u4-1'].student);
  let status,data;const res={setHeader(){},status(s){status=s;return this;},json(v){data=v;}};
@@ -161,7 +173,7 @@ async function browserTests(stats){
   running.db.state[BASE].sesiones['sesion-2']={activa:false,contenido:{textos:Array.from({length:7},(_,i)=>({id:'t'+(i+1),titulo:'Texto ficticio '+(i+1),fuente:'Fixture',parrafos:[{texto:'Texto de prueba.'}]})),preguntas:Array.from({length:7},(_,i)=>({id:i+1,textoRef:'t'+(i+1),enunciado:'Pregunta de prueba',opciones:[{texto:'A'},{texto:'B'},{texto:'C'},{texto:'D'}]}))}};
   await page.goto(running.url+'/estudiantes/simce-unidad4/forma-p.html');await page.waitForFunction(()=>document.getElementById('status').textContent.includes('Referencia cargada'));check(await page.getByText('Respuesta redactada:',{exact:false}).count()===2,'Dos abiertas de referencia renderizadas');check(!await overflow(),'Referencia con abiertas sin desborde');
   for(const n of [2,3,4,5]){
-   await page.setViewportSize({width:390,height:900});await page.goto(running.url+`/estudiantes/simce-unidad4/?ensayo=${n}`);await page.getByRole('button',{name:'Comenzar miniensayo'}).click();check(await page.locator('input[type=radio]').count()===(n===2?96:72),'Alternativas en cada miniensayo');check(!await overflow(),'Cada miniensayo sin desborde');
+   await page.setViewportSize({width:390,height:900});await page.goto(running.url+`/estudiantes/simce-unidad4/?ensayo=${n}`);await page.getByRole('button',{name:'Comenzar miniensayo'}).click();check(await page.locator('input[type=radio]').count()===(EXTENDED.has(n)?96:72),'Alternativas en cada miniensayo');check(!await overflow(),'Cada miniensayo sin desborde');
    stats[n-1].renderedOptionLines={390:await page.locator('.question').evaluateAll(fields=>fields.map(field=>[...field.querySelectorAll('.option span')].map(span=>Math.round(span.getBoundingClientRect().height/parseFloat(getComputedStyle(span).lineHeight)))))};
   }
   await page.goto(running.url+'/estudiantes/simce-unidad4/presentacion.html');check(await page.locator('section:visible').count()===1,'Aperturas separadas');await page.getByRole('button',{name:'Siguiente'}).click();check(await page.locator('#rules').isVisible(),'Normas segunda pantalla');await page.getByRole('button',{name:'Siguiente'}).click();check(await page.locator('#objective').isVisible(),'Objetivo tercera pantalla');
@@ -170,6 +182,6 @@ async function browserTests(stats){
   fs.writeFileSync(path.join(evidence,'measurement.json'),JSON.stringify({checks,stats,errors,failed},null,2));console.log('Evidencia local: '+evidence);
  }finally{await browser.close();await new Promise(resolve=>running.server.close(resolve));}
 }
-async function main(){const stats=measure();await apiTests();if(process.argv.includes('--browser'))await browserTests(stats);console.log(`SIMCE U4: ${checks} comprobaciones aprobadas; 5 miniensayos, 16 textos, 96 preguntas, demanda individual, claves privadas, entrega, reapertura y permisos. Solo fixtures.`);if(process.argv.includes('--details'))console.log(JSON.stringify(stats,null,2));}
+async function main(){const stats=measure();await apiTests();if(process.argv.includes('--browser'))await browserTests(stats);console.log(`SIMCE U4: ${checks} comprobaciones aprobadas; 5 miniensayos, 17 textos, 102 preguntas, demanda individual, claves privadas, entrega, reapertura y permisos. Solo fixtures.`);if(process.argv.includes('--details'))console.log(JSON.stringify(stats,null,2));}
 if(require.main===module){if(process.argv.includes('--serve'))serve().then(({url})=>console.log(url));else main().catch(e=>{console.error(e.stack);process.exitCode=1;});}
 module.exports={fixture,mockDb,serve,measure};

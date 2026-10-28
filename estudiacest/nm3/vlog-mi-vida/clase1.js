@@ -69,8 +69,8 @@ window.VlogClase1={
     {
       "phase": 0,
       "page": 1,
-      "title": "Mi vida en cinco minutos",
-      "html": "<p class=\"hero-question\">¿Cómo contamos quiénes somos con lo que elegimos mostrar de nuestro día?</p><p>Clase 1 · Leemos, observamos y trabajamos con la guía.</p>",
+      "title": "Tema, propósito, planos y ángulos",
+      "html": "<p class=\"hero-question\">¿Qué cambia en una imagen cuando cambiamos el plano o el ángulo?</p><p>Clase 1 · Tema, mensaje, propósito, planos y ángulos.</p>",
       "cue": "Tengan a mano la guía impresa, el cuaderno y un lápiz.",
       "kind": "title"
     },
@@ -85,18 +85,18 @@ window.VlogClase1={
     {
       "phase": 0,
       "page": 1,
-      "title": "Acuerdos para aprender juntos",
-      "html": "<p>Escuchen otras interpretaciones y fundaméntenlas con evidencias. Se analiza cómo se comunica una experiencia, sin juzgar la vida de las personas.</p><p>No se permite el uso de celular durante el análisis, salvo indicación del profesor.</p>",
-      "cue": "Escuchen, fundamenten y respeten las experiencias de otras personas.",
-      "kind": ""
+      "title": "Normas de la clase",
+      "html": "<ol class=\"rules\"><li>Levantar la mano para hablar.</li><li>Nos escuchamos.</li><li>Uso del celular prohibido.</li><li>Trabajar activamente en su guía.</li></ol>",
+      "cue": "Estas normas rigen durante toda la clase.",
+      "kind": "rules-slide"
     },
     {
       "phase": 0,
       "page": 1,
       "title": "Objetivo de la clase",
-      "html": "<p>Analizar cómo las imágenes, la voz y la selección de escenas construyen un relato personal, fundamentando las observaciones con evidencias y eligiendo planos adecuados para una escena cotidiana.</p>",
-      "cue": "Al finalizar, justificarán cómo un encuadre aporta al relato.",
-      "kind": ""
+      "html": "<p class=\"objective\">Analizar el tema, el propósito, los planos y los ángulos en un vlog y en una escena propia, fundamentando con evidencias.</p>",
+      "cue": "Al finalizar, explicarán con una evidencia qué comunica un plano o un ángulo.",
+      "kind": "goal"
     },
     {
       "phase": 1,
@@ -109,10 +109,26 @@ window.VlogClase1={
     {
       "phase": 1,
       "page": 1,
-      "title": "Tema, mensaje y propósito",
-      "html": "<table><thead><tr><th>Concepto</th><th>Qué nos permite analizar</th></tr></thead><tbody><tr><td>Tema, mensaje y propósito</td><td>El tema es el asunto; el mensaje, la idea que se construye sobre él; el propósito, lo que se busca lograr en la audiencia.</td></tr></tbody></table>",
-      "cue": "Distingan el asunto, la idea y lo que se busca lograr.",
-      "kind": ""
+      "title": "El tema",
+      "html": "<div class=\"concept\"><p class=\"concept-def\">El tema es el asunto del que trata.</p><p class=\"concept-q\"><b>Pregunta:</b> ¿De qué trata?</p><p class=\"concept-ex\"><b>Ejemplo:</b> La mañana de un estudiante antes de ir al colegio.</p></div>",
+      "cue": "Ubiquen la definición en la tabla de la página 1.",
+      "kind": "concept-slide"
+    },
+    {
+      "phase": 1,
+      "page": 1,
+      "title": "El mensaje",
+      "html": "<div class=\"concept\"><p class=\"concept-def\">El mensaje es la idea que se construye sobre ese tema.</p><p class=\"concept-q\"><b>Pregunta:</b> ¿Qué idea quiere que comprendamos?</p><p class=\"concept-ex\"><b>Ejemplo:</b> Las mañanas son apuradas, pero cada uno tiene su forma de enfrentarlas.</p></div>",
+      "cue": "Ubiquen la definición en la tabla de la página 1.",
+      "kind": "concept-slide"
+    },
+    {
+      "phase": 1,
+      "page": 1,
+      "title": "El propósito",
+      "html": "<div class=\"concept\"><p class=\"concept-def\">El propósito es lo que se busca lograr en la audiencia: informar, entretener, convencer o emocionar.</p><p class=\"concept-q\"><b>Pregunta:</b> ¿Para qué lo cuenta?</p><p class=\"concept-ex\"><b>Ejemplo:</b> Entretener y lograr que otros estudiantes se identifiquen.</p></div>",
+      "cue": "Ubiquen la definición en la tabla de la página 1.",
+      "kind": "concept-slide"
     },
     {
       "phase": 1,
@@ -237,18 +253,18 @@ window.VlogClase1={
     {
       "phase": 3,
       "page": 5,
+      "title": "Antes del video · Qué vamos a registrar",
+      "html": "<p>Observen el vlog de Leo Bascuñán. Individualmente, copien y completen en su cuaderno las ocho filas. En cada una incluyan una observación y una escena, minuto o detalle que la respalde. La tabla de esta guía sirve de apoyo.</p><p class=\"watch-for\"><span>Enunciador</span><span>Audiencia</span><span>Tema y mensaje</span><span>Propósito</span><span>Formato y estructura</span><span>Imagen y planos</span><span>Voz, sonido y edición</span><span>Selección y responsabilidad</span></p>",
+      "cue": "Lean la instrucción antes de ver el video. Copien las ocho filas en el cuaderno.",
+      "kind": ""
+    },
+    {
+      "phase": 3,
+      "page": 5,
       "title": "Observamos a Leo Bascuñán",
       "html": "<div class=\"video-heading\"><p><b>Video:</b> <i>Un día COMIENDO por $1.000 pesos en CHILE en pleno 2024!</i> · Leo Bascuñán · 12:20.<br><span class=\"source\">youtube.com/watch?v=h23SJatDO74 · El profesor lo proyectará.</span></p></div><div class=\"video-slot\" id=\"leo-video\"><button type=\"button\" class=\"load-video\">Cargar video para proyectar</button><p>Observen cómo se selecciona y organiza la experiencia.</p></div><a class=\"video-link\" href=\"https://www.youtube.com/watch?v=h23SJatDO74\" target=\"_blank\" rel=\"noopener\">Abrir el video original en YouTube</a>",
       "cue": "El profesor proyecta el video. Reconozcan apertura, recorrido y cierre.",
       "kind": "video"
-    },
-    {
-      "phase": 4,
-      "page": 5,
-      "title": "Organizador · Cómo vamos a responder",
-      "html": "<p>Observen el vlog de Leo Bascuñán. Individualmente, copien y completen en su cuaderno las ocho filas. En cada una incluyan una observación y una escena, minuto o detalle que la respalde. La tabla de esta guía sirve de apoyo.</p>",
-      "cue": "Trabajen individualmente en el cuaderno. La tabla de la guía sirve de apoyo.",
-      "kind": ""
     },
     {
       "phase": 4,
@@ -326,7 +342,7 @@ window.VlogClase1={
       "phase": 7,
       "page": 7,
       "title": "Volvemos a la pregunta de la clase",
-      "html": "<p class=\"return-question\">¿Cómo contamos quiénes somos con lo que elegimos mostrar de nuestro día?</p><p>¿Cómo influye lo que mostramos y dejamos fuera en la manera en que otros comprenden nuestra experiencia? Respondan usando una decisión de su secuencia.</p>",
+      "html": "<p class=\"return-question\">¿Qué cambia en una imagen cuando cambiamos el plano o el ángulo?</p><p>¿Cómo influye lo que mostramos y dejamos fuera en la manera en que otros comprenden nuestra experiencia? Respondan usando una decisión de su secuencia.</p>",
       "cue": "Respondan el cierre de la página 7 usando una decisión de su secuencia.",
       "kind": ""
     }

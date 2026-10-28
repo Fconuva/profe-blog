@@ -186,7 +186,11 @@ Una clase no está terminada hasta que cumple simultáneamente lo siguiente:
 - Los resultados permanecen ocultos hasta autorización docente.
 - Las verificaciones local, de datos y de producción terminan sin errores.
 
-## 14. Actividad de reemplazo 1D por nombre
+## 14. Actividad de reemplazo 1D por nombre (retirada el 28-oct-2026)
+
+Aplicada el 27-oct y retirada del sitio el 28-oct-2026 por pedido de Francisco:
+sin página, tarjeta ni API. Las entregas quedan en la rama privada de Firebase.
+Lo que sigue describe cómo funcionó.
 
 Francisco autoriza el 27-oct-2026 el acceso a `/1d/` con nombre completo, sin
 cuenta institucional. La identidad técnica es un UID aleatorio, curso `1D` y

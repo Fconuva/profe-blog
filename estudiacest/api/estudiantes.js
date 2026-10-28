@@ -969,7 +969,6 @@ const PERFILES = require('./_perfiles-publicos.js');
 // Inscripción docente del paseo a las Termas de Panimávida (/termas). Mismo
 // motivo que SALAS: no quedan funciones libres en el plan.
 const TERMAS = require('./_termas.js');
-const REEMPLAZO_1D = require('./_reemplazo-1d.js');
 const SIMCE_U3S12 = require('./_simce-u3s12.js');
 const SIMCE_U4 = require('./_simce-u4.js');
 const SIMCE_ADMIN_ATTEMPTS = require('./_simce-admin-attempts.js');
@@ -988,7 +987,6 @@ module.exports = async (req, res) => {
     try {
         const action = String(req.query.action || (req.body && req.body.action) || '');
 
-        if (action.startsWith('1d-')) return await REEMPLAZO_1D.manejar(req, res, action, db, auth);
         if (action === 'simce-admin-grade') return await SIMCE_ADMIN_GRADES.manejar(req, res, db, auth);
         if (action === 'simce-honor') return await SIMCE_HONOR.manejar(req, res, db, auth);
         if (action.startsWith('simce-admin-')) return await SIMCE_ADMIN_ATTEMPTS.manejar(req, res, action.slice('simce-admin-'.length), db, auth);

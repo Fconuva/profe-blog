@@ -2133,12 +2133,34 @@
 
       renderGuiaHabSummary(rows, C);
 
+      // Con nota en el libro y sin registro digital: se lista como revisada (solo lectura; no crea una entrega).
+      if (filter === '' || filter === 'graded') Object.entries(databaseData.libroNotas || {}).forEach(([rut, b]) => {
+        const nota = String((b && b.notas && b.notas[currentGuia]) || '');
+        if (respByRut[rut] || !/^[1-7](\.\d)?$/.test(nota)) return;
+        const nombre = b.nombre || '', curso = b.curso || '';
+        if (course !== '' && curso !== course) return;
+        if (!(nombre.toLowerCase().includes(search) || rut.includes(searchRut))) return;
+        rows.push({ rut, nombre, curso, soloLibro: true, nota });
+      });
+      rows.sort((a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
+
       if (rows.length === 0) {
         tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 30px;">Sin respuestas para esta guía/curso todavía.</td></tr>`;
         return;
       }
 
       rows.forEach(r => {
+        if (r.soloLibro) {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+          <td style="font-weight: 600; color: #fff;">${r.nombre || '—'} &nbsp; <span class="status-pill completed" title="Nota registrada en el libro sin entrega digital">✓ Revisada</span></td>
+          <td><span style="font-size: 12px; font-weight: 700; color: var(--paes-color-light);">${r.curso || '—'}</span></td>
+          <td><span class="status-pill completed">Sin entrega digital</span></td>
+          <td><span class="status-pill completed">${r.nota}</span></td>
+          <td><span style="font-size: 12px; color: var(--text-muted);">Nota en el libro</span></td>`;
+          tbody.appendChild(tr);
+          return;
+        }
         const isDraft = r.status === 'draft';
         const answered = currentGuia === '14'
           ? Number.isFinite(Number(r.answered)) ? Number(r.answered) : Object.keys(r.answers || {}).filter(id => /^q\d{2}$/.test(id)).length
@@ -2146,12 +2168,15 @@
         const score = currentGuia === '14'
           ? (isDraft ? `${answered}/${C.itemCount} respondidas` : `${r.correct || 0}/${C.total} correctas · ${answered}/${C.itemCount} respondidas`)
           : `${r.correct || 0}/${r.total || C.total} correctas`;
-        const statusPill = isDraft
+        const graded = !!(r.grade && r.grade.nota);
+        const statusPill = isDraft && graded
+          ? `<span class="status-pill completed" title="Borrador revisado y calificado por el docente">✓ Revisada</span>`
+          : isDraft
           ? `<span class="status-pill pending" title="Aún no la envía: avance autoguardado">⏳ Borrador</span>`
           : `<span class="status-pill completed" title="El alumno la envió">✓ Enviado</span>`;
-        const gradeCell = isDraft
+        const gradeCell = isDraft && !graded
           ? `<span class="status-pill pending">En curso</span>`
-          : (r.grade && r.grade.nota)
+          : graded
           ? `<span class="status-pill completed">${r.grade.nota}</span>`
           : `<span class="status-pill pending">Sin calificar</span>`;
         const safeName = (r.nombre || '').replace(/'/g, '’');

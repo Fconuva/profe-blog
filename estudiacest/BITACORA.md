@@ -1,5 +1,27 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-29, PAES: G25 auditada, corregida y probada en los cuatro cursos HC
+
+- Acceso: la G25 no filtra por curso (patrón G21). Entra todo RUT de la nómina PAES, lo que cubre a 3.º A HC, 3.º B HC, 4.º A HC y 4.º B HC, y también a 4.º D y 4.º E TP. Un RUT con ruta guiada va a `guia25-guiada.html` (responde 200).
+- La auditoría pedagógica dio NO APTA. Correcciones aplicadas con 0 intentos en `guia_respuestas/25`:
+  - Se acortaron 19 claves; ahora la correcta es la más larga en 8 de 24 (razón 1,02).
+  - Las pestañas mostraban los títulos de las lecturas de la G21; ahora llevan los títulos reales.
+  - q8 pasa a INTERPRETAR y q20 a EVALUAR, para quedar 8/8/8, y el mapa del admin se actualizó.
+  - Enunciado de q3 reescrito.
+  - Retroalimentación 9 y 22 con cita literal.
+  - El género del texto 3 pasa a «Columna de opinión de una profesora de Historia» y el texto llega a 505 palabras.
+  - Se aclaró la definición de evapotranspiración y «WhatsApp» pasa a «por mensaje».
+  - Se cambió la redacción de pt-focus y de «liberación».
+  - El candado del portal (`applyDashboardGuiaLock`) ahora cubre g25 sin dejar de recorrer 10–21; la auditoría G21 no se tocó.
+  - Commit 99eb62de, `deploy:prod:safe` READY.
+- Flujo en producción con Playwright: sin sesión, el portal redirige con `next`. Se probaron 4 cursos con anchos de 390, 1440, 320 y 1920 px. En cada uno se marcaron las 24 respuestas, se guardó un borrador y se hizo la entrega final 24/24. Resultado: 0 errores de consola, 0 solicitudes fallidas, 0 respuestas ≥400 y sin desborde horizontal. Las escrituras quedaron simuladas con `page.route`.
+- Incidente: una primera versión de la prueba mandó una entrega real con un RUT ficticio (curso PRUEBA), esperando un 400. El servidor la aceptó, porque la G25 admite entregas incompletas y `submit-guia` no valida la nómina. Se leyó el registro, se confirmó que era el ficticio y se borró; `guia_respuestas/25` volvió a quedar vacío. La G25 no tiene premios, así que no hubo otro efecto. Desde entonces la prueba solo lee.
+- Pendiente de decisión de Francisco:
+  - Los strikes de integridad: la regla del 08-10 exige el control compartido y la G25 no lo tiene. Hay que reconstruirla con la arquitectura de la G24 o autorizar una excepción.
+  - El plan define la G25 con 5 lecturas, 49 preguntas y 113 min; la publicada tiene 3, 24 y 50.
+  - Si `SECOND_SEMESTER_GUIDES` debe incluir la 25 (libro de notas).
+  - Si `submit-guia` debe exigir un RUT de la nómina.
+
 ## 2026-10-29, PAES: Guía 25 publicada y biblioteca hasta la 25
 
 - Francisco pide dejar habilitado PAES hasta la guía 25. La G24 ya estaba publicada desde el 21-oct en `/paes/guia24/`. Su tarjeta del portal aparece solo con sesión iniciada y solo para 3.º y 4.º HC (`api/_paes-g24.js`); a otros cursos la API responde 403 y la tarjeta muestra «Bloqueada por el docente». Una G24 nueva que se armó por error en el repositorio canónico desactualizado no se usó.

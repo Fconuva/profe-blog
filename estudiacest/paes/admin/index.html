@@ -820,8 +820,8 @@
 
     <ul class="nav-list">
       <li><a class="nav-btn" href="/paes/mini-invierno-2027/docente.html">Guía 22 · Miniensayo de Competencia Lectora</a></li>
-      <li><a class="nav-btn" href="/paes/guia24/docente.html">Guía 24 · Gráficos y normas</a></li>
-      <li><a class="nav-btn" href="/paes/mini-octubre-2026/docente.html">Miniensayo 23 · Evidencia y consistencia</a></li>
+      <li><a class="nav-btn" href="/paes/mini-octubre-2026/docente.html">Guía 23 · Miniensayo de evidencia y consistencia</a></li>
+      <li><a class="nav-btn" href="/paes/guia24/docente.html">Guía 24 · Textos discontinuos avanzados</a></li>
       <li>
         <button class="nav-btn active" data-tab="ensayos">
           <span>📝</span> Ensayos PAES
@@ -1016,7 +1016,7 @@
           <div>
             <h3>Respuestas de Guías Interactivas</h3>
             <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Elige la guía y el curso. Revisa respuestas, mira el logro por habilidad, califica manualmente (nota + retro) y restablece.</p>
-            <p style="margin-top:12px"><a class="btn" href="/paes/mini-invierno-2027/docente.html">Guía 22 · Ver respuestas del miniensayo</a> · <a class="btn" href="/paes/mini-octubre-2026/docente.html">Miniensayo 23 · Ver respuestas</a></p>
+            <p style="margin-top:12px"><a class="btn" href="/paes/mini-invierno-2027/docente.html">Guía 22 · Ver respuestas</a> · <a class="btn" href="/paes/mini-octubre-2026/docente.html">Guía 23 · Ver respuestas</a> · <a class="btn" href="/paes/guia24/docente.html">Guía 24 · Ver respuestas</a></p>
           </div>
           <div class="filters-bar">
             <select class="select-filter" id="selectGuia" title="Guía"></select>
@@ -1175,7 +1175,7 @@
           </div>
           <div class="filters-bar">
             <input type="text" class="search-input" id="searchLibro" placeholder="Buscar por nombre o RUT...">
-            <select class="select-filter" id="periodoLibro" aria-label="Período de notas"><option value="2">Segundo semestre · G11–G21</option><option value="1">Primer semestre · G3–G10</option><option value="todos">Todas · G3–G21</option></select>
+            <select class="select-filter" id="periodoLibro" aria-label="Período de notas"><option value="2">Segundo semestre · G11–G25</option><option value="1">Primer semestre · G3–G10</option><option value="todos">Todas · G3–G21</option></select>
             <button type="button" class="btn-action-small" id="refreshLibro">Actualizar notas</button>
             <select class="select-filter" id="filterCourseLibro" title="Curso">
               <option value="3°A HC">3°A HC</option>
@@ -1451,13 +1451,16 @@
     let databaseData = { resultados: {}, guias: {}, guiaResp: {}, guiasConfig: { blocked: {}, exceptions: {} }, libroNotas: {} };
 
     // Guías del Taller PAES que muestra el Libro de Notas.
-    const SESIONES_LIBRO = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21];
+    const SESIONES_LIBRO = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25];
     function sesionesLibro() {
       const periodo = document.getElementById('periodoLibro').value;
       return SESIONES_LIBRO.filter(s => periodo === 'todos' || (periodo === '2' ? s >= 11 : s <= 10));
     }
-    function omitirNotaLibro(guia, curso) {
-      return guia === 14 && String(curso || '').replace(/[^0-9A-Z]/gi, '').toUpperCase() === '4AHC';
+    function omitirNotaLibro(guia, curso, nota) {
+      const c = String(curso || '').replace(/[^0-9A-Z]/gi, '').toUpperCase();
+      if (guia === 14) return c === '4AHC';
+      // La Guía 23 se aplicó en 3.º HC; en 4.º HC no aplica salvo que tenga nota registrada.
+      return guia === 23 && /^4[AB]HC$/.test(c) && String(nota ?? '').trim() === '';
     }
 
     // ====== CATÁLOGO DE GUÍAS (ids compartidos con guias.html y guia-lock.js) ======
@@ -1649,9 +1652,9 @@
         skill: { 1:'LOCALIZAR',2:'INTERPRETAR',3:'INTERPRETAR',4:'INTERPRETAR',5:'INTERPRETAR',6:'INTERPRETAR',7:'EVALUAR',8:'EVALUAR',9:'LOCALIZAR',10:'LOCALIZAR',11:'INTERPRETAR',12:'INTERPRETAR',13:'INTERPRETAR',14:'INTERPRETAR',15:'EVALUAR',16:'EVALUAR',17:'LOCALIZAR',18:'INTERPRETAR',19:'INTERPRETAR',20:'INTERPRETAR',21:'INTERPRETAR',22:'INTERPRETAR',23:'INTERPRETAR',24:'EVALUAR' },
         devOrder: [], devLabels: {}
       },
-      '22': { titulo:'Guía 22 — Clínica de distractores', total:6, key:{}, skill:{}, devOrder:[], devLabels:{} },
-      '23': { titulo:'Guía 23 — Evidencia y consistencia', total:6, key:{}, skill:{}, devOrder:[], devLabels:{} },
-      '24': { titulo:'Guía 24 — Textos discontinuos', total:6, key:{}, skill:{}, devOrder:[], devLabels:{} },
+      '22': { titulo:'Guía 22 — Miniensayo de Competencia Lectora', total:6, key:{}, skill:{}, devOrder:[], devLabels:{} },
+      '23': { titulo:'Guía 23 — Miniensayo de evidencia y consistencia', total:6, key:{}, skill:{}, devOrder:[], devLabels:{} },
+      '24': { titulo:'Guía 24 — Textos discontinuos avanzados: integrar gráficos y normas', total:6, key:{}, skill:{}, devOrder:[], devLabels:{} },
       '25': {
         titulo: 'Guía 25: Simulacro PAES 1: lectura sostenida y precisión',
         total: 24,
@@ -2661,7 +2664,7 @@
     }
     function promedioDe(notas, curso) {
       const nums = sesionesLibro()
-        .filter(s => !omitirNotaLibro(s, curso))
+        .filter(s => !omitirNotaLibro(s, curso, notas[s]))
         .map(s => notas[s])
         .filter(v => v !== undefined && v !== null && String(v).trim() !== '' && String(v).trim().toUpperCase() !== 'A')
         .map(v => parseFloat(String(v).replace(',', '.')))
@@ -2702,7 +2705,7 @@
       });
       filtered.sort((a, b) => a.nombre.localeCompare(b.nombre));
 
-      const cantidad = filtered.reduce((n, student) => n + sesiones.filter(g => !omitirNotaLibro(g, student.curso) && /^[1-7](?:[.,]\d)?$/.test(String(notasDe(student.rut)[g] ?? ''))).length, 0);
+      const cantidad = filtered.reduce((n, student) => n + sesiones.filter(g => !omitirNotaLibro(g, student.curso, notasDe(student.rut)[g]) && /^[1-7](?:[.,]\d)?$/.test(String(notasDe(student.rut)[g] ?? ''))).length, 0);
       document.getElementById('libroStatus').textContent = `${filtered.length} estudiantes · ${cantidad} notas numéricas · ${sesiones.length} guías. El promedio corresponde al período seleccionado.`;
       tbody.innerHTML = '';
       if (filtered.length === 0) {
@@ -2715,7 +2718,7 @@
         const tr = document.createElement('tr');
         let html = `<td style="font-weight:600; color:#fff; text-align:left; position:sticky; left:0; background:#0b0e20; border-right:1px solid var(--border-color); z-index:5;">${student.nombre}<br><span style="font-size:10px; font-weight:bold; color:var(--paes-color-light);">${student.curso}</span></td>`;
         sesiones.forEach(s => {
-          if (omitirNotaLibro(s, student.curso)) { html += '<td title="Guía no aplicada al curso">No aplica</td>'; return; }
+          if (omitirNotaLibro(s, student.curso, notas[s])) { html += '<td title="Guía no aplicada al curso">No aplica</td>'; return; }
           const v = notas[s] != null ? notas[s] : '';
           html += `<td><input class="nota-input ${notaInputClass(v)}" value="${v}" maxlength="4"
             data-rut="${student.rut}" data-ses="${s}"
@@ -2864,9 +2867,11 @@
     // Poblar selector de guía desde el registro GUIAS
     (function initSelectGuia() {
       const sel = document.getElementById('selectGuia');
-      sel.innerHTML = '<option value="22">Guía 22 — Miniensayo de Competencia Lectora</option>' + Object.keys(GUIAS).sort((a,b) => Number(b) - Number(a)).map(id => `<option value="${id}">${GUIAS[id].titulo}</option>`).join('');
+      // Las guías 22, 23 y 24 tienen su propio panel docente; el selector las abre allí.
+      const panelesPropios = {'22':'/paes/mini-invierno-2027/docente.html','23':'/paes/mini-octubre-2026/docente.html','24':'/paes/guia24/docente.html'};
+      sel.innerHTML = Object.keys(GUIAS).sort((a,b) => Number(b) - Number(a)).map(id => `<option value="${id}">${GUIAS[id].titulo}</option>`).join('');
       sel.value = currentGuia;
-      sel.addEventListener('change', function() { if(this.value==='22'){const curso=document.getElementById('filterCourseGuiaInt').value.replace(/[^0-9A-Z]/gi,'').toUpperCase();this.value=currentGuia;location.assign('/paes/mini-invierno-2027/docente.html'+(curso?'?curso='+encodeURIComponent(curso):''));return;}currentGuia = this.value; renderGuiaIntTable(); });
+      sel.addEventListener('change', function() { if(panelesPropios[this.value]){const curso=document.getElementById('filterCourseGuiaInt').value.replace(/[^0-9A-Z]/gi,'').toUpperCase();const destino=panelesPropios[this.value];this.value=currentGuia;location.assign(destino+(curso?'?curso='+encodeURIComponent(curso):''));return;}currentGuia = this.value; renderGuiaIntTable(); });
     })();
     async function setGuiaRelease(released) {
       const course = document.getElementById('filterCourseGuiaInt').value;

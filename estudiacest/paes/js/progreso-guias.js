@@ -1,8 +1,8 @@
 (function(){
  'use strict';
  let student=null,sequence=0,pendingOnly=false;
- const cards=()=>[...document.querySelectorAll('.ensayo-grid > .ensayo-card')].filter(c=>/^cardGuia\d+$/.test(c.id)||['miniInviernoCard','miniOctubreCard'].includes(c.id));
- const number=c=>c.id==='miniInviernoCard'?'22':c.id==='miniOctubreCard'?'23':c.id.replace('cardGuia','');
+ const cards=()=>[...document.querySelectorAll('.ensayo-grid > .ensayo-card')].filter(c=>/^cardGuia\d+$/.test(c.id)||['miniInviernoCard','miniOctubreCard','guia24Card'].includes(c.id));
+ const number=c=>c.id==='miniInviernoCard'?'22':c.id==='miniOctubreCard'?'23':c.id==='guia24Card'?'24':c.id.replace('cardGuia','');
  const pending=new Set(['missing','draft','incomplete']);
  function badge(card){let b=card.querySelector('.paes-work-label');if(!b){b=document.createElement('div');b.className='paes-work-label';b.setAttribute('role','status');card.prepend(b);}return b;}
  function filter(){for(const card of cards())card.classList.toggle('paes-filtered-out',pendingOnly&&!(card.dataset.workRequired==='true'&&pending.has(card.dataset.workState)));const toggle=document.getElementById('paesPendingToggle');toggle.setAttribute('aria-pressed',String(pendingOnly));toggle.textContent=pendingOnly?'Ver todas las guías':'Ver solo pendientes';}

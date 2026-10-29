@@ -1,5 +1,5 @@
 'use strict';
-const MINI=require('./_paes-mini-invierno-catalog'),OCT=require('./_paes-mini-octubre-catalog');
+const MINI=require('./_paes-mini-invierno-catalog'),OCT=require('./_paes-mini-octubre-catalog'),G24=require('./_paes-g24-catalog');
 const clean=v=>String(v||'').replace(/[^0-9A-Z]/gi,'').toUpperCase();
 const allowed=new Set(['3AHC','3BHC','4AHC','4BHC']);
 const textFields=new Set(['meta_cierre','concepto_logro','concepto_intentos','meta_criterio','meta_evidencia','meta_distractor','meta_transferencia','meta_meta','error_analysis','next_step','context_evidence','distractor_analysis','agreement','tension','evidence','distractor']);
@@ -26,8 +26,8 @@ async function handle(req,res,ctx){
  const rut=clean(profile?.rut),course=clean(profile?.curso),guided=rut==='229327739';
  if(!profile||profile.activo===false||!rut||!allowed.has(course))return res.status(403).json({error:'Tu cuenta no tiene este recorrido PAES.'});
  const read=async(path,render,required=true)=>{try{return render((await ctx.db.ref(path).once('value')).val());}catch(_){return{state:'unknown',required};}};
- const rows=await Promise.all(Array.from({length:21},async(_,i)=>{
-  const id=String(i+1),required=+id>=11;
+ const rows=await Promise.all([...Array.from({length:21},(_,i)=>String(i+1)),'25'].map(async id=>{
+  const required=+id>=11;
   if(id==='14'&&course==='4AHC')return[id,{state:'not-assigned',required:false}];
   return[id,await read('plataforma_paes/guia_respuestas/'+id+'/'+rut,r=>{
    if(r&&(r.rut&&clean(r.rut)!==rut||r.curso&&clean(r.curso)!==course))return{state:'review',required};
@@ -38,7 +38,8 @@ async function handle(req,res,ctx){
  }));
  for(const [id,catalog,base,assigned]of [
   ['22',MINI,'plataforma_paes/mini_invierno_intentos',true],
-  ['23',OCT,'plataforma_paes/mini_octubre_intentos',course==='3AHC'||course==='3BHC'||guided&&course==='4AHC']
+  ['23',OCT,'plataforma_paes/mini_octubre_intentos',course==='3AHC'||course==='3BHC'||guided&&course==='4AHC'],
+  ['24',G24,'plataforma_paes/guia24_intentos',true]
  ]){
   if(!assigned){rows.push([id,{state:'not-assigned',required:false}]);continue;}
   const sid=catalog.SESSION+(guided?'-guiada':'');

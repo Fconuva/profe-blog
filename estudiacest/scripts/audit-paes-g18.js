@@ -121,7 +121,7 @@ const currentCard24 = portal.match(/<article\b[^>]*id="guia24Card"[^>]*>([\s\S]*
 assert(currentCard24 && /href="guia24\/"/.test(currentCard24[1]), 'G24 debe tener su tarjeta publicada y destino regular.');
 assert(!/<article\b[^>]*class="upcoming-card"[^>]*data-guided-guide="24"/.test(portal), 'G24 no debe duplicarse como futura.');
 const currentCard23 = portal.match(/<article\b[^>]*id="miniOctubreCard"[^>]*>([\s\S]*?)<\/article>/);
-assert(currentCard23 && /Miniensayo N.º 23/.test(currentCard23[1]) && /href="mini-octubre-2026\/"/.test(currentCard23[1]), 'N.º 23 debe conservar su tarjeta y acceso al miniensayo.');
+assert(currentCard23 && /Guía N°23/.test(currentCard23[1]) && /href="mini-octubre-2026\/"/.test(currentCard23[1]), 'N.º 23 debe conservar su tarjeta y acceso al miniensayo.');
 assert(!/<article\b[^>]*class="upcoming-card"[^>]*data-guided-guide="23"/.test(portal), 'N.º 23 no debe duplicarse como futura.');
 const currentCard25 = portal.match(/<article\b[^>]*id="cardGuia25"[^>]*>([\s\S]*?)<\/article>/);
 assert(currentCard25 && /href="guia25\.html"/.test(currentCard25[1]), 'G25 debe tener su tarjeta publicada y destino regular.');
@@ -133,7 +133,8 @@ for (let guide = 26; guide <= 31; guide += 1) {
 const currentCard21 = portal.match(/<article\b[^>]*id="cardGuia21"[^>]*>([\s\S]*?)<\/article>/);
 assert(currentCard21 && /href="guia21\.html"/.test(currentCard21[1]), 'G21 debe conservar su acceso.');
 const currentCard22 = portal.match(/<article\b[^>]*id="miniInviernoCard"[^>]*>([\s\S]*?)<\/article>/);
-assert(currentCard22 && /<span class="ensayo-tag">Sesión actual<\/span>/.test(currentCard22[1]) && /href="mini-invierno-2027\/"/.test(currentCard22[1]), 'G22 debe ser la sesión actual y abrir el miniensayo.');
+assert(currentCard22 && /Guía N°22/.test(currentCard22[1]) && /href="mini-invierno-2027\/"/.test(currentCard22[1]), 'G22 debe conservar su tarjeta y abrir el miniensayo.');
+assert(currentCard25 && /<span class="ensayo-tag">Sesión actual<\/span>/.test(currentCard25[1]), 'G25 debe ser la sesión actual.');
 assert(portal.indexOf('id="cardGuia21"') < portal.indexOf('id="miniInviernoCard"'), 'G22 debe aparecer después de G21.');
 assert(!/<article\b[^>]*class="upcoming-card"[^>]*data-guided-guide="22"/.test(portal), 'G22 no debe duplicarse como futura.');
 assert(currentCard21 && /24 preguntas/.test(currentCard21[1]) && /3 textos/.test(currentCard21[1]) && /datetime="2026-09-10"/.test(currentCard21[1]), 'G21 debe anunciar 24 preguntas, 3 textos y fecha 10 de septiembre de 2026.');

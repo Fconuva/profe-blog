@@ -24,7 +24,7 @@ Object.assign(GUIDED_GUIDE_FEEDBACK, FOUNDATIONS.GUIDED_FEEDBACK);
 const DEFAULT_DATABASE_URL = 'https://estudiacest-default-rtdb.firebaseio.com';
 const BASE = 'plataforma_paes';
 const ADMIN_BASE = 'plataforma_estudiantes';
-const SECOND_SEMESTER_GUIDES = ['11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21'];
+const SECOND_SEMESTER_GUIDES = ['11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25'];
 const PAES_TEST_RUT = '111111111';
 
 function normalizePrivateKey(raw) {
@@ -850,14 +850,17 @@ async function handleGetMisNotas(req, res) {
     });
     const normalizedCourse = String(stored.curso || '').toUpperCase().replace(/\s+/g, '').replace(/[-°º]/g, '');
     const isFourthA = normalizedCourse === '4AHC';
+    const omitidos = isFourthA ? ['14'] : [];
+    // La Guía 23 se aplicó en 3.º HC; en 4.º HC no aplica salvo que tenga nota registrada.
+    if (/^4[AB]HC$/.test(normalizedCourse) && !notas['23']) omitidos.push('23');
     return res.status(200).json({
         success: true,
         libro: {
             curso: stored.curso || '',
             notas,
-            omitidos: isFourthA ? ['14'] : [],
+            omitidos,
             desde: 11,
-            hasta: 21
+            hasta: 25
         }
     });
 }

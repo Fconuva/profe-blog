@@ -125,7 +125,7 @@ const currentCard24 = portal.match(/<article\b[^>]*id="guia24Card"[^>]*>([\s\S]*
 assert(currentCard24 && /href="guia24\/"/.test(currentCard24[1]), 'G24 debe tener su tarjeta publicada y destino regular.');
 assert(!/<article\b[^>]*class="upcoming-card"[^>]*data-guided-guide="24"/.test(portal), 'G24 no debe duplicarse como futura.');
 const currentCard23 = portal.match(/<article\b[^>]*id="miniOctubreCard"[^>]*>([\s\S]*?)<\/article>/);
-assert(currentCard23 && /Miniensayo N.º 23/.test(currentCard23[1]) && /href="mini-octubre-2026\/"/.test(currentCard23[1]), 'N.º 23 debe conservar su tarjeta y acceso al miniensayo.');
+assert(currentCard23 && /Guía N°23/.test(currentCard23[1]) && /href="mini-octubre-2026\/"/.test(currentCard23[1]), 'N.º 23 debe conservar su tarjeta y acceso al miniensayo.');
 assert(!/<article\b[^>]*class="upcoming-card"[^>]*data-guided-guide="23"/.test(portal), 'N.º 23 no debe duplicarse como futura.');
 const currentCard25 = portal.match(/<article\b[^>]*id="cardGuia25"[^>]*>([\s\S]*?)<\/article>/);
 assert(currentCard25 && /href="guia25\.html"/.test(currentCard25[1]), 'G25 debe tener su tarjeta publicada y destino regular.');

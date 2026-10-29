@@ -172,17 +172,6 @@
     });
   }
 
-  function guardarFirebase() {
-    try {
-      if (typeof firebase === 'undefined' || !firebase.auth) return;
-      var u = firebase.auth().currentUser; if (!u) return;
-      firebase.database().ref('ecep_practica/' + u.uid + '/' + P.id).update({
-        respondidas: answeredCount(), correctas: score(), total: total,
-        finalizada: !!state.done, ts: firebase.database.ServerValue.TIMESTAMP
-      });
-    } catch (e) {}
-  }
-
   function intro() {
     clearMath();
     mount.innerHTML =
@@ -273,7 +262,7 @@
           var L = b.getAttribute('data-l');
           if (state.resp[q.n] === L) delete state.resp[q.n];   // tocar de nuevo desmarca
           else state.resp[q.n] = L;
-          save(); guardarFirebase();
+          save();
           if (state.resp[q.n] && state.idx < total - 1) go(state.idx + 1); else go(state.idx);
         };
       });
@@ -295,7 +284,7 @@
   function finalizar() {
     var faltan = total - answeredCount();
     if (faltan > 0 && !confirm('Te quedan ' + faltan + ' preguntas sin responder. ¿Finalizar igual? Las no respondidas cuentan como incorrectas.')) return;
-    state.done = true; save(); guardarFirebase();
+    state.done = true; save();
     resultados();
   }
 

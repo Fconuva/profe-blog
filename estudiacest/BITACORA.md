@@ -1,5 +1,12 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-29, PAES: Guía 25 publicada y biblioteca hasta la 25
+
+- Francisco pide dejar habilitado PAES hasta la guía 25. La G24 ya estaba publicada desde el 21-oct en `/paes/guia24/`. Su tarjeta del portal aparece solo con sesión iniciada y solo para 3.º y 4.º HC (`api/_paes-g24.js`); a otros cursos la API responde 403 y la tarjeta muestra «Bloqueada por el docente». Una G24 nueva que se armó por error en el repositorio canónico desactualizado no se usó.
+- G25 regular nueva: «Simulacro PAES 1: lectura sostenida y precisión». Tres textos originales (relato, divulgación con tabla ficticia y columna de opinión), 24 preguntas A–D con clave 6/6/6/6, 8 LOCALIZAR, 8 INTERPRETAR y 8 EVALUAR, retroalimentación con cita. Usa el patrón G21: `paes/guia25.html`, `js/guia25.js`, `data/guia25.json` y `api/_paes-g25.js` registrado en `api/paes.js`. Admin con 24 preguntas y mapa de habilidades. La tarjeta del portal reemplaza a la futura gris. La biblioteca `guias.html` suma las tarjetas g24 y g25, y el regex de `guia-lock.js` acepta la 25.
+- Auditorías G18 y G19: el rango de tarjetas futuras pasa a 26–31 y se agrega el control de que la G25 exista publicada sin duplicarse como futura (mismo ajuste que se hizo al publicar la G24).
+- Cierre: commit 162b55a1, build en código 0 y `deploy:prod:safe` READY (dpl_AT4mGonNve77X6XPLaBqVfmGfzsE) con alias y SHA verificados. En producción, guia25.html, js y json responden 200, `guias.html` muestra g24 y g25, y el portal muestra cardGuia25 sin tarjeta futura 25. `get-guias-config` no bloquea ni g24 ni g25. La previsión de aula y la dificultad quedan pendientes de calibrar con evidencia.
+
 ## 2026-10-28, ruta personal: sesión 8 creada; 1D retirada
 
 - Ruta personal SIMCE (2B-HC): un estudiante tenía abiertas la 1–7 y la 9–12, pero la 8 decía no disponible. Causa: faltaba en Firebase el nodo `sesiones/personal-u3-8-mini-ensayo`, aunque la sesión está en el catálogo público y privado. Se creó con los mismos campos de la 7 (variante `guided-access-2026`, activa, asignada solo a su UID, orden 308) y se releyó. `publish-personal-session-11.js` no servía como molde directo porque filtra por `ruta_personal`; la API valida ruta, variante y asignación, y las tres se cumplen. Producción: catálogo con la sesión 8 y página 200 sin errores JS en 390.

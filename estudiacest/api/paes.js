@@ -11,6 +11,7 @@ const G21 = require('./_paes-g21');
 const G25 = require('./_paes-g25');
 const FOUNDATIONS = require('./_paes-foundations');
 const PREMIOS_PAES = require('./_premios-paes');
+const NOTA_AUTO = require('./_paes-nota-auto');
 const CARTAS = require('./_paes-cartas');
 const MINI_INVIERNO = require('./_paes-mini-invierno');
 const MINI_OCTUBRE = require('./_paes-mini-octubre');
@@ -517,9 +518,19 @@ async function handleSubmitGuia(req, res) {
     if (!draft && PREMIOS_PAES.completada(guideId,saved)) {
         try {await PREMIOS_PAES.alEntregar(db,rutLimpio,guideId);} catch(_) {premioPendiente=true;}
     }
+    // 29-oct: la nota de laboriosidad llega sola al libro (lo ve el estudiante y el docente).
+    let notaAuto=null;
+    if (!draft && serverKey && !isPaesTestRut(rutLimpio)) {
+        try {
+            const r=await NOTA_AUTO.registrar(db,{rut:rutLimpio,guia:guideId,
+                contestadas:Object.keys(saved.answers||{}).length,total:safeTotal});
+            if (r.escrita) notaAuto=r.nota;
+        } catch(e) {console.error('nota automática PAES',guideId,e&&e.message);}
+    }
     return res.status(200).json({
         success: true,
         premioPendiente,
+        notaAuto,
         status: saved.status,
         submitted: saved.submitted === true,
         completada: saved.completada === true,

@@ -763,6 +763,10 @@
       border: 1px solid #0f766e; border-radius: 7px; background: #0f766e; color: #fff;
       font-size: 13px; font-weight: 700; text-decoration: none; white-space: nowrap; }
     .paes-space-button[hidden] { display: none; }
+    .aviso-final-4m { margin: 0 0 18px; padding: 14px 18px; border: 1px solid #f1c97a; border-left: 5px solid #d98a00; border-radius: 12px; background: #fff6e5; color: #162638; }
+    .aviso-final-4m[hidden] { display: none; }
+    .aviso-final-4m strong { display: block; font-family: 'Outfit', 'Inter', system-ui, sans-serif; font-size: clamp(16px, 1rem + .3vw, 19px); line-height: 1.3; }
+    .aviso-final-4m p { margin: 4px 0 0; font-size: 15px; line-height: 1.45; color: #4a3a1f; }
     .paes-space-button:hover, .paes-space-button:focus-visible { background: #115e59; }
     .paes-space-button:focus-visible { outline: 3px solid #5eead4; outline-offset: 3px; }
 
@@ -1046,6 +1050,11 @@
           <button type="button" class="btn-logout" id="btnLogoutAction">Cerrar sesión</button>
         </div>
       </div>
+
+      <section class="aviso-final-4m" id="avisoFinal4m" role="status" hidden>
+        <strong>📌 La Guía 26 será la última del Taller PAES.</strong>
+        <p>El jueves 5 de noviembre se calcula tu promedio final.</p>
+      </section>
 
       <section id="paesAcademicRanking" class="paes-academic-ranking" data-program="hc" aria-label="Ranking PAES HC"></section>
 
@@ -1860,6 +1869,10 @@
         : NOMINAS_PAES.find(item => !item.es_prueba && cleanRut(item.rut) === cleanRut(student.rut));
       const spaceCourses = new Set(['3°A HC', '3°B HC', '4°A HC', '4°B HC']);
       document.getElementById('paesSpaceLink').hidden = !paesRosterEntry || !spaceCourses.has(paesRosterEntry.curso);
+      // 29-oct: Francisco avisa a 4.º A y 4.º B HC que la G26 es la última y que el
+      // promedio se calcula el 5-nov. El aviso se apaga al terminar ese día (hora de Chile).
+      document.getElementById('avisoFinal4m').hidden = !/^4[AB]HC$/.test(String(student.curso || '').replace(/[^0-9A-Z]/gi, '').toUpperCase())
+        || Date.now() >= Date.UTC(2026, 10, 6, 3);
       applyGuidedPaesRoute(student);
       syncMiniInvierno();
       syncMiniOctubre();

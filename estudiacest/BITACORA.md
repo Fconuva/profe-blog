@@ -7,7 +7,8 @@
 - `paes/js/student-session.js`: nuevo `ready()`, que trae una vez `get-nomina-extra` y lo suma a `NOMINAS_PAES` con el mismo criterio del admin. `signIn` y `sessionFor` lo esperan, y `paes/index.html` también antes de buscar el RUT.
 - Admin: al guardar un alumno nuevo avisa con qué clave entra.
 - Guardas: `audit-admin-student-creation` exige la cuenta y la lectura de la nómina extra; `audit-paes-mi-espacio-page` prueba que un alumno solo de la nómina extra recupera su sesión sin volver a pedir credenciales. Prueba simulada del alta (nueva, recuperada, curso inválido) y build en verde.
-- Alumno del caso: 3.º A HC. Queda habilitado al volver a guardarlo en el admin publicado.
+- Commit 12f307e3, `deploy:prod:safe` READY (dpl_7Sa3Sv41cSmQuWSyxeL7NVkvh1yH). También publicó b4813277 y 3c255e1c, que estaban pendientes.
+- Verificación en producción: el portal sirve `ready()` y lee la nómina extra. El alumno del caso (3.º A HC) se volvió a guardar desde el admin publicado: cuenta y perfil presentes (respuesta `recuperada` y `perfilPrevio`), y en `/paes/` queda en la nómina con Mi espacio habilitado. No se probó su clave (es la cuenta del alumno).
 
 ## 2026-10-29, PAES: G19 de 3.º A HC revisada, notas actualizadas e importación G22–G24 al libro
 

@@ -1,5 +1,20 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-29, PAES: libro de notas, admin y tarjetas uniformes hasta la Guía 25
+
+- Libro de notas: `SECOND_SEMESTER_GUIDES` y «Mis notas» cubren las guías 11 a 25. La G23 se aplicó solo en 3.º HC; en 4.º A y 4.º B HC se omite («No aplica») salvo que haya nota registrada. El progreso por guía (`_paes-progress.js`) suma la G24 (`guia24_intentos`) y la G25.
+- Admin: el libro y el selector de periodo incluyen G22 a G25 («Segundo semestre · G11–G25»), la navegación queda en orden 22 → 23 → 24 con títulos corregidos, y el selector abre los paneles propios de 22, 23 y 24. Se agregó «Guía 24 · Ver respuestas».
+- Portal: las tarjetas 22, 23 y 24 se rehicieron con la estructura de las demás (etiqueta, «Guía N°NN: …», meta de textos, preguntas y fecha, estado con punto y «Iniciar Guía NN»). Se mantienen sus ids, su estado oculto y el acceso guiado. La G25 lleva «Sesión actual».
+- Biblioteca (`guias.html`): se agregaron g22 y g23 antes de g24 con el mismo formato.
+- Auditorías: se actualizó el estado publicado esperado en `audit-paes-semester-grades`, `g18`, `g19` y `g21`; no se relajó ninguna guarda.
+- Commit b4a7bdf5, `deploy:prod:safe` READY (dpl_Gf8XXs5aomQEX4W3aFTcVr2nSxGV).
+- Verificación en producción con Playwright, solo lectura:
+  - 3.º A HC a 1440 px: notas de G11 a G25, sin omisiones.
+  - 4.º B HC a 390 px: la G23 aparece como «No aplica».
+  - Tarjetas con formato uniforme y sin desborde; biblioteca de g20 a g25 visible.
+  - 0 errores de consola y 0 respuestas ≥400.
+- Pendiente: las columnas G22 a G25 del libro están vacías hasta importar las notas desde el almacén de cada guía. Antes de escribir hay que simular las notas de laboriosidad y comparar.
+
 ## 2026-10-29, PAES: G25 auditada, corregida y probada en los cuatro cursos HC
 
 - Acceso: la G25 no filtra por curso (patrón G21). Entra todo RUT de la nómina PAES, lo que cubre a 3.º A HC, 3.º B HC, 4.º A HC y 4.º B HC, y también a 4.º D y 4.º E TP. Un RUT con ruta guiada va a `guia25-guiada.html` (responde 200).

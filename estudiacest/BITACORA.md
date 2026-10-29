@@ -1,5 +1,18 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-29 (tarde), PAES: notas hasta la G23, aviso de cierre a 4.º A y B HC y calendario de fin de año
+
+- Pedido de Francisco: revisar nuevas entregas y respuestas en 3.º A, 3.º B, 4.º A y 4.º B HC, actualizar el libro hasta la G23 y avisar a 4.º A y B HC que la Guía 26 es la última.
+- Notas con el modelo de laboriosidad del 15-oct (proporción de alternativas A–D contestadas; se toma la mejor evidencia entre intento actual, intentos anteriores y borrador de reenvío). No baja notas, no escribe un 1,0 nuevo, respeta ausencias «A», omite la G14 de 4.º A HC y usa solo la nómina HC. G24 y G25 no se tocaron.
+- Lectura fresca: 153 libros. Simulación con checksum, 11 notas nuevas en 8 libros, todas 7,0: 3.º A HC 2 (G12, G13), 3.º B HC 5 (G13, G15, G19 al alza, G22 ×2), 4.º B HC 4 (G20, G21 ×2, G22). Omitidas: 1651 ya iguales o mayores, 6 fuera de la nómina HC, 31 de G14 (4.º A HC o instrumento no reconocido) y 5 que serían un 1,0 nuevo (no se escriben).
+- Escritura condicional por ETag con respaldo previo: 8/8 libros, 0 conflictos, 0 errores. Relectura: 11/11 del plan, 0 bajas, 0 borradas, 0 cambios fuera del plan.
+- Aviso en el portal (`paes/index.html`): franja ámbar en el panel del estudiante, solo para 4.º A HC y 4.º B HC: «La Guía 26 será la última del Taller PAES. El jueves 5 de noviembre se calcula tu promedio final». Se apaga sola al terminar el 5-nov (hora de Chile). Build en verde; revisado a 390 y 1440 px sin desborde.
+- Calendario de cierre que dio Francisco:
+  - jueves 5-nov: promedio final de 4.º A y B HC (G26 es la última);
+  - martes 10-nov: se envían las notas al docente;
+  - viernes 13-nov: cierra el sistema de notas (Francisco escribió «CIJE»; probablemente SIGE) y ya no se puede cambiar nada. Todo debe estar cargado ese día.
+- Commit 85cdf09f.
+
 ## 2026-10-29, PAES: «Agregar estudiante» del admin ahora deja al alumno ingresar
 
 - Caso: un alumno agregado desde el admin PAES aparecía como «Agregado», pero no podía entrar al portal. El admin solo escribía `plataforma_paes/nomina_extra`, sin cuenta en Auth ni perfil canónico, y el portal y la sesión solo leían la nómina estática `NOMINAS_PAES`.

@@ -9,7 +9,7 @@ const feedback = {
   6:'En el párrafo 2, Tomás toma «Es para acordarse» como una excusa; el párrafo 5 revela qué debía recordarse: a quién no se le cobra. El párrafo 5 aclara esa frase.',
   7:'El párrafo 6 muestra que la planilla se conserva con una columna nueva que debe completar el tío, y que el cuaderno sigue en uso. Lo digital no desplaza el criterio de Ramón.',
   8:'En el párrafo 1, Tomás quiere «arreglar» el cuaderno; en el párrafo 4 descubre la marca que su planilla no había guardado. Su visión cambia; no sigue a su tío desde el inicio.',
-  9:'El párrafo 2 define el albedo «es decir, reflejan una fracción pequeña de la luz que reciben». La evapotranspiración y el calor liberado de noche son otros conceptos.',
+  9:'El párrafo 2 define el albedo: las superficies de albedo bajo «reflejan una fracción pequeña de la luz que reciben». La evapotranspiración y el calor liberado de noche son otros conceptos.',
   10:'En la columna de las 23:00, la zona rural registra 16,5 °C, el valor más bajo; el parque marca 19,2 °C. A las 15:00, en cambio, el más fresco es el parque.',
   11:'El estacionamiento supera a la zona rural en 3,0 °C a las 15:00 y en 8,8 °C a las 23:00; la avenida, en 2,2 y 8,1 °C. El parque es más fresco que el campo de día, por eso B es falsa.',
   12:'El párrafo 4 explica la frase: «el aire tibio de las calles vecinas circula hacia él y su suelo también ha recibido el calor del día». Por eso de noche supera a la zona rural.',
@@ -22,7 +22,7 @@ const feedback = {
   19:'El párrafo 3 responde que el establecimiento cuenta con teléfono, inspectores y protocolos, y que el celular puede usarse al terminar la jornada. No afirma que las emergencias sean raras.',
   20:'En el párrafo 4 la autora admite que «una norma, por sí sola, no forma juicio» y por eso suma talleres sobre uso digital en orientación. Mantiene su tesis, pero la complementa.',
   21:'El párrafo 5 se apoya en un solo liceo durante un semestre, y la autora reconoce: «No tengo cifras que lo respalden». Es una experiencia concreta, pero no permite generalizar.',
-  22:'La frase del párrafo 2 apela a lo que «cualquiera sabe» sin aportar pruebas: convierte una impresión personal en una verdad compartida. No es un dato, una concesión ni una cita.',
+  22:'La frase del párrafo 2, «Cualquiera que haya pisado un patio en los últimos años sabe», presenta una impresión personal como verdad compartida, sin pruebas: convierte una impresión personal en una verdad compartida. No es un dato, una concesión ni una cita.',
   23:'El párrafo 4 explica la analogía: dejar el teléfono a un lado «se aprende mejor cuando existen primero espacios protegidos». No dice que los adolescentes sean incapaces.',
   24:'La propuesta supone que sin celular vuelve la interacción en el patio (párrafos 1, 2 y 5). Un estudio amplio que lo desmienta ataca esa base; D es una objeción que el párrafo 4 ya considera.'
 };

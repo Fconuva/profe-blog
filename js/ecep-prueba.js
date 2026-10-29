@@ -1,6 +1,7 @@
 /* ECEP · Runner de prueba real — rinde el examen oficial 2024 con la clave oficial,
    feedback inmediato al responder cada pregunta. Lee window.PRUEBA y monta en #ec-prueba.
-   Persistencia local (localStorage) para retomar; guarda el resultado final en Firebase si hay sesión. */
+   Persistencia local (localStorage) para retomar. Cada respuesta guarda la huella del ítem
+   que se vio; si el ítem se corrige después, esa respuesta se anula y se vuelve a responder. */
 (function () {
   'use strict';
   var P = window.PRUEBA;
@@ -9,7 +10,8 @@
   var LET = ['A', 'B', 'C', 'D'];
   var KEY = 'ecep_prueba_' + P.id;
   var total = P.preguntas.length;
-  var state = load();           // { resp: {n: 'A'}, idx: 0 }
+  var state = load();           // { resp: {n: 'A'}, h: {n: huella}, idx: 0 }
+  var anuladas = conciliar();   // ítems cuya respuesta guardada era de otra versión
 
   var VERSION_2026 = {
     'generalista': '/evaluaciones/practica/generalista/',
@@ -60,23 +62,38 @@
 
   function load() {
     try { var s = JSON.parse(localStorage.getItem(KEY)); if (s && s.resp) return s; } catch (e) {}
-    return { resp: {}, idx: 0 };
+    return { resp: {}, h: {}, idx: 0 };
   }
   function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
+
+  // FNV-1a de lo que la persona ve y de la clave: cambia si se corrige el ítem.
+  function huella(q) {
+    var t = JSON.stringify([q.enunciado, q.textoBase || '', q.alternativas, q.correcta, q.imagen || '']);
+    var h = 0x811c9dc5;
+    for (var i = 0; i < t.length; i++) { h ^= t.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
+    return ('0000000' + h.toString(16)).slice(-8);
+  }
+
+  // Anula las respuestas guardadas con otra versión del ítem. Un avance anterior a las huellas
+  // no sabe qué versión vio: se anulan solo los ítems que la prueba declara revisados.
+  function conciliar() {
+    var porN = {}, fuera = [], heredado = !state.h;
+    var revisados = (P.revisados || []).map(Number);
+    P.preguntas.forEach(function (q) { porN[q.n] = q; });
+    if (heredado) state.h = {};
+    Object.keys(state.resp).forEach(function (n) {
+      var q = porN[n];
+      var vigente = q && (heredado ? revisados.indexOf(Number(q.n)) < 0 : state.h[n] === huella(q));
+      if (vigente) { state.h[n] = huella(q); return; }
+      delete state.resp[n]; delete state.h[n];
+      if (q) fuera.push(Number(q.n));
+    });
+    if (heredado || fuera.length) save();
+    return fuera.sort(function (a, b) { return a - b; });
+  }
   function answeredCount() { return Object.keys(state.resp).length; }
   function score() { var s = 0; P.preguntas.forEach(function (q) { if (state.resp[q.n] === q.correcta) s++; }); return s; }
   function esc(t) { return (t == null ? '' : String(t)).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
-
-  function guardarFirebase(final) {
-    try {
-      if (typeof firebase === 'undefined' || !firebase.auth) return;
-      var u = firebase.auth().currentUser; if (!u) return;
-      firebase.database().ref('ecep_pruebas/' + u.uid + '/' + P.id).update({
-        respondidas: answeredCount(), correctas: score(), total: total,
-        finalizada: !!final, ts: firebase.database.ServerValue.TIMESTAMP
-      });
-    } catch (e) {}
-  }
 
   // ---------- pantallas ----------
   function intro() {
@@ -90,6 +107,7 @@
           ? '<p>Este es un <strong>ensayo de práctica</strong> elaborado por nuestro equipo con el formato de la ECEP, con <strong>' + total + ' preguntas</strong> y su pauta de corrección. Al responder cada pregunta verás de inmediato si acertaste y cuál es la respuesta correcta.</p>'
           : '<p>Esta es la <strong>prueba oficial</strong> tal cual se rindió, con <strong>' + total + ' preguntas</strong> y su <strong>clave oficial</strong>. Al responder cada pregunta verás de inmediato si acertaste y cuál es la respuesta correcta.</p>') +
         '<ul class="ecq-tips"><li><i class="bi bi-check2"></i> Feedback inmediato con la ' + (esEnsayo ? 'pauta de corrección' : 'clave oficial') + '</li><li><i class="bi bi-bookmark-check"></i> Tu avance se guarda en este dispositivo</li><li><i class="bi bi-image"></i> Las preguntas con figura muestran la imagen original</li></ul>' +
+        avisoAnuladas() +
         (answeredCount() ? '<div class="ecq-resume">Llevas <b>' + answeredCount() + '/' + total + '</b> respondidas.</div>' : '') +
         '<div class="ecq-introbtns">' +
           '<button class="ecq-start" id="ecq-go">' + (answeredCount() ? 'Continuar' : 'Comenzar la prueba') + '</button>' +
@@ -98,7 +116,17 @@
       '</div>';
     document.getElementById('ecq-go').onclick = function () { go(state.idx || 0); };
     var r = document.getElementById('ecq-reset');
-    if (r) r.onclick = function () { if (confirm('¿Borrar tus respuestas y empezar de nuevo?')) { state = { resp: {}, idx: 0 }; save(); intro(); } };
+    if (r) r.onclick = function () { if (confirm('¿Borrar tus respuestas y empezar de nuevo?')) { state = { resp: {}, h: {}, idx: 0 }; anuladas = []; save(); intro(); } };
+  }
+
+  function avisoAnuladas() {
+    var k = anuladas.length;
+    if (!k) return '';
+    var lista = k === 1 ? 'la pregunta <b>' + anuladas[0] + '</b>'
+      : 'las preguntas <b>' + anuladas.slice(0, -1).join(', ') + ' y ' + anuladas[k - 1] + '</b>';
+    return '<div class="ecq-resume"><i class="bi bi-info-circle"></i> Corregimos ' + lista +
+      ' para que ' + (k === 1 ? 'coincida' : 'coincidan') + ' con el examen oficial. Borramos lo que habías marcado ahí: ' +
+      (k === 1 ? 'respóndela' : 'respóndelas') + ' de nuevo.</div>';
   }
 
   function go(i) {
@@ -145,7 +173,7 @@
     mount.querySelectorAll('.ecq-alt').forEach(function (b) {
       b.onclick = function () {
         if (state.resp[q.n]) return;
-        state.resp[q.n] = b.getAttribute('data-l'); save(); guardarFirebase(false); go(state.idx);
+        state.resp[q.n] = b.getAttribute('data-l'); state.h[q.n] = huella(q); save(); go(state.idx);
       };
     });
     var pv = mount.querySelector('.ecq-prev'); if (pv) pv.onclick = function () { go(state.idx - 1); };
@@ -169,7 +197,6 @@
   }
 
   function resultados() {
-    guardarFirebase(true);
     var s = score(), pct = Math.round(s / total * 100);
     var nivel = pct >= 80 ? 'Excelente' : pct >= 60 ? 'Bueno' : pct >= 40 ? 'Suficiente' : 'A reforzar';
     var html = '<div class="ecq-run"><div class="ecq-result">' +
@@ -181,7 +208,7 @@
       '</div></div>';
     mount.innerHTML = html;
     mount.querySelector('.ecq-back').onclick = grid;
-    mount.querySelector('.ecq-reset2').onclick = function () { if (confirm('¿Borrar tus respuestas y empezar de nuevo?')) { state = { resp: {}, idx: 0 }; save(); intro(); } };
+    mount.querySelector('.ecq-reset2').onclick = function () { if (confirm('¿Borrar tus respuestas y empezar de nuevo?')) { state = { resp: {}, h: {}, idx: 0 }; anuladas = []; save(); intro(); } };
     window.scrollTo(0, 0);
   }
 

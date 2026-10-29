@@ -123,7 +123,10 @@ assert(!/<article\b[^>]*class="upcoming-card"[^>]*data-guided-guide="24"/.test(p
 const currentCard23 = portal.match(/<article\b[^>]*id="miniOctubreCard"[^>]*>([\s\S]*?)<\/article>/);
 assert(currentCard23 && /Miniensayo N.º 23/.test(currentCard23[1]) && /href="mini-octubre-2026\/"/.test(currentCard23[1]), 'N.º 23 debe conservar su tarjeta y acceso al miniensayo.');
 assert(!/<article\b[^>]*class="upcoming-card"[^>]*data-guided-guide="23"/.test(portal), 'N.º 23 no debe duplicarse como futura.');
-for (let guide = 25; guide <= 31; guide += 1) {
+const currentCard25 = portal.match(/<article\b[^>]*id="cardGuia25"[^>]*>([\s\S]*?)<\/article>/);
+assert(currentCard25 && /href="guia25\.html"/.test(currentCard25[1]), 'G25 debe tener su tarjeta publicada y destino regular.');
+assert(!/<article\b[^>]*class="upcoming-card"[^>]*data-guided-guide="25"/.test(portal), 'G25 no debe duplicarse como futura.');
+for (let guide = 26; guide <= 31; guide += 1) {
   if (guide === 21) continue;
   assert(portal.includes(`Guía ${guide}</span>`), `Falta la tarjeta futura gris de la Guía ${guide}.`);
 }

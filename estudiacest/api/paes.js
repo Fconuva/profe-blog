@@ -8,6 +8,7 @@ const admin = require('firebase-admin');
 const { GUIDED_GUIDE_KEYS, GUIDED_GUIDE_FEEDBACK } = require('./_paes-guided-catalog');
 const G20 = require('./_paes-g20');
 const G21 = require('./_paes-g21');
+const G25 = require('./_paes-g25');
 const FOUNDATIONS = require('./_paes-foundations');
 const PREMIOS_PAES = require('./_premios-paes');
 const CARTAS = require('./_paes-cartas');
@@ -201,6 +202,7 @@ const G19_FEEDBACK = {
 
 const INTERACTIVE_GUIDE_FEEDBACK = {
     ...FOUNDATIONS.FEEDBACK,
+    '25': G25.feedback,
     '21': G21.feedback,
     '20': G20.feedback,
     '18': G18_FEEDBACK,
@@ -209,6 +211,7 @@ const INTERACTIVE_GUIDE_FEEDBACK = {
 
 const INTERACTIVE_GUIDE_KEYS = {
     ...FOUNDATIONS.KEYS,
+    '25': G25.key,
     '21': G21.key,
     '20': G20.key,
     '10': G10_KEY,

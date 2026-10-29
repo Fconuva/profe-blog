@@ -17,7 +17,7 @@
 
   // Los enlaces directos recuperan la misma cuenta desde el portal.
   var page = window.location.pathname.split('/').pop();
-  if (/^guia(?:[1-9]|1[0-9]|2[01])(?:-guiada)?\.html$/.test(page)) {
+  if (/^guia(?:[1-9]|1[0-9]|2[015])(?:-guiada)?\.html$/.test(page)) {
     var selected = null;
     try { selected = JSON.parse(sessionStorage.getItem('paes_student') || 'null'); } catch (_) {}
     if (!selected || !selected.rut) {

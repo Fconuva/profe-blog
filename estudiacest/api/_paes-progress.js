@@ -48,6 +48,12 @@ async function handle(req,res,ctx){
    return progress(r,catalog.questionsFor(guided).map(q=>q.id),{mini:true});
   })]);
  }
+ // Con nota en el libro (G11–G24), la guía ya no es deuda aunque el registro diga borrador o falte.
+ let notas={};try{notas=(await ctx.db.ref('plataforma_paes/libro_notas/'+rut+'/notas').once('value')).val()||{};}catch(_){}
+ for(const row of rows){
+  const [id,p]=row,nota=Number(String(notas[id]??'').replace(',','.'));
+  if(+id>=11&&+id<=24&&p.required&&['missing','draft','incomplete'].includes(p.state)&&nota>=1&&nota<=7)row[1]={...p,state:'graded',nota:nota.toFixed(1)};
+ }
  return res.status(200).json({success:true,guides:Object.fromEntries(rows)});
 }
 module.exports={handle,progress};

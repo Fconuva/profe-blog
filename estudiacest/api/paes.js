@@ -1052,22 +1052,60 @@ async function handleAdminResetGuia(req, res) {
     return res.status(200).json({ success: true });
 }
 
-async function handleAdminSaveStudent(req, res) {
+async function handleAdminSaveStudent(req, res, decoded) {
     const { rut, nombre, curso, rutFormato } = req.body;
     if (!rut || !nombre || !curso) {
         return res.status(400).json({ error: 'Campos requeridos: rut, nombre, curso' });
     }
 
     const rutLimpio = cleanRut(rut);
+    const student = { rut: rutLimpio, nombre: String(nombre).trim(), curso: String(curso).trim() };
+    // Caso (29-oct-2026): «Agregar estudiante» solo anotaba la nómina extra y el
+    // alumno no podía ingresar. Ahora deja también su cuenta y su perfil canónico.
+    const cuenta = await ensurePaesStudentAccount(student, decoded);
     await db.ref(`${BASE}/nomina_extra/${rutLimpio}`).set({
-        rut: rutLimpio,
+        ...student,
         rut_formato: rutFormato ? String(rutFormato).trim() : rutLimpio,
-        nombre: String(nombre).trim(),
-        curso: String(curso).trim(),
         updatedAt: Date.now()
     });
 
-    return res.status(200).json({ success: true });
+    return res.status(200).json({ success: true, cuenta });
+}
+
+// Misma cuenta que crea el admin de estudiantes: correo RUT@est, clave inicial
+// con los 6 primeros dígitos y perfil con el curso en formato canónico (3A-HC).
+async function ensurePaesStudentAccount(student, decoded) {
+    const curso = student.curso.replace('°', '').replace(/\s+/g, '-').toUpperCase();
+    if (!/^[34][A-E]-(HC|TP)$/.test(curso)) throw new Error('Curso PAES no válido');
+    const email = student.rut.toLowerCase() + '@est.estudiacest.com';
+    let userRecord;
+    let recuperada = false;
+    try {
+        userRecord = await auth.createUser({
+            email,
+            password: student.rut.replace(/[^0-9]/g, '').substring(0, 6).padEnd(6, '0'),
+            displayName: student.nombre
+        });
+    } catch (error) {
+        if (error.code !== 'auth/email-already-exists') throw error;
+        userRecord = await auth.getUserByEmail(email);
+        recuperada = true;
+        await auth.updateUser(userRecord.uid, { displayName: student.nombre }).catch(() => null);
+    }
+    const ref = db.ref(`${ADMIN_BASE}/estudiantes/${userRecord.uid}`);
+    const existing = (await ref.once('value')).val() || {};
+    await ref.set({
+        ...existing,
+        nombre: student.nombre,
+        rut: student.rut,
+        curso,
+        programa: 'paes',
+        perfil_completo: existing.perfil_completo === true,
+        password_changed: existing.password_changed === true,
+        createdAt: existing.createdAt || Date.now(),
+        createdBy: existing.createdBy || decoded.uid
+    });
+    return { recuperada, perfilPrevio: Object.keys(existing).length > 0 };
 }
 
 async function handleAdminDeleteStudent(req, res) {
@@ -1207,7 +1245,7 @@ module.exports = async (req, res) => {
             case 'admin-reset-result': return await handleAdminResetResult(req, res);
             case 'admin-grade-guia': return await handleAdminGradeGuia(req, res, decoded);
             case 'admin-reset-guia': return await handleAdminResetGuia(req, res);
-            case 'admin-save-student': return await handleAdminSaveStudent(req, res);
+            case 'admin-save-student': return await handleAdminSaveStudent(req, res, decoded);
             case 'admin-delete-student': return await handleAdminDeleteStudent(req, res);
             case 'admin-set-guia14-release': return await handleAdminSetGuiaRelease(req, res, '14');
             case 'admin-set-guia-release': return await handleAdminSetGuiaRelease(req, res);

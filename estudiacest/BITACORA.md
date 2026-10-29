@@ -1,5 +1,14 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-29, PAES: «Agregar estudiante» del admin ahora deja al alumno ingresar
+
+- Caso: un alumno agregado desde el admin PAES aparecía como «Agregado», pero no podía entrar al portal. El admin solo escribía `plataforma_paes/nomina_extra`, sin cuenta en Auth ni perfil canónico, y el portal y la sesión solo leían la nómina estática `NOMINAS_PAES`.
+- `api/paes.js` (`admin-save-student`): además de la nómina extra, crea o recupera la cuenta `{rut}@est.estudiacest.com` (clave inicial: 6 primeros dígitos del RUT) y deja el perfil `plataforma_estudiantes/estudiantes/{uid}` con el curso canónico (`3A-HC`) y `programa: 'paes'`. Si la cuenta ya existía, no toca la clave y conserva `password_changed`. Si el curso no es PAES válido, responde error y no escribe nada.
+- `paes/js/student-session.js`: nuevo `ready()`, que trae una vez `get-nomina-extra` y lo suma a `NOMINAS_PAES` con el mismo criterio del admin. `signIn` y `sessionFor` lo esperan, y `paes/index.html` también antes de buscar el RUT.
+- Admin: al guardar un alumno nuevo avisa con qué clave entra.
+- Guardas: `audit-admin-student-creation` exige la cuenta y la lectura de la nómina extra; `audit-paes-mi-espacio-page` prueba que un alumno solo de la nómina extra recupera su sesión sin volver a pedir credenciales. Prueba simulada del alta (nueva, recuperada, curso inválido) y build en verde.
+- Alumno del caso: 3.º A HC. Queda habilitado al volver a guardarlo en el admin publicado.
+
 ## 2026-10-29, PAES: G19 de 3.º A HC revisada, notas actualizadas e importación G22–G24 al libro
 
 - Revisión de la G19 en 3.º A HC (41 en nómina): llegó la entrega de 37 de 41.

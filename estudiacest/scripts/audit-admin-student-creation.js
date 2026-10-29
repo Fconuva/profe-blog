@@ -9,6 +9,9 @@ const login = read('lecturas/index.html');
 const profile = read('lecturas/perfil.html');
 const legacyDashboard = read('lecturas/dashboard.html');
 const vercel = JSON.parse(read('vercel.json'));
+const paesApi = read('api/paes.js');
+const paesSession = read('paes/js/student-session.js');
+const paesPortal = read('paes/index.html');
 const failures = [];
 const expect = (condition, message) => { if (!condition) failures.push(message); };
 
@@ -20,6 +23,13 @@ expect(admin.includes("'Authorization':'Bearer '+token"), 'Las altas no envían 
 expect(api.includes("userRecord = await auth.getUserByEmail(email)"), 'La API no recupera una cuenta cuyo correo ya existe.');
 expect(api.includes('const profile = await upsertStudentProfile(userRecord.uid, student, decoded)'), 'La API no reconstruye o actualiza el perfil canónico.');
 expect(api.includes('programa: programFromCourse(student.curso)'), 'La API no conserva el programa académico al crear o recuperar el perfil.');
+
+// Caso 29-oct-2026: el alta del admin PAES no creaba cuenta y el portal no leía la nómina extra.
+expect(paesApi.includes('const cuenta = await ensurePaesStudentAccount(student, decoded)'), 'El alta del admin PAES no crea ni recupera la cuenta del estudiante.');
+expect(paesApi.includes("case 'admin-save-student': return await handleAdminSaveStudent(req, res, decoded)"), 'El alta del admin PAES no recibe al docente que la autoriza.');
+expect(paesSession.includes("fetch('/api/paes?action=get-nomina-extra')"), 'La sesión PAES no suma los estudiantes agregados desde el admin.');
+expect(paesSession.includes('await ready();') && paesSession.includes('Promise.all([client(), ready()])'), 'La sesión PAES consulta la nómina antes de sumar los agregados.');
+expect(paesPortal.includes('await PaesStudentSession.ready();'), 'El ingreso del portal PAES no espera a los estudiantes agregados.');
 
 expect(admin.includes("firebase.initializeApp(FIREBASE_CONFIG,'estudiacest-admin')"), 'El panel administrativo no tiene un contenedor Firebase exclusivo.');
 expect(admin.includes('const auth=adminFirebaseApp.auth()'), 'El panel no usa la sesión administrativa aislada.');

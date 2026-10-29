@@ -92,9 +92,9 @@ assert.equal(guideSession.destination, '/paes/?logout=1');
 assert.equal(guideSession.storage.has('paes_student'), false);
 assert.match(portal, /entryParams\.get\('logout'\) === '1'/);
 
-async function testSession({ user = null, profile, selected = null, fallback = false, denied = false } = {}) {
+async function testSession({ user = null, profile, selected = null, fallback = false, denied = false, extra = false } = {}) {
   const saved = new Map(selected ? [['paes_student', JSON.stringify(selected)]] : []);
-  const calls = { custom:0, password:0, signOut:0, requests:0 };
+  const calls = { custom:0, password:0, signOut:0, requests:0, roster:0 };
   const auth = {
     currentUser:user,
     async setPersistence() {},
@@ -108,9 +108,12 @@ async function testSession({ user = null, profile, selected = null, fallback = f
   const sdk = { apps:[], initializeApp:() => app, auth:{ Auth:{ Persistence:{ LOCAL:'local' } } } };
   const student = { rut:'111111111', curso:'3°A HC', nombre:'Cuenta de prueba' };
   const sandbox = {
-    NOMINAS_PAES:[student], firebase:sdk,
+    NOMINAS_PAES:extra ? [] : [student], firebase:sdk,
     sessionStorage:{ getItem:key => saved.get(key) || null, setItem:(key, value) => saved.set(key, value), removeItem:key => saved.delete(key) },
-    async fetch() { calls.requests++; return { ok:!denied, status:denied ? 401 : 200,
+    async fetch(url) {
+      // La nómina extra (alumnos agregados desde el admin) no es un pedido de credenciales.
+      if (String(url).includes('get-nomina-extra')) { calls.roster++; return { ok:true, json:async () => ({ nomina_extra:extra ? [student] : [] }) }; }
+      calls.requests++; return { ok:!denied, status:denied ? 401 : 200,
       json:async () => fallback ? { fallback:true } : { token:'fixture-token' } }; }
   };
   sandbox.window = sandbox;
@@ -146,6 +149,9 @@ async function testFlow() {
   const wrong = await testSession({ profile, denied:true });
   await assert.rejects(wrong.session.signIn('111111111', 'fixture-password'));
   assert.equal(wrong.calls.password + wrong.calls.custom, 0);
+  const added = await testSession({ user:{ uid:'fixture-user' }, profile, extra:true });
+  assert.ok(await added.session.restore(), 'Un alumno agregado desde el admin debe abrir Mi espacio.');
+  assert.equal(added.calls.roster, 1, 'La nómina extra se consulta una sola vez.');
   const crossCourse = await testSession({ user:{ uid:'fixture-user' }, profile:{ ...profile, curso:'4B-HC' } });
   assert.equal(await crossCourse.session.restore(), null, 'No aceptar un perfil de otro curso.');
   console.log('PAES Mi espacio: ingreso único, sesión recuperada, identidad, clave propia, cierre y recursos OK.');

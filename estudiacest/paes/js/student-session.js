@@ -15,7 +15,25 @@
   const cleanRut = value => String(value || '').replace(/[^0-9kK]/g, '').toUpperCase();
   const cleanCourse = value => String(value || '').replace(/[^0-9A-Z]/gi, '').toUpperCase();
   let clientPromise;
+  let extraPromise;
 
+  // Los alumnos que el docente agrega desde el admin viven en la nómina extra;
+  // se suman a NOMINAS_PAES con el mismo criterio del admin (reemplaza o agrega).
+  function ready() {
+    if (!extraPromise) extraPromise = fetch('/api/paes?action=get-nomina-extra')
+      .then(response => response.ok ? response.json() : {})
+      .then(data => {
+        if (typeof NOMINAS_PAES === 'undefined') return;
+        (data.nomina_extra || []).forEach(extra => {
+          if (!extra || !extra.rut) return;
+          const record = { nombre: extra.nombre, rut: cleanRut(extra.rut), rut_formato: extra.rut_formato || extra.rut, curso: extra.curso };
+          const index = NOMINAS_PAES.findIndex(student => cleanRut(student.rut) === record.rut);
+          if (index >= 0) NOMINAS_PAES[index] = record; else NOMINAS_PAES.push(record);
+        });
+      })
+      .catch(() => null);
+    return extraPromise;
+  }
   function rosterEntry(rut) {
     const roster = typeof NOMINAS_PAES === 'undefined' ? [] : NOMINAS_PAES;
     return roster.find(student => cleanRut(student.rut) === cleanRut(rut)) || null;
@@ -42,7 +60,7 @@
   }
   async function sessionFor(user) {
     if (!user) return null;
-    const { db } = await client();
+    const [{ db }] = await Promise.all([client(), ready()]);
     const snapshot = await db.ref(BASE + '/estudiantes/' + user.uid).once('value');
     const profile = snapshot.val();
     const student = profile && rosterEntry(profile.rut);
@@ -61,6 +79,7 @@
   async function signIn(rut, password) {
     const { auth } = await client();
     const normalizedRut = cleanRut(rut);
+    await ready();
     if (!hasSpace(rosterEntry(normalizedRut))) throw new Error('Esta cuenta no tiene Mi espacio habilitado.');
     let credential;
     let response;
@@ -100,5 +119,5 @@
     if (error && String(error.code || '').startsWith('auth/')) return 'RUT o contraseña incorrectos.';
     return error && error.message || 'No se pudo recuperar tu sesión. Inténtalo nuevamente.';
   }
-  global.PaesStudentSession = { client, restore, sessionFor, remember, signIn, signOut, hasSpace, rosterEntry, errorMessage };
+  global.PaesStudentSession = { client, ready, restore, sessionFor, remember, signIn, signOut, hasSpace, rosterEntry, errorMessage };
 })(window);

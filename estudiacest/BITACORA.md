@@ -16,7 +16,10 @@
 - Portal (commit b4813277): una guía de G11 a G24 con nota numérica en el libro pasa de borrador, faltante o incompleta a «✓ Calificada» y cuenta como hecha. La G25 y las ausencias «A» quedan igual.
   - Simulado con datos reales: G19 de 3.º A HC queda con 33 entregadas y 8 calificadas, 0 pendientes.
   - check:api, 8 auditorías PAES y build en verde.
-- Pendiente: `deploy:prod:safe` del commit b4813277, que lo bloqueó el permiso de despliegue; lo autoriza Francisco. Después, revisar en producción la tarjeta G19 de una cuenta de 3.º A HC (Ctrl+F5).
+- «Déjaselas a todas revisadas y con notas a todos» (Francisco): las 37 entregas de G19 en 3.º A HC ya tenían `grade.nota` 7,0, así que no se escribió nada en `guia_respuestas`.
+  - Admin (commit 3c255e1c): un borrador calificado muestra «✓ Revisada» con su nota, y quien tiene nota en el libro sin registro digital aparece como «✓ Revisada · Sin entrega digital» (solo lectura, no crea entrega).
+  - Simulado con datos reales: G19 · 3°A HC queda en 41/41 con 7,0, 0 «Sin calificar» y 0 «En curso». check:api, auditorías y build en verde.
+- Pendiente: `deploy:prod:safe` de b4813277 y 3c255e1c, bloqueado dos veces por el permiso de despliegue; lo autoriza Francisco. Después, revisar en producción la tarjeta G19 de una cuenta de 3.º A HC y el panel del admin (Ctrl+F5).
 
 ## 2026-10-29, PAES: libro de notas, admin y tarjetas uniformes hasta la Guía 25
 

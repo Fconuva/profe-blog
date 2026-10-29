@@ -1,5 +1,23 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-29, PAES: G19 de 3.º A HC revisada, notas actualizadas e importación G22–G24 al libro
+
+- Revisión de la G19 en 3.º A HC (41 en nómina): llegó la entrega de 37 de 41.
+  - 33 aparecen como entregadas y 4 tienen trabajo guardado sin entrega final (corrección sin reenviar, 18/18 sin enviar o entrega incompleta). Esos 37 ya tenían 7,0 en el libro.
+  - 4 no tienen ningún registro. Por decisión de Francisco («un error de nosotros no los castiga a ellos») quedan con 7,0 en la G19.
+  - No hay registros huérfanos ni descuadres de RUT o curso. El reenvío sigue cerrado desde el 9-oct.
+- Notas actualizadas con el modelo de laboriosidad 1/3/5/7 del 15-oct: se toma la mejor evidencia entre el intento, los intentos anteriores y el borrador. Las G22, G23 y G24 se calcularon desde sus almacenes (`mini_invierno_intentos`, `mini_octubre_intentos` y `guia24_intentos`, con uid→RUT por perfil).
+  - Simulación determinista: 337 notas en 139 libros, 0 libros nuevos.
+  - Altas en G22 (128), G23 (71) y G24 (113). Además, altas y alzas sueltas en G14, G15 y G18 a G21, y los 4 de la G19 de 3.º A HC.
+  - Se omitieron 14 notas 1,0 nuevas (quedan pendientes, no se escriben), 29 de G14 en 4.º A HC y 6 RUT fuera de la nómina HC. La G25 no se tocó.
+- Escritura condicional por RUT (ETag con `if-match` y hash del libro igual al simulado): 139/139 escritos, 0 conflictos y respaldo privado previo.
+  - Verificación releyendo todo `libro_notas`: 337/337 en su lugar, 0 notas bajadas, 0 borradas y 0 cambios fuera del plan.
+  - Ojo: Firebase devuelve `notas` como arreglo cuando las claves son densas; al comparar hay que ignorar los huecos `null`.
+- Portal (commit b4813277): una guía de G11 a G24 con nota numérica en el libro pasa de borrador, faltante o incompleta a «✓ Calificada» y cuenta como hecha. La G25 y las ausencias «A» quedan igual.
+  - Simulado con datos reales: G19 de 3.º A HC queda con 33 entregadas y 8 calificadas, 0 pendientes.
+  - check:api, 8 auditorías PAES y build en verde.
+- Pendiente: `deploy:prod:safe` del commit b4813277, que lo bloqueó el permiso de despliegue; lo autoriza Francisco. Después, revisar en producción la tarjeta G19 de una cuenta de 3.º A HC (Ctrl+F5).
+
 ## 2026-10-29, PAES: libro de notas, admin y tarjetas uniformes hasta la Guía 25
 
 - Libro de notas: `SECOND_SEMESTER_GUIDES` y «Mis notas» cubren las guías 11 a 25. La G23 se aplicó solo en 3.º HC; en 4.º A y 4.º B HC se omite («No aplica») salvo que haya nota registrada. El progreso por guía (`_paes-progress.js`) suma la G24 (`guia24_intentos`) y la G25.

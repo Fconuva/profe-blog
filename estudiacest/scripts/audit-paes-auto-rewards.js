@@ -7,7 +7,60 @@ const salas=require('../api/_salas');
 const catalog=require('../estudiantes/js/catalogo-casa');
 const {createHouseFixture}=require('./audit-paes-house-admin');
 const root=path.join(__dirname,'..');
+// Muebles regalables que ya recibieron completos 3A, 3B, 4A y 4B HC el 29-oct-2026.
+// No se edita: un set de tarea nuevo no puede repetir ninguno.
+const ENTREGADOS_29OCT=new Set([
+  "terracePoolSmall","terracePoolMedium","terracePoolLarge","terraceWaterfall","terraceGrass","terracePalm",
+  "terraceOak","terracePine","terraceRockingChair","terraceLounger","terraceTable","terraceParasol","wallStone",
+  "wallWood","wallBrick","wallGarden","wallBlueTile","wallTerraceFence","gymBench","gymDumbbells",
+  "gymTreadmill","gymBike","christmasTree","halloweenPumpkin","halloweenCauldron","halloweenGhost",
+  "halloweenScarecrow","halloweenCandy","halloweenLantern","rgbPartySpeaker","gamerDesk","whiteGamerTower",
+  "gamerChair","loungeSofaThree","aquarium","statueCR7","statueMessi","petDachshund","petPoodle","petTerrier",
+  "petCatOrange","petCatBlack","electricGuitarSet","drumKit","musicKeyboard","uprightPiano","electricBass",
+  "djStation","rugGryffindor","rugSlytherin","rugRavenclaw","rugHufflepuff","rugRangers","cardboardBoxClosed",
+  "books","bear","cabinetBed","cabinetBedDrawer","cabinetBedDrawerTable","rugRectangle","rugRectangle__naranja",
+  "rugRectangle__rojo","bookcaseOpen","bookcaseOpenLow","chair","cardboardBoxOpen","coatRack","ceilingFan",
+  "sideTable","sideTableDrawers","rugRectangle__amarillo","rugRectangle__celeste","rugRectangle__verde",
+  "chairCushion","chairDesk","chairRounded","lampRoundTable","lampRoundFloor","coatRackStanding","bench",
+  "benchCushionLow","benchCushion","rugRectangle__azul","rugRectangle__morado","rugRectangle__rosa",
+  "lampSquareTable","lampSquareFloor","lampSquareCeiling","computerScreen","computerMouse","computerKeyboard",
+  "cabinetTelevision","cabinetTelevisionDoors","loungeChair","rugRound","rugRound__naranja","rugRound__rojo",
+  "plantSmall3","pillow","pillow__amarillo","pillow__azul","pillow__celeste","pillowLong",
+  "pillowLong__amarillo","pillowLong__azul","pillowLong__celeste","pillowLong__morado","pillowLong__naranja",
+  "pillowLong__rojo","pillowLong__rosa","pillowLong__verde","pillow__morado","pillow__naranja","pillow__rojo",
+  "pillow__rosa","pillow__verde","trashcan","speaker","speakerSmall","playStation5","cocaColaCooler",
+  "monsterEnergyCooler","pottedPlant","plantSmall2","radio","plantSmall1","kitchenBar","kitchenBarEnd","dryer",
+  "desk","deskCorner","laptop","loungeChairRelax","loungeSofa","loungeSofaCorner","rugSquare",
+  "rugSquare__amarillo","rugSquare__azul","rugSquare__celeste","rugSquare__morado","rugSquare__naranja",
+  "rugSquare__rojo","rugSquare__rosa","rugSquare__verde","rugRounded","rugRounded__amarillo","rugRounded__azul",
+  "rugRounded__celeste","rugRounded__morado","rugRounded__naranja","rugRounded__rojo","rugRounded__rosa",
+  "rugRounded__verde","rugRound__amarillo","rugRound__azul","rugRound__celeste","rugRound__morado",
+  "rugRound__rosa","rugRound__verde","kitchenBlender","kitchenCabinet","kitchenCabinetCornerInner","table",
+  "loungeSofaOttoman","loungeSofaLong","bathroomMirror","bathroomSink","bathroomCabinet","kitchenCabinetDrawer",
+  "kitchenCabinetDrawer 1","kitchenCabinetCornerRound","tableCloth","tableCrossCloth","tableCoffee",
+  "tableCoffeeSquare","tableCross","tableCoffeeGlass","tableCoffeeGlassSquare","tableGlass","tableRound",
+  "televisionVintage","televisionAntenna","televisionModern","shower","bathtub","toilet",
+  "kitchenCabinetUpperDouble","kitchenCabinetUpperCorner","kitchenCabinetUpper","kitchenCabinetUpperLow",
+  "kitchenCoffeeMachine","kitchenStove","kitchenStoveElectric","kitchenFridgeSmall","washer","kitchenSink",
+  "kitchenMicrowave","stoolBar","stoolBarSquare","kitchenFridge","kitchenFridgeBuiltIn","washerDryerStacked"
+]);
+function auditarSetsPorTarea() {
+  const sets=rewards.SETS_POR_TAREA,usados=new Set(),ids=new Set(catalog.map(m=>m.id));
+  for(const id of ENTREGADOS_29OCT)assert.ok(ids.has(id),'La base del 29-oct no se borra del catálogo: '+id);
+  for(const guia of Object.keys(rewards.GUIAS_RECIENTES).filter(g=>Number(g)>24))
+    assert.ok(Array.isArray(sets[guia])&&sets[guia].length,'La guía '+guia+' necesita su set nuevo de muebles en SETS_POR_TAREA.');
+  for(const [guia,muebles] of Object.entries(sets)) {
+    assert.ok(Number(guia)>24&&Array.isArray(muebles)&&muebles.length>0&&muebles.length<=12,'Set de la guía '+guia+': entre uno y doce muebles.');
+    for(const id of muebles) {
+      const mueble=catalog.find(m=>m.id===id);
+      assert.ok(mueble&&Number(mueble.xp||0)>0,'El set de la guía '+guia+' usa un mueble regalable del catálogo: '+id);
+      assert.ok(!ENTREGADOS_29OCT.has(id),'El set de la guía '+guia+' repite un mueble ya entregado el 29-oct: '+id);
+      assert.ok(!usados.has(id),'Dos tareas comparten el mueble '+id);usados.add(id);
+    }
+  }
+}
 async function test() {
+  auditarSetsPorTarea();
   assert.deepEqual(Object.keys(rewards.PREMIOS),['15','16','17','18','19','20','21']);
   assert.ok(rewards.fichas().every(item=>catalog.some(m=>m.id===item.mueble&&m.xp>0&&m.xp<9999&&m.motivo!=='Premio del profesor')));
   const fixture=createHouseFixture(),{db,state}=fixture;
@@ -70,6 +123,6 @@ async function test() {
   const api=fs.readFileSync(path.join(root,'api/paes.js'),'utf8');
   assert.ok(api.includes('if (!draft && PREMIOS_PAES.completada(guideId,saved))'));
   assert.ok(api.includes('await PREMIOS_PAES.alEntregar(db,rutLimpio,guideId)'));
-  console.log('Premios PAES G15–21: kit básico, borradores excluidos, envío final, recuperación, simulación, permisos, relectura, reintento, duplicados y conservación de notas/premios manuales: OK.');
+  console.log('Premios PAES G15–21: kit básico, set nuevo por tarea desde el 29-oct, borradores excluidos, envío final, recuperación, simulación, permisos, relectura, reintento, duplicados y conservación de notas/premios manuales: OK.');
 }
 test().catch(error=>{console.error(error);process.exit(1);});

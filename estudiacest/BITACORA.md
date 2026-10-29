@@ -1,5 +1,14 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-29, PAES: todos los muebles a los cuatro cursos HC y set nuevo por tarea
+
+- Pedido de Francisco: entregar todos los muebles disponibles a 3.º A, 3.º B, 4.º A y 4.º B HC; desde ahora cada tarea trae un set nuevo.
+- Entrega por `salas-regalos-admin-paes-lote` desde el admin publicado, en lotes de 12: cada lote se simula, se confirma con los destinatarios de esa simulación y se relee. Catálogo regalable: 202 piezas (xp > 0).
+- Simulación previa: 154 estudiantes (3A 42, 3B 42, 4A 34, 4B 36) y 30.180 piezas faltantes. Las corridas que se cortaron (error de red, pestaña cerrada) se retomaron simulando de nuevo: solo se escribe lo que falta y los regalos se guardan por id, sin duplicados.
+- Relectura final: los cuatro cursos con las 202 piezas por estudiante y 0 faltantes.
+- Regla: `REGLAS.md`, sección «Mi espacio PAES HC: cada tarea trae un set nuevo». Cada guía nueva (>24) declara en `SETS_POR_TAREA` de `api/_premios-paes.js` de 1 a 12 piezas que nadie recibió el 29-oct y que no comparte con otra tarea.
+- Guarda: `scripts/audit-paes-auto-rewards.js` (en el `prebuild`) falla si una guía nueva no tiene set, si repite piezas de la entrega del 29-oct o de otra tarea, o si usa piezas fuera del catálogo. No cambia el comportamiento publicado; corre en el próximo build.
+
 ## 2026-10-29, PAES: «Agregar estudiante» del admin ahora deja al alumno ingresar
 
 - Caso: un alumno agregado desde el admin PAES aparecía como «Agregado», pero no podía entrar al portal. El admin solo escribía `plataforma_paes/nomina_extra`, sin cuenta en Auth ni perfil canónico, y el portal y la sesión solo leían la nómina estática `NOMINAS_PAES`.

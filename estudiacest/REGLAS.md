@@ -678,3 +678,15 @@ La interfaz consulta cada minuto mientras la pestaña está visible. La API usa
 una caché interna breve y privada, sin escribir ni recalificar los registros.
 Las próximas guías se agregan al catálogo de ranking junto a su fuente de
 corrección de servidor, sin duplicar ni publicar claves.
+
+### Mi espacio PAES HC: cada tarea trae un set nuevo · 29-oct-2026
+
+Por decisión de Francisco, el 29-oct-2026 los cursos 3A-HC, 3B-HC, 4A-HC y
+4B-HC recibieron completos los 202 muebles regalables del catálogo. Desde ahora
+cada guía o tarea nueva de esos cursos se publica con su propio set de muebles
+nuevos: piezas agregadas al catálogo de Mi casa para esa tarea, que nadie haya
+recibido antes y que no se compartan con otra tarea. El set se declara en
+`SETS_POR_TAREA` de `api/_premios-paes.js` (entre uno y doce muebles) y
+`scripts/audit-paes-auto-rewards.js` impide publicar una guía nueva sin su set o
+con muebles de la base del 29-oct. La entrega sigue el mismo camino: simular,
+confirmar y releer, sin duplicar ni reemplazar lo que el estudiante ya tiene.

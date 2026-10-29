@@ -5,6 +5,9 @@ const catalogo = require('../estudiantes/js/catalogo-casa.js');
 const BASE = 'plataforma_estudiantes';
 const CURSOS = ['3A-HC','3B-HC','4A-HC','4B-HC'];
 const PREMIOS = Object.freeze({15:'chairDesk',16:'desk',17:'computerScreen',18:'loungeSofa',19:'lampSquareFloor',20:'pottedPlant',21:'televisionModern'});
+// Desde el 29-oct-2026 cada guía o tarea nueva trae su propio set de muebles, nunca entregados antes.
+// Se declara aquí por número de guía; scripts/audit-paes-auto-rewards.js lo exige y lo compara con la base.
+const SETS_POR_TAREA = Object.freeze({});
 const GUIAS_RECIENTES = Object.freeze({
   22:{base:'mini_invierno_intentos',session:require('./_paes-mini-invierno-catalog').SESSION},
   23:{base:'mini_octubre_intentos',session:require('./_paes-mini-octubre-catalog').SESSION},
@@ -99,4 +102,4 @@ async function planCurso(db, curso) {
   const firma=crypto.createHash('sha256').update(JSON.stringify(destinatarios.map(row=>[row.uid,row.premios.map(item=>[item.guia,item.mueble,item.yaTiene])]).sort((a,b)=>a[0].localeCompare(b[0])))).digest('hex');
   return{curso,totalCurso:targets.length,destinatarios,firma,pendientes:destinatarios.reduce((total,row)=>total+row.premios.filter(item=>!item.yaTiene).length,0),asignaciones:fichas()};
 }
-module.exports={CURSOS,PREMIOS,GUIAS_RECIENTES,entregasRecientes,completada,fichas,requisitos,sincronizarUid,alEntregar,planCurso,entregar};
+module.exports={CURSOS,PREMIOS,SETS_POR_TAREA,GUIAS_RECIENTES,entregasRecientes,completada,fichas,requisitos,sincronizarUid,alEntregar,planCurso,entregar};

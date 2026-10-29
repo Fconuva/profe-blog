@@ -1,5 +1,14 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-29 (noche), PAES: nota automática al entregar y relleno de la G25
+
+- Pedido de Francisco: «al completar se actualice a ellos y en mi libro». Antes la nota solo entraba por traspaso manual o calificación del docente.
+- `api/_paes-nota-auto.js`, llamado desde `handleSubmitGuia` tras un envío real (no borrador) de una guía con clave en el servidor: escribe en `libro_notas/{rut}/notas/{guía}` con el modelo de laboriosidad del 15-oct, por transacción. Mismas guardas del traspaso: nunca baja, no pisa «A», no escribe un 1,0 nuevo, omite la G14 de 4.º A HC, solo libros HC que ya existen, nunca RUT de prueba. Si falla, la entrega se guarda igual (se registra en el log). La respuesta trae `notaAuto`.
+- Cubre G10–G21, G25 y G26. No cubre la G14 (`submit-guia14`) ni las minis G22–G24 (identidad por uid, ya cerradas e importadas).
+- Auditoría nueva `scripts/audit-paes-nota-auto.js` en el build. Commit 20c29db4; despliegue dpl_7yBzcxXRVWS2iW4XCZR3QX1wyrzA (READY), API en producción responde.
+- Relleno G25 autorizado por Francisco: lectura fresca, simulación y ensayo; 45 notas 7,0 (3.º A HC 31, 4.º B HC 13, 3.º B HC 1) con ETag y respaldo previo, 0 conflictos. Relectura: 45/45, 0 bajas, 0 borradas, 0 cambios fuera del plan. Omitidas: 3 borradores, 1 ya con 7,0, 1 fuera de la nómina HC.
+- Despliegue anterior del aviso a 4.º HC: dpl_VGohg7268adZCJT8HsKYVJr1X2Ku, verificado en producción.
+
 ## 2026-10-29 (tarde), PAES: notas hasta la G23, aviso de cierre a 4.º A y B HC y calendario de fin de año
 
 - Pedido de Francisco: revisar nuevas entregas y respuestas en 3.º A, 3.º B, 4.º A y 4.º B HC, actualizar el libro hasta la G23 y avisar a 4.º A y B HC que la Guía 26 es la última.

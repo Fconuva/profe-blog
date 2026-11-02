@@ -1,5 +1,13 @@
 # Bitácora de Estudia CEST
 
+## 2026-11-02, NM4: promedios del trabajo en clases pasados a Lirmi (4.º A, B, C y E TP)
+
+- Pedido de Francisco: pasar a Lirmi las notas de `/nm4/trabajo-en-clases/`. Promedio tal como está aunque falten tareas; columna N4 ya existente del Segundo Semestre; 4.º D TP queda pendiente por orden suya.
+- Lectura por la API de la planilla con la sesión docente (los `FIREBASE_*` de `.env.local` siguen vacíos). Cruce por nombre contra la nómina de Lirmi; dos alumnos con primer apellido distinto en Lirmi se emparejaron por número de lista y segundo apellido.
+- Antes de escribir se comparó N4 con N1–N3 para descartar duplicado. Plan: 4.º A 12 celdas (9 vacías y 3 que se reemplazan, alumnos que completaron las tareas), 4.º B 8, 4.º C 45, 4.º E 38. Las que ya coincidían no se tocaron; los alumnos sin nota quedan en blanco.
+- Carga en Lirmi con la sesión que abrió Francisco. Relectura tras recargar: 103/103 del plan confirmadas, 0 celdas de otras columnas alteradas, 0 cambios fuera del plan. N4 llena: 4.º A 45/45, 4.º B 42/44, 4.º C 45/45, 4.º E 38/39.
+- Pendiente: 4.º D TP (22 de 29 sin nota en la planilla).
+
 ## 2026-10-29 (noche), PAES: nota automática al entregar y relleno de la G25
 
 - Pedido de Francisco: «al completar se actualice a ellos y en mi libro». Antes la nota solo entraba por traspaso manual o calificación del docente.

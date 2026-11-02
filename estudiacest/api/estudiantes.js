@@ -1,6 +1,6 @@
 // api/estudiantes.js
 // Unified Vercel Serverless Function for student management
-// Routes: ?action=create | ?action=reset-password | ?action=bulk-create
+// Routes: ?action=create | ?action=reset-password | ?action=bulk-reset-password | ?action=bulk-create
 
 const admin = require('firebase-admin');
 const {
@@ -837,6 +837,14 @@ async function handleCreate(req, res, decoded) {
     return res.status(200).json({ success: true, ...result });
 }
 
+async function resetStudentPassword(student, studentUid) {
+    const newPassword = defaultPassword(student.rut);
+    await auth.updateUser(studentUid, { password: newPassword });
+    // perfil_completo en false: al entrar con la clave por defecto, el panel lo
+    // lleva a perfil.html y tiene que elegir una propia otra vez.
+    await db.ref(`${BASE}/estudiantes/${studentUid}`).update({ password_changed: false, password_reset_pending: false, perfil_completo: false });
+}
+
 async function handleResetPassword(req, res) {
     const { studentUid } = req.body;
     if (!studentUid) return res.status(400).json({ error: 'studentUid requerido' });
@@ -845,13 +853,35 @@ async function handleResetPassword(req, res) {
     const student = snap.val();
     if (!student) return res.status(404).json({ error: 'Estudiante no encontrado' });
 
-    const newPassword = defaultPassword(student.rut);
-    await auth.updateUser(studentUid, { password: newPassword });
-    // perfil_completo en false: al entrar con la clave por defecto, el panel lo
-    // lleva a perfil.html y tiene que elegir una propia otra vez.
-    await db.ref(`${BASE}/estudiantes/${studentUid}`).update({ password_changed: false, password_reset_pending: false, perfil_completo: false });
-
+    await resetStudentPassword(student, studentUid);
     return res.status(200).json({ success: true });
+}
+
+// Restablecimiento por curso (2-nov-2026): el panel manda lotes de UID de un
+// solo curso. Se resuelve por UID y se exige que el perfil sea de ese curso,
+// así un filtro equivocado o un UID ajeno no toca a otro curso.
+async function handleBulkResetPassword(req, res) {
+    const { studentUids, curso } = req.body;
+    if (!curso || typeof curso !== 'string') return res.status(400).json({ error: 'curso requerido' });
+    if (!Array.isArray(studentUids) || studentUids.length === 0) return res.status(400).json({ error: 'Lista de estudiantes requerida' });
+    const uids = [...new Set(studentUids.map(String))];
+    if (uids.length > 50) return res.status(400).json({ error: 'Máximo 50 estudiantes por lote' });
+
+    const reset = [];
+    const errors = [];
+    for (const uid of uids) {
+        try {
+            const student = (await db.ref(`${BASE}/estudiantes/${uid}`).once('value')).val();
+            if (!student) { errors.push({ uid, error: 'Estudiante no encontrado' }); continue; }
+            if (student.curso !== curso) { errors.push({ uid, nombre: student.nombre, error: 'No pertenece a ' + curso }); continue; }
+            if (cleanRut(student.rut).replace(/[^0-9]/g, '').length < 7) { errors.push({ uid, nombre: student.nombre, error: 'RUT incompleto' }); continue; }
+            await resetStudentPassword(student, uid);
+            reset.push(uid);
+        } catch (e) {
+            errors.push({ uid, error: e.message });
+        }
+    }
+    return res.status(200).json({ success: true, total: uids.length, reset, errors });
 }
 
 async function handleChangeRut(req, res, decoded) {
@@ -1010,10 +1040,11 @@ module.exports = async (req, res) => {
             case 'admin-session-token': return await handleAdminSessionToken(req, res, decoded);
             case 'create': return await handleCreate(req, res, decoded);
             case 'reset-password': return await handleResetPassword(req, res);
+            case 'bulk-reset-password': return await handleBulkResetPassword(req, res);
             case 'bulk-create': return await handleBulkCreate(req, res, decoded);
             case 'login-token': return await handleLoginToken(req, res);
             case 'change-rut': return await handleChangeRut(req, res, decoded);
-            default: return res.status(400).json({ error: 'Acción no válida. Usa: admin-login, admin-session-token, create, reset-password, bulk-create, login-token, change-rut' });
+            default: return res.status(400).json({ error: 'Acción no válida. Usa: admin-login, admin-session-token, create, reset-password, bulk-reset-password, bulk-create, login-token, change-rut' });
         }
     } catch (error) {
         console.error('Error:', error);

@@ -24,6 +24,12 @@ expect(api.includes("userRecord = await auth.getUserByEmail(email)"), 'La API no
 expect(api.includes('const profile = await upsertStudentProfile(userRecord.uid, student, decoded)'), 'La API no reconstruye o actualiza el perfil canónico.');
 expect(api.includes('programa: programFromCourse(student.curso)'), 'La API no conserva el programa académico al crear o recuperar el perfil.');
 
+// Restablecimiento por curso, 2-nov-2026: lotes por la API administrativa y curso comprobado en servidor.
+expect(admin.includes("adminStudentRequest('bulk-reset-password'"), 'El restablecimiento por curso no usa la API administrativa.');
+expect(admin.includes("typed.trim().toUpperCase()!==courseF.toUpperCase()"), 'El restablecimiento por curso no exige escribir el código del curso.');
+expect(api.includes("case 'bulk-reset-password': return await handleBulkResetPassword(req, res)"), 'La API no expone el restablecimiento por curso tras verificar al administrador.');
+expect(api.includes("if (student.curso !== curso)"), 'La API no rechaza estudiantes de otro curso en el restablecimiento masivo.');
+
 // Caso 29-oct-2026: el alta del admin PAES no creaba cuenta y el portal no leía la nómina extra.
 expect(paesApi.includes('const cuenta = await ensurePaesStudentAccount(student, decoded)'), 'El alta del admin PAES no crea ni recupera la cuenta del estudiante.');
 expect(paesApi.includes("case 'admin-save-student': return await handleAdminSaveStudent(req, res, decoded)"), 'El alta del admin PAES no recibe al docente que la autoriza.');

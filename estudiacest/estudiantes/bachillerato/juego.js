@@ -42,7 +42,7 @@
  async function refresh(force=false){
   if(!user||!code||polling)return;polling=true;
   try{state=await api('state',{},true);offset=state.serverNow-Date.now();if(host)renderHost();else renderPlayer();if(force)notice(host?'Sala conectada.':'Conectado a la partida.');tick();}
-  catch(e){notice(e.message,true);}finally{polling=false;}
+  catch(e){notice(e.message,true);if(force)throw e;}finally{polling=false;}
  }
  function fillRound(){
   const r=state.round;$('roundNumber').textContent='RONDA '+state.current;$('roundTitle').textContent=r.title;
@@ -101,7 +101,7 @@
   document.body.classList.add('in-game');
   show('hostGame',true);$('roomCode').textContent=code;$('roomInfo').textContent=state.course+' · '+state.count+' participantes';
   $('project').href='pantalla.html?sala='+code;$('joinUrl').href=location.origin+'/estudiantes/bachillerato/?sala='+code;$('joinUrl').textContent='enlace directo de la sala';
-  $('attendance').textContent=state.count+' estudiantes han ingresado. Puedes comenzar cuando el curso esté listo.';
+  $('attendance').textContent=state.round&&!state.round.closedAt?state.count+' participantes · '+Object.keys(state.answers).length+' han guardado · '+Object.values(state.answers).filter(a=>a.submitted).length+' enviaron.':state.count+' participantes dentro. Puedes comenzar cuando el curso esté listo.';
   const people=$('participants');people.replaceChildren();state.players.forEach(p=>people.append(node('span',p.name)));
   const r=state.round;$('hostStatus').textContent=state.status==='finished'?'Partida terminada':!r?'Esperando jugadores':r.published?'Ronda '+state.current+' publicada':r.closedAt?'Revisando ronda '+state.current:'Ronda '+state.current+' en juego';
   show('startPanel',state.status!=='finished'&&(!r||r.published));show('liveRound',!!r);show('stop',!!r&&!r.closedAt&&!r.published);show('reviewPanel',!!r&&!!r.closedAt&&!r.published);

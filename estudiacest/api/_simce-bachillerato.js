@@ -5,7 +5,7 @@ const BASE='plataforma_estudiantes',ROOT=BASE+'/bachillerato/salas';
 const COURSES=['2A-HC','2B-HC'],CODE=/^[A-HJ-NP-Z2-9]{6}$/,KEY=/^[A-Za-z0-9_-]{1,128}$/;
 const fail=(status,message)=>Object.assign(new Error(message),{status});
 const val=async(db,p)=>(await db.ref(p).once('value')).val();
-const normalize=s=>String(s||'').trim().toLocaleLowerCase('es').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ');
+const normalize=s=>String(s||'').trim().toLocaleLowerCase('es').normalize('NFD').replace(/n\u0303/g,'ñ').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ');
 const shortName=s=>{const p=String(s||'Estudiante').trim().split(/\s+/);return p[0]+(p[1]?' '+p[1][0]+'.':'');};
 function publicConfig(r){const {guide,...safe}=r;return safe;}
 function scores(room){

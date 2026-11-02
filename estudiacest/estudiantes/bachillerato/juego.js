@@ -3,11 +3,11 @@
  const $=id=>document.getElementById(id),role=document.body.dataset.role,host=role==='host',screen=role==='screen';
  const config={apiKey:'AIzaSyCuDQ_iHDHmTd8bPeqUbsXQqdxw2SObt8w',authDomain:'estudiacest.firebaseapp.com',projectId:'estudiacest'};
  const app=firebase.initializeApp(config,host||screen?'estudiacest-admin':undefined),auth=app.auth();
- let user=null,code='',state=null,busy=false,polling=false,timer=null,rendered='',reviewRendered='',saveQueue=Promise.resolve(),version=0,draftTimer=null,stopping=false,offset=0,sending=false;
+ let user=null,code='',state=null,busy=false,polling=false,timer=null,rendered='',reviewRendered='',saveQueue=Promise.resolve(),version=0,draftTimer=null,stopping=false,offset=0,sending=false,saveGeneration=0;
  const show=(id,yes)=>{if($(id))$(id).hidden=!yes;};
  const notice=(message,error=false)=>{if($('notice')){$('notice').textContent=message;$('notice').classList.toggle('error',error);}};
  const node=(tag,text,cls)=>{const e=document.createElement(tag);if(text!==undefined)e.textContent=text;if(cls)e.className=cls;return e;};
- const norm=s=>String(s||'').trim().toLocaleLowerCase('es').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ');
+ const norm=s=>String(s||'').trim().toLocaleLowerCase('es').normalize('NFD').replace(/n\u0303/g,'ñ').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ');
  const draftKey=()=>`bachillerato:${user.uid}:${code}:${state.current}`;
  function localDraft(){try{return JSON.parse(localStorage.getItem(draftKey())||'null');}catch{return null;}}
  function remember(){if(!user||!state?.round||!$('answerForm'))return;const answers=values();try{localStorage.setItem(draftKey(),JSON.stringify({answers,dirty:true}));}catch{} }
@@ -32,6 +32,7 @@
   }
  }
  function setCode(next){
+  saveGeneration++;clearTimeout(draftTimer);saveQueue=Promise.resolve();sending=false;
   code=next.toUpperCase().trim();localStorage.setItem(`bachillerato-last-${role}-${user.uid}`,code);
   const url=new URL(location.href);url.searchParams.set('sala',code);history.replaceState({},'',url);rendered='';reviewRendered='';
  }
@@ -67,12 +68,16 @@
    else{
     const signature=code+':'+state.current;
     if(rendered!==signature){
-     rendered=signature;version=state.own?.version||0;const draft=localDraft(),answers=state.own?.submitted?state.own.answers:draft?.answers||state.own?.answers||[];
+     rendered=signature;saveGeneration++;clearTimeout(draftTimer);saveQueue=Promise.resolve();sending=false;version=state.own?.version||0;const draft=localDraft(),answers=state.own?.submitted?state.own.answers:draft?.dirty?draft.answers:state.own?.answers||draft?.answers||[];
      const fields=$('fields');fields.replaceChildren();r.questions.forEach((q,i)=>{const div=node('div',undefined,r.mode==='reading'?'wide':'');const label=node('label',(i+1)+'. '+q);label.htmlFor='answer'+i;const input=node(r.mode==='reading'?'textarea':'input');input.id='answer'+i;input.dataset.answer=i;input.maxLength=500;input.value=answers[i]||'';if(r.mode==='reading')input.rows=3;input.autocomplete='off';div.append(label,input);fields.append(div);});
      $('saveStatus').textContent=state.own?.submitted?'Entrega confirmada.':draft?.dirty?'Borrador recuperado en este equipo.':'Escribe: tus respuestas se guardan automáticamente.';
     }
     version=Math.max(version,state.own?.version||0);
-    if(state.own?.submitted){$('saveStatus').textContent='Entrega confirmada. Tus respuestas quedaron guardadas.';}
+    if(state.own?.submitted){
+     document.querySelectorAll('[data-answer]').forEach((input,i)=>{input.value=state.own.answers?.[i]||'';});
+     try{localStorage.setItem(draftKey(),JSON.stringify({answers:state.own.answers,dirty:false}));}catch{}
+     $('saveStatus').textContent='Entrega confirmada. Tus respuestas quedaron guardadas.';
+    }
     $('myPoints').replaceChildren();if(state.ownGrade){const p=node('p',state.ownGrade.reduce((a,b)=>a+b,0)+' puntos en esta ronda.');$('myPoints').append(p);state.ownGrade.forEach((points,i)=>$('myPoints').append(node('p',(i+1)+'. '+r.questions[i]+': '+points+' puntos')));}
    }
   }
@@ -115,18 +120,20 @@
  }
  function enqueueSave(final=false){
   if(!state?.round||state.own?.submitted||state.round.closedAt)return Promise.resolve();
-  const round=state.current,answers=values(),requestId=crypto.randomUUID();remember();
+  const round=state.current,answers=values(),requestId=crypto.randomUUID(),generation=saveGeneration,savedCode=code,savedUid=user?.uid;
+  const current=()=>generation===saveGeneration&&state?.current===round&&code===savedCode&&user?.uid===savedUid;
+  remember();
   saveQueue=saveQueue.catch(()=>{}).then(async()=>{
-   if(state.current!==round)return;
-   try{const data=await api('save',{round,answers,version,final,requestId});version=data.record.version;state.own=data.record;
+   if(!current())return;
+   try{const data=await api('save',{code:savedCode,round,answers,version,final,requestId});if(!current())return;version=data.record.version;state.own=data.record;
     const latest=localDraft();if(JSON.stringify(latest?.answers)===JSON.stringify(answers))localStorage.setItem(draftKey(),JSON.stringify({answers,dirty:false}));
     $('saveStatus').textContent=final?'Entrega confirmada. Tus respuestas quedaron guardadas.':'Guardado en la sala.';updateControls();
-   }catch(e){$('saveStatus').textContent=e.message;notice(e.message,true);throw e;}
+   }catch(e){if(!current())return;$('saveStatus').textContent=e.message;notice(e.message,true);throw e;}
   });return saveQueue;
  }
  if($('answerForm')){
   $('answerForm').addEventListener('submit',e=>e.preventDefault());$('fields').addEventListener('input',()=>{remember();$('saveStatus').textContent='Guardando…';clearTimeout(draftTimer);draftTimer=setTimeout(()=>enqueueSave().catch(()=>{}),650);});
-  $('submit').onclick=async()=>{if(sending)return;sending=true;clearTimeout(draftTimer);updateControls();try{await saveQueue.catch(()=>{});await enqueueSave(true).catch(()=>{});await refresh();}finally{sending=false;updateControls();}};
+  $('submit').onclick=async()=>{if(sending)return;const generation=saveGeneration;sending=true;clearTimeout(draftTimer);updateControls();try{await saveQueue.catch(()=>{});if(generation!==saveGeneration)return;await enqueueSave(true).catch(()=>{});await refresh();}finally{if(generation===saveGeneration){sending=false;updateControls();}}};
  }
  if($('joinForm'))$('joinForm').onsubmit=async e=>{e.preventDefault();try{await joinRoom($('code').value);}catch(error){notice(error.message,true);}};
  if($('leave'))$('leave').onclick=()=>{clearTimeout(timer);code='';state=null;show('game',false);show('join',true);};

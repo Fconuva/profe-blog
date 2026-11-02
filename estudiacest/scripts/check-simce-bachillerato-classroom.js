@@ -12,7 +12,7 @@ const AUTH='https://identitytoolkit.googleapis.com/v1/projects/estudiacest';
 const BASE='plataforma_estudiantes';
 const COUNT=33;
 const pause=ms=>new Promise(r=>setTimeout(r,ms));
-async function batch(values,size,fn){const out=[];for(let i=0;i<values.length;i+=size)out.push(...await Promise.all(values.slice(i,i+size).map(fn)));return out;}
+async function batch(values,size,fn){const out=[];for(let i=0;i<values.length;i+=size){const results=await Promise.allSettled(values.slice(i,i+size).map(fn));const failed=results.find(r=>r.status==='rejected');out.push(...results.filter(r=>r.status==='fulfilled').map(r=>r.value));if(failed)throw failed.reason;}return out;}
 function run(){const digits=String(99000000+crypto.randomInt(999999));let sum=0,factor=2;for(const d of [...digits].reverse()){sum+=Number(d)*factor;factor=factor===7?2:factor+1;}const n=11-sum%11;return digits+(n===11?'0':n===10?'k':n);}
 async function main(){
  const accessToken=getAccessToken(),prefix='qa-bach33-'+crypto.randomUUID().slice(0,12);
@@ -87,7 +87,7 @@ async function main(){
   await closeRound();check(await teacher.locator('.review-item').count()===COUNT,'Las 33 respuestas aparecen para revisión');
   const first=teacher.locator('.review-item').filter({has:teacher.getByRole('heading',{name:people[0].name,exact:true})});await first.locator('select').first().selectOption('0');await first.getByRole('button',{name:'Guardar cambios',exact:true}).click();await first.getByRole('button',{name:'Revisión guardada',exact:true}).waitFor();await publish();
   await Promise.all(students.map(s=>s.page.locator('#leaderboard').waitFor({state:'visible'})));
-  check(await screen.locator('#ranking li').count()===COUNT,'Proyección muestra la tabla de 33');
+  await screen.waitForFunction(()=>document.querySelectorAll('#ranking li').length===33);check(await screen.locator('#ranking li').count()===COUNT,'Proyección muestra la tabla de 33');
   check((await students[0].page.locator('#myPoints').textContent()).includes('10 puntos'),'Corrección docente llega al estudiante');
   await start('reading');await Promise.all(students.map(s=>round(s.page,2)));
   await answer(students[0].page,['Se levanta y le indica el asiento.','',''],false);
@@ -122,9 +122,11 @@ async function main(){
   }finally{release();}
   await closeRound();const last=teacher.locator('.review-item').filter({has:teacher.getByRole('heading',{name:people[32].name,exact:true})});await last.getByRole('button',{name:'Todas logradas · 10'}).click();await last.getByRole('button',{name:'Guardar cambios'}).click();await last.getByRole('button',{name:'Revisión guardada',exact:true}).waitFor();await publish();
   await teacher.locator('#finish').click();await teacher.waitForFunction(()=>document.querySelector('#hostStatus').textContent==='Partida terminada');
+  await Promise.all(students.map(async(s,i)=>{const expected=i===32?'105 pts':i===0?'40 pts':'45 pts';await s.page.waitForFunction(expected=>document.querySelector('#ranking li.self strong')?.textContent===expected,expected,{timeout:20000});}));check(true,'Los 33 navegadores muestran sus puntos finales exactos');
   await students[0].page.reload();await students[0].page.waitForFunction(()=>document.querySelector('#rankingTitle').textContent==='¡Partida terminada!');check(await students[0].page.locator('#ranking li').count()===COUNT,'Recarga de partida terminada conserva sus 33 participantes y resultados');
   const noKeys=await students[0].page.evaluate(async()=>{const token=await firebase.auth().currentUser.getIdToken();const r=await fetch('/api/estudiantes?action=bachillerato-state&code='+new URLSearchParams(location.search).get('sala'),{headers:{Authorization:'Bearer '+token}});const data=await r.json();return !data.guide&&!data.answers&&!data.players;});check(noKeys,'Alumno no recibe pauta ni respuestas ajenas');
   for(const width of [320,390,1366,3840]){for(const [label,p]of [['alumno',students[0].page],['docente',teacher],['proyección',screen]]){await p.setViewportSize({width,height:900});check(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),label+' sin desborde a '+width);}}
+  const recoveryContext=await browser.newContext(),recovery=await recoveryContext.newPage();watch(recovery,'recuperación de librerías');await recoveryContext.route('**/firebase*-compat.js',r=>r.fulfill({contentType:'application/javascript',body:''}));await recovery.goto(ORIGIN+'/estudiantes/bachillerato/');await recovery.locator('#reloadConnection').waitFor({state:'visible'});await recoveryContext.unrouteAll();await recovery.locator('#reloadConnection').click();await recovery.locator('#login').waitFor({state:'visible'});check(true,'Librerías ausentes permiten recargar y recuperar el ingreso sin excepción JS');await recoveryContext.close();
   await teacher.setViewportSize({width:1366,height:768});await students[0].page.setViewportSize({width:1366,height:768});await students[0].page.screenshot({path:path.join(dir,'alumno-final.png'),fullPage:true});await teacher.screenshot({path:path.join(dir,'docente-final.png'),fullPage:true});await screen.screenshot({path:path.join(dir,'proyeccion-final.png'),fullPage:true});
   await pause(2000);check(report.pageErrors.length===0,'Cero excepciones JavaScript en 33 estudiantes, docente y proyección');check(report.consoleErrors.length===0,'Cero errores inesperados de consola');check(report.failedRequests.length===0,'Cero solicitudes fallidas inesperadas');check(report.httpErrors.length===0,'Cero respuestas HTTP de error inesperadas');
   console.log(JSON.stringify({checks:report.checks.length,participants:COUNT,joinMs:report.joinMs,submitMs:report.submitMs,consoleErrors:report.consoleErrors.length,pageErrors:report.pageErrors.length,httpErrors:report.httpErrors.length,warnings:report.warnings.length}));

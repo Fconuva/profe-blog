@@ -13,6 +13,13 @@ async function main(){
  }
  async function test(name,fn){try{await fn();passed.push(name);}catch(e){findings.push({name,error:e.message.slice(0,240)});}}
  try{
+  await test('Librerías no cargadas ofrecen reintento sin excepción JavaScript',async()=>{
+   for(const body of ['', 'window.firebase={initializeApp:()=>({})};']){
+    const c=await browser.newContext(),p=await c.newPage(),errors=[];p.on('pageerror',e=>errors.push(e.message));
+    await c.route('**/firebase*-compat.js',r=>r.fulfill({contentType:'application/javascript',body}));
+    try{await p.goto(origin+'/estudiantes/bachillerato/');await p.locator('#reloadConnection').waitFor();assert.equal(errors.length,0);assert.match(await p.locator('#notice').textContent(),/Revisa la red/);}finally{await c.close();}
+   }
+  });
   await test('Una respuesta tardía de la ronda anterior no bloquea la siguiente',async()=>{
    const code=await room(),c=await context(),page=await c.newPage();let release,committed;const gate=new Promise(r=>release=r),saved=new Promise(r=>committed=r);let held=false;
    await page.route('**/api/estudiantes?**',async route=>{const req=route.request(),b=req.postDataJSON();if(!held&&req.url().includes('bachillerato-save')&&b?.round===1){held=true;const response=await route.fetch();committed();await gate;await route.fulfill({response});}else await route.continue();});

@@ -2,7 +2,11 @@
  'use strict';
  const $=id=>document.getElementById(id),role=document.body.dataset.role,host=role==='host',screen=role==='screen';
  const config={apiKey:'AIzaSyCuDQ_iHDHmTd8bPeqUbsXQqdxw2SObt8w',authDomain:'estudiacest.firebaseapp.com',projectId:'estudiacest'};
- const app=firebase.initializeApp(config,host||screen?'estudiacest-admin':undefined),auth=app.auth();
+ function connectionNotLoaded(){const status=$('notice');status.textContent='No se pudo cargar la conexión. Revisa la red y vuelve a intentar.';status.classList.add('error');const retry=document.createElement('button');retry.id='reloadConnection';retry.type='button';retry.textContent='Volver a cargar';retry.onclick=()=>location.reload();status.after(retry);}
+ if(typeof globalThis.firebase?.initializeApp!=='function'){connectionNotLoaded();return;}
+ const app=firebase.initializeApp(config,host||screen?'estudiacest-admin':undefined);
+ if(typeof app.auth!=='function'){connectionNotLoaded();return;}
+ const auth=app.auth();
  let user=null,code='',state=null,busy=false,polling=false,timer=null,rendered='',reviewRendered='',saveQueue=Promise.resolve(),version=0,draftTimer=null,stopping=false,offset=0,sending=false,saveGeneration=0;
  const show=(id,yes)=>{if($(id))$(id).hidden=!yes;};
  const notice=(message,error=false)=>{if($('notice')){$('notice').textContent=message;$('notice').classList.toggle('error',error);}};

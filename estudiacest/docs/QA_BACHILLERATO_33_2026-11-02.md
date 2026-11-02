@@ -97,3 +97,33 @@ Comandos: `node scripts/audit-simce-bachillerato-races.js`,
 `node scripts/audit-simce-bachillerato.js --browser`, `npm run build` y
 `node scripts/check-simce-bachillerato-classroom.js`.
 Las cuentas y la sala son efímeras: no se conserva una partida ficticia abierta.
+
+## Seguimiento: rechazo al ingresar por código como docente
+
+La prueba de 33 alumnos no cubría al creador docente sin perfil de estudiante.
+Tras el reporte de Francisco para 436FR6, una consulta de solo lectura confirmó
+que la sala es de 2B-HC y su creador docente no tiene perfil de alumno. No se
+inspeccionó la sesión activa del usuario ni se modificó esa sala.
+
+La entrada consulta ahora el rol antes de inscribir: el creador autorizado abre
+su panel conservando el código, sin agregarse como jugador. Un alumno de otro
+curso recibe una explicación con ambos cursos; el servidor sigue rechazando un
+POST directo de inscripción que intente eludir esa comprobación.
+
+Validación local: siete regresiones de navegador, 60 controles del módulo y
+build integral aprobados. Publicación mediante `npm run deploy:prod:safe` del
+commit `265ba45c8847107c29a71568c563063ef3d127a9`, despliegue
+`dpl_4m4X8ER1TsHpZM5EdMHEkcg86Bi6` READY, proyecto y alias público comprobados.
+El JavaScript público coincide por SHA-256 con la fuente (normalizando CRLF).
+
+Prueba focalizada en producción: 12 controles aprobados con tres cuentas
+ficticias autenticadas: creador sin perfil de alumno y alumnos 2A/2B. Se probó
+pegar el código, retomar por enlace, inscripción correcta, aviso de otro curso,
+guardado, entrega, publicación de 30 puntos y cierre. Cero errores de consola,
+excepciones JS, HTTP o recursos fallidos en los flujos normales; el POST directo
+de otro curso conservó su 403 esperado. Las tres cuentas y la sala ficticia
+quedaron eliminadas, con ausencia comprobada en Auth y base. Ambas capturas de
+entrada se abrieron y revisaron. La sala real 436FR6 se conserva en 2B-HC.
+
+Registro: [prueba de entrada por rol y curso](evidencias/bachillerato-entry-2026-11-02.json).
+Auxiliar reproducible: `node scripts/check-simce-bachillerato-entry.js`.

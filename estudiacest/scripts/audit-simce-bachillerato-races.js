@@ -6,13 +6,21 @@ async function main(){
  const {server,db}=harness();await new Promise(r=>server.listen(0,'127.0.0.1',r));const origin='http://127.0.0.1:'+server.address().port;
  const browser=await chromium.launch({headless:true}),findings=[],passed=[];
  const sdk=`window.firebase ||= {initializeApp:()=>({auth:()=>({onAuthStateChanged:fn=>queueMicrotask(()=>fn({uid:'s0',getIdToken:async()=>'s0'}))})})};`;
- async function context(){const c=await browser.newContext();await c.route('**/firebase*-compat.js',r=>r.fulfill({contentType:'application/javascript',body:sdk}));return c;}
+ async function context(actor='s0'){const c=await browser.newContext();await c.route('**/firebase*-compat.js',r=>r.fulfill({contentType:'application/javascript',body:sdk.replaceAll("'s0'",JSON.stringify(actor))}));return c;}
  async function room(letter='M'){
   const code=(await call(origin,'create','host',{course:'2A-HC'})).data.code;
   await call(origin,'join','s0',{code});await call(origin,'start','host',{code,mode:'classic',letter,categories:['Nombre','Animal','Lugar'],seconds:120});return code;
  }
  async function test(name,fn){try{await fn();passed.push(name);}catch(e){findings.push({name,error:e.message.slice(0,240)});}}
  try{
+  await test('Creador docente sin perfil de alumno abre su panel al ingresar el código',async()=>{
+   const code=await room(),c=await context('host'),p=await c.newPage(),errors=[];let joins=0;p.on('pageerror',e=>errors.push(e.message));p.on('console',m=>{if(m.type()==='error')errors.push(m.text());});p.on('request',r=>{if(r.url().includes('bachillerato-join'))joins++;});
+   try{await p.goto(origin+'/estudiantes/bachillerato/?sala='+code);await p.locator('#hostGame').waitFor({state:'visible'});assert.match(p.url(),/docente\.html\?sala=/);assert.equal((await p.locator('#roomCode').textContent()).trim(),code);assert.equal(joins,0);assert.equal(errors.length,0);assert.ok(!db.state.plataforma_estudiantes.bachillerato.salas[code].players?.host);}finally{await c.close();}
+  });
+  await test('Otro curso ve el motivo antes de enviar join y conserva la protección',async()=>{
+   const code=await room(),c=await context('wrong'),p=await c.newPage(),errors=[];let joins=0;p.on('console',m=>{if(m.type()==='error')errors.push(m.text());});p.on('request',r=>{if(r.url().includes('bachillerato-join'))joins++;});
+   try{await p.goto(origin+'/estudiantes/bachillerato/?sala='+code);await p.waitForFunction(()=>document.querySelector('#notice').textContent.includes('2B-HC'));assert.match(await p.locator('#notice').textContent(),/2A-HC/);assert.ok(await p.locator('#join').isVisible());assert.ok((await p.locator('#teacherAccess').getAttribute('href')).includes(code));assert.equal(joins,0);assert.equal(errors.length,0);assert.equal((await call(origin,'join','wrong',{code})).status,403);}finally{await c.close();}
+  });
   await test('Librerías no cargadas ofrecen reintento sin excepción JavaScript',async()=>{
    for(const body of ['', 'window.firebase={initializeApp:()=>({})};']){
     const c=await browser.newContext(),p=await c.newPage(),errors=[];p.on('pageerror',e=>errors.push(e.message));

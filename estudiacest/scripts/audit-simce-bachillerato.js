@@ -37,6 +37,13 @@ async function main(){
   check((await call(origin,'catalog','s0',{},true)).status===403,'Catálogo docente privado');
   check((await call(origin,'create','host',{course:'2B-HC'})).status===403,'Alcance docente por curso');
   const created=await call(origin,'create','host',{course:'2A-HC'});check(created.status===200,'Crear sala');const code=created.data.code;
+  check((await call(origin,'entry','host',{code},true)).data.mode==='host','Creador docente sin perfil de alumno reconocido antes de entrar');
+  const teacherEntry=await call(origin,'join','host',{code});check(teacherEntry.status===200&&teacherEntry.data.mode==='host','Entrada del creador conserva su rol docente');
+  check(!db.state[BASE].bachillerato.salas[code].players?.host,'No se agrega al docente como alumno');
+  const otherCourse=await call(origin,'entry','wrong',{code},true);check(otherCourse.status===200&&otherCourse.data.mode==='course-mismatch'&&otherCourse.data.message.includes('2B-HC')&&otherCourse.data.message.includes('2A-HC'),'Otro curso recibe explicación sin intentar join');
+  check((await call(origin,'entry','s0',{code},true)).data.mode==='student','Alumno del curso habilitado');
+  check((await call(origin,'entry','other',{code},true)).data.mode==='account-required','Otro administrador no toma una sala ajena');
+  db.state[BASE].estudiantes.s41.activo=false;check((await call(origin,'entry','s41',{code},true)).data.mode==='inactive','Se conserva bloqueo de cuenta inactiva');db.state[BASE].estudiantes.s41.activo=true;
   check((await call(origin,'join','wrong',{code})).status===403,'No entra otro curso');
   const joined=await Promise.all(Array.from({length:42},(_,i)=>call(origin,'join','s'+i,{code})));check(joined.every(x=>x.status===200),'42 ingresos simultáneos');
   await call(origin,'join','s0',{code});let room=(await call(origin,'state','host',{code,host:1},true)).data;check(room.count===42,'Ingreso repetido no duplica');

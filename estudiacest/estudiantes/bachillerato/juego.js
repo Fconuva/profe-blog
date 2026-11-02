@@ -41,7 +41,16 @@
   const url=new URL(location.href);url.searchParams.set('sala',code);history.replaceState({},'',url);rendered='';reviewRendered='';
  }
  async function joinRoom(next){
-  setCode(next);if(!host&&!screen)await api('join');await refresh(true);show('join',false);show('setup',false);schedule();
+  setCode(next);
+  if(!host&&!screen){
+   const teacherUrl='/estudiantes/bachillerato/docente.html?sala='+encodeURIComponent(code);
+   if($('teacherAccess'))$('teacherAccess').href=teacherUrl;
+   const access=await api('entry',{},true);
+   if(access.mode==='host'){location.replace(teacherUrl);return;}
+   if(access.mode!=='student')throw new Error(access.message||'Revisa tu cuenta y el curso de la sala.');
+   const joined=await api('join');if(joined.mode==='host'){location.replace(teacherUrl);return;}
+  }
+  await refresh(true);show('join',false);show('setup',false);schedule();
  }
  function schedule(){clearTimeout(timer);timer=setTimeout(async()=>{await refresh();schedule();},4000+Math.random()*1000);}
  async function refresh(force=false){

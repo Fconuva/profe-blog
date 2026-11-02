@@ -42,7 +42,7 @@ async function manejar(req,res,action,db,auth){
  res.setHeader('Cache-Control','private, no-store');
  try{
   if(!['GET','POST'].includes(req.method))throw fail(405,'Método no permitido.');
-  if(req.method==='GET'&&!['state','catalog'].includes(action))throw fail(405,'Usa POST para cambiar la partida.');
+  if(req.method==='GET'&&!['state','catalog','entry'].includes(action))throw fail(405,'Usa POST para cambiar la partida.');
   let b=req.body||{};if(typeof b==='string'){try{b=JSON.parse(b);}catch{throw fail(400,'Solicitud inválida.');}}
   const actor=await identity(req,db,auth);
   if(action==='catalog'){
@@ -62,6 +62,17 @@ async function manejar(req,res,action,db,auth){
   }
   const code=String(req.query?.code||b.code||'').trim().toUpperCase();if(!CODE.test(code))throw fail(400,'Escribe el código de seis caracteres.');
   const path=ROOT+'/'+code,control=await val(db,path+'/control');if(!control)throw fail(404,'No existe esta sala. Revisa el código.');
+  const ownsRoom=canTeach(actor,control.course)&&control.owner===actor.uid;
+  if(action==='entry'){
+   if(ownsRoom)return res.status(200).json({ok:true,mode:'host',course:control.course});
+   if(!actor.student)return res.status(200).json({ok:true,mode:'account-required',message:'Esta cuenta no tiene perfil de alumno. Si vas a dirigir la partida, abre Docente e ingresa con tu cuenta habitual.'});
+   if(actor.student.activo===false)return res.status(200).json({ok:true,mode:'inactive',message:'Tu cuenta está inactiva. Pide al profesor que revise tu acceso.'});
+   if(actor.student.curso!==control.course)return res.status(200).json({ok:true,mode:'course-mismatch',course:control.course,message:`La sala ${code} es de ${control.course}. Tu cuenta corresponde a ${actor.student.curso||'un curso sin asignar'}. Usa el código de tu curso; si estás dirigiendo la partida, abre Docente.`});
+   return res.status(200).json({ok:true,mode:'student',course:control.course});
+  }
+  // El creador que entra desde la portada de jugadores conserva su rol docente.
+  // No se le fabrica un perfil ni se agrega su cuenta a la nómina de jugadores.
+  if(action==='join'&&ownsRoom)return res.status(200).json({ok:true,code,mode:'host'});
   const host=['start','stop','grade','publish','finish'].includes(action)||action==='state'&&req.query?.host==='1';authorized(actor,control,host);
   const roundPath=path+'/rounds/'+control.current;
   const loadRound=async()=>{

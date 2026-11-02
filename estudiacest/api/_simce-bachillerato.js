@@ -30,13 +30,14 @@ function makeRound(body,index){
 async function identity(req,db,auth){
  const token=String(req.headers?.authorization||'').replace(/^Bearer\s+/i,'');if(!token)throw fail(401,'Inicia sesión para jugar.');
  let actor;try{actor=await auth.verifyIdToken(token);}catch{throw fail(401,'Tu sesión venció. Vuelve a ingresar.');}
- const [admin,teacher,student]=await Promise.all(['admins','docentes','estudiantes'].map(n=>val(db,BASE+'/'+n+'/'+actor.uid)));
- return {uid:actor.uid,admin:admin===true,teacher,student};
+ const [admin,teacher,student,access]=await Promise.all(['admins','docentes','estudiantes','bachillerato/accesos'].map(n=>val(db,BASE+'/'+n+'/'+actor.uid)));
+ return {uid:actor.uid,admin:admin===true,teacher,student,access};
 }
+function canPlay(actor,course){return COURSES.includes(course)&&!!actor.student&&actor.student.activo!==false&&(actor.student.curso===course||actor.access?.cursos?.[course]===true);}
 function canTeach(actor,course){return actor.admin&&(!actor.teacher||actor.teacher.superadmin===true||(actor.teacher.cursos||[]).includes(course));}
 function authorized(actor,room,host){
  if(host){if(!canTeach(actor,room.course)||room.owner!==actor.uid)throw fail(403,'Solo quien creó esta sala puede dirigirla.');}
- else if(!actor.student||actor.student.activo===false||actor.student.curso!==room.course)throw fail(403,'Esta sala corresponde a otro curso.');
+ else if(!canPlay(actor,room.course))throw fail(403,'Esta sala corresponde a otro curso.');
 }
 async function manejar(req,res,action,db,auth){
  res.setHeader('Cache-Control','private, no-store');
@@ -67,7 +68,7 @@ async function manejar(req,res,action,db,auth){
    if(ownsRoom)return res.status(200).json({ok:true,mode:'host',course:control.course});
    if(!actor.student)return res.status(200).json({ok:true,mode:'account-required',message:'Esta cuenta no tiene perfil de alumno. Si vas a dirigir la partida, abre Docente e ingresa con tu cuenta habitual.'});
    if(actor.student.activo===false)return res.status(200).json({ok:true,mode:'inactive',message:'Tu cuenta está inactiva. Pide al profesor que revise tu acceso.'});
-   if(actor.student.curso!==control.course)return res.status(200).json({ok:true,mode:'course-mismatch',course:control.course,message:`La sala ${code} es de ${control.course}. Tu cuenta corresponde a ${actor.student.curso||'un curso sin asignar'}. Usa el código de tu curso; si estás dirigiendo la partida, abre Docente.`});
+   if(!canPlay(actor,control.course))return res.status(200).json({ok:true,mode:'course-mismatch',course:control.course,message:`La sala ${code} es de ${control.course}. Tu cuenta corresponde a ${actor.student.curso||'un curso sin asignar'}. Usa el código de tu curso; si estás dirigiendo la partida, abre Docente.`});
    return res.status(200).json({ok:true,mode:'student',course:control.course});
   }
   // El creador que entra desde la portada de jugadores conserva su rol docente.

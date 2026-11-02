@@ -45,6 +45,14 @@ async function main(){
   check((await call(origin,'entry','other',{code},true)).data.mode==='account-required','Otro administrador no toma una sala ajena');
   db.state[BASE].estudiantes.s41.activo=false;check((await call(origin,'entry','s41',{code},true)).data.mode==='inactive','Se conserva bloqueo de cuenta inactiva');db.state[BASE].estudiantes.s41.activo=true;
   check((await call(origin,'join','wrong',{code})).status===403,'No entra otro curso');
+  db.state[BASE].bachillerato.accesos={wrong:{cursos:{'2A-HC':true,'2B-HC':true}}};
+  check((await call(origin,'entry','wrong',{code},true)).data.mode==='student','Acceso privado adicional reconoce el otro curso');
+  check((await call(origin,'join','wrong',{code})).status===200,'Cuenta habilitada puede ingresar al otro curso');
+  check((await call(origin,'state','wrong',{code},true)).status===200,'Acceso adicional permite sondeo');
+  check((await call(origin,'start','wrong',{code,mode:'classic'})).status===403,'Acceso adicional no concede administración');
+  db.state[BASE].estudiantes.wrong.activo=false;check((await call(origin,'join','wrong',{code})).status===403,'Acceso adicional no omite cuenta inactiva');db.state[BASE].estudiantes.wrong.activo=true;
+  delete db.state[BASE].bachillerato.accesos.wrong;delete db.state[BASE].bachillerato.salas[code].players.wrong;
+  db.state[BASE].estudiantes.wrong.cursos=['2A-HC'];check((await call(origin,'join','wrong',{code})).status===403,'Campo del perfil no concede acceso adicional');
   const joined=await Promise.all(Array.from({length:42},(_,i)=>call(origin,'join','s'+i,{code})));check(joined.every(x=>x.status===200),'42 ingresos simultáneos');
   await call(origin,'join','s0',{code});let room=(await call(origin,'state','host',{code,host:1},true)).data;check(room.count===42,'Ingreso repetido no duplica');
   check((await call(origin,'start','s0',{code,mode:'classic'})).status===403,'Alumno no inicia');

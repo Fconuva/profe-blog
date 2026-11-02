@@ -1,5 +1,9 @@
 # Contrato obligatorio para clases interactivas
 
+## Juego en vivo: Bachillerato lector
+
+El juego SIMCE del 2-nov-2026 se registra en `liveGames` del contrato: guarda rondas, no calificaciones ni entregas de clases. Cada respuesta conserva `sessionId + uid + course`, versión, cola de guardado y borrador local. El envío y la recogida docente de borradores previos al cierre registran juntas `submitted`, `completada` y sus fechas; el cliente confirma por lectura API. Solo el docente propietario de la sala y autorizado para el curso puede cerrar, revisar y publicar puntos. El juego no marca clases completadas en el dashboard. Su auditoría funcional y de concurrencia es `scripts/audit-simce-bachillerato.js`.
+
 Este documento define el comportamiento mínimo de toda clase, guía o ensayo de Estudia CEST que permita autoguardar y entregar trabajo. Se aplica a SIMCE, PAES, NM3, NM4 y a cualquier sección nueva.
 
 ## 1. Identidad única

@@ -4,9 +4,20 @@
  const config={apiKey:'AIzaSyCuDQ_iHDHmTd8bPeqUbsXQqdxw2SObt8w',authDomain:'estudiacest.firebaseapp.com',projectId:'estudiacest'};
  function connectionNotLoaded(){const status=$('notice');status.textContent='No se pudo cargar la conexión. Revisa la red y vuelve a intentar.';status.classList.add('error');const retry=document.createElement('button');retry.id='reloadConnection';retry.type='button';retry.textContent='Volver a cargar';retry.onclick=()=>location.reload();status.after(retry);}
  if(typeof globalThis.firebase?.initializeApp!=='function'){connectionNotLoaded();return;}
- const app=firebase.initializeApp(config,host||screen?'estudiacest-admin':undefined);
+ const studentSession=new URLSearchParams(location.search).get('estudiante')==='1';
+ const app=firebase.initializeApp(config,(host||screen)&&!studentSession?'estudiacest-admin':undefined);
  if(typeof app.auth!=='function'){connectionNotLoaded();return;}
  const auth=app.auth();
+ if(host&&studentSession){showStudentHost();}
+ if(screen&&studentSession){const back=document.querySelector('header a');back.href='docente.html?estudiante=1&sala='+encodeURIComponent(new URLSearchParams(location.search).get('sala')||'');back.textContent='← Anfitrión';}
+ function showStudentHost(){
+  document.title='Crear y dirigir sala · Bachillerato lector';
+  const back=document.querySelector('header a');back.href='./';back.textContent='← Bachillerato';document.querySelector('header span').textContent='ESTUDIA CEST · ANFITRIÓN';
+  if($('teacherLogin'))$('teacherLogin').hidden=true;
+  if($('studentHostLogin'))$('studentHostLogin').hidden=false;
+  document.querySelector('#login h2').textContent='Ingresa con tu cuenta de SIMCE';
+  $('notice').textContent='Comprobando tu sesión…';document.querySelector('footer').textContent='Anfitrión · Comparte el código y dirige tu partida.';
+ }
  let user=null,code='',state=null,busy=false,polling=false,timer=null,rendered='',reviewRendered='',saveQueue=Promise.resolve(),version=0,draftTimer=null,stopping=false,offset=0,sending=false,saveGeneration=0;
  const show=(id,yes)=>{if($(id))$(id).hidden=!yes;};
  const notice=(message,error=false)=>{if($('notice')){$('notice').textContent=message;$('notice').classList.toggle('error',error);}};
@@ -43,7 +54,7 @@
  async function joinRoom(next){
   setCode(next);
   if(!host&&!screen){
-   const teacherUrl='/estudiantes/bachillerato/docente.html?sala='+encodeURIComponent(code);
+   const teacherUrl='/estudiantes/bachillerato/docente.html?sala='+encodeURIComponent(code)+'&estudiante=1';
    if($('teacherAccess'))$('teacherAccess').href=teacherUrl;
    const access=await api('entry',{},true);
    if(access.mode==='host'){location.replace(teacherUrl);return;}
@@ -76,7 +87,7 @@
   show('round',!!state.round);
   if(state.round){
    fillRound();const r=state.round,closed=r.closedAt||Date.now()+offset>=r.endsAt;
-   $('instructions').textContent=r.published?'Ronda revisada. Mira tus puntos y espera la siguiente.':closed?'Se acabó el tiempo. El profesor está revisando las respuestas.':r.mode==='classic'?'Escribe una palabra por categoría que empiece con la letra. Envía cuando termines.':'Lee y responde las tres preguntas. Usa las pistas del texto para explicar.';
+   $('instructions').textContent=r.published?'Ronda revisada. Mira tus puntos y espera la siguiente.':closed?'Se acabó el tiempo. El anfitrión está revisando las respuestas.':r.mode==='classic'?'Escribe una palabra por categoría que empiece con la letra. Envía cuando termines.':'Lee y responde las tres preguntas. Usa las pistas del texto para explicar.';
    if(screen){const list=$('screenQuestions');list.replaceChildren();r.questions.forEach(q=>list.append(node('li',q)));}
    else{
     const signature=code+':'+state.current;
@@ -118,7 +129,7 @@
  function renderHost(){
   document.body.classList.add('in-game');
   show('hostGame',true);$('roomCode').textContent=code;$('roomInfo').textContent=state.course+' · '+state.count+' participantes';
-  $('project').href='pantalla.html?sala='+code;$('joinUrl').href=location.origin+'/estudiantes/bachillerato/?sala='+code;$('joinUrl').textContent='enlace directo de la sala';
+  $('project').href='pantalla.html?sala='+code+(studentSession?'&estudiante=1':'');$('joinUrl').href=location.origin+'/estudiantes/bachillerato/?sala='+code;$('joinUrl').textContent='enlace directo de la sala';
   $('attendance').textContent=state.round&&!state.round.closedAt?state.count+' participantes · '+Object.keys(state.answers).length+' han guardado · '+Object.values(state.answers).filter(a=>a.submitted).length+' enviaron.':state.count+' participantes dentro. Puedes comenzar cuando el curso esté listo.';
   const people=$('participants');people.replaceChildren();state.players.forEach(p=>people.append(node('span',p.name)));
   const r=state.round;$('hostStatus').textContent=state.status==='finished'?'Partida terminada':!r?'Esperando jugadores':r.published?'Ronda '+state.current+' publicada':r.closedAt?'Revisando ronda '+state.current:'Ronda '+state.current+' en juego';
@@ -151,7 +162,7 @@
  if($('joinForm'))$('joinForm').onsubmit=async e=>{e.preventDefault();try{await joinRoom($('code').value);}catch(error){notice(error.message,true);}};
  if($('leave'))$('leave').onclick=()=>{clearTimeout(timer);code='';state=null;show('game',false);show('join',true);};
  if($('teacherLogin'))$('teacherLogin').onsubmit=async e=>{e.preventDefault();try{await auth.signInWithEmailAndPassword($('email').value.trim(),$('password').value);$('password').value='';}catch{notice('Revisa tu correo y contraseña docente.',true);}};
- if($('createForm'))$('createForm').onsubmit=async e=>{e.preventDefault();try{const result=await api('create',{course:$('course').value});await joinRoom(result.code);}catch(error){notice(error.message,true);}};
+ if($('createForm'))$('createForm').onsubmit=async e=>{e.preventDefault();if(busy)return;busy=true;updateControls();try{const result=await api('create',{course:$('course').value});await joinRoom(result.code);}catch(error){notice(error.message,true);}finally{busy=false;updateControls();}};
  if($('resumeForm'))$('resumeForm').onsubmit=async e=>{e.preventDefault();try{await joinRoom($('resumeCode').value);}catch(error){notice(error.message,true);}};
  if($('newRoom'))$('newRoom').onclick=()=>{clearTimeout(timer);state=null;code='';show('hostGame',false);show('setup',true);};
  if($('mode'))$('mode').onchange=()=>{const reading=$('mode').value==='reading';show('readingSettings',reading);show('classicSettings',!reading);if(reading)$('seconds').value='180';};
@@ -161,13 +172,13 @@
  if($('finish'))$('finish').onclick=()=>command('finish',{round:state.current});
  if($('fullscreen'))$('fullscreen').onclick=()=>{if(document.fullscreenElement)document.exitFullscreen().catch(()=>{});else document.documentElement.requestFullscreen().catch(()=>{});};
  auth.onAuthStateChanged(async account=>{
-  user=account;if(!account){clearTimeout(timer);show('game',false);show('hostGame',false);show('setup',false);show('join',false);show('login',!screen);notice(screen?'Inicia sesión en el panel docente y vuelve a abrir esta pantalla.':'Ingresa para participar.');
+  user=account;if(!account){clearTimeout(timer);show('game',false);show('hostGame',false);show('setup',false);show('join',false);show('login',!screen);notice(screen?'Inicia sesión en la partida y vuelve a abrir esta pantalla.':'Ingresa para participar.');
    if($('loginLink'))$('loginLink').href='/lecturas/?next='+encodeURIComponent(location.pathname+location.search);return;}
   show('login',false);
   try{
    if(host){const catalog=await api('catalog',{},true);$('course').replaceChildren();catalog.courses.forEach(c=>{const option=node('option',c);option.value=c;$('course').append(option);});$('categories').value=catalog.classics.join('\n');$('readingChoice').replaceChildren();catalog.readings.forEach(r=>{const option=node('option',r.title);option.value=r.id;$('readingChoice').append(option);});show('setup',true);}
    else if(!screen){show('join',true);$('identity').textContent='Cuenta: '+(account.displayName||'Estudiante SIMCE');}
-   const last=new URLSearchParams(location.search).get('sala')||localStorage.getItem(`bachillerato-last-${role}-${account.uid}`);if(last){if($('code'))$('code').value=last;if($('resumeCode'))$('resumeCode').value=last;await joinRoom(last);}else notice(host?'Elige el curso y crea la sala.':'Pide al profesor el código de la sala.');
+   const last=new URLSearchParams(location.search).get('sala')||localStorage.getItem(`bachillerato-last-${role}-${account.uid}`);if(last){if($('code'))$('code').value=last;if($('resumeCode'))$('resumeCode').value=last;await joinRoom(last);}else notice(host?'Elige el curso y crea la sala.':'Crea una sala o pide al anfitrión su código.');
   }catch(e){notice(e.message,true);}
  });
  setInterval(tick,500);

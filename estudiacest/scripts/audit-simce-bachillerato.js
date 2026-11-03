@@ -34,8 +34,20 @@ async function main(){
  const {db,server}=harness();await new Promise(r=>server.listen(0,'127.0.0.1',r));const origin='http://127.0.0.1:'+server.address().port;
  try{
   check((await call(origin,'catalog','bad',{},true)).status===401,'Sin sesión');
-  check((await call(origin,'catalog','s0',{},true)).status===403,'Catálogo docente privado');
+  check((await call(origin,'catalog','s0',{},true)).data.courses.join(',')==='2A-HC','Alumno puede crear para su curso');
   check((await call(origin,'create','host',{course:'2B-HC'})).status===403,'Alcance docente por curso');
+  const studentCreated=await call(origin,'create','s40',{course:'2A-HC'});check(studentCreated.status===200,'Estudiante activo crea su propia sala');const studentCode=studentCreated.data.code;
+  check((await call(origin,'entry','s40',{code:studentCode},true)).data.mode==='host','Creador estudiante conserva rol anfitrión');
+  check((await call(origin,'state','s40',{code:studentCode,host:1},true)).status===200,'Creador estudiante abre controles de su sala');
+  check((await call(origin,'state','s39',{code:studentCode,host:1},true)).status===403,'Compañero no lee respuestas como anfitrión');
+  check((await call(origin,'start','s39',{code:studentCode,mode:'classic'})).status===403,'Compañero no controla sala ajena');
+  check((await call(origin,'create','s40',{course:'2B-HC'})).status===403,'Estudiante no crea para otro curso sin permiso');
+  db.state[BASE].estudiantes.s40.activo=false;check((await call(origin,'create','s40',{course:'2A-HC'})).status===403,'Cuenta inactiva no crea salas');check((await call(origin,'state','s40',{code:studentCode,host:1},true)).status===403,'Cuenta inactiva no dirige');db.state[BASE].estudiantes.s40.activo=true;
+  check((await call(origin,'start','s40',{code:studentCode,mode:'classic'})).status===200,'Estudiante anfitrión inicia ronda');
+  check((await call(origin,'stop','s40',{code:studentCode,round:1})).status===200,'Estudiante anfitrión detiene ronda');
+  check((await call(origin,'publish','s40',{code:studentCode,round:1})).status===200,'Estudiante anfitrión publica puntos');
+  check((await call(origin,'finish','s40',{code:studentCode,round:1})).status===200,'Estudiante anfitrión termina partida');
+  check(!db.state[BASE].admins.s40&&!db.state[BASE].docentes.s40,'Crear sala no concede admin ni docente');
   const created=await call(origin,'create','host',{course:'2A-HC'});check(created.status===200,'Crear sala');const code=created.data.code;
   check((await call(origin,'entry','host',{code},true)).data.mode==='host','Creador docente sin perfil de alumno reconocido antes de entrar');
   const teacherEntry=await call(origin,'join','host',{code});check(teacherEntry.status===200&&teacherEntry.data.mode==='host','Entrada del creador conserva su rol docente');
@@ -97,6 +109,9 @@ async function main(){
     for(const width of [320,390,1366,3840]){await student.setViewportSize({width,height:900});check(await student.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Sin desborde a '+width);await page.setViewportSize({width,height:900});check(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Docente sin desborde a '+width);}
     const out=path.join(ROOT,'test-results/bachillerato');fs.mkdirSync(out,{recursive:true});await student.setViewportSize({width:1366,height:768});await student.screenshot({path:path.join(out,'alumno.png'),fullPage:true});await page.setViewportSize({width:1366,height:768});await page.screenshot({path:path.join(out,'docente.png'),fullPage:true});
     await page.goto(origin+'/estudiantes/bachillerato/presentacion.html');for(let i=0;i<7;i++){check(await page.locator('[data-slide]:visible').count()===1,'Presentación una pantalla '+i);if(i<6)await page.locator('#next').click();}
+    await student.goto(origin+'/estudiantes/bachillerato/');await student.locator('#leave').click();await student.locator('#studentCreate').click();await student.locator('#setup').waitFor({state:'visible'});check(student.url().includes('estudiante=1'),'Crear desde portada conserva sesión estudiante');await student.locator('#createForm button').click();await student.locator('#hostGame').waitFor({state:'visible'});const ownedCode=(await student.locator('#roomCode').textContent()).trim();await student.reload();await student.locator('#hostGame').waitFor({state:'visible'});check((await student.locator('#roomCode').textContent()).trim()===ownedCode,'Anfitrión estudiante retoma al recargar');
+    for(const width of [320,390,1366,3840]){await student.setViewportSize({width,height:900});check(await student.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Anfitrión estudiante sin desborde a '+width);}
+    const projection=await students.newPage();projection.on('pageerror',e=>errors.push(e.message));await projection.goto(new URL(await student.locator('#project').getAttribute('href'),student.url()).href);await projection.locator('#waiting').waitFor({state:'visible'});check((await projection.locator('#roomCode').textContent()).trim()===ownedCode,'Proyección usa sesión del anfitrión estudiante');await projection.close();
     check(errors.length===0,'Sin errores JS: '+errors.join('; '));await context.close();await students.close();
    }finally{await browser.close();}
   }

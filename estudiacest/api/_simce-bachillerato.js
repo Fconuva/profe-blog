@@ -35,8 +35,9 @@ async function identity(req,db,auth){
 }
 function canPlay(actor,course){return COURSES.includes(course)&&!!actor.student&&actor.student.activo!==false&&(actor.student.curso===course||actor.access?.cursos?.[course]===true);}
 function canTeach(actor,course){return actor.admin&&(!actor.teacher||actor.teacher.superadmin===true||(actor.teacher.cursos||[]).includes(course));}
+function canHost(actor,course){return canTeach(actor,course)||canPlay(actor,course);}
 function authorized(actor,room,host){
- if(host){if(!canTeach(actor,room.course)||room.owner!==actor.uid)throw fail(403,'Solo quien creó esta sala puede dirigirla.');}
+ if(host){if(!canHost(actor,room.course)||room.owner!==actor.uid)throw fail(403,'Solo quien creó esta sala puede dirigirla.');}
  else if(!canPlay(actor,room.course))throw fail(403,'Esta sala corresponde a otro curso.');
 }
 async function manejar(req,res,action,db,auth){
@@ -47,11 +48,11 @@ async function manejar(req,res,action,db,auth){
   let b=req.body||{};if(typeof b==='string'){try{b=JSON.parse(b);}catch{throw fail(400,'Solicitud inválida.');}}
   const actor=await identity(req,db,auth);
   if(action==='catalog'){
-   const courses=COURSES.filter(c=>canTeach(actor,c));if(!courses.length)throw fail(403,'Acceso docente requerido.');
+   const courses=COURSES.filter(c=>canHost(actor,c));if(!courses.length)throw fail(403,'Necesitas una cuenta activa de SIMCE para crear una sala.');
    return res.status(200).json({ok:true,courses,classics,readings:readings.map((r,i)=>({id:i,title:r.title}))});
   }
   if(action==='create'){
-   if(!COURSES.includes(b.course)||!canTeach(actor,b.course))throw fail(403,'No tienes este curso asignado.');
+   if(!COURSES.includes(b.course)||!canHost(actor,b.course))throw fail(403,'No tienes este curso asignado.');
    const alphabet='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let code,ref,tx;
    for(let n=0;n<4;n++){
     code=Array.from({length:6},()=>alphabet[crypto.randomInt(alphabet.length)]).join('');ref=db.ref(ROOT+'/'+code);
@@ -63,7 +64,7 @@ async function manejar(req,res,action,db,auth){
   }
   const code=String(req.query?.code||b.code||'').trim().toUpperCase();if(!CODE.test(code))throw fail(400,'Escribe el código de seis caracteres.');
   const path=ROOT+'/'+code,control=await val(db,path+'/control');if(!control)throw fail(404,'No existe esta sala. Revisa el código.');
-  const ownsRoom=canTeach(actor,control.course)&&control.owner===actor.uid;
+  const ownsRoom=canHost(actor,control.course)&&control.owner===actor.uid;
   if(action==='entry'){
    if(ownsRoom)return res.status(200).json({ok:true,mode:'host',course:control.course});
    if(!actor.student)return res.status(200).json({ok:true,mode:'account-required',message:'Esta cuenta no tiene perfil de alumno. Si vas a dirigir la partida, abre Docente e ingresa con tu cuenta habitual.'});
@@ -71,8 +72,8 @@ async function manejar(req,res,action,db,auth){
    if(!canPlay(actor,control.course))return res.status(200).json({ok:true,mode:'course-mismatch',course:control.course,message:`La sala ${code} es de ${control.course}. Tu cuenta corresponde a ${actor.student.curso||'un curso sin asignar'}. Usa el código de tu curso; si estás dirigiendo la partida, abre Docente.`});
    return res.status(200).json({ok:true,mode:'student',course:control.course});
   }
-  // El creador que entra desde la portada de jugadores conserva su rol docente.
-  // No se le fabrica un perfil ni se agrega su cuenta a la nómina de jugadores.
+  // El creador conserva el control exclusivo de su sala, sea estudiante o docente.
+  // Ser anfitrión no modifica los permisos de administración de la plataforma.
   if(action==='join'&&ownsRoom)return res.status(200).json({ok:true,code,mode:'host'});
   const host=['start','stop','grade','publish','finish'].includes(action)||action==='state'&&req.query?.host==='1';authorized(actor,control,host);
   const roundPath=path+'/rounds/'+control.current;

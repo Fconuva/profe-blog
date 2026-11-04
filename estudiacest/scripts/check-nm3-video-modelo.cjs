@@ -25,6 +25,6 @@ await p.waitForFunction(()=>!document.querySelector('video').seeking);
 await p.locator('video').screenshot({path:`test-results/mi-dia/video-${origin.includes('127.')?'local':'publico'}-${width}-cierre.png`});
 if(await p.evaluate(()=>document.documentElement.scrollWidth>innerWidth))throw Error('Desborde');
 if(errors.length)throw Error(errors.join('\n'));
-evidence.push({width,...meta,inicio:true,matematica:true,cierre:true,sinErrores:true});await p.close();
+evidence.push({viewport:width,...meta,inicio:true,matematica:true,cierre:true,sinErrores:true});await p.close();
 }fs.writeFileSync('test-results/mi-dia/video-'+(origin.includes('127.')?'local':'publico')+'.json',JSON.stringify(evidence,null,2));console.log('Video: 5:00, reproducción, Matemática y cierre verificados en tres tamaños.');
 }finally{await b.close()}})().catch(e=>{console.error(e);process.exitCode=1});

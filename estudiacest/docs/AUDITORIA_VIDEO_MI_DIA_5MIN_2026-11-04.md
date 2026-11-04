@@ -11,7 +11,7 @@ Versión del 4 de noviembre de 2026. Archivo: `Mi dia - modelo 5 minutos.mp4`.
 - Decodificación del archivo completo sin errores. Corregido el redondeo que inicialmente hacía terminar la imagen antes del audio.
 - Sonoridad medida sobre el MP4 final: **−17,03 LUFS integrados; pico real −1,89 dBTP**. Música ambiental original suave bajo la voz; sin saturación medida.
 - Voz nueva con pensamientos, duda interna, pregunta y reflexión final; duración hablada aproximada: 277 s. Aceleración base 1,05× con ajustes de hasta 1,214× para encajar las partes. No se ralentizó la voz para llenar cinco minutos.
-- Subtítulos VTT con texto del libreto y tiempos derivados del reconocimiento local. La transcripción automática sirve como contraste y puede diferir en nombres o puntuación.
+- Subtítulos VTT con texto del libreto y tiempos derivados del reconocimiento local. La transcripción automática sirve como contraste y puede diferir en nombres o puntuación. También se transcribió el MP4 final completo: 57 fragmentos, con la última frase reconocida hasta 297,98 s.
 
 ## Revisión visual y pedagógica
 
@@ -34,3 +34,11 @@ Guía de 19 páginas: PDF abierto, páginas 6 y 9 revisadas visualmente; ninguna
 Alcance: auditoría técnica completa y revisión visual por muestreo de cortes; no es un dictamen humano independiente ni una observación en aula.
 
 SHA-256 del MP4: `a3c30503d4a9b2a3891f35bae36624dc1b9ff8ce6a984b78a8706f03661aed30`.
+
+## Publicación verificada
+
+Commit de contenido: `51c7b8eacc0ba1cf19600643d5f59f0d60b680a0`. Despliegue seguro: `dpl_9SGsheLuxAcbvX99q8gLqXvmd29E`, READY, proyecto `prj_v2yUaXflcSoBgunqmn1rAEfh0KMR`, alias `www.estudiacest.com`; datos consultados al terminar.
+
+Los seis archivos públicos (tres HTML, PDF, MP4 y VTT) coinciden por SHA-256 con la fuente final, normalizando CRLF en texto. El MP4 público pesa 67.733.380 bytes. Reproducción, salto a 2:20 y reproducción hasta terminar aprobados en 390/1366/3840; capturas de Matemática y cierre abiertas. Nueve vistas públicas de los documentos sin desbordes ni excepciones JS; ingreso habitual accesible. La transcripción del MP4 completo conserva la reflexión final, reconocida hasta 297,98 s.
+
+Entrega: https://www.estudiacest.com/nm3/mi-dia-en-imagenes/ ; conserva la tarjeta de NM3 y el acceso a la guía actualizada. Evidencia en `docs/evidencias/nm3-video-5min-2026-11-04.json`. Cierre documental y corrección del nombre del campo viewport en el control; sin segundo despliegue de contenido.

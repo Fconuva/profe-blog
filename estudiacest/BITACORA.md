@@ -5436,3 +5436,10 @@ Validación proporcional: rutas y fuentes existentes, mapa actualizado con cober
 - Actualizados MP4, VTT, presentación del proyecto, pauta docente y páginas 6/9 de la guía de 19 páginas. Sigue en la tarjeta existente de NM3. La voz ahora incorpora expectativa, duda, pregunta y reflexión; las viñetas alternativas se mantienen distinguidas de su audio literal.
 - Auditoría: 300 s de imagen/audio, 9.000 fotogramas, decodificación completa sin errores; −17,03 LUFS y −1,89 dBTP. Contactos de 48 centros y 96 extremos revisados. PDF sin invasión de pies; nueve vistas documentales y reproducción/saltos hasta el final en tres tamaños aprobados. Build integral aprobado (915 recursos). Evidencia en docs/AUDITORIA_VIDEO_MI_DIA_5MIN_2026-11-04.md y test-results/mi-dia. Publicación y comprobación pública se registrarán al cierre.
 
+## Publicación verificada
+
+Commit de contenido: `51c7b8eacc0ba1cf19600643d5f59f0d60b680a0`. Despliegue seguro: `dpl_9SGsheLuxAcbvX99q8gLqXvmd29E`, READY, proyecto `prj_v2yUaXflcSoBgunqmn1rAEfh0KMR`, alias `www.estudiacest.com`; datos consultados al terminar.
+
+Los seis archivos públicos (tres HTML, PDF, MP4 y VTT) coinciden por SHA-256 con la fuente final, normalizando CRLF en texto. El MP4 público pesa 67.733.380 bytes. Reproducción, salto a 2:20 y reproducción hasta terminar aprobados en 390/1366/3840; capturas de Matemática y cierre abiertas. Nueve vistas públicas de los documentos sin desbordes ni excepciones JS; ingreso habitual accesible. La transcripción del MP4 completo conserva la reflexión final, reconocida hasta 297,98 s.
+
+Entrega: https://www.estudiacest.com/nm3/mi-dia-en-imagenes/ ; conserva la tarjeta de NM3 y el acceso a la guía actualizada. Evidencia en `docs/evidencias/nm3-video-5min-2026-11-04.json`. Cierre documental y corrección del nombre del campo viewport en el control; sin segundo despliegue de contenido.

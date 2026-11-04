@@ -19,7 +19,7 @@ const origin=process.argv[2]||'http://127.0.0.1:8874';
     if(route==='/nm3/mi-dia-en-imagenes/'){
      await page.locator('video').evaluate(v=>new Promise((res,rej)=>{if(v.readyState>=1)return res();v.onloadedmetadata=res;v.onerror=()=>rej(Error('No carga el video'));}));
      const v=await page.locator('video').evaluate(v=>({duration:v.duration,width:v.videoWidth,height:v.videoHeight}));
-     if(v.duration<119||v.duration>122||v.width!==1280)throw Error(JSON.stringify(v));
+     if(Math.abs(v.duration-300)>.04||v.width!==1280)throw Error(JSON.stringify(v));
      await page.locator('video').evaluate(v=>{v.muted=true;return v.play()});
      await page.waitForFunction(()=>document.querySelector('video').currentTime>0.2);
      await page.locator('video').evaluate(v=>v.pause());

@@ -1,5 +1,7 @@
 # Auditoría del video modelo · Mi día en imágenes y voz
 
+> **Revisión de Francisco posterior al cierre, 4-nov-2026:** voz e imágenes están en tiempos distintos. La sincronización no está aprobada; las comprobaciones siguientes no acreditan la correspondencia frase–acción. Trabajo detenido a petición del docente para retomar mañana. Véase `RETOMAR_VIDEO_MI_DIA_2026-11-04.md`. Se preserva el informe anterior como antecedente, sin modificar el video ni publicar cambios durante la pausa.
+
 Versión del 4 de noviembre de 2026. Archivo: `Mi dia - modelo 5 minutos.mp4`.
 
 ## Resultado técnico

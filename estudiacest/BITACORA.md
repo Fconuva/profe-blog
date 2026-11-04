@@ -5446,3 +5446,7 @@ Entrega: https://www.estudiacest.com/nm3/mi-dia-en-imagenes/ ; conserva la tarje
 ## 2026-11-04 · NM3 · Pausa solicitada: voz e imagen desfasadas
 
 Francisco informa que la voz del libreto no acompaña las imágenes en sus tiempos y pide detener el trabajo, guardar y documentar para mañana. Queda pendiente corregir la sincronización frase por frase; la auditoría previa no acreditó esa correspondencia y el modelo no se considera aprobado. Se conservan archivos y publicación sin modificar MP4, audio, guía ni sitio. Traspaso en docs/RETOMAR_VIDEO_MI_DIA_2026-11-04.md y copia junto al proyecto local. Sin render, generación, pruebas nuevas ni despliegue; esperar a que Francisco retome.
+
+## 2026-11-04 · NM3 · Recursos integrados como tarjetas
+
+Por solicitud de Francisco, los bloques destacados de la clase de planos y de Siddhartha pasan a la cuadrícula habitual de `nm3/index.html`. Se reutiliza la tarjeta de la clase para evitar duplicarla y se incorpora el carrete como tarjeta de Plan lector, conservando enlaces y anclas. La portada pasa de 24 a 23 tarjetas y conserva sus 28 destinos. Revisión visual local y comprobación de anchos sin desbordes; publicación y cierre se registrarán tras verificar producción. Cambio limitado a la portada: el trabajo de sincronización del video continúa pausado.

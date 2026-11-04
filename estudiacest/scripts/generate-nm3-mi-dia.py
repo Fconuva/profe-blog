@@ -136,7 +136,8 @@ extra='''
 '''
 foot='EDUCAR EVANGELIZANDO Y EVANGELIZAR EDUCANDO, MEDIANTE UNA FORMACIÓN CONTINUA Y DE CALIDAD'
 html='<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Mi día en imágenes y voz · Guía</title><style>'+CSS+extra+'</style></head><body><nav class="print-tools"><a href="./">Volver al proyecto</a><a href="assets/guia-mi-dia-nm3.pdf">Descargar PDF</a><button onclick="print()">Imprimir</button></nav>'
-html+=''.join(f'<article class="sheet" data-page="{i}">{s}<footer class="footer"><span>{foot}</span><span class="page-number">Página {i} de {len(pages)}</span></footer></article>' for i,s in enumerate(pages,1))
+anchors={12:'libreto',16:'grabacion',17:'edicion',18:'presentacion',19:'rubrica'}
+html+=''.join(f'<article class="sheet" data-page="{i}" id="{anchors.get(i,"pagina-"+str(i))}">{s}<footer class="footer"><span>{foot}</span><span class="page-number">Página {i} de {len(pages)}</span></footer></article>' for i,s in enumerate(pages,1))
 html+='<script src="/assets/anotar-pizarra.js" defer></script></body></html>'
 (DEST/'guia.html').write_text('\n'.join(line.rstrip() for line in html.split('\n')),encoding='utf-8')
 print('Guía:',len(pages),'páginas')

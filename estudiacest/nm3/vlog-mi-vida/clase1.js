@@ -357,22 +357,6 @@ window.VlogClase1={
     {
       "phase": 8,
       "page": null,
-      "title": "Para el video · Al menos 4 planos distintos",
-      "html": "<p><b>Elijan al menos 4 de los 8 tamaños de plano estudiados.</b> Cada uno debe aportar algo a lo que quieren comunicar.</p><ol><li>Gran plano general</li><li>General</li><li>Entero</li><li>Americano</li><li>Medio</li><li>Primer plano</li><li>Primerísimo primer plano</li><li>Detalle</li></ol>",
-      "cue": "Repetir un plano en varias tomas cuenta como un solo tipo.",
-      "kind": "project-requirement"
-    },
-    {
-      "phase": 8,
-      "page": null,
-      "title": "Para el video · Al menos 3 ángulos distintos",
-      "html": "<p><b>Usen al menos 3 ángulos diferentes.</b> El ángulo indica desde dónde mira la cámara; el plano indica cuánto se ve.</p><p><b>Pueden elegir:</b> normal, picado, contrapicado, cenital, nadir e inclinado.</p><p><b>Ejemplo:</b> normal para conversar, cenital para mostrar los materiales y picado para observar una acción desde arriba.</p>",
-      "cue": "Planifiquen posiciones que puedan grabar con seguridad y expliquen qué aportan.",
-      "kind": ""
-    },
-    {
-      "phase": 8,
-      "page": null,
       "title": "La imagen muestra; la voz permite reflexionar",
       "html": "<p><b>Introspección:</b> observar los propios pensamientos, emociones y decisiones.</p><p><b>Acción:</b> «Voy en la micro hacia el colegio».</p><p><b>Reflexión:</b> «Me preocupa equivocarme en el taller. ¿Por qué me cuesta pedir ayuda si voy a aprender?».</p><p>El monólogo interior y la corriente de la conciencia permiten representar esa vida interior.</p>",
       "cue": "La voz agrega lo que la imagen no permite conocer por sí sola.",
@@ -422,7 +406,7 @@ window.VlogClase1={
       "phase": 8,
       "page": null,
       "title": "Revisen su video antes de entregarlo",
-      "html": "<ul><li><b>Planos:</b> al menos 4 tipos distintos de los 8 estudiados.</li><li><b>Ángulos:</b> al menos 3 diferentes, elegidos con una intención.</li><li><b>Reflexión:</b> incorporen monólogo interior y un breve pasaje de corriente de la conciencia.</li><li><b>Sincronización:</b> cada voz acompaña la escena prevista; prueben imagen y sonido juntos.</li><li><b>Duración:</b> máximo 5 minutos, con segundos planificados para cada toma.</li></ul>",
+      "html": "<ul><li><b>Reflexión:</b> incorporen monólogo interior y un breve pasaje de corriente de la conciencia.</li><li><b>Sincronización:</b> cada voz acompaña la escena prevista; prueben imagen y sonido juntos.</li><li><b>Duración:</b> máximo 5 minutos, con segundos planificados para cada toma.</li></ul>",
       "cue": "Expliquen qué aporta una elección de cámara y una frase de la voz interior.",
       "kind": ""
     }

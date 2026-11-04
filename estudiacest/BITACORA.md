@@ -1,5 +1,11 @@
 # Bitácora de Estudia CEST
 
+## 2026-11-04, PAES HC: clase de estrategias 3.º y diseño del ensayo final 4.º
+
+- Por instrucción de Francisco, 3.º A y B HC continúan con estrategias. Se creó `paes/clase-estrategias-3hc/`: presentación de nueve momentos, guía de dos lecturas originales y ocho preguntas, y hoja de ruta/pauta docente de 90 minutos. La explicación de pista textual, inferencia, alcance y distractor precede a la práctica. Las preguntas 3 y 7 exigen anotar evidencia y descarte; las claves docentes son B/C/A/D/C/A/D/B.
+- Dos ilustraciones originales generadas con Codex image_gen, abiertas y revisadas; se usan para enseñar el vínculo entre pista, inferencia y alternativa. La guía conserva los textos ficticios identificados. Se verificaron enlaces, imágenes y ocho reactivos, móvil a 390 px sin desborde, y build completo. La única incidencia de consola local fue la solicitud automática de `favicon.ico` al servidor de prueba.
+- Para 4.º A y B HC se trazó `paes/DISENO_ENSAYO_FINAL_4HC_20261105.md` contra la Forma 101 de Invierno 2026 y el temario DEMRE: siete lecturas, 65 ítems, 60 calificables y 150 minutos. La equivalencia psicométrica no puede asegurarse sin datos de dificultad por ítem; se planifica comprobación editorial y posterior análisis de respuestas. El cuadernillo aún no está construido, y falta confirmar tiempo efectivo y regla de nota final antes de aplicarlo.
+
 ## 2026-11-02, NM4: promedios del trabajo en clases pasados a Lirmi (4.º A, B, C y E TP)
 
 - Pedido de Francisco: pasar a Lirmi las notas de `/nm4/trabajo-en-clases/`. Promedio tal como está aunque falten tareas; columna N4 ya existente del Segundo Semestre; 4.º D TP queda pendiente por orden suya.

@@ -63,6 +63,14 @@ window.VlogClase1={
       "end": 90,
       "page": 7,
       "seconds": 300
+    },
+    {
+      "id": 8,
+      "name": "Preparación del video",
+      "start": null,
+      "end": null,
+      "page": null,
+      "seconds": 720
     }
   ],
   "slides": [
@@ -344,6 +352,78 @@ window.VlogClase1={
       "title": "Volvemos a la pregunta de la clase",
       "html": "<p class=\"return-question\">¿Qué cambia en una imagen cuando cambiamos el plano o el ángulo?</p><p>¿Cómo influye lo que mostramos y dejamos fuera en la manera en que otros comprenden nuestra experiencia? Respondan usando una decisión de su secuencia.</p>",
       "cue": "Respondan el cierre de la página 7 usando una decisión de su secuencia.",
+      "kind": ""
+    },
+    {
+      "phase": 8,
+      "page": null,
+      "title": "Para el video · Al menos 4 planos distintos",
+      "html": "<p><b>Elijan al menos 4 de los 8 tamaños de plano estudiados.</b> Cada uno debe aportar algo a lo que quieren comunicar.</p><ol><li>Gran plano general</li><li>General</li><li>Entero</li><li>Americano</li><li>Medio</li><li>Primer plano</li><li>Primerísimo primer plano</li><li>Detalle</li></ol>",
+      "cue": "Repetir un plano en varias tomas cuenta como un solo tipo.",
+      "kind": "project-requirement"
+    },
+    {
+      "phase": 8,
+      "page": null,
+      "title": "Para el video · Al menos 3 ángulos distintos",
+      "html": "<p><b>Usen al menos 3 ángulos diferentes.</b> El ángulo indica desde dónde mira la cámara; el plano indica cuánto se ve.</p><p><b>Pueden elegir:</b> normal, picado, contrapicado, cenital, nadir e inclinado.</p><p><b>Ejemplo:</b> normal para conversar, cenital para mostrar los materiales y picado para observar una acción desde arriba.</p>",
+      "cue": "Planifiquen posiciones que puedan grabar con seguridad y expliquen qué aportan.",
+      "kind": ""
+    },
+    {
+      "phase": 8,
+      "page": null,
+      "title": "La imagen muestra; la voz permite reflexionar",
+      "html": "<p><b>Introspección:</b> observar los propios pensamientos, emociones y decisiones.</p><p><b>Acción:</b> «Voy en la micro hacia el colegio».</p><p><b>Reflexión:</b> «Me preocupa equivocarme en el taller. ¿Por qué me cuesta pedir ayuda si voy a aprender?».</p><p>El monólogo interior y la corriente de la conciencia permiten representar esa vida interior.</p>",
+      "cue": "La voz agrega lo que la imagen no permite conocer por sí sola.",
+      "kind": ""
+    },
+    {
+      "phase": 8,
+      "page": null,
+      "title": "Monólogo interior · Escuchar un pensamiento",
+      "html": "<div class=\"concept\"><p class=\"concept-def\">Representa directamente lo que una persona piensa para sí misma.</p><p>Puede mostrar dudas, deseos, recuerdos o decisiones. En este ejemplo, las ideas siguen un hilo fácil de reconocer.</p><p class=\"concept-ex\">«Otra vez voy mirando la hora. No quiero llegar tarde al taller. Ayer no entendí una parte, pero me dio vergüenza preguntar. Hoy voy a pedir ayuda».</p></div>",
+      "cue": "Reconozcan la preocupación, su motivo y la decisión. Ejemplo creado para esta clase.",
+      "kind": "concept-slide"
+    },
+    {
+      "phase": 8,
+      "page": null,
+      "title": "Corriente de la conciencia · Seguir las asociaciones",
+      "html": "<div class=\"concept\"><p class=\"concept-def\">Busca reproducir el fluir de la mente: sensaciones, recuerdos e ideas que se van enlazando.</p><p>Puede tener saltos, repeticiones o frases incompletas. Sus asociaciones permiten seguir la experiencia interior.</p><p class=\"concept-ex\">«El vidrio frío… como la ventana de mi pieza. Mamá dijo la colación, ¿la guardé? La mochila pesa. Ese ruido… el taller. Ayer las chispas, hoy preguntar, que no se me olvide…».</p></div>",
+      "cue": "Sigan la cadena: vidrio, casa, mamá, mochila y taller. Ejemplo creado para esta clase.",
+      "kind": "concept-slide"
+    },
+    {
+      "phase": 8,
+      "page": null,
+      "title": "¿En qué se parecen y en qué se diferencian?",
+      "html": "<table><thead><tr><th>Monólogo interior</th><th>Corriente de la conciencia</th></tr></thead><tbody><tr><td>Da voz directa a los pensamientos.</td><td>Recrea el fluir de pensamientos y sensaciones.</td></tr><tr><td>En el ejemplo, desarrolla una preocupación hasta una decisión.</td><td>En el ejemplo, enlaza sensaciones, recuerdos y preocupaciones con saltos.</td></tr><tr><td>El lector reconoce un hilo de reflexión.</td><td>El lector reconstruye la cadena de asociaciones.</td></tr></tbody></table><p>Son recursos relacionados y pueden combinarse. La diferencia de estos ejemplos está en cómo organizan el pensamiento, no en quitar la puntuación.</p>",
+      "cue": "Ambos muestran interioridad: expliquen qué cambia en la forma de contarla.",
+      "kind": ""
+    },
+    {
+      "phase": 8,
+      "page": null,
+      "title": "Una escena · Imagen, pensamiento y tiempo",
+      "html": "<table><thead><tr><th>Tiempo</th><th>Imagen y cámara</th><th>Voz que acompaña</th></tr></thead><tbody><tr><td>0–10 s</td><td>Plano general · normal. El estudiante sube a la micro.</td><td>«Hoy voy al taller con una duda. No quiero volver a quedarme callado».</td></tr><tr><td>10–20 s</td><td>Primer plano · normal. Mira por la ventana.</td><td>«El vidrio frío… mi pieza, mamá llamando, ¿guardé la colación? El taller… ahí está otra vez la duda».</td></tr><tr><td>20–30 s</td><td>Plano detalle · picado. Abre el cuaderno con su pregunta.</td><td>«La voy a anotar ahora. Preguntar también es parte de aprender».</td></tr></tbody></table>",
+      "cue": "Ejemplo de 30 segundos: la voz debe coincidir con la acción. Lean y ajusten la duración real.",
+      "kind": "organizer"
+    },
+    {
+      "phase": 8,
+      "page": null,
+      "title": "Prueben las dos voces",
+      "html": "<ol><li>En parejas, elijan una escena cotidiana y anótenla en el cuaderno.</li><li>Escriban un monólogo interior de 2 o 3 frases: ¿qué piensa o decide quien aparece?</li><li>Reescriban el momento como corriente de la conciencia: enlacen una sensación, un recuerdo y una preocupación.</li><li>Lean ambas versiones y revisen una frase para vincularla mejor con la imagen.</li></ol>",
+      "cue": "Tienen 3 minutos. Pueden inventar la situación; no necesitan compartir experiencias privadas.",
+      "kind": ""
+    },
+    {
+      "phase": 8,
+      "page": null,
+      "title": "Revisen su video antes de entregarlo",
+      "html": "<ul><li><b>Planos:</b> al menos 4 tipos distintos de los 8 estudiados.</li><li><b>Ángulos:</b> al menos 3 diferentes, elegidos con una intención.</li><li><b>Reflexión:</b> incorporen monólogo interior y un breve pasaje de corriente de la conciencia.</li><li><b>Sincronización:</b> cada voz acompaña la escena prevista; prueben imagen y sonido juntos.</li><li><b>Duración:</b> máximo 5 minutos, con segundos planificados para cada toma.</li></ul>",
+      "cue": "Expliquen qué aporta una elección de cámara y una frase de la voz interior.",
       "kind": ""
     }
   ],

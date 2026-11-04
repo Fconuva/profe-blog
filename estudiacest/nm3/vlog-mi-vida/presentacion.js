@@ -12,7 +12,7 @@
   activePhase=phase;current=next;
   slides.forEach((s,i)=>{s.hidden=i!==current;s.classList.toggle('active',i===current);s.setAttribute('aria-hidden',String(i!==current));});
   $('counter').textContent=(current+1)+' / '+slides.length;$('jump').value=current;$('prev').disabled=current===0;$('next').disabled=current===slides.length-1;
-  $('phase-label').textContent=phases[phase].name+' · '+phases[phase].start+'–'+phases[phase].end+' min';
+  $('phase-label').textContent=phases[phase].name+' · '+(phases[phase].start===null?phases[phase].seconds/60+' min estimados':phases[phase].start+'–'+phases[phase].end+' min');
   slides[current].querySelector('.slide-content').scrollTop=0;
   history.replaceState(null,'','#diapositiva-'+(current+1));paintClock();
   if(focus)slides[current].querySelector('h1').focus({preventScroll:true});

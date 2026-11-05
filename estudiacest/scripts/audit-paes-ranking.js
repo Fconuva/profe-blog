@@ -58,20 +58,24 @@ async function audit() {
     check(result.correct === result.total && result.total === catalog.questionsFor(false).length, 'TP conserva catálogo ' + version);
     attempt.version = 'desconocida'; check(R.build('tp', profiles, {}, { tp: { [sid]: { tp: attempt } } }, score).length === 0, 'TP rechaza versión desconocida');
   }
-  const results = [{ uid: 'a', nombre: 'A', curso: '3A-HC', results: { 1: { correct: 1, total: 2 }, 2: { correct: 10, total: 10 } } }, { uid: 'b', nombre: 'B', curso: '3B-HC', results: { 1: { correct: 3, total: 4 } } }, { uid: 'c', nombre: 'C', curso: '3B-HC', results: { 1: { correct: 3, total: 4 } } }];
-  const ordered = R.order(results, 'all', 'b');
-  check(ordered.rows[0].percentage === 75 && ordered.rows[0].completed === 2, 'promedio por guía, distinto largo');
-  check(ordered.rows[1].position === 2 && ordered.rows[2].position === 2 && ordered.mine.isYou === true, 'empate y puesto propio');
-  check(R.order(results, '2', 'b').participants === 1, 'filtro por guía');
+  const mk = (uid, nombre, n, correct, total) => ({ uid, nombre, curso: '3A-HC', results: Object.fromEntries(Array.from({ length: n }, (_, i) => [String(i + 1), { correct, total }])) });
+  const one = mk('uno', 'Uno', 1, 10, 10), ten = mk('diez', 'Diez', 10, 8, 10), twin = mk('gemelo', 'Gemelo', 10, 8, 10), tie = mk('empate', 'Empate', 5, 16, 10);
+  const ordered = R.order([one, ten, twin, tie], 'uno');
+  check(ordered.rows[0].nombre === 'Diez' && ordered.rows[0].score === 80 && ordered.rows[0].completed === 10, 'criterio total acumulado: 10 guías al 80 % superan a 1 guía al 100 %');
+  check(ordered.rows.at(-1).nombre === 'Uno' && ordered.mine.position === 4 && ordered.mine.score === 10 && ordered.mine.percentage === 10, '1 guía al 100 % queda por debajo');
+  check(ordered.rows[0].position === 1 && ordered.rows[1].position === 1 && ordered.rows[0].possible === 100 && ordered.rows[0].percentage === 80, 'empate de puntaje y guías comparte puesto; logro sobre el total del catálogo');
+  const tiebreak = R.order([mk('a', 'A', 4, 20, 20), mk('b', 'B', 8, 10, 20)], 'a');
+  check(tiebreak.rows[0].nombre === 'B' && tiebreak.rows[0].position === 1 && tiebreak.rows[1].position === 2, 'a igual puntaje total... más guías completadas va primero');
+  check(/ranking suma las respuestas correctas/.test(fs.readFileSync(path.join(__dirname, '../paes/js/ranking.js'), 'utf8')) && !/<select/.test(fs.readFileSync(path.join(__dirname, '../paes/js/ranking.js'), 'utf8')), 'interfaz: un solo ranking por el total, sin selector de guía');
   check(!JSON.stringify(ordered).includes('uid') && !JSON.stringify(ordered).includes('rut'), 'no devuelve identificadores privados');
   data.plataforma_paes.guia_respuestas = snapshots.legacy;
   const before = JSON.stringify(data), a = await call(api), b = await call(api, 'hc', 'admin');
-  check(a.code === 200 && b.code === 200 && a.body.guides.at(-1).id === '24', 'API real permite alumno de su programa y admin');
+  check(a.code === 200 && b.code === 200 && a.body.totalGuides === 24, 'API real permite alumno de su programa y admin');
   check(db.reads.filter(p => p === 'plataforma_paes/guia_respuestas').length === 1, 'caché evita descargar todo por alumno');
   check(a.headers['Cache-Control'] === 'private, no-store', 'no hay caché pública compartida');
   check(JSON.stringify(data) === before, 'no modifica respuestas, notas ni publicaciones');
   const now = Date.now;
-  try { Date.now = () => now() + R.CACHE_MS + 1; r.answers = {}; r.intentosAnteriores = []; const fresh = await call(api); check(fresh.body.rows[0].percentage === 0 && fresh.body.updatedAt > a.body.updatedAt, 'actualización automática desde resultados nuevos, incluido cero'); }
+  try { Date.now = () => now() + R.CACHE_MS + 1; r.answers = {}; r.intentosAnteriores = []; const fresh = await call(api); check(fresh.body.rows[0].score === 0 && fresh.body.updatedAt > a.body.updatedAt, 'actualización automática desde resultados nuevos, incluido cero'); }
   finally { Date.now = now; }
   console.log(`Rankings PAES: ${checks} controles de cálculo, historia, identidad, privacidad, caché y actualización aprobados.`);
 }

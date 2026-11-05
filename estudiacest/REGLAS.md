@@ -668,12 +668,17 @@ logro y cantidad de guías; nunca RUT, UID, respuestas, claves ni notas privadas
 Esta autorización publica únicamente ese resumen; no cambia las publicaciones
 individuales ni las pautas de los instrumentos.
 
-El general promedia los porcentajes por guía, una vez por guía, con el mejor
-reenvío confirmado conservado. Los borradores y archivos de restablecimiento no
-compiten. Las formas o versiones diferentes usan su clave y denominador propio;
-las rutas de apoyo no se mezclan con las actividades comparadas. Se excluyen
-cuentas administrativas, pruebas e inactivas. Empata primero el promedio a una
-décima, luego la cantidad completada; si siguen iguales comparten puesto.
+**Criterio vigente desde el 5-nov-2026.** Orden literal de Francisco: «ARREGLA EL RANKING, CUENTA A LA GENTE
+CON 1 TAREA, ENTONCES SI TIENE 1 OBVIO VA A SER EL MEJOR EL RANKIGN TOMA EL TOTAL DE TODO. 1 SOLO RANKING DEL
+TOTAL. SOBRE TODO EN HC». Hay un único ranking por programa (HC y TP, mismo código), sin selector de guía,
+ordenado por el **total acumulado**: la suma de respuestas correctas de todas las guías del catálogo; una guía
+no entregada aporta 0, de modo que 1 guía al 100 % queda por debajo de 10 guías al 80 %. Se muestra además el
+logro (puntaje sobre el total posible, sumando el mayor denominador visto por guía) y las guías completadas.
+Cada guía cuenta una vez, con el mejor reenvío confirmado conservado. Los borradores y archivos de
+restablecimiento no compiten. Las formas o versiones diferentes usan su clave y denominador propio; las rutas de
+apoyo no se mezclan con las actividades comparadas. Se excluyen cuentas administrativas, pruebas e inactivas.
+Empata primero el puntaje total, luego la cantidad completada; si siguen iguales comparten puesto.
+(Criterio anterior, retirado: promedio de los porcentajes por guía solo sobre las guías entregadas.)
 La interfaz consulta cada minuto mientras la pestaña está visible. La API usa
 una caché interna breve y privada, sin escribir ni recalificar los registros.
 Las próximas guías se agregan al catálogo de ranking junto a su fuente de

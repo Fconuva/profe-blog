@@ -19,14 +19,21 @@ function confirmed(record, legacy = false, id = '') {
   if (record.submitted !== undefined || record.completada !== undefined) return record.submitted === true && record.completada === true;
   return legacy && (record.status === 'sent' || ['10', '11', '12', '13'].includes(id) && Number(record.submittedAt) > 0 && Object.keys(record.answers || {}).length > 0);
 }
-function order(entries, guide, viewer) {
+// Ranking único por total acumulado (5-nov-2026): suma de respuestas correctas de
+// todas las guías del catálogo. Una guía no entregada aporta 0. El porcentaje se
+// informa sobre el total posible del catálogo (suma del mayor denominador visto por guía).
+function order(entries, viewer) {
+  const possibleByGuide = {};
+  entries.forEach(entry => Object.entries(entry.results).forEach(([id, v]) => { possibleByGuide[id] = Math.max(possibleByGuide[id] || 0, v.total); }));
+  const possible = Object.values(possibleByGuide).reduce((sum, n) => sum + n, 0);
   const rows = entries.map(entry => {
-    const values = guide === 'all' ? Object.values(entry.results) : entry.results[guide] ? [entry.results[guide]] : [];
+    const values = Object.values(entry.results);
     if (!values.length) return null;
-    return { uid: entry.uid, nombre: entry.nombre, curso: entry.curso, percentage: Math.round(values.reduce((sum, v) => sum + v.correct / v.total * 100, 0) / values.length * 10) / 10, completed: values.length };
-  }).filter(Boolean).sort((a, b) => b.percentage - a.percentage || b.completed - a.completed || a.nombre.localeCompare(b.nombre, 'es') || a.uid.localeCompare(b.uid));
-  rows.forEach((row, index) => { row.position = index && row.percentage === rows[index - 1].percentage && row.completed === rows[index - 1].completed ? rows[index - 1].position : index + 1; });
-  const safe = row => row ? { position: row.position, nombre: row.nombre, curso: row.curso, percentage: row.percentage, completed: row.completed, isYou: row.uid === viewer } : null;
+    const score = values.reduce((sum, v) => sum + v.correct, 0);
+    return { uid: entry.uid, nombre: entry.nombre, curso: entry.curso, score, possible, percentage: possible ? Math.round(score / possible * 1000) / 10 : 0, completed: values.length };
+  }).filter(Boolean).sort((a, b) => b.score - a.score || b.completed - a.completed || a.nombre.localeCompare(b.nombre, 'es') || a.uid.localeCompare(b.uid));
+  rows.forEach((row, index) => { row.position = index && row.score === rows[index - 1].score && row.completed === rows[index - 1].completed ? rows[index - 1].position : index + 1; });
+  const safe = row => row ? { position: row.position, nombre: row.nombre, curso: row.curso, score: row.score, possible: row.possible, percentage: row.percentage, completed: row.completed, isYou: row.uid === viewer } : null;
   return { rows: rows.filter(row => row.position <= 10).map(safe), mine: safe(rows.find(row => row.uid === viewer)), participants: rows.length };
 }
 function build(program, profiles, admins, data, scoreLegacy) {
@@ -100,7 +107,7 @@ async function handle(req, res, ctx) {
   try {
     if (req.method !== 'GET') throw error(405, 'Usa GET para consultar el ranking.');
     const program = req.query.programa, guide = String(req.query.guia || 'all');
-    if (!['hc', 'tp'].includes(program) || guide !== 'all' && !descriptors[program].some(d => d.id === guide)) throw error(400, 'Selecciona HC o TP y una guía disponible.');
+    if (!['hc', 'tp'].includes(program) || guide !== 'all') throw error(400, 'Selecciona HC o TP; el ranking es uno solo, por el total.');
     const token = String(req.headers.authorization || '').replace(/^Bearer\s+/i, '').trim();
     if (!token) throw error(401, 'Ingresa con tu cuenta para ver el ranking.');
     let user; try { user = await ctx.auth.verifyIdToken(token); } catch (_) { throw error(401, 'Vuelve a ingresar para consultar el ranking.'); }
@@ -108,7 +115,7 @@ async function handle(req, res, ctx) {
     const profile = profileSnap.val();
     if (adminSnap.val() !== true && (!profile || profile.activo === false || !courses[program].has(clean(profile.curso)))) throw error(403, 'Este ranking corresponde al otro programa PAES.');
     const loaded = await load(ctx.db, program, ctx);
-    return res.status(200).json({ success: true, program, guide, guides: descriptors[program], updatedAt: loaded.at, refreshSeconds: 60, ...order(loaded.value, guide, user.uid) });
+    return res.status(200).json({ success: true, program, guide, totalGuides: descriptors[program].length, updatedAt: loaded.at, refreshSeconds: 60, ...order(loaded.value, user.uid) });
   } catch (e) {
     if (!e.status) console.error('[paes-ranking] No se pudo consultar:', e.code || 'internal');
     return res.status(e.status || 500).json({ error: e.status ? e.message : 'No se pudo actualizar el ranking. Vuelve a intentarlo.' });

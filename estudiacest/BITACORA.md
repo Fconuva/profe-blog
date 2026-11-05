@@ -5520,3 +5520,10 @@ Lirmi completado mediante MCP Playwright con sesión autenticada: cinco clases p
 - Recálculo con `personalRouteRow` y `buildPublication`, el mismo modelo `laboriosidad-u3-c1-c12-2026-10-14-r6`, limitado a ese UID. Se probó primero sin guardar: 4 escrituras previstas y las demás clases idénticas. Luego se escribieron solo esas 4 clases; la relectura coincide por checksum y el resto quedó intacto. Ninguna nota bajó.
 - La clase 12, sin evidencia en la guía estándar ni en la ruta personal, queda con nota manual 1,0 por decisión de Francisco («las que no tiene hecha es nota 1.0»). Usa `teacherGradeOverride` y `manualGradeHistory`, para que el publicador la conserve. Las clases 8 y 9 siguen sin evaluación.
 - Respaldos previos y el informe PDF quedan fuera de Git. No se modificó Lirmi, ni otros estudiantes, ni el código.
+
+## 2026-11-05 · PAES HC y TP · Ranking único por total acumulado
+
+- Orden de Francisco: «ARREGLA EL RANKING, CUENTA A LA GENTE CON 1 TAREA, ENTONCES SI TIENE 1 OBVIO VA A SER EL MEJOR EL RANKIGN TOMA EL TOTAL DE TODO. 1 SOLO RANKING DEL TOTAL. SOBRE TODO EN HC».
+- Antes: promedio del porcentaje por guía solo sobre las guías entregadas (quien entregaba 1 guía al 100 % iba primero). Ahora: un único ranking por programa, ordenado por el puntaje total (suma de respuestas correctas de todas las guías; una guía sin entregar aporta 0). Se muestra también el logro sobre el total posible del catálogo y las guías completadas. Desempate: más guías completadas; luego puesto compartido. Se retiró el selector de guía; la API solo acepta el ranking del total.
+- Sin cambios: una vez por guía con el mejor reenvío confirmado, borradores fuera, cuentas de prueba, administrativas e inactivas excluidas, y solo nombre abreviado, curso, puesto, puntaje, logro y guías (nunca RUT, UID, respuestas, claves ni notas). TP comparte el mismo código y queda con el mismo criterio.
+- Archivos: `api/_paes-ranking.js`, `paes/js/ranking.js`, `scripts/audit-paes-ranking.js`, `REGLAS.md`. Auditoría con caso ficticio: 1 guía al 100 % queda bajo 10 guías al 80 %.

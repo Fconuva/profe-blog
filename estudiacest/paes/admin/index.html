@@ -1175,7 +1175,7 @@
           </div>
           <div class="filters-bar">
             <input type="text" class="search-input" id="searchLibro" placeholder="Buscar por nombre o RUT...">
-            <select class="select-filter" id="periodoLibro" aria-label="Período de notas"><option value="2">Segundo semestre · G11–G25</option><option value="1">Primer semestre · G3–G10</option><option value="todos">Todas · G3–G21</option></select>
+            <select class="select-filter" id="periodoLibro" aria-label="Período de notas"><option value="2">Segundo semestre · G11–G26</option><option value="1">Primer semestre · G3–G10</option><option value="todos">Todas · G3–G26</option></select>
             <button type="button" class="btn-action-small" id="refreshLibro">Actualizar notas</button>
             <select class="select-filter" id="filterCourseLibro" title="Curso">
               <option value="3°A HC">3°A HC</option>
@@ -1451,7 +1451,7 @@
     let databaseData = { resultados: {}, guias: {}, guiaResp: {}, guiasConfig: { blocked: {}, exceptions: {} }, libroNotas: {} };
 
     // Guías del Taller PAES que muestra el Libro de Notas.
-    const SESIONES_LIBRO = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25];
+    const SESIONES_LIBRO = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26];
     function sesionesLibro() {
       const periodo = document.getElementById('periodoLibro').value;
       return SESIONES_LIBRO.filter(s => periodo === 'todos' || (periodo === '2' ? s >= 11 : s <= 10));
@@ -1460,7 +1460,8 @@
       const c = String(curso || '').replace(/[^0-9A-Z]/gi, '').toUpperCase();
       if (guia === 14) return c === '4AHC';
       // La Guía 23 se aplicó en 3.º HC; en 4.º HC no aplica salvo que tenga nota registrada.
-      return guia === 23 && /^4[AB]HC$/.test(c) && String(nota ?? '').trim() === '';
+      // La Guía 26 es de 3.º A y B HC; en 4.º HC tampoco aplica sin nota registrada.
+      return (guia === 23 || guia === 26) && /^4[AB]HC$/.test(c) && String(nota ?? '').trim() === '';
     }
 
     // ====== CATÁLOGO DE GUÍAS (ids compartidos con guias.html y guia-lock.js) ======
@@ -1483,7 +1484,7 @@
       { id: 'g23',   n: 'Guía N°23 — Evidencia y consistencia',      tipo: 'Ruta individual' },
       { id: 'g24',   n: 'Guía N°24 — Textos discontinuos',           tipo: 'Ruta individual' },
       { id: 'g25',   n: 'Guía N°25 — Simulacro PAES 1: lectura sostenida y precisión', tipo: 'Interactiva' },
-      { id: 'g26',   n: 'Guía N°26 — Retroalimentación de errores',  tipo: 'Ruta individual' },
+      { id: 'g26',   n: 'Guía N°26 — Elegir con evidencia (3.º HC)', tipo: 'Interactiva' },
       { id: 'g27',   n: 'Guía N°27 — Inferencias globales',          tipo: 'Ruta individual' },
       { id: 'g28',   n: 'Guía N°28 — Simulacro guiado 2',            tipo: 'Ruta individual' },
       { id: 'g29',   n: 'Guía N°29 — Plan personal de lectura',      tipo: 'Ruta individual' },
@@ -1662,7 +1663,20 @@
         skill: { 1:'LOCALIZAR',2:'INTERPRETAR',3:'LOCALIZAR',4:'LOCALIZAR',5:'INTERPRETAR',6:'INTERPRETAR',7:'EVALUAR',8:'INTERPRETAR',9:'LOCALIZAR',10:'LOCALIZAR',11:'INTERPRETAR',12:'INTERPRETAR',13:'EVALUAR',14:'EVALUAR',15:'LOCALIZAR',16:'EVALUAR',17:'LOCALIZAR',18:'INTERPRETAR',19:'LOCALIZAR',20:'EVALUAR',21:'EVALUAR',22:'EVALUAR',23:'INTERPRETAR',24:'EVALUAR' },
         devOrder: [], devLabels: {}
       },
-      '26': { titulo:'Guía 26 — Retroalimentación de errores', total:6, key:{}, skill:{}, devOrder:[], devLabels:{} },
+      '26': {
+        titulo: 'Guía 26: Elegir con evidencia (3.º A y B HC)',
+        total: 8,
+        key: {},
+        skill: { 1:'LOCALIZAR',2:'INTERPRETAR',3:'EVALUAR',4:'INTERPRETAR',5:'LOCALIZAR',6:'INTERPRETAR',7:'INTERPRETAR',8:'EVALUAR' },
+        devOrder: ['p3_pista','p3_descarte','p7_pista','p7_descarte','salida'],
+        devLabels: {
+          p3_pista:'Pregunta 3 — pista del texto',
+          p3_descarte:'Pregunta 3 — opción descartada y razón',
+          p7_pista:'Pregunta 7 — pista del texto',
+          p7_descarte:'Pregunta 7 — opción descartada y razón',
+          salida:'Cierre — elegí y descarté porque…'
+        }
+      },
       '27': { titulo:'Guía 27 — Inferencias globales', total:6, key:{}, skill:{}, devOrder:[], devLabels:{} },
       '28': { titulo:'Guía 28 — Simulacro guiado 2', total:6, key:{}, skill:{}, devOrder:[], devLabels:{} },
       '29': { titulo:'Guía 29 — Plan personal de lectura', total:6, key:{}, skill:{}, devOrder:[], devLabels:{} },
@@ -1711,7 +1725,7 @@
       if (record && record.variant === 'guided-access-2026' && GUIDED_CFG[currentGuia]) {
         return { ...GUIDED_CFG[currentGuia], key: record.adminKey || {} };
       }
-      if (Number(currentGuia) <= 9 || currentGuia === '20' || ['21','25'].includes(currentGuia)) {
+      if (Number(currentGuia) <= 9 || currentGuia === '20' || ['21','25','26'].includes(currentGuia)) {
         return { ...cfg(), key: (record && record.adminKey) || {} };
       }
       return cfg();
@@ -2208,7 +2222,7 @@
         const ans = r.answers || {};
         for (let q = 1; q <= recordCfg.total; q++) {
           const sk = recordCfg.skill && recordCfg.skill[q]; if (!sk || !agg[sk]) continue;
-          if ((Number(currentGuia) <= 9 || ['21','25'].includes(currentGuia)) && !recordCfg.key[q]) continue;
+          if ((Number(currentGuia) <= 9 || ['21','25','26'].includes(currentGuia)) && !recordCfg.key[q]) continue;
           const response = ans[q] || ans[`q${String(q).padStart(2, '0')}`];
           agg[sk].tot++;
           if (response === recordCfg.key[q]) agg[sk].ok++;
@@ -2222,7 +2236,7 @@
         ? rows.filter(r => r.status === 'sent' && r.skills)
         : Number(currentGuia) <= 9
           ? rows.filter(r => r.status === 'sent' && Object.keys(cfgForRecord(r).key).length === cfgForRecord(r).total)
-        : ['21','25'].includes(currentGuia)
+        : ['21','25','26'].includes(currentGuia)
           ? rows.filter(r => Object.keys(cfgForRecord(r).key).length === cfgForRecord(r).total)
           : rows;
       if (!summaryRows.length || (currentGuia !== '14' && !C.skill)) { box.style.display = 'none'; return; }
@@ -2258,7 +2272,7 @@
         Object.keys(sk).forEach(k => { sk[k].ok = Number(r.skills[k]?.correct || 0); sk[k].tot = Number(r.skills[k]?.total || 0); });
       } else {
         for (let q=1; q<=C.total; q++){
-          if ((Number(currentGuia) <= 9 || ['21','25'].includes(currentGuia)) && !C.key[q]) continue;
+          if ((Number(currentGuia) <= 9 || ['21','25','26'].includes(currentGuia)) && !C.key[q]) continue;
           const s = C.skill && C.skill[q];
           const response = ans0[q] || ans0[`q${String(q).padStart(2, '0')}`];
           if (s && sk[s]) { sk[s].tot++; if (response === C.key[q]) sk[s].ok++; }
@@ -2281,7 +2295,7 @@
         const ans = isG14 ? (r.displayAnswers && r.displayAnswers[qid]) : (ans0[q] || ans0[qid]);
         const key = isG14 ? (r.displayKeys && r.displayKeys[qid]) : C.key[q];
         const experimental = isG14 && r.itemCorrect && r.itemCorrect[qid] === null;
-        const canEvaluate = isG14 ? !isDraft : (Number(currentGuia) > 9 && !['21','25'].includes(currentGuia)) || !!key;
+        const canEvaluate = isG14 ? !isDraft : (Number(currentGuia) > 9 && !['21','25','26'].includes(currentGuia)) || !!key;
         const ok = isG14 ? r.itemCorrect && r.itemCorrect[qid] === true : ans === key;
         const cell = document.createElement('div');
         cell.className = `q-cell ${experimental || !canEvaluate ? '' : (ans ? (ok ? 'correct' : 'incorrect') : '')}`;

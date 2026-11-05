@@ -35,6 +35,8 @@ async function registrar(db, { rut, guia, contestadas, total }) {
   const c = curso(libro);
   if (!CURSOS_HC.has(c)) return { escrita: false, motivo: 'sin-libro-hc' };
   if (g === '14' && c === '4AHC') return { escrita: false, motivo: 'g14-4ahc' };
+  // La Guía 26 es de 3.º A y B HC; en 4.º HC queda «No aplica».
+  if (g === '26' && /^4[AB]HC$/.test(c)) return { escrita: false, motivo: 'g26-4hc' };
   let escrita = null;
   const tx = await db.ref(BASE + '/' + r + '/notas/' + g).transaction(actual => {
     escrita = decidir(actual, nueva);

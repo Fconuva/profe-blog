@@ -154,6 +154,13 @@ function guideKeyFor(guideId, rut) {
     return isGuidedAccess(guideId, rut) ? GUIDED_GUIDE_KEYS[String(guideId)] : INTERACTIVE_GUIDE_KEYS[String(guideId)];
 }
 
+// 5-nov-2026: la Guía 26 pasó de 8 a 24 preguntas (dos lecturas más). Lo
+// guardado o enviado desde la versión de 8 se corrige sobre esas 8 preguntas.
+function keyForRecordTotal(guideId, key, total) {
+    if (String(guideId) !== '26' || !key || key !== G26.key || Number(total) !== 8) return key;
+    return Object.fromEntries(Object.entries(key).filter(([id]) => Number(id) <= 8));
+}
+
 function guideFeedbackFor(guideId, rut) {
     if (isGuidedAccess(guideId, rut)) {
         return GUIDED_GUIDE_FEEDBACK[String(guideId)];
@@ -452,7 +459,7 @@ async function handleSubmitGuia(req, res) {
     let safeCorrect = parseInt(correct, 10) || 0;
     let safeTotal = parseInt(total, 10) || 0;
     let safeScore = parseInt(score, 10) || 0;
-    const serverKey = guideKeyFor(guideId, rutLimpio);
+    const serverKey = keyForRecordTotal(guideId, guideKeyFor(guideId, rutLimpio), total);
     if (serverKey) {
         safeAnswers = {};
         Object.keys(serverKey).forEach((id) => {
@@ -619,7 +626,7 @@ async function handleGetGuiaState(req, res) {
         return res.status(200).json({ success: true, attempt, released: false, answerKey: null, feedback: null, reenvio: true });
     }
     if (released && attempt.completada) {
-        const serverKey = guideKeyFor(guideId, rut);
+        const serverKey = keyForRecordTotal(guideId, guideKeyFor(guideId, rut), value.total);
         if (serverKey) {
             const correct = Object.keys(serverKey).reduce(
                 (sum, id) => sum + (normalizedAnswers[id] === serverKey[id] ? 1 : 0), 0
@@ -634,7 +641,7 @@ async function handleGetGuiaState(req, res) {
             };
         }
     }
-    const selectedKey = guideKeyFor(guideId, rut);
+    const selectedKey = keyForRecordTotal(guideId, guideKeyFor(guideId, rut), value.total);
     const answerKey = released && attempt.completada && selectedKey
         ? selectedKey
         : null;
@@ -964,7 +971,7 @@ async function handleAdminGetResults(req, res) {
                 if (record.variant === GUIDED_VARIANT && GUIDED_GUIDE_KEYS[guideId]) {
                     record.adminKey = GUIDED_GUIDE_KEYS[guideId];
                 } else if (INTERACTIVE_GUIDE_KEYS[guideId]) {
-                    record.adminKey = INTERACTIVE_GUIDE_KEYS[guideId];
+                    record.adminKey = keyForRecordTotal(guideId, INTERACTIVE_GUIDE_KEYS[guideId], record.total);
                 }
             }
         });
@@ -1171,6 +1178,7 @@ function scoreRankingLegacy(guideId, record) {
     if (!key) return null;
     let ids = Object.keys(key);
     if (guideId === '16' && [15, 20].includes(Number(record.total))) ids = ids.slice(0, Number(record.total));
+    if (guideId === '26' && Number(record.total) === 8) ids = ids.slice(0, 8);
     return { correct: ids.filter(id => answers[id] === key[id]).length, total: ids.length };
 }
 
@@ -1212,6 +1220,7 @@ module.exports = async (req, res) => {
                 if (id === '14' && !guided) key = G14_KEY;
                 let ids = Object.keys(key || {});
                 if (id === '16' && !guided && [15, 20].includes(Number(record?.total))) ids = ids.slice(0, Number(record.total));
+                if (id === '26' && !guided && Number(record?.total) === 8) ids = ids.slice(0, 8);
                 const compatible = ids.length > 0 && (!record ||
                     (!FOUNDATIONS.KEYS[id] || record.contentVersion === FOUNDATIONS.VERSION) &&
                     (id !== '14' || guided || isCurrentGuia14Record(record)) &&

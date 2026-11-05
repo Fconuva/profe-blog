@@ -163,3 +163,12 @@ if (failures.length) {
 }
 
 console.log(`PAES G18 auditada: 3 textos (${wordCounts.join(', ')} palabras), 18 reactivos, claves ${JSON.stringify(keys)}, habilidades ${JSON.stringify(skills)}, entrega sin condición y hoja de ruta G19-G31.`);
+// 5-nov-2026: G26 ampliada a 4 lecturas y 24 preguntas; lo enviado con 8 se corrige sobre 8.
+{
+  const g26 = require('../api/_paes-g26');
+  const data26 = JSON.parse(fs.readFileSync(path.join(root, 'paes/data/guia26.json'), 'utf8'));
+  assert(Object.keys(g26.key).length === 24 && Object.keys(g26.feedback).length === 24, 'G26 debe tener clave y retroalimentación para 24 preguntas.');
+  assert(data26.texts.length === 4 && data26.questions.length === 24, 'G26 debe tener 4 lecturas y 24 preguntas.');
+  assert(!JSON.stringify(data26).includes('"key"'), 'La clave de G26 no debe publicarse en el JSON.');
+  assert(fs.readFileSync(path.join(root, 'api/paes.js'), 'utf8').includes("guideId === '26' && Number(record.total) === 8"), 'Las entregas de G26 con 8 preguntas deben corregirse sobre 8.');
+}

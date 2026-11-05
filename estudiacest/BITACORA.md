@@ -5527,3 +5527,12 @@ Lirmi completado mediante MCP Playwright con sesión autenticada: cinco clases p
 - Antes: promedio del porcentaje por guía solo sobre las guías entregadas (quien entregaba 1 guía al 100 % iba primero). Ahora: un único ranking por programa, ordenado por el puntaje total (suma de respuestas correctas de todas las guías; una guía sin entregar aporta 0). Se muestra también el logro sobre el total posible del catálogo y las guías completadas. Desempate: más guías completadas; luego puesto compartido. Se retiró el selector de guía; la API solo acepta el ranking del total.
 - Sin cambios: una vez por guía con el mejor reenvío confirmado, borradores fuera, cuentas de prueba, administrativas e inactivas excluidas, y solo nombre abreviado, curso, puesto, puntaje, logro y guías (nunca RUT, UID, respuestas, claves ni notas). TP comparte el mismo código y queda con el mismo criterio.
 - Archivos: `api/_paes-ranking.js`, `paes/js/ranking.js`, `scripts/audit-paes-ranking.js`, `REGLAS.md`. Auditoría con caso ficticio: 1 guía al 100 % queda bajo 10 guías al 80 %.
+
+## 2026-11-05, PAES HC: Guía 26 ampliada a cuatro lecturas y 24 preguntas
+
+- Francisco: «la guia 26 es extremandamente corta que mal trabajo» y «2 textos mas deberia tener». Tenía 2 lecturas y 8 preguntas, un tercio de la G25.
+- Se mantienen intactas las lecturas 1 y 2 y las preguntas 1 a 8. Se agregan dos lecturas originales con datos ficticios: una columna de opinión, «Antes de cerrar la calle, contemos bien» (540 palabras), y un texto informativo con tabla, «Tres camas, tres riegos» (483 palabras). Suman 16 preguntas, de la 9 a la 24.
+- Totales: 24 preguntas; habilidades L8/I8/E8; claves 6 por letra; la clave nunca es la opción más larga; retroalimentación con cita literal. La clave sigue solo en el servidor (`api/_paes-g26.js`).
+- Pista y descarte en las preguntas 3, 7, 14 y 22. El tiempo sugerido sube a 60 minutos. Se actualizaron las pestañas, el panel de revisión (`panel-5`), la tarjeta del portal, la biblioteca y la configuración del panel docente.
+- Compatibilidad: lo guardado o enviado con la versión de 8 preguntas (total 8) se sigue corrigiendo sobre esas 8, en estado, panel, ranking y progreso. Mismo criterio que la G16.
+- Por orden de Francisco («despliega sin tanto proceso, despliega directo») no hubo verificador independiente de los ítems. Quedan pendientes de revisión docente.

@@ -90,7 +90,10 @@ async function main() {
     // Strike: una salida de la pestaña registra un incidente.
     await page.evaluate(() => { Object.defineProperty(document, 'hidden', { configurable: true, get: () => true }); Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'hidden' }); document.dispatchEvent(new Event('visibilitychange')); });
     await page.waitForFunction(() => /Strikes: 1 de 3/.test(document.getElementById('strikes').textContent), null, { timeout: 8000 });
-    check((await db.ref(B.BASE + '/' + C.SESSION + '/alumno').once('value')).val().strikes === 1, 'el servidor registra el primer strike');
+    // La pantalla cuenta el strike antes de que llegue al servidor: se espera el registro.
+    let serverStrikes = 0;
+    for (let i = 0; i < 40 && serverStrikes !== 1; i++) { serverStrikes = (await db.ref(B.BASE + '/' + C.SESSION + '/alumno').once('value')).val().strikes; if (serverStrikes !== 1) await page.waitForTimeout(200); }
+    check(serverStrikes === 1, 'el servidor registra el primer strike');
     await page.evaluate(() => { delete document.hidden; delete document.visibilityState; document.dispatchEvent(new Event('visibilitychange')); });
 
     // Tercer strike por la API del mismo usuario: cierra y entrega con dos marcas.

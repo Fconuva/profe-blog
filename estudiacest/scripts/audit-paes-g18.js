@@ -129,6 +129,7 @@ assert(!/<article\b[^>]*class="upcoming-card"[^>]*data-guided-guide="25"/.test(p
 const currentCard26 = portal.match(/<article\b[^>]*id="cardGuia26"[^>]*>([\s\S]*?)<\/article>/);
 assert(currentCard26 && /href="guia26\.html"/.test(currentCard26[1]) && /<span class="ensayo-tag">Sesión actual<\/span>/.test(currentCard26[1]), 'G26 debe ser la sesión actual con destino regular.');
 assert(/getElementById\('cardGuia26'\)\.hidden = !\/\^3\[AB\]HC\$\//.test(portal), 'G26 debe mostrarse solo a 3.º A y B HC.');
+assert(portal.includes("2[0156])(?:-guiada)?\\.html$/.test(next)"), 'El regreso tras el ingreso debe aceptar la G26.');
 assert(!/<article\b[^>]*class="upcoming-card"[^>]*data-guided-guide="26"/.test(portal), 'G26 no debe duplicarse como futura.');
 for (let guide = 27; guide <= 31; guide += 1) {
   if (guide === 21) continue;

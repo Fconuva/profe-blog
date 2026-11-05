@@ -15,6 +15,7 @@
 - En el portal, la tarjeta G26 es la «Sesión actual» y solo la ven 3.º A/B HC; la G25 pasa a «Sesión anterior». Se actualizaron la biblioteca, el panel docente, el manifiesto, el contrato de entrega y las auditorías g18, g19 y semester-grades. El build completo pasó (924 recursos críticos).
 - Commit 913c97c4 en `origin/main`. Despliegue dpl_DD8QvPL5Dk52LiGSmQ9j8ey8tton (READY): la guía, su JS, su JSON y la ruta guiada responden 200 en www.estudiacest.com. Los dos primeros intentos se cortaron: al worktree le faltaba `.vercel/project.json` y hubo una falla de red pasajera.
 - El ensayo final de 4.º HC se publicó en la entrada siguiente.
+- Corrección posterior: Francisco no podía ver la guía con su cuenta. El portal no devolvía a `guia26.html` después del ingreso, porque la expresión de `next` no incluía la 26, y la tarjeta se ocultaba a la cuenta de prueba. Commit 160d1489, despliegue dpl_DX9143DkRx3A2r36QpjRkeZ9jqxY (READY). Se probó en producción con Chrome y la cuenta de prueba, solo ingreso y lectura: el portal vuelve a la G26 con la sesión iniciada, la tarjeta se ve y no hay errores de JS. La auditoría g18 ahora revisa el regreso a la G26.
 
 ## 2026-11-04, PAES HC: auditoría editorial de ocho reactivos de 3.º
 

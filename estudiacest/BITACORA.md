@@ -5536,3 +5536,9 @@ Lirmi completado mediante MCP Playwright con sesión autenticada: cinco clases p
 - Pista y descarte en las preguntas 3, 7, 14 y 22. El tiempo sugerido sube a 60 minutos. Se actualizaron las pestañas, el panel de revisión (`panel-5`), la tarjeta del portal, la biblioteca y la configuración del panel docente.
 - Compatibilidad: lo guardado o enviado con la versión de 8 preguntas (total 8) se sigue corrigiendo sobre esas 8, en estado, panel, ranking y progreso. Mismo criterio que la G16.
 - Por orden de Francisco («despliega sin tanto proceso, despliega directo») no hubo verificador independiente de los ítems. Quedan pendientes de revisión docente.
+
+## 2026-11-05, Vercel: profefranciscopancho.com ya no se reconstruye por push de estudiacest
+
+- Francisco vio en Vercel que cada push de estudiacest también desplegaba el proyecto `profefconuva` (profefranciscopancho.com), conectado por Git al mismo repositorio: «cortalo tu, no vuelva a pasar hay un esfuerzo doble, le gasta uso de vercel». Él sigue usando esa página.
+- Se agregó en el `vercel.json` de la raíz: `ignoreCommand: git diff --quiet ${VERCEL_GIT_PREVIOUS_SHA:-HEAD^} HEAD -- . :!estudiacest` (commit a688d52f). Si el push solo toca `estudiacest/`, Vercel salta el build. Si cambia algo del sitio raíz, despliega como siempre.
+- Probado localmente con commits reales: los que tocan solo estudiacest salen con 0 (se salta) y uno de ECEP sale con 1 (se despliega). estudiacest no cambia: sigue con `npm run deploy:prod:safe`.

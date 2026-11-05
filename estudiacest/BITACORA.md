@@ -1,12 +1,20 @@
 # Bitácora de Estudia CEST
 
+## 2026-11-05, PAES HC: ensayo final de Competencia Lectora 4.º A y B HC publicado
+
+- Francisco pidió dejar el cuadernillo de 4.º HC en la página y quitarle 2 textos por tiempo. Eligió quitar L2 y L4, 90 minutos, strikes solo en este ensayo y ruta guiada. Ruta `/paes/ensayo-final-4hc/`: cinco lecturas y 42 preguntas, con el plazo controlado por el servidor y la nota con exigencia del 60 %. Los resultados quedan privados hasta que el docente los publique. El panel docente filtra por curso. La tarjeta del portal solo aparece en las cuentas de 4A-HC y 4B-HC. No se conecta a la nota automática de PAES.
+- El commit de la rama (376bdf85) se pasó con cherry-pick sobre el main que ya tenía la G26, sin conflictos. Faltaba `guiada.html`, porque `.gitignore` la atrapaba con `GUIA*.html`. Sin ella, la cuenta guiada de 4.º A caía en un 404 al redirigir. Se agregó forzada (bb0c3c71).
+- La prueba en Chrome fallaba en «el servidor registra el primer strike». Era una carrera de la prueba: la pantalla cuenta el strike antes de que llegue al servidor. Ahora la prueba espera el registro. La auditoría propia dio 69 chequeos y la prueba en Chrome con fixtures 39, sin tocar Firebase. El build completo verificó 932 recursos críticos.
+- Commit 60e34a38 en `origin/main`. Despliegue dpl_BgGE2QLY1wGTVLFK9oUZ1Aid2wEw (READY). En producción responden 200 el ensayo, la ruta guiada, sus scripts, la integridad y el panel docente, y la G26 sigue arriba. La API sin sesión responde 401. El catálogo con la clave y el documento de diseño redirigen a `private-source`, y `mini.js` no contiene la clave. Diseño y validación: `paes/ensayo-final-4hc/DISENO_Y_VALIDACION.md`.
+- Pendiente: la versión impresa necesita su preimpresión y la prueba física. No se probó una entrega real con una cuenta de estudiante en producción.
+
 ## 2026-11-05, PAES HC: Guía 26 «Elegir con evidencia» publicada para 3.º A y B HC
 
 - Francisco pidió que la clase de estrategias de 3.º HC fuera una guía regular, la Guía 26, en el formato de la G25. La clase de `paes/clase-estrategias-3hc/` se convirtió en `paes/guia26.html` con su JS y su JSON. Tiene un preludio de enseñanza en cuatro bloques, dos lecturas, 8 preguntas, pista y descarte en las preguntas 3 y 7, y un cierre escrito. No lleva tachado.
 - La clave B/D/A/C/A/C/D/B queda solo en el servidor (`api/_paes-g26.js`), con su retroalimentación. Se comprobó que el JSON y el JS públicos no la contienen. La nota automática se pone al entregar. En 4.º A/B HC no se escribe nota (`g26-4hc`) y el panel y el libro marcan «No aplica». La ruta guiada sigue siendo `guia26-guiada.html`.
 - En el portal, la tarjeta G26 es la «Sesión actual» y solo la ven 3.º A/B HC; la G25 pasa a «Sesión anterior». Se actualizaron la biblioteca, el panel docente, el manifiesto, el contrato de entrega y las auditorías g18, g19 y semester-grades. El build completo pasó (924 recursos críticos).
 - Commit 913c97c4 en `origin/main`. Despliegue dpl_DD8QvPL5Dk52LiGSmQ9j8ey8tton (READY): la guía, su JS, su JSON y la ruta guiada responden 200 en www.estudiacest.com. Los dos primeros intentos se cortaron: al worktree le faltaba `.vercel/project.json` y hubo una falla de red pasajera.
-- Pendiente: integrar la rama `feat/paes-ensayo-final-4hc` (376bdf85) del ensayo final de 4.º HC, que tiene 42 preguntas sin L2 ni L4, sobre este main; luego build, despliegue y verificación.
+- El ensayo final de 4.º HC se publicó en la entrada siguiente.
 
 ## 2026-11-04, PAES HC: auditoría editorial de ocho reactivos de 3.º
 
@@ -5504,8 +5512,3 @@ Verificación local: 24 vistas a 390/1366/3840, sin desbordes ni imágenes rotas
 Cierre: commits a335cd51 y 12ab6979 subidos a origin/main. Despliegue final dpl_5HcDH48KhNQ6TFv2BLpLn4earcEK en READY, alias www.estudiacest.com; diez archivos públicos con HTTP 200 y SHA-256 coincidente con la fuente (CRLF normalizado en HTML). Playwright en producción a 390/1366: sin desbordes ni imágenes rotas. Calendarios PNG revisados sin barra de navegación ni controles superpuestos.
 
 Lirmi completado mediante MCP Playwright con sesión autenticada: cinco clases por curso, quince en total para 3.º A, B y D TP, del 6 de noviembre al 4 de diciembre. Objetivos y desarrollo releídos tras recargar; OA, habilidades, actitudes, conocimientos e indicadores guardados y comprobados, estado Planificada (4). Indicadores propios rotulados como criterios de la actividad; OA oficiales conservados. Registros anteriores preservados; sin leccionarios, asistencias ni firmas futuras. Evidencia y respaldos locales en outputs/nm3-noviembre-20261104 del workspace 2026. Video y audio continúan pausados. Entrega: https://www.estudiacest.com/nm3/ .
-## 2026-11-05 · PAES · Ensayo final de Competencia Lectora 4.º A y B HC
-
-Rama `feat/paes-ensayo-final-4hc` (no desplegada). Nueva ruta `/paes/ensayo-final-4hc/` con cinco lecturas y 42 preguntas del cuadernillo (sin controles internos), 90 minutos con plazo en servidor, strikes, nota con exigencia 60 %, resultados privados hasta publicar, panel docente con filtro por curso y ruta acompañada para 4.º A. Tarjeta nueva en el portal (visible solo para 4A-HC y 4B-HC). No se conecta a la nota automática de PAES.
-
-Verificación local: auditoría propia (69), prueba en Chrome a 390 y 1440 px con fixtures (39), build integral aprobado. Pendiente del agente principal: fusionar, desplegar y probar en producción; detalle en `paes/ensayo-final-4hc/DISENO_Y_VALIDACION.md`.

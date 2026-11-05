@@ -228,7 +228,7 @@
     .filas::before { content: ""; position: absolute; top: 0; bottom: 0; left: 50%; width: 0; border-left: 2px dotted rgba(92,107,115,.25); transform: translateX(-1px); }
     .atras { display: grid; grid-template-columns: repeat(5, 1fr); gap: 7px; margin-top: 12px; padding-top: 12px; border-top: 2px dotted rgba(92,107,115,.25); }
     .asiento {
-      position: relative; aspect-ratio: 1 / 1.08; min-width: 0;
+      position: relative; aspect-ratio: 1 / 1.08; min-width: 0; min-height: 58px;
       border: 1.5px solid var(--termal); border-radius: 13px 13px 9px 9px;
       background: #fff; color: var(--pino);
       font-weight: 800; font-size: 14px; font-variant-numeric: tabular-nums;
@@ -244,6 +244,10 @@
     .asiento:focus-visible { outline: 3px solid var(--noche); outline-offset: 2px; }
     .asiento.ocupado { background: linear-gradient(180deg, #3a5663, var(--ocupado)); border-color: var(--ocupado); color: #fff; box-shadow: 0 3px 0 rgba(0,0,0,.18); font-size: 13px; letter-spacing: .02em; }
     .asiento.ocupado:hover { transform: none; }
+    .asiento.ocupado { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 10px 2px 4px; }
+    .asiento .num { font-size: 12px; line-height: 1; opacity: .8; }
+    .asiento .quien { display: grid; width: 100%; font: 700 10px/1.15 "Plus Jakarta Sans", sans-serif; letter-spacing: 0; }
+    .asiento .quien span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .asiento.elegido { background: var(--coral); border-color: var(--coral-osc); color: #fff; transform: scale(1.07); box-shadow: 0 10px 18px -6px rgba(201,68,41,.48); animation: pop .38s cubic-bezier(.2,1.4,.4,1); }
     @keyframes pop { 0% { transform: scale(.9); } 60% { transform: scale(1.14); } 100% { transform: scale(1.07); } }
     .asiento.tuyo { background: linear-gradient(135deg, #f7c65a, #f08c2e); border-color: #e08a22; color: #3b1d00; animation: brillaTuyo 2.4s ease-in-out infinite; }
@@ -461,7 +465,7 @@
   <main id="contenido">
     <details class="tarjeta" id="consultaBus">
       <summary>Ver bus y asientos</summary>
-      <p class="nota">Toca un asiento para ver quién lo ocupa. Para reservar o cambiar el tuyo, completa o edita tu inscripción.</p>
+      <p class="nota">Cada asiento ocupado muestra quién va en él. Para reservar o cambiar el tuyo, completa o edita tu inscripción.</p>
       <div class="zona-bus">
         <div>
           <div class="leyenda" aria-hidden="true"><span><i></i>Libre</span><span><i class="o"></i>Ocupado</span><span><i class="t"></i>Tu asiento</span></div>
@@ -774,7 +778,12 @@
         if (b.closest('#consultaBus')) b.removeAttribute('aria-pressed');
         else b.setAttribute('aria-pressed', elegido ? 'true' : 'false');
         if (ajeno) {
-          b.textContent = n;
+          const partes = (ocupante.nombre || 'Reservado').trim().split(/\s+/)
+            .map(p => p.length > 1 && p === p.toUpperCase() ? p[0] + p.slice(1).toLowerCase() : p);
+          const num = document.createElement('span'); num.className = 'num'; num.textContent = n;
+          const quien = document.createElement('span'); quien.className = 'quien'; quien.setAttribute('aria-hidden', 'true');
+          [partes[0], partes.slice(1).join(' ')].filter(Boolean).forEach(t => { const l = document.createElement('span'); l.textContent = t; quien.appendChild(l); });
+          b.replaceChildren(num, quien);
           b.dataset.nombre = 'Asiento ' + n + ' · ' + (ocupante.nombre || 'Reservado');
           b.setAttribute('aria-label', 'Asiento ' + n + ', reservado por ' + (ocupante.nombre || 'otra persona'));
           if (!estado.primera && !estado.previos[n]) { b.classList.remove('recien'); void b.offsetWidth; b.classList.add('recien'); }
@@ -786,7 +795,20 @@
       });
       estado.previos = Object.assign({}, mapa.asientos);
       pintarEleccion();
+      ajustarNombres();
     }
+
+    // Achica la letra solo de los nombres que no caben en su asiento.
+    function ajustarNombres() {
+      document.querySelectorAll('.asiento .quien span').forEach(s => {
+        s.style.fontSize = '';
+        if (!s.clientWidth || s.scrollWidth <= s.clientWidth) return;
+        const base = parseFloat(getComputedStyle(s).fontSize);
+        s.style.fontSize = Math.max(7.5, Math.floor(base * s.clientWidth / s.scrollWidth * 10) / 10) + 'px';
+      });
+    }
+    $('consultaBus').addEventListener('toggle', ajustarNombres);
+    addEventListener('resize', ajustarNombres);
 
     function pintarEleccion() {
       const n = estado.asiento; const mio = estado.mia && estado.mia.asiento;

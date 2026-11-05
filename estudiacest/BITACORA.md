@@ -1,5 +1,14 @@
 # Bitácora de Estudia CEST
 
+## 2026-11-05, NM3 vlog: portada sin título, ejemplo de storyboard y voz interior en la tercera hora
+
+- Francisco pidió tres cambios en `/nm3/vlog-mi-vida/presentacion.html`, y los tres se hicieron en `scripts/generate-nm3-vlog-mirror.cjs`, que regenera la presentación, `clase1.js`, `docente.html` y la correspondencia. La guía, la portada del proyecto y el PDF no cambian (sha del PDF 843c1c7a…).
+- **Portada:** se quitaron «Tema, propósito, planos y ángulos» y la bajada «Clase 1 · Tema, mensaje, propósito…». Queda solo la pregunta de la clase, como título. La barra superior de todas las diapositivas dice ahora «Lengua y Literatura · 3.º medio».
+- **Diapositiva 10, «Leemos · El guion visual»:** se agregó un ejemplo de tres viñetas de una mañana, cada una con su acción, lugar y plano (general, medio y detalle). Codex estaba sin cupo hasta el 9-nov, así que se usó Higgsfield (Nano Banana 2, 2k, 3 variantes, 6 créditos). Se eligió la v2, se revisó abierta (sin texto, el mismo personaje en las tres, manos normales) y se recortó en `nm3/vlog-mi-vida/assets/storyboard-vineta-1/2/3.webp`. El original y las variantes quedan en `referencias/metodo-gdd-sm/clase1-vlog/assets/storyboard/`. Las tres viñetas se registraron en el manifiesto.
+- **Diapositivas 36–42 (voz interior):** ahora son la tercera hora, un bloque propio de 45 minutos: rótulo «Tercera hora · Bloque de 45 minutos», reloj de 45:00, «3.ª hora» en el selector y 12 minutos para escribir las dos versiones. En la hoja de ruta, los 90 minutos con la guía usan solo las diapositivas 1–35 (60–80 bosquejo, 80–90 cierre), y la tercera hora tiene su propia tabla, de 0 a 45 minutos.
+- Verificado con Chromium a 390, 1366 y 3840 px en las diapositivas 1, 10 y 36–42: sin errores de consola, imágenes cargadas y sin desborde a 1366 ni a 3840. En móvil, el contenido se desplaza dentro de la diapositiva, como antes. El desborde de 67 px de la diapositiva 39 a 1366 ya estaba en producción. El build pasó con 935 recursos críticos.
+- Pendiente para Francisco: la tercera hora no tiene diapositivas propias de activación, normas y objetivo (regla 13). Además, las tarjetas de NM3 y Lirmi todavía describen la voz interior como parte de la clase del 6-nov.
+
 ## 2026-11-05, PAES HC: ensayo final de Competencia Lectora 4.º A y B HC publicado
 
 - Francisco pidió dejar el cuadernillo de 4.º HC en la página y quitarle 2 textos por tiempo. Eligió quitar L2 y L4, 90 minutos, strikes solo en este ensayo y ruta guiada. Ruta `/paes/ensayo-final-4hc/`: cinco lecturas y 42 preguntas, con el plazo controlado por el servidor y la nota con exigencia del 60 %. Los resultados quedan privados hasta que el docente los publique. El panel docente filtra por curso. La tarjeta del portal solo aparece en las cuentas de 4A-HC y 4B-HC. No se conecta a la nota automática de PAES.

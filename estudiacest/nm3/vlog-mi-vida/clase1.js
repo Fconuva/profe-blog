@@ -66,19 +66,19 @@ window.VlogClase1={
     },
     {
       "id": 8,
-      "name": "Preparación del video",
+      "name": "Tercera hora · Voz interior",
       "start": null,
       "end": null,
       "page": null,
-      "seconds": 720
+      "seconds": 2700
     }
   ],
   "slides": [
     {
       "phase": 0,
       "page": 1,
-      "title": "Tema, propósito, planos y ángulos",
-      "html": "<p class=\"hero-question\">¿Qué cambia en una imagen cuando cambiamos el plano o el ángulo?</p><p>Clase 1 · Tema, mensaje, propósito, planos y ángulos.</p>",
+      "title": "¿Qué cambia en una imagen cuando cambiamos el plano o el ángulo?",
+      "html": "",
       "cue": "Tengan a mano la guía impresa, el cuaderno y un lápiz.",
       "kind": "title"
     },
@@ -150,9 +150,9 @@ window.VlogClase1={
       "phase": 1,
       "page": 2,
       "title": "Leemos · El guion visual",
-      "html": "<div class=\"reading\"><p>El <b>storyboard o guion visual</b> es un borrador formado por viñetas. En cada una se indica qué acción se mostrará, dónde ocurrirá y qué plano se utilizará. La selección de gestos, posturas y detalles ayuda a representar las acciones y emociones. Por eso, una imagen puede aportar información que las palabras no entregan por sí solas.</p></div>",
-      "cue": "Sigan la lectura de la página 2. Adaptación de SM, GDD tomo 1, pp. 89–90.",
-      "kind": "reading-slide"
+      "html": "<div class=\"reading\"><p>El <b>storyboard o guion visual</b> es un borrador formado por viñetas. En cada una se indica qué acción se mostrará, dónde ocurrirá y qué plano se utilizará. La selección de gestos, posturas y detalles ayuda a representar las acciones y emociones. Por eso, una imagen puede aportar información que las palabras no entregan por sí solas.</p></div><div class=\"storyboard-example\"><figure><img class=\"zoomable\" src=\"assets/storyboard-vineta-1.webp\" alt=\"Viñeta 1: Apaga la alarma recién despierto.\" tabindex=\"0\" role=\"button\" aria-label=\"Ampliar: Viñeta 1: Apaga la alarma recién despierto.\"><figcaption><b>Viñeta 1</b><span><b>Acción:</b> Apaga la alarma recién despierto.</span><span><b>Lugar:</b> Su pieza.</span><span><b>Plano:</b> General.</span></figcaption></figure><figure><img class=\"zoomable\" src=\"assets/storyboard-vineta-2.webp\" alt=\"Viñeta 2: Toma desayuno apurado y mira la hora.\" tabindex=\"0\" role=\"button\" aria-label=\"Ampliar: Viñeta 2: Toma desayuno apurado y mira la hora.\"><figcaption><b>Viñeta 2</b><span><b>Acción:</b> Toma desayuno apurado y mira la hora.</span><span><b>Lugar:</b> La cocina.</span><span><b>Plano:</b> Medio.</span></figcaption></figure><figure><img class=\"zoomable\" src=\"assets/storyboard-vineta-3.webp\" alt=\"Viñeta 3: Cierra la mochila para salir.\" tabindex=\"0\" role=\"button\" aria-label=\"Ampliar: Viñeta 3: Cierra la mochila para salir.\"><figcaption><b>Viñeta 3</b><span><b>Acción:</b> Cierra la mochila para salir.</span><span><b>Lugar:</b> La cocina, antes de salir.</span><span><b>Plano:</b> Detalle.</span></figcaption></figure></div>",
+      "cue": "Ejemplo: tres viñetas de una mañana. Cada una indica acción, lugar y plano. Ilustración didáctica de IA.",
+      "kind": "reading-slide storyboard-slide"
     },
     {
       "phase": 1,
@@ -399,7 +399,7 @@ window.VlogClase1={
       "page": null,
       "title": "Prueben las dos voces",
       "html": "<ol><li>En parejas, elijan una escena cotidiana y anótenla en el cuaderno.</li><li>Escriban un monólogo interior de 2 o 3 frases: ¿qué piensa o decide quien aparece?</li><li>Reescriban el momento como corriente de la conciencia: enlacen una sensación, un recuerdo y una preocupación.</li><li>Lean ambas versiones y revisen una frase para vincularla mejor con la imagen.</li></ol>",
-      "cue": "Tienen 3 minutos. Pueden inventar la situación; no necesitan compartir experiencias privadas.",
+      "cue": "Tienen 12 minutos. Pueden inventar la situación; no necesitan compartir experiencias privadas.",
       "kind": ""
     },
     {

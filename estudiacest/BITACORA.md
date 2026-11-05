@@ -1,5 +1,13 @@
 # Bitácora de Estudia CEST
 
+## 2026-11-05, PAES HC: Guía 26 «Elegir con evidencia» publicada para 3.º A y B HC
+
+- Francisco pidió que la clase de estrategias de 3.º HC fuera una guía regular, la Guía 26, en el formato de la G25. La clase de `paes/clase-estrategias-3hc/` se convirtió en `paes/guia26.html` con su JS y su JSON. Tiene un preludio de enseñanza en cuatro bloques, dos lecturas, 8 preguntas, pista y descarte en las preguntas 3 y 7, y un cierre escrito. No lleva tachado.
+- La clave B/D/A/C/A/C/D/B queda solo en el servidor (`api/_paes-g26.js`), con su retroalimentación. Se comprobó que el JSON y el JS públicos no la contienen. La nota automática se pone al entregar. En 4.º A/B HC no se escribe nota (`g26-4hc`) y el panel y el libro marcan «No aplica». La ruta guiada sigue siendo `guia26-guiada.html`.
+- En el portal, la tarjeta G26 es la «Sesión actual» y solo la ven 3.º A/B HC; la G25 pasa a «Sesión anterior». Se actualizaron la biblioteca, el panel docente, el manifiesto, el contrato de entrega y las auditorías g18, g19 y semester-grades. El build completo pasó (924 recursos críticos).
+- Commit 913c97c4 en `origin/main`. Despliegue dpl_DD8QvPL5Dk52LiGSmQ9j8ey8tton (READY): la guía, su JS, su JSON y la ruta guiada responden 200 en www.estudiacest.com. Los dos primeros intentos se cortaron: al worktree le faltaba `.vercel/project.json` y hubo una falla de red pasajera.
+- Pendiente: integrar la rama `feat/paes-ensayo-final-4hc` (376bdf85) del ensayo final de 4.º HC, que tiene 42 preguntas sin L2 ni L4, sobre este main; luego build, despliegue y verificación.
+
 ## 2026-11-04, PAES HC: auditoría editorial de ocho reactivos de 3.º
 
 - A pedido de Francisco se revisaron clave única, plausibilidad de distractores, secuencia A–D y demanda prevista de la clase `paes/clase-estrategias-3hc/`. La primera versión equilibraba letras, pero tenía opciones remotas y cruce de pistas entre ítems 6 y 8. Se ampliaron las dos lecturas, se reescribieron los ocho reactivos y se actualizó la pauta con evidencia y descarte por opción. Auditoría: `paes/clase-estrategias-3hc/AUDITORIA_REACTIVOS_20261104.md`.

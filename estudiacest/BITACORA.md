@@ -1,5 +1,13 @@
 # Bitácora de Estudia CEST
 
+## 2026-11-08, Termas: reconfirmación individual de asistencia enviada
+
+- Francisco aprobó el 05-11 el texto de la reconfirmación: se pregunta de nuevo si cada uno va, se avisa que quedan pocos días y que es la última confirmación, y se pide avisar las bajas para pagar el monto correcto sin excedentes. Lo fijó para el lunes 09-11, y el 08-11 ordenó adelantarlo: «MANDA HOY LO DE ASISTENCIA A TERMAS / MANDALO DE INMEDIATO». Va individual, al chat personal, no al grupo.
+- Padrón leído del panel autenticado `/termas/admin`, solo nombre, teléfono, asistencia y baja. La copia local tiene una huella SHA-256 idéntica a la del panel. Se excluyen el organizador, las bajas registradas y quienes ya habían avisado por WhatsApp que no van.
+- Dos teléfonos mal escritos se corrigieron solo con evidencia cruzada: contacto de WhatsApp, nombre completo y planilla del aniversario con el mismo número. Un tercero no se pudo confirmar y queda para Francisco. No se envía a números supuestos.
+- Envío uno por uno por el puente, con pausa entre mensajes y protección contra duplicados. Cada mensaje quedó releído en `messages.db`. Un número sin WhatsApp se reintentó con el número verificado del contacto. Nombres, teléfonos, cifras y acuses quedan solo en la carpeta privada `lecturas/adminprofe/reportes/termas-asistencia-20261105/`, ignorada por git. Sin cambios en inscripciones, código ni producción.
+- Pendiente: leer las respuestas y anotar las bajas en `/termas/admin`, y escribirle a la persona sin número confirmado.
+
 ## 2026-11-05, NM3 vlog: portada sin título, ejemplo de storyboard y voz interior en la tercera hora
 
 - Francisco pidió tres cambios en `/nm3/vlog-mi-vida/presentacion.html`, y los tres se hicieron en `scripts/generate-nm3-vlog-mirror.cjs`, que regenera la presentación, `clase1.js`, `docente.html` y la correspondencia. La guía, la portada del proyecto y el PDF no cambian (sha del PDF 843c1c7a…).

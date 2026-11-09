@@ -1,5 +1,12 @@
 # Bitácora de Estudia CEST
 
+## 2026-11-09, PAES TP: promedio de sesiones a Lirmi en 4.º A a E TP, solo a quienes les sube
+
+- Francisco pidió calcular el promedio de lo respondido en PAES TP en 4.º A, B, C, D y E y ver a quién le subiría el promedio. Se leyó Firebase en modo de solo lectura (`plataforma_paes/tp_intentos`, sesiones 1 a 3) y se recalculó cada nota con la clave del servidor (`api/_paes-tp-catalog.js`, exigencia del 60 %). Cuenta solo lo entregado (`submitted` y `completada`, sin `resetAt`); los borradores no cuentan y no se pone 1,0 por no rendir una sesión. Las notas recalculadas coinciden con las guardadas, y ningún intento archivado es mejor que el vigente.
+- Cruce por RUT con Lirmi (LyL, 2.º semestre): 162 de 162 calzan, sin huérfanos ni RUT repetidos. Se simuló la nota PAES como una nota más, con el mismo peso: 41 suben y 32 de ellos suben al menos una décima al redondear.
+- Orden literal de Francisco, con la lista de los 32: «PON A TODOS LOS QUE LE SSUBE … CREAS LA NOTA Y LA SUBES». Se creó la columna «Promedio sesiones PAES TP» (fecha 9-nov, ponderación 0, al final: N5, y N6 en 4.º D) y se cargaron solo esas 32 notas: 10 en 4.º A, 5 en 4.º B, 6 en 4.º C, 3 en 4.º D y 8 en 4.º E. Los 9 que suben menos de una décima no estaban en la lista y no se cargaron.
+- Antes de escribir se comprobó en los cinco cursos la identidad de cada estudiante (matrícula, RUT y número de lista, sin retiros) y que el 2.º semestre seguía igual a la lectura que dio los promedios. Cada columna se releyó vacía al crearla. Se escribió primero una nota sola y se releyó, después el resto, y al final se releyó el libro completo: 32 notas en la columna nueva, sin otras celdas cambiadas, con las columnas existentes y el 1.er semestre intactos. Nombres, RUT, notas y la evidencia quedan fuera del repositorio. Sin cambios en código, reglas ni producción de estudiacest.
+
 ## 2026-11-09, Lecturas NM3: planilla de notas de proceso para 3.º A, B y D TP
 
 - Francisco pidió una sección en el admin para registrar notas de proceso de 3.º A, B y D TP, con el nombre del estudiante y las tareas. Quedó como «📝 Notas de proceso» en `/lecturas/adminprofe/`, con enlace directo `/lecturas/adminprofe/#notas-proceso` y acceso desde la tarjeta Lecturas de `/admin/`.

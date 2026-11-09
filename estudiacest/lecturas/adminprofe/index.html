@@ -208,6 +208,7 @@
       <div class="sep"></div>
       <a href="#" data-section="reports"><span class="icon">📋</span>Reportes</a>
       <a href="#" data-section="planilla"><span class="icon">📊</span>Planilla de Notas</a>
+      <a href="#" data-section="notasproceso"><span class="icon">📝</span>Notas de proceso</a>
     </nav>
 
     <div class="content">
@@ -387,6 +388,13 @@
           </table>
         </div>
         <div id="planillaDetail" style="margin-top:20px"></div>
+      </div>
+
+      <!-- ===== NOTAS DE PROCESO 3.º TP (notas-proceso.js) ===== -->
+      <div class="section" id="sec-notasproceso">
+        <h2>📝 Notas de proceso · 3.º A, B y D TP</h2>
+        <p class="np-intro">Una fila por estudiante y una columna por tarea. Cada nota se guarda sola al salir de la celda o presionar Enter, y queda en el historial del curso.</p>
+        <div id="npRoot"><div class="muted">Cargando planilla…</div></div>
       </div>
     </div>
   </div>
@@ -699,6 +707,7 @@ function showSection(id, el) {
   document.querySelectorAll('.mobile-nav a').forEach(a=>{ if(a.dataset.section===id) a.classList.add('active'); });
   document.querySelectorAll('.sidebar a').forEach(a=>{ if(a.dataset.section===id) a.classList.add('active'); });
   if (id === 'planilla' && typeof loadPlanilla === 'function') { try { loadPlanilla(); } catch(e){ console.error(e); } }
+  if (window.NotasProceso) { try { if (id === 'notasproceso') NotasProceso.open(); else NotasProceso.leave(); } catch(e){ console.error('[notas-proceso]', e); } }
 }
 document.querySelectorAll('.sidebar a').forEach(a=>{
   a.addEventListener('click',e=>{ e.preventDefault(); showSection(a.dataset.section,a); });
@@ -709,7 +718,8 @@ function initMobileNav() {
     {id:'overview',icon:'📊',label:'Panel'},{id:'students',icon:'👥',label:'Estudiantes'},
     {id:'lecturas',icon:'📖',label:'Lecturas'},
     {id:'reports',icon:'📋',label:'Reportes'},
-    {id:'planilla',icon:'📊',label:'Planilla'}
+    {id:'planilla',icon:'📊',label:'Planilla'},
+    {id:'notasproceso',icon:'📝',label:'Notas de proceso'}
   ];
   nav.innerHTML=links.map(l=>'<a href="#" data-section="'+l.id+'" class="'+(l.id==='overview'?'active':'')+'" onclick="showSection(\''+l.id+'\',this)">'+l.icon+' '+l.label+'</a>').join('');
 }
@@ -765,6 +775,7 @@ async function loadAllData() {
     populateCourseFilters();
     renderAll();
     attachLiveListeners();
+    if (window.NotasProceso) { try { NotasProceso.onDataLoaded(); } catch(e){ console.error('[notas-proceso]', e); } }
   } catch(e) {
     console.error('[loadAllData]',e);
     toast('Error cargando datos: '+e.message,'err');
@@ -829,6 +840,7 @@ function renderAll() {
   renderLecSessions();
   updateLecReviewSessionSelect();
   renderLecReviewPanel();
+  if (window.NotasProceso) { try { NotasProceso.refresh(); } catch(e){ console.error('[notas-proceso]', e); } }
 }
 
 /* ====================================================================
@@ -2460,5 +2472,6 @@ window.loadPlanilla=loadPlanilla;
 window.exportPlanillaCSV=exportPlanillaCSV;
 window.viewPlanillaDetail=viewPlanillaDetail;
 </script>
+<script src="/lecturas/adminprofe/notas-proceso.js"></script>
 </body>
 </html>

@@ -1,5 +1,14 @@
 # Bitácora de Estudia CEST
 
+## 2026-11-09, Lecturas NM3: planilla de notas de proceso para 3.º A, B y D TP
+
+- Francisco pidió una sección en el admin para registrar notas de proceso de 3.º A, B y D TP, con el nombre del estudiante y las tareas. Quedó como «📝 Notas de proceso» en `/lecturas/adminprofe/`, con enlace directo `/lecturas/adminprofe/#notas-proceso` y acceso desde la tarjeta Lecturas de `/admin/`.
+- Módulo nuevo `lecturas/adminprofe/notas-proceso.js` (`window.NotasProceso`). Toma la nómina de `plataforma_estudiantes/estudiantes` por curso (sin inactivos ni otros cursos) y guarda en `plataforma_lecturas/notas_proceso`: tareas por curso, notas por estudiante y tarea, e historial con deshacer. La regla de Firebase existente ya permite solo admins; no se abrió ninguna regla.
+- Funciones: crear, renombrar, mover y archivar tareas, más cuatro sugeridas de noviembre. Nota escrita como «55» pasa a 5,5 y se aceptan pegados desde Excel. Promedio con redondeo a una décima (7,0 y 5,5 dan 6,3), con opción de contar la nota faltante como 1,0. Exporta CSV para Lirmi (promedio o una tarea) y un CSV completo, con BOM UTF-8.
+- Archivos: `lecturas/adminprofe/notas-proceso.js`, `lecturas/adminprofe/index.html` (enlace lateral, sección y ganchos de carga), `admin/index.html` (una línea, con los saltos de línea originales) y `scripts/academic-release-manifest.json` (dos recursos críticos nuevos).
+- Validado con un Firebase simulado y nombres ficticios en Chromium: carga por curso, escritura, error de permiso, historial y deshacer, y exportación con BOM `ef bb bf` en los tres cursos. El build pasó todas las auditorías: «Release academico verificado: 937 recursos criticos presentes». No se probó con la base real.
+- Commit 8e1be7aa en `origin/main`. **Despliegue pendiente:** `npm run deploy:prod:safe` quedó a la espera de la aprobación de Francisco. Tras desplegar, se comprueba que `/lecturas/adminprofe/notas-proceso.js` responde 200 y que la sección carga con su cuenta.
+
 ## 2026-11-08, Termas: reconfirmación individual de asistencia enviada
 
 - Francisco aprobó el 05-11 el texto de la reconfirmación: se pregunta de nuevo si cada uno va, se avisa que quedan pocos días y que es la última confirmación, y se pide avisar las bajas para pagar el monto correcto sin excedentes. Lo fijó para el lunes 09-11, y el 08-11 ordenó adelantarlo: «MANDA HOY LO DE ASISTENCIA A TERMAS / MANDALO DE INMEDIATO». Va individual, al chat personal, no al grupo.

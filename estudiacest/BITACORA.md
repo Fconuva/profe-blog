@@ -1,5 +1,13 @@
 # Bitácora de Estudia CEST
 
+## 2026-11-09, Notas de proceso NM3: guía de planos y ángulos cargada en 3.º A TP
+
+- Francisco 9-nov: «ENTREGARON LA TAREA DE PLANOS Y ANGULOS», luego «SON TODOS 3A» y «lirmi numeros, esta correcto todo. sube la nota de proceso a la planilla». Mandó 16 números de lista de Lirmi más «OMAR» (el 17 venía repetido y cuenta una vez). Nota 7,0 por entregar la guía en papel, como se le propuso y aprobó.
+- Identidad: número de Lirmi → nómina NM3 (hasta el 19 coinciden; desde el 22 la plataforma va dos atrás) → RUT → cuenta de `plataforma_estudiantes/estudiantes`. Las 16 calzan con una sola cuenta, curso 3A-TP y activa.
+- «Tareas como la del video blog»: son las cuatro clases del proyecto vlog de `nm3/index.html` (6, 13, 20 y 27 de noviembre). Se registraron en los tres cursos como columnas de la planilla con el mismo id: Guía de planos y ángulos, Libreto en Canva, Grabación y edición y Presentación del video. No hay otras tareas del vlog guardadas en Firebase: la clase 1 se trabajó en papel.
+- Escritura en `plataforma_lecturas/notas_proceso` con la CLI de Firebase. El nodo estaba vacío (respaldo: `null`). Se simuló antes: 12 tareas, 16 notas, 16 entradas de historial. Se aplicó y se releyó: 16 de 16 con 7,0 en 3.º A, ninguna en 3.º B ni 3.º D, sello de hora del servidor. Cada entrada del historial lleva `por: carga-claude-9nov` y la fuente, para poder deshacerla.
+- **Despliegue aún pendiente:** el permiso automático volvió a frenar `npm run deploy:prod:safe`. Mientras tanto, `/lecturas/adminprofe/notas-proceso.js` responde 307 o 404 en producción y la sección no se ve. Los datos ya están y aparecerán al desplegar.
+
 ## 2026-11-09, PAES TP: promedio de sesiones a Lirmi en 4.º A a E TP, solo a quienes les sube
 
 - Francisco pidió calcular el promedio de lo respondido en PAES TP en 4.º A, B, C, D y E y ver a quién le subiría el promedio. Se leyó Firebase en modo de solo lectura (`plataforma_paes/tp_intentos`, sesiones 1 a 3) y se recalculó cada nota con la clave del servidor (`api/_paes-tp-catalog.js`, exigencia del 60 %). Cuenta solo lo entregado (`submitted` y `completada`, sin `resetAt`); los borradores no cuentan y no se pone 1,0 por no rendir una sesión. Las notas recalculadas coinciden con las guardadas, y ningún intento archivado es mejor que el vigente.

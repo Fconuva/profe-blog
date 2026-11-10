@@ -80,10 +80,10 @@
   }
   await refresh(true);show('join',false);show('setup',false);schedule();
  }
- function schedule(){clearTimeout(timer);timer=setTimeout(async()=>{await refresh();schedule();},4000+Math.random()*1000);}
+ function schedule(){clearTimeout(timer);timer=setTimeout(async()=>{await refresh();if(user&&code)schedule();},4000+Math.random()*1000);}
  async function refresh(force=false){
   if(!user||!code||polling)return;polling=true;
-  try{state=await api('state',{},true);offset=state.serverNow-Date.now();if(host)renderHost();else renderPlayer();if(force)notice(host?'Sala conectada.':'Conectado a la partida.');tick();}
+  try{const next=await api('state',{},true);if(!user||!code)return;state=next;offset=state.serverNow-Date.now();if(host)renderHost();else renderPlayer();if(force)notice(host?'Sala conectada.':'Conectado a la partida.');tick();}
   catch(e){notice(e.message,true);if(force)throw e;}finally{polling=false;}
  }
  function fillRound(){
@@ -207,8 +207,10 @@
  if($('copyLink'))$('copyLink').onclick=async()=>{try{await navigator.clipboard.writeText(joinLink());notice('Enlace de la sala copiado.');}catch{notice('Enlace de la sala: '+joinLink());}};
  if($('finish'))$('finish').onclick=()=>command('finish',{round:state.current});
  if($('fullscreen'))$('fullscreen').onclick=()=>{if(document.fullscreenElement)document.exitFullscreen().catch(()=>{});else document.documentElement.requestFullscreen().catch(()=>{});};
+ // Cerrar sesión en este equipo: lo guardado en la sala se conserva y el otro equipo del docente sigue conectado.
+ if($('logout'))$('logout').onclick=async()=>{const playing=!host&&!screen&&!!code&&!!state?.round&&!state.round.closedAt;if(!confirm(playing?'La ronda sigue abierta. ¿Cerrar sesión en este equipo? Lo guardado en la sala se conserva.':'¿Cerrar sesión en este equipo?'))return;$('logout').disabled=true;try{if(playing&&localDraft()?.dirty)await enqueueSave().catch(()=>{});clearTimeout(timer);code='';state=null;await auth.signOut();if(screen){location.href=studentSession?'docente.html?estudiante=1':'docente.html';return;}notice('Sesión cerrada en este equipo.');}catch{notice('No se pudo cerrar la sesión. Vuelve a intentar.',true);}finally{$('logout').disabled=false;}};
  auth.onAuthStateChanged(async account=>{
-  user=account;if(!account){clearTimeout(timer);show('game',false);show('hostGame',false);show('setup',false);show('join',false);show('login',!screen);notice(screen?'Inicia sesión en la partida y vuelve a abrir esta pantalla.':'Ingresa para participar.');
+  user=account;document.body.classList.toggle('signed-in',!!account);if($('logout'))$('logout').hidden=!account;if(!account){clearTimeout(timer);show('game',false);show('hostGame',false);show('setup',false);show('join',false);show('login',!screen);notice(screen?'Inicia sesión en la partida y vuelve a abrir esta pantalla.':'Ingresa para participar.');
    const pending=String(new URLSearchParams(location.search).get('sala')||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6);if($('loginRoom')&&pending){$('loginRoom').textContent='Sala '+pending;$('loginRoom').hidden=false;}
    if($('loginLink'))$('loginLink').href='/lecturas/?next='+encodeURIComponent(location.pathname+location.search);return;}
   show('login',false);

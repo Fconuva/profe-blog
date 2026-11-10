@@ -574,7 +574,13 @@
       return DEFAULT_LECTURAS_DASHBOARD;
     }
 
+    // El juego en vivo se abre desde un QR proyectado: tras ingresar, el estudiante vuelve a su sala.
+    function isLiveGamePath(path) {
+      return /^\/estudiantes\/bachillerato\/(?:index\.html|docente\.html|pantalla\.html)?(?:[?#]|$)/.test(path || '');
+    }
+
     async function resolvePostLoginTarget(uid, student) {
+      if (requestedNext && isLiveGamePath(requestedNext)) return requestedNext;
       if (student && isNm4Course(student.curso) && !requestedNext && !requestedTarget) return '/paes/tp/';
       if (isAccessOnlyStudent(student)) {
         return DEFAULT_LECTURAS_DASHBOARD;
@@ -609,7 +615,8 @@
       // excepción no cambia la exigencia de perfil para Lecturas ni SIMCE.
       const paesSpace = nextPath === '/paes/mi-espacio.html' && isPaesCourse(student && student.curso);
       const paesTp = nextPath === '/paes/tp/' && student && isNm4Course(student.curso);
-      const finalPath = (student && !student.perfil_completo && !isAccessOnlyStudent(student) && !paesSpace && !paesTp)
+      const liveGame = isLiveGamePath(nextPath);
+      const finalPath = (student && !student.perfil_completo && !isAccessOnlyStudent(student) && !paesSpace && !paesTp && !liveGame)
         ? getProfileUrl(nextPath)
         : nextPath;
 

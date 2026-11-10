@@ -19,7 +19,7 @@ async function main(){
   });
   await test('Otro curso ve el motivo antes de enviar join y conserva la protección',async()=>{
    const code=await room(),c=await context('wrong'),p=await c.newPage(),errors=[];let joins=0;p.on('console',m=>{if(m.type()==='error')errors.push(m.text());});p.on('request',r=>{if(r.url().includes('bachillerato-join'))joins++;});
-   try{await p.goto(origin+'/estudiantes/bachillerato/?sala='+code);await p.waitForFunction(()=>document.querySelector('#notice').textContent.includes('2B-HC'));assert.match(await p.locator('#notice').textContent(),/2A-HC/);assert.ok(await p.locator('#join').isVisible());assert.ok((await p.locator('#teacherAccess').getAttribute('href')).includes(code));assert.equal(joins,0);assert.equal(errors.length,0);assert.equal((await call(origin,'join','wrong',{code})).status,403);}finally{await c.close();}
+   try{await p.goto(origin+'/estudiantes/bachillerato/?sala='+code);await p.waitForFunction(()=>document.querySelector('#notice').textContent.includes('2B-HC'));assert.match(await p.locator('#notice').textContent(),/2\.º A HC/);assert.ok(await p.locator('#join').isVisible());assert.ok((await p.locator('#teacherAccess').getAttribute('href')).includes(code));assert.equal(joins,0);assert.equal(errors.length,0);assert.equal((await call(origin,'join','wrong',{code})).status,403);}finally{await c.close();}
   });
   await test('Librerías no cargadas ofrecen reintento sin excepción JavaScript',async()=>{
    for(const body of ['', 'window.firebase={initializeApp:()=>({})};']){

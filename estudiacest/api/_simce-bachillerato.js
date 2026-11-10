@@ -40,6 +40,7 @@ async function identity(req,db,auth){
  const [admin,teacher,student,access]=await Promise.all(['admins','docentes','estudiantes','bachillerato/accesos'].map(n=>val(db,BASE+'/'+n+'/'+actor.uid)));
  return {uid:actor.uid,admin:admin===true,teacher,student,access};
 }
+function rutOk(r){const m=/^(\d{7,8})([0-9K])$/.exec(r);if(!m)return false;let s=0,f=2;for(const d of [...m[1]].reverse()){s+=Number(d)*f;f=f===7?2:f+1;}const k=11-s%11;return m[2]===(k===11?'0':k===10?'K':String(k));}
 function canPlay(actor,course){
  if(!COURSES.includes(course)||!actor.student||actor.student.activo===false)return false;
  const own=courseKey(actor.student.curso),extra=actor.access?.cursos||{};
@@ -58,6 +59,21 @@ async function manejar(req,res,action,db,auth){
   if(!['GET','POST'].includes(req.method))throw fail(405,'Método no permitido.');
   if(req.method==='GET'&&!['state','catalog','entry'].includes(action))throw fail(405,'Usa POST para cambiar la partida.');
   let b=req.body||{};if(typeof b==='string'){try{b=JSON.parse(b);}catch{throw fail(400,'Solicitud inválida.');}}
+  // Ingreso solo con RUT (Francisco, 10-nov-2026): sirve únicamente para entrar a una sala abierta y si el curso del RUT es el de la sala.
+  if(action==='rut'){
+   if(req.method!=='POST')throw fail(405,'Usa POST para entrar.');
+   const rut=String(b.rut||'').replace(/[.\s-]/g,'').toUpperCase(),room=String(b.code||'').trim().toUpperCase().replace(/[^A-Z0-9]/g,'');
+   if(!CODE.test(room))throw fail(400,'Escribe el código de seis caracteres de la sala.');
+   if(!rutOk(rut))throw fail(400,'Revisa tu RUT: escríbelo con su dígito verificador, por ejemplo 12345678-9.');
+   const control=await val(db,ROOT+'/'+room+'/control');if(!control)throw fail(404,'No existe esta sala. Revisa el código.');
+   if(control.status==='finished')throw fail(403,'Esta partida ya terminó.');
+   let account;try{account=await auth.getUserByEmail(rut+'@est.estudiacest.com');}catch{throw fail(404,'No encontramos ese RUT. Revísalo o pide ayuda al profesor.');}
+   const [student,access]=await Promise.all([val(db,BASE+'/estudiantes/'+account.uid),val(db,BASE+'/bachillerato/accesos/'+account.uid)]);
+   if(!student)throw fail(404,'No encontramos ese RUT. Revísalo o pide ayuda al profesor.');
+   if(student.activo===false)throw fail(403,'Tu cuenta está inactiva. Pide al profesor que revise tu acceso.');
+   if(!canPlay({uid:account.uid,student,access},control.course))throw fail(403,`La sala ${room} es de ${label(control.course)}. Ese RUT no corresponde a este curso.`);
+   return res.status(200).json({ok:true,code:room,token:await auth.createCustomToken(account.uid,{bachillerato:room})});
+  }
   const actor=await identity(req,db,auth);
   if(action==='catalog'){
    const courses=COURSES.filter(c=>canHost(actor,c));if(!courses.length)throw fail(403,'Necesitas una cuenta activa de Estudia CEST para crear una sala.');

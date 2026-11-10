@@ -194,6 +194,11 @@
  if($('fields'))$('fields').addEventListener('keydown',e=>{if(e.key!=='Enter'||e.isComposing||e.target.tagName!=='INPUT')return;e.preventDefault();const all=Array.from(document.querySelectorAll('[data-answer]')),next=all[all.indexOf(e.target)+1];if(next)next.focus();else e.target.blur();});
  if($('code'))$('code').addEventListener('input',()=>{const v=$('code').value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6);if(v!==$('code').value)$('code').value=v;});
  if($('joinForm'))$('joinForm').onsubmit=async e=>{e.preventDefault();try{await joinRoom($('code').value);}catch(error){notice(error.message,true);}};
+ // Ingreso solo con RUT: el servidor valida la sala abierta y el curso, y entrega la sesión de ese estudiante.
+ if($('rutForm'))$('rutForm').onsubmit=async e=>{e.preventDefault();const button=$('rutForm').querySelector('button');if(button.disabled)return;button.disabled=true;notice('Entrando…');
+  try{const room=$('rutCode').value.toUpperCase().replace(/[^A-Z0-9]/g,'');const response=await fetch('/api/estudiantes?action=bachillerato-rut',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({rut:$('rutOnly').value,code:room})});const data=await response.json().catch(()=>({}));if(!response.ok||!data.token)throw new Error(data.error||'No se pudo entrar. Revisa tu RUT y vuelve a intentar.');
+   const url=new URL(location.href);url.searchParams.set('sala',data.code||room);history.replaceState({},'',url);$('rutOnly').value='';await auth.signInWithCustomToken(data.token);}
+  catch(error){notice(error.message,true);}finally{button.disabled=false;}};
  if($('leave'))$('leave').onclick=()=>{clearTimeout(timer);code='';state=null;show('game',false);show('join',true);};
  if($('teacherLogin'))$('teacherLogin').onsubmit=async e=>{e.preventDefault();try{await auth.signInWithEmailAndPassword($('email').value.trim(),$('password').value);$('password').value='';}catch{notice('Revisa tu correo y contraseña docente.',true);}};
  if($('createForm'))$('createForm').onsubmit=async e=>{e.preventDefault();if(busy)return;busy=true;updateControls();try{const result=await api('create',{course:$('course').value});await joinRoom(result.code);}catch(error){notice(error.message,true);}finally{busy=false;updateControls();}};
@@ -212,6 +217,7 @@
  auth.onAuthStateChanged(async account=>{
   user=account;document.body.classList.toggle('signed-in',!!account);if($('logout'))$('logout').hidden=!account;if(!account){clearTimeout(timer);show('game',false);show('hostGame',false);show('setup',false);show('join',false);show('login',!screen);notice(screen?'Inicia sesión en la partida y vuelve a abrir esta pantalla.':'Ingresa para participar.');
    const pending=String(new URLSearchParams(location.search).get('sala')||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6);if($('loginRoom')&&pending){$('loginRoom').textContent='Sala '+pending;$('loginRoom').hidden=false;}
+   if($('rutCode')){if(pending)$('rutCode').value=pending;$('rutCode').hidden=!!pending;$('rutCodeLabel').hidden=!!pending;}
    if($('loginLink'))$('loginLink').href='/lecturas/?next='+encodeURIComponent(location.pathname+location.search);return;}
   show('login',false);
   try{

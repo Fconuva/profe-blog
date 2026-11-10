@@ -10,7 +10,7 @@
   const clear = () => { $('rankingContent').hidden = true; $('rankingRows').replaceChildren(); $('rankingMine').textContent = ''; $('rankingUpdated').textContent = ''; };
   const percentage = n => Number(n).toLocaleString('es-CL', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' %';
   async function refresh() {
-    if (!user || document.hidden) return;
+    if (!user || document.hidden || host.hidden) return;
     const id = ++generation, uid = user.uid, guide = 'all';
     controller?.abort(); controller = new AbortController();
     $('rankingStatus').textContent = 'Actualizando el ranking…';

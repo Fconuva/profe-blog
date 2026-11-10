@@ -38,6 +38,7 @@
     const roster = typeof NOMINAS_PAES === 'undefined' ? [] : NOMINAS_PAES;
     return roster.find(student => cleanRut(student.rut) === cleanRut(rut)) || null;
   }
+  function isNm2(student) { return /^2[AB]HC$/.test(cleanCourse(student && student.curso)); }
   function hasSpace(student) {
     return !!student && !student.es_prueba && COURSES.has(student.curso);
   }
@@ -63,8 +64,8 @@
     const [{ db }] = await Promise.all([client(), ready()]);
     const snapshot = await db.ref(BASE + '/estudiantes/' + user.uid).once('value');
     const profile = snapshot.val();
-    const student = profile && rosterEntry(profile.rut);
-    if (!hasSpace(student) || profile.ocultarDeCasas === true ||
+    const student = profile && (isNm2(profile) && profile.activo !== false ? {rut:cleanRut(profile.rut), nombre:profile.nombre, curso:profile.curso} : rosterEntry(profile.rut));
+    if ((!hasSpace(student) && !isNm2(student)) || profile.activo === false || profile.ocultarDeCasas === true ||
         cleanCourse(profile.curso) !== cleanCourse(student.curso)) return null;
     return { user, profile, student };
   }

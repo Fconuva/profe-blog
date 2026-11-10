@@ -683,3 +683,8 @@ La interfaz consulta cada minuto mientras la pestaña está visible. La API usa
 una caché interna breve y privada, sin escribir ni recalificar los registros.
 Las próximas guías se agregan al catálogo de ranking junto a su fuente de
 corrección de servidor, sin duplicar ni publicar claves.
+
+
+### Cierre SIMCE y continuidad PAES · 10-nov-2026
+
+Por instrucción de Francisco, 2.º A HC y 2.º B HC continúan en PAES con las mismas credenciales y las guías iniciales 1–9. El acceso desde la portada y desde SIMCE conduce a PAES; no se cambia el curso ni se publica la nómina. Las sesiones SIMCE quedan cerradas para nuevas respuestas, conservando historial y administración. Las unidades 3 y 4 se revisan por laboriosidad: U3 mantiene el modelo canónico r6, notas mayores y ajustes manuales; U4 usa las bandas de completitud 3/5/7 de U3 sobre las alternativas válidamente respondidas de su versión. Sin evidencia digital U4 no se crea nota nueva; la práctica de cuaderno requiere evidencia docente y no se presume corregida. Los miniensayos 4 y 5 no aplicados quedan fuera.

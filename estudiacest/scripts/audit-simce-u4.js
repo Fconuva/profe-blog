@@ -111,9 +111,11 @@ async function apiTests(){
  const rules=JSON.parse(fs.readFileSync(path.join(ROOT,'firebase-rules.json'))).rules.plataforma_estudiantes;
  for(const node of ['respuestas','resultados']){
   const rule=rules[node].$sesionId.$uid['.write'].replaceAll('.matches(','.match(');
-  const evaluate=(session,admin,completed=false)=>new Function('auth','$uid','$sesionId','root','data','newData',`return ${rule}`)({uid:'student'},'student',session,{child:()=>({child:()=>({val:()=>admin})})},{exists:()=>false,child:()=>({val:()=>completed})},{child:()=>({val:()=>false})});
+  const evaluate=(session,admin,completed=false,closed=false)=>new Function('auth','$uid','$sesionId','root','data','newData',`return ${rule}`)({uid:'student'},'student',session,{child:p=>{const ref=path=>({child:key=>ref(path+'/'+key),val:()=>path.endsWith('/cierre_final')?closed:admin});return ref(p);}},{exists:()=>false,child:()=>({val:()=>completed})},{child:()=>({val:()=>false})});
   for(let n=1;n<=5;n++)check(!evaluate(`sesion-u4-${n}`,false),'Firebase rechaza escritura directa del alumno');
   check(evaluate('sesion-u4-1',true),'Admin conserva administración');check(evaluate('sesion-u3-1',false),'Sesiones previas conservadas');
+  check(!evaluate('sesion-u3-1',false,false,true),'Cierre final rechaza escritura del alumno en clases antiguas');
+  check(evaluate('sesion-u3-1',true,false,true),'Cierre final conserva administración');
  }
 }
 function snapshot(value,key){return {key,val:()=>clone(value),exists:()=>value!=null,forEach(fn){Object.entries(value||{}).forEach(([k,v])=>fn(snapshot(v,k)));}};}

@@ -1757,12 +1757,14 @@
     function isPaesTpStudent(student) {
       return /^4[A-E]TP$/.test(String(student && student.curso || '').replace(/[^0-9A-Z]/gi, '').toUpperCase());
     }
+    function isNm2Student(student) { return /^2[AB]HC$/.test(String(student && student.curso || '').replace(/[^0-9A-Z]/gi, '').toUpperCase()); }
     function enterPortal(student) {
       sessionStorage.setItem('paes_student', JSON.stringify(student));
       if (isPaesTpStudent(student)) {
         window.location.replace('/paes/tp/');
         return;
       }
+      if (isNm2Student(student) && nextPath && !/^\/paes\/guia[1-9]\.html$/.test(nextPath)) { window.location.replace('/paes/'); return; }
       if (nextPath && (next !== 'mi-espacio' || PaesStudentSession.hasSpace(student))) {
         window.location.replace(nextPath);
         return;
@@ -1802,13 +1804,13 @@
       button.disabled = true;
       try {
         if (!student || isPaesTpStudent(student)) {
-          if (!passwordInput.value) { showError('Ingresa tu contraseña para abrir las tres semanas de PAES.'); passwordInput.focus(); return; }
+          if (!passwordInput.value) { showError('Ingresa tu contraseña del colegio para abrir tus sesiones PAES.'); passwordInput.focus(); return; }
           const session = await MiniSession.signIn(rutClean, passwordInput.value);
           const { db } = await PaesStudentSession.client();
           const profile = (await db.ref('plataforma_estudiantes/estudiantes/' + session.user.uid).once('value')).val();
-          if (!profile || profile.activo === false || cleanRut(profile.rut) !== rutClean || !isPaesTpStudent(profile)) {
+          if (!profile || profile.activo === false || cleanRut(profile.rut) !== rutClean || (!isPaesTpStudent(profile) && !isNm2Student(profile))) {
             await PaesStudentSession.signOut();
-            throw new Error('Esta cuenta no tiene habilitado el ciclo de cuartos medios TP. Consulta a tu profesor.');
+            throw new Error('Esta cuenta no tiene habilitado este acceso a PAES. Consulta a tu profesor.');
           }
           passwordInput.value = '';
           enterPortal(profile);
@@ -1908,6 +1910,13 @@
 
       document.getElementById('studentWelcomeName').textContent = `Bienvenido, ${student.nombre}`;
       document.getElementById('studentCourseBadge').textContent = student.curso;
+      if (isNm2Student(student)) {
+        document.querySelector('.welcome-text p').textContent = 'Sesiones PAES · Comienza por la Guía 1 y avanza en orden.';
+        [...grid.children].forEach(card => { card.hidden = !/^cardGuia[1-9]$/.test(card.id); });
+        for (let n=1;n<=9;n++) grid.append(document.getElementById('cardGuia'+n));
+        ['paesSpaceLink','avisoFinal4m','paesAcademicRanking','misNotasPanel','paesProgressPanel'].forEach(id => { document.getElementById(id).hidden = true; });
+        return;
+      }
       const paesRosterEntry = typeof NOMINAS_PAES === 'undefined' ? null
         : NOMINAS_PAES.find(item => !item.es_prueba && cleanRut(item.rut) === cleanRut(student.rut));
       const spaceCourses = new Set(['3°A HC', '3°B HC', '4°A HC', '4°B HC']);

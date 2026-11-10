@@ -54,6 +54,7 @@ Never force-push, hard-reset, restore an older copy over current work, delete an
 - La entrada histórica `/paes/` también envía a esos cinco cursos a `/paes/tp/`, resolviendo primero el perfil autenticado y después la selección histórica. Nunca muestra el catálogo HC para un cuarto TP, aunque el enlace incluya `next=guia...`.
 - `/paes/` ofrece dos botones: PAES TP abre las tres semanas; PAES HC despliega el ingreso habitual. El primer ingreso TP valida RUT y contraseña en su actividad contra Auth/perfil canónico, sin exigir que el RUT esté en `NOMINAS_PAES`. La prueba de publicación comienza con un navegador nuevo en `/`, no con una sesión autenticada previamente en una actividad.
 - PAES HC: `3A-HC`, `3B-HC`, `4A-HC`, `4B-HC` -> `/paes/`
+- Desde el cierre SIMCE del 10-nov-2026, `2A-HC` y `2B-HC` ingresan a `/paes/` con sus credenciales canónicas y ven las guías iniciales 1–9, sin nómina pública nueva. El acceso histórico SIMCE redirige a PAES, antes de cualquier ruta personal SIMCE. El libro y las respuestas SIMCE se conservan; `cierre_final` impide nuevos escritos incluso en páginas antiguas.
 - Student-specific PAES invariant: every new interactive instrument also includes Dylan Abaca's guided route for normalized RUN `229327739`; it must remain isolated from the regular attempt and use the same Firebase/admin release lifecycle.
 - Remaining students: `/estudiantes/dashboard.html`
 - Incomplete profile: `/estudiantes/perfil.html?next=...`

@@ -840,6 +840,9 @@ async function handleGetGuiasConfig(req, res) {
         Object.keys(config.exceptions || {}).forEach((guideId) => {
             if (config.exceptions[guideId] && config.exceptions[guideId][rut] === true) allowed[guideId] = true;
         });
+        const profiles = await db.ref(ADMIN_BASE + '/estudiantes').orderByChild('curso').startAt('2A-HC').endAt('2B-HC').once('value');
+        const nm2 = Object.values(profiles.val() || {}).some(p => p.activo !== false && /^2[AB]-HC$/.test(p.curso) && cleanRut(p.rut) === rut);
+        if (nm2) for (let n = 1; n <= 9; n++) allowed['g' + n] = true;
         if (isPaesTestRut(rut)) {
             Object.keys(config.blocked || {}).forEach((guideId) => { allowed[guideId] = true; });
         }

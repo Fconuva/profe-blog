@@ -1,5 +1,13 @@
 # Bitácora de Estudia CEST
 
+## 2026-11-10, Bachillerato: ingreso solo con RUT y prueba NM4 en producción
+
+- Francisco 10-nov: «PRUEBALO» (ingreso de 4.º con RUT y clave) y luego «QUITA RAPIDAMENTE EN MENOS DE 5 MINUTOS EL INCIO DE SESION , SOLO CON RUT».
+- Prueba NM4 en producción con cuentas ficticias (`scripts/check-simce-bachillerato-nm4-production.js`): 45 de 4.º de los siete cursos entran por el QR con RUT y clave (40 con los 6 primeros dígitos y perfil sin completar, 5 con clave propia), vuelven a la sala sin pasar por PAES TP ni por el perfil, panel y proyector muestran 45, un 2.º medio ve el motivo y no se suma, ronda, entrega, cierre de sesión con la ronda abierta, publicación y fin. 26 comprobaciones, mediana 6,4 s por ingreso, sin excepciones ni 5xx. Limpieza releída: 1 sala y 47 identidades ausentes. El token de la CLI de Firebase había vencido; se renovó con `firebase projects:list` antes de correr.
+- Ingreso solo con RUT: acción `bachillerato-rut` sin sesión previa. Valida dígito verificador, sala existente y no terminada, cuenta activa y curso de la sala (`canPlay`); entrega un token propio del estudiante. En la sala, formulario «Entra con tu RUT»: por el QR pide solo el RUT; sin QR, RUT y código. Queda el enlace «Entrar con RUT y contraseña». Riesgo aceptado por Francisco: con el código de una sala abierta y el RUT de alguien del curso se entra como esa persona.
+- Commit 69e99a12, `deploy:prod:safe` desde snapshot limpio, quitado al terminar. `dpl_DFtvpJrwgfoSGkEYtW7otXB5smEG` READY. Prueba en producción (`scripts/check-simce-bachillerato-rut-production.js`): 15 comprobaciones; RUT con y sin puntos, código en minúsculas, rechazo de 2.º, inactivo, dígito errado, RUT inexistente y sala inválida; celular a 390 sin desborde. Limpieza releída: 1 sala y 5 identidades ausentes.
+- Pendiente: si después de la clase se quiere volver a la contraseña, basta con quitar el formulario `rutForm` y la acción `rut`.
+
 ## 2026-11-10, Bachillerato: dos PC con la misma cuenta y botón «Cerrar sesión»
 
 - Francisco 10-nov: «me permite usasr 2 pc? 1 pc voy a proyectar (pantalla gigante) en otro pc (notebook) puedo adminsitrar» y «ademas falta boton de cerrar sesion».

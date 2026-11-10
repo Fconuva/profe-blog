@@ -1,5 +1,15 @@
 # Bitácora de Estudia CEST
 
+## 2026-11-10, Bachillerato: dos PC con la misma cuenta y botón «Cerrar sesión»
+
+- Francisco 10-nov: «me permite usasr 2 pc? 1 pc voy a proyectar (pantalla gigante) en otro pc (notebook) puedo adminsitrar» y «ademas falta boton de cerrar sesion».
+- Dos PC: el servidor deja dirigir la sala a quien la creó (`room.owner===actor.uid`). Por eso la misma cuenta docente sirve en dos equipos. El notebook crea y dirige la sala. En el PC de la sala se entra a `docente.html` con el mismo correo y contraseña, se escribe el código en «Retomar una sala», se pulsa «Abrir» y luego «Proyectar QR» y «Pantalla completa». Prueba local con contextos separados: retoma por código en minúsculas, el QR y los ingresos se actualizan solos, la ronda iniciada en el notebook aparece en el proyector, el conteo de entregas avanza y el proyector no muestra respuestas.
+- «Cerrar sesión» en `estudiantes/bachillerato/` (sala), `docente.html` y `pantalla.html`. Solo se ve con la sesión abierta. En el celular reemplaza la etiqueta central del encabezado y, bajo 360 px, desaparece el enlace secundario. Con la ronda abierta pide confirmar, guarda el borrador si quedó algo sin guardar y deja el ingreso apuntando a la misma sala (`?sala=` se conserva). La pantalla vuelve al ingreso docente. El cierre es por navegador: cerrar en el PC de la sala no desconecta al notebook. El borrador local va por cuenta (`bachillerato:<uid>:<sala>:<ronda>`), así que el siguiente estudiante en un equipo compartido no ve lo del anterior.
+- Carrera corregida: un sondeo en vuelo al cerrar sesión ya no vuelve a dibujar la sala, y el ciclo de sondeo se detiene sin usuario o sin sala.
+- Auditoría: SDK ficticio con cierre de sesión por equipo. Se agregaron 10 comprobaciones del cierre en el celular y de los dos PC: retomar, proyectar, cerrar, el notebook sigue y el reingreso vuelve a la última sala. Sin navegador, 130; con navegador, 187; carreras sin hallazgos; build integral con 939 recursos críticos.
+- Commit 2e66ba24. Se publicó con `deploy:prod:safe` desde un snapshot limpio de `origin/main`, quitado al terminar. `dpl_FeasRtXYt4wLyuEqnFu497TCUNdu` READY, alias www.estudiacest.com. 14 recursos con 200 e idénticos a la fuente. El botón está en las tres páginas, oculto sin sesión, sin desborde a 1366 y 390 y sin errores de consola. No se probó en producción con cuentas ficticias porque requiere el OK de Francisco.
+- Pendiente para la clase: probar una vez en producción con la cuenta de Francisco en los dos equipos antes de jugar.
+
 ## 2026-11-10, Bachillerato lector: etiqueta propia en la portada y sala NM4 con QR para 45
 
 - Francisco 10-nov: «HAY UN BACHILLERATO EN ESTUDIACEST. DEJALO CON UNA ETIQUETA PROPIA EN ESTUDIACEST.COM ADEMAS MEJORA LA VISUAL, VOY A JUGAR CON NM4 ENTONCES ELLOS SCANEAN UN QR O INGRESAN UN CODIGO A LA SALA DE BACHILLERATO SON 45 ESTUDIANTES. ASEGURATE QUE FUNCIONE BIEN».

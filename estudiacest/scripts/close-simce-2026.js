@@ -59,10 +59,16 @@ function build(platform,review,at){
   for(const [key,value]of Object.entries(desired))if(stable(s[key]??null)!==stable(value))updates['sesiones/'+id+'/'+key]=value;
   closed.push(id);
  }
+ // La Clase 11 tiene respaldo est?tico en el panel y puede no existir en sesiones.
+ // Registrar su cierre evita que una URL antigua siga escribiendo por RTDB.
+ if(!platform.sesiones?.['sesion-u3-11']){
+  updates['sesiones/sesion-u3-11']={titulo:'Unidad 3 ? Clase 11 ? Transformar dos textos',programa:'simce',asignados:[...COURSES],activa:false,respuestas_bloqueadas:true,cierre_final:true,cerrada_at:Date.parse(at)};
+  closed.push('sesion-u3-11');
+ }
  return {updates,students,u3,u4,grades,summary:{students:students.length,u3Rows:review.rows.length,u4Rows:u4.rows.length,u4Graded:Object.keys(u4.records).length,u4WithoutNewGrade:u4.rows.filter(r=>r.proposedGrade===null).length,gradeIncreases:up,newGrades:created,gradeWrites:Object.keys(updates).filter(k=>k.startsWith('calificaciones_clase/')).length,closedSessions:closed.length,paths:Object.keys(updates).length,lowered:0}};
 }
 async function main(){
- const args=process.argv.slice(2),apply=args.includes('--apply'),arg=n=>args[args.indexOf(n)+1];
+ const args=process.argv.slice(2),apply=args.includes('--apply'),arg=n=>{const i=args.indexOf(n);return i<0?null:args[i+1];};
  const dir=path.resolve(arg('--dir')||path.join(process.env.TEMP,'estudiacest-cierre-simce-20261110'));fs.mkdirSync(dir,{recursive:true});
  const platform=await readPlatform(),stamp=Date.now(),snapshot=path.join(dir,'platform-'+stamp+'.json'),reviewPath=path.join(dir,'u3-review-'+stamp+'.json');
  fs.writeFileSync(snapshot,JSON.stringify(platform));

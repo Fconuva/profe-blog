@@ -82,7 +82,7 @@ exigir(/reenvioAbierto\(guideId\)/.test(cuerpo('handleGetGuiaState')) && /answer
   'get-guia-state debe devolver lo enviado como editable y sin pauta cuando el reenvío está abierto.');
 exigir(/reenvioAbierto\(guiaId\)/.test(cuerpo('handleGetGuiaDraft')), 'get-guia-draft (guías 10–13) debe respetar el reenvío.');
 // Caso (10-sep-2026): 16–21 releen el estado tras entregar y exigen completada.
-exigir(/if \(attempt\.completada && !recienEntregada && await reenvioAbierto\(guideId\)\)/.test(cuerpo('handleGetGuiaState')) &&
+exigir(/if \(attempt\.completada && !recienEntregada && \(reabiertaParaAlumno\(value\) \|\| await reenvioAbierto\(guideId\)\)\)/.test(cuerpo('handleGetGuiaState')) &&
   /const RECIEN_ENTREGADA_MS = \d+ \* 60 \* 1000;/.test(api),
   'get-guia-state debe informar como entregada una entrega recién hecha: las guías 16–21 releen el estado para confirmar.');
 for (const archivo of ['paes/guia16.html', 'paes/guia17.html', 'paes/guia18.html', 'paes/guia19.html', 'paes/js/guia20.js', 'paes/js/guia21.js']) {
@@ -91,6 +91,23 @@ for (const archivo of ['paes/guia16.html', 'paes/guia17.html', 'paes/guia18.html
 exigir(/reenvioAbierto\('14'\)/.test(cuerpo('handleSubmitGuia14')) && /ref\.child\('reenvioBorrador'\)/.test(cuerpo('handleSubmitGuia14')),
   'El ensayo de la 14 tiene su propia ruta de envío y también debe respetar el reenvío.');
 exigir(/reenvioAbierto\('14'\)/.test(cuerpo('handleGetGuia14State')), 'get-guia14-state debe respetar el reenvío.');
+
+// ---- Reabrir por estudiante (12-nov-2026) ----
+// Francisco: en el admin las guías tenían «Restablecer» y no «Reabrir».
+// Reabrir conserva las respuestas; la nueva entrega borra la marca y archiva la anterior.
+const adminHtml = leer('paes/admin/index.html');
+const cuerpoLF = (nombre) => { const t = api.replace(/\r\n/g, '\n'); const i = t.indexOf('async function ' + nombre + '('); return i < 0 ? '' : t.slice(i, t.indexOf('\n}\n', i)); };
+exigir(/function reabiertaParaAlumno\(record\)/.test(api) && /case 'admin-reopen-guia': return await handleAdminReopenGuia\(req, res, decoded\);/.test(api),
+  'Falta la acción admin-reopen-guia (Reabrir por estudiante).');
+exigir(/ref\.child\('reabierta'\)\.set\(/.test(cuerpoLF('handleAdminReopenGuia')) && !/\.remove\(\)/.test(cuerpoLF('handleAdminReopenGuia')),
+  'Reabrir solo pone o quita la marca: nunca borra el intento (eso es Restablecer).');
+exigir(/reabierta: null/.test(envio) && /abiertoGuia \|\| reabiertaParaAlumno\(current\)/.test(envio),
+  'La entrega de una guía reabierta debe aceptarse y borrar la marca reabierta.');
+for (const [fn, re] of [['handleGetGuiaDraft', /reabiertaParaAlumno\(v\)/], ['handleSubmitGuia14', /reabiertaParaAlumno\(anterior\)/], ['handleGetGuia14State', /reabiertaParaAlumno\(v\)/]]) {
+  exigir(re.test(cuerpo(fn)), `${fn} debe respetar la reapertura por estudiante.`);
+}
+exigir(/async function reopenGuiaResp\(rut, name, abrir\)/.test(adminHtml) && /action=admin-reopen-guia/.test(adminHtml) && /onclick="reopenGuiaResp\(/.test(adminHtml),
+  'El admin debe mostrar «Reabrir» junto a «Restablecer» en la tabla de guías.');
 
 // ---- Bloqueo programado con cuenta regresiva (10-sep-2026) ----
 // Francisco: "avisar que se bloquean hasta la 19 el 23 de septiembre".

@@ -1,7 +1,7 @@
 // api/paes.js
 // Unified Vercel Serverless Function for PAES module management
 // Routes: ?action=submit | ?action=submit-guia | ?action=track-download | ?action=get-student-status | ?action=get-nomina-extra | ?action=get-guia-draft | ?action=get-guias-config | ?action=get-mis-notas
-//         | ?action=admin-get-results | ?action=admin-reset-result | ?action=admin-grade-guia | ?action=admin-reset-guia
+//         | ?action=admin-get-results | ?action=admin-reset-result | ?action=admin-grade-guia | ?action=admin-reset-guia | ?action=admin-reopen-guia
 //         | ?action=admin-save-student | ?action=admin-delete-student | ?action=admin-set-guias-config | ?action=admin-save-nota
 
 const admin = require('firebase-admin');
@@ -516,19 +516,22 @@ async function handleSubmitGuia(req, res) {
         payload.completadaAt = now;
     }
 
-    const abierto = await reenvioAbierto(guideId);
+    const abiertoGuia = await reenvioAbierto(guideId);
     let borradorDeReenvio = false;
     const tx = await ref.transaction((current) => {
         borradorDeReenvio = false;
         if (FOUNDATIONS.KEYS[guideId] && current && current.contentVersion !== FOUNDATIONS.VERSION) return;
         const enviado = isDeliveredGuiaRecord(guideId, current);
+        // Reabierta por el docente para este estudiante (botón «Reabrir» del admin).
+        const abierto = abiertoGuia || reabiertaParaAlumno(current);
         if (enviado && abierto) {
             if (draft) {
                 borradorDeReenvio = true;
                 return Object.assign({}, current, { reenvioBorrador: { answers: safeAnswers, dev: dev || {}, lastSavedAt: now } });
             }
             return Object.assign({}, current, payload, {
-                intentosAnteriores: archivarIntento(current), reenviadoAt: now, grade: null, reenvioBorrador: null
+                intentosAnteriores: archivarIntento(current), reenviadoAt: now, grade: null, reenvioBorrador: null,
+                reabierta: null
             });
         }
         if (!isPaesTestRut(rutLimpio) && isDeliveredGuiaRecord(guideId, current)) return;
@@ -586,7 +589,7 @@ async function handleGetGuiaDraft(req, res) {
         lastSavedAt: v.lastSavedAt || v.submittedAt || null
     } : null;
     // Con reenvío abierto, lo enviado vuelve como borrador editable.
-    if (draft && draft.submitted && await reenvioAbierto(guiaId)) {
+    if (draft && draft.submitted && (reabiertaParaAlumno(v) || await reenvioAbierto(guiaId))) {
         const b = v.reenvioBorrador || null;
         Object.assign(draft, {
             answers: normalizeStoredAnswers((b && b.answers) || v.answers),
@@ -632,7 +635,7 @@ async function handleGetGuiaState(req, res) {
     // últimos minutos se informa como entregada; después vuelve a ser editable.
     const ultimaEntrega = Math.max(Number(value.submittedAt) || 0, Number(value.reenviadoAt) || 0);
     const recienEntregada = Date.now() - ultimaEntrega < RECIEN_ENTREGADA_MS;
-    if (attempt.completada && !recienEntregada && await reenvioAbierto(guideId)) {
+    if (attempt.completada && !recienEntregada && (reabiertaParaAlumno(value) || await reenvioAbierto(guideId))) {
         const b = value.reenvioBorrador || null;
         Object.assign(attempt, {
             answers: normalizeStoredAnswers((b && b.answers) || value.answers),
@@ -677,7 +680,7 @@ async function handleSubmitGuia14(req, res) {
     const previous = await ref.once('value');
     const anterior = previous.exists() ? previous.val() : null;
     const enviado = !!anterior && isCurrentGuia14Record(anterior) && anterior.status === 'sent';
-    const abierto = enviado && await reenvioAbierto('14');
+    const abierto = enviado && (reabiertaParaAlumno(anterior) || await reenvioAbierto('14'));
     if (!isPaesTestRut(rutLimpio) && previous.exists() && isCurrentGuia14Record(previous.val()) && previous.val().status === 'sent' && !abierto) {
         return res.status(409).json({ error:'El ensayo ya fue enviado. El docente debe restablecerlo para responder nuevamente.' });
     }
@@ -719,7 +722,7 @@ async function handleGetGuia14State(req, res) {
     if (!snap.exists()) return res.status(200).json({success:true,attempt:null,released:false});
     const v=snap.val();
     if (!isCurrentGuia14Record(v)) return res.status(200).json({success:true,attempt:null,released:false});
-    if (v.status === 'sent' && await reenvioAbierto('14')) {
+    if (v.status === 'sent' && (reabiertaParaAlumno(v) || await reenvioAbierto('14'))) {
         const b = v.reenvioBorrador || null;
         const attempt = { answers: (b && b.answers) || v.answers || {}, form: (b && b.form && b.form.length ? b.form : v.form) || [],
             incidents: v.incidents || [], startedAt: v.startedAt || null, status: 'draft', reenvio: true, enviadaAntes: v.submittedAt || null };
@@ -836,6 +839,13 @@ async function reenvioAbierto(guideId) {
         db.ref(`${BASE}/guias_config/reenvio_cierra`).once('value')
     ]);
     return reenvioVigente(marca.val(), cierre.val(), hoyEnChileISO());
+}
+// Caso (12-nov-2026): Francisco pidió «Reabrir» junto a «Restablecer» en el admin.
+// Restablecer borra el intento; Reabrir lo deja editable para ese estudiante, con
+// sus respuestas, hasta que vuelva a entregar. La marca vive en el registro
+// (reabierta = { at, by }) y la nueva entrega la borra y archiva la anterior.
+function reabiertaParaAlumno(record) {
+    return !!(record && record.reabierta && record.reabierta.at);
 }
 function archivarIntento(current) {
     const previos = Array.isArray(current.intentosAnteriores) ? current.intentosAnteriores.slice(-4) : [];
@@ -1098,6 +1108,26 @@ async function handleAdminResetGuia(req, res) {
     return res.status(200).json({ success: true });
 }
 
+async function handleAdminReopenGuia(req, res, decoded) {
+    const { studentRut, guiaId } = req.body || {};
+    const id = String(guiaId || '');
+    if (!studentRut || !/^\d{1,2}$/.test(id)) {
+        return res.status(400).json({ error: 'studentRut y guiaId requeridos' });
+    }
+    const abrir = req.body.abrir !== false;
+    const rutLimpio = cleanRut(studentRut);
+    const ref = db.ref(`${BASE}/guia_respuestas/${id}/${rutLimpio}`);
+    const snap = await ref.once('value');
+    if (!snap.exists()) return res.status(404).json({ error: 'El estudiante no tiene esta guía.' });
+    const v = snap.val() || {};
+    const entregada = id === '14' ? v.status === 'sent' : isDeliveredGuiaRecord(id, v);
+    if (abrir && !entregada) {
+        return res.status(409).json({ error: 'La guía no está entregada: el estudiante ya puede seguir respondiendo.' });
+    }
+    await ref.child('reabierta').set(abrir ? { at: Date.now(), by: (decoded && decoded.uid) || null } : null);
+    return res.status(200).json({ success: true, reabierta: abrir });
+}
+
 async function handleAdminSaveStudent(req, res, decoded) {
     const { rut, nombre, curso, rutFormato } = req.body;
     if (!rut || !nombre || !curso) {
@@ -1297,6 +1327,7 @@ module.exports = async (req, res) => {
             case 'admin-reset-result': return await handleAdminResetResult(req, res);
             case 'admin-grade-guia': return await handleAdminGradeGuia(req, res, decoded);
             case 'admin-reset-guia': return await handleAdminResetGuia(req, res);
+            case 'admin-reopen-guia': return await handleAdminReopenGuia(req, res, decoded);
             case 'admin-save-student': return await handleAdminSaveStudent(req, res, decoded);
             case 'admin-delete-student': return await handleAdminDeleteStudent(req, res);
             case 'admin-set-guia14-release': return await handleAdminSetGuiaRelease(req, res, '14');

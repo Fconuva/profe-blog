@@ -450,6 +450,23 @@
       transition: all 0.2s;
     }
 
+    .btn-reopen-small {
+      background: rgba(59, 130, 246, 0.06);
+      border: 1px solid rgba(59, 130, 246, 0.2);
+      color: #93c5fd;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-reopen-small:hover {
+      background: rgba(59, 130, 246, 0.15);
+      border-color: rgba(59, 130, 246, 0.35);
+    }
+
     .btn-reset-small:hover {
       background: rgba(239, 68, 68, 0.12);
       border-color: rgba(239, 68, 68, 0.25);
@@ -2268,7 +2285,10 @@
           ? (isDraft ? `${answered}/${C.itemCount} respondidas` : `${r.correct || 0}/${C.total} correctas · ${answered}/${C.itemCount} respondidas`)
           : `${r.correct || 0}/${r.total || C.total} correctas`;
         const graded = !!(r.grade && r.grade.nota);
-        const statusPill = isDraft && graded
+        const reabierta = !isDraft && !!(r.reabierta && r.reabierta.at);
+        const statusPill = reabierta
+          ? `<span class="status-pill pending" title="Reabierta por el docente: puede cambiar sus respuestas y volver a enviarla">🔓 Reabierta</span>`
+          : isDraft && graded
           ? `<span class="status-pill completed" title="Borrador revisado y calificado por el docente">✓ Revisada</span>`
           : isDraft
           ? `<span class="status-pill pending" title="Aún no la envía: avance autoguardado">⏳ Borrador</span>`
@@ -2288,6 +2308,7 @@
           <td>
             <div style="display: flex; gap: 6px;">
               <button class="btn-action-small" onclick="openGuiaModal('${r.rut}')">📝 Revisar / Calificar</button>
+              ${isDraft ? '' : `<button class="btn-reopen-small" title="${reabierta ? 'Vuelve a cerrar la guía con lo que ya envió' : 'Le permite cambiar sus respuestas y volver a enviarla, sin borrar lo que ya respondió'}" onclick="reopenGuiaResp('${r.rut}', '${safeName}', ${reabierta ? 'false' : 'true'})">${reabierta ? '🔒 Cerrar' : '🔓 Reabrir'}</button>`}
               <button class="btn-reset-small" onclick="resetGuiaResp('${r.rut}', '${safeName}')">🔄 Restablecer</button>
             </div>
           </td>`;
@@ -2449,6 +2470,28 @@
       } catch (error) {
         console.error('[Grade Error]', error);
         alert('No se pudo guardar la calificación.');
+      }
+    }
+
+    // Caso (12-nov-2026): Reabrir deja la guía editable para un estudiante sin borrar
+    // lo que respondió. Al volver a enviarla, el intento anterior queda archivado.
+    async function reopenGuiaResp(rut, name, abrir) {
+      const msg = abrir
+        ? `¿Reabrir la ${cfg().titulo} de "${name}"?\n\nConserva sus respuestas: podrá cambiarlas y volver a enviarla. Lo que envió antes queda guardado.`
+        : `¿Volver a cerrar la ${cfg().titulo} de "${name}"?\n\nQueda lo que ya había enviado.`;
+      if (!confirm(msg)) return;
+      try {
+        const resp = await fetch('/api/paes?action=admin-reopen-guia', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${idToken}` },
+          body: JSON.stringify({ studentRut: rut, guiaId: currentGuia, abrir })
+        });
+        const data = await resp.json().catch(() => ({}));
+        if (!resp.ok || !data.success) throw new Error(data.error || 'API Reopen Guia Error');
+        await fetchResultsConsolidated();
+      } catch (error) {
+        console.error('[Reopen Guia Error]', error);
+        alert(error.message && !/API/.test(error.message) ? error.message : 'No se pudo reabrir la guía del estudiante.');
       }
     }
 

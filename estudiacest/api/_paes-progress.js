@@ -26,10 +26,11 @@ async function handle(req,res,ctx){
  const rut=clean(profile?.rut),course=clean(profile?.curso),guided=rut==='229327739';
  if(!profile||profile.activo===false||!rut||!allowed.has(course))return res.status(403).json({error:'Tu cuenta no tiene este recorrido PAES.'});
  const read=async(path,render,required=true)=>{try{return render((await ctx.db.ref(path).once('value')).val());}catch(_){return{state:'unknown',required};}};
- const rows=await Promise.all([...Array.from({length:21},(_,i)=>String(i+1)),'25','26'].map(async id=>{
+ const rows=await Promise.all([...Array.from({length:21},(_,i)=>String(i+1)),'25','26','27'].map(async id=>{
   const required=+id>=11;
   if(id==='14'&&course==='4AHC')return[id,{state:'not-assigned',required:false}];
   if(id==='26'&&/^4[AB]HC$/.test(course))return[id,{state:'not-assigned',required:false}];
+  if(id==='27'&&/^4[AB]HC$/.test(course))return[id,{state:'not-assigned',required:false}];
   return[id,await read('plataforma_paes/guia_respuestas/'+id+'/'+rut,r=>{
    if(r&&(r.rut&&clean(r.rut)!==rut||r.curso&&clean(r.curso)!==course))return{state:'review',required};
    const spec=ctx.spec(id,r,rut);

@@ -1478,9 +1478,29 @@
           </div>
         </article>
 
-        <article class="ensayo-card" id="cardGuia26" data-guided-guide="26" hidden>
+        <article class="ensayo-card" id="cardGuia27" data-guided-guide="27" hidden>
           <div class="ensayo-card-header">
             <span class="ensayo-tag">Sesión actual</span>
+            <h3>Guía N°27: Repaso 1 · Leer para comprender</h3>
+            <div class="ensayo-card-meta">
+              <span>4 contenidos</span>
+              <span>20 preguntas</span>
+              <time datetime="2026-11-12">12 noviembre 2026</time>
+            </div>
+          </div>
+          <div class="ensayo-status-box">
+            <div class="status-pending" style="color: var(--paes-color-light);">
+              <span class="status-dot"></span>
+              Tema e ideas · Propósito · Inferencias · Vocabulario
+            </div>
+          </div>
+          <div>
+            <a href="guia27.html" class="btn-action btn-start">Iniciar Guía 27</a>
+          </div>
+        </article>
+        <article class="ensayo-card" id="cardGuia26" data-guided-guide="26" hidden>
+          <div class="ensayo-card-header">
+            <span class="ensayo-tag">Sesión anterior</span>
             <h3>Guía N°26: Elegir con evidencia</h3>
             <div class="ensayo-card-meta">
               <span>4 textos</span>
@@ -1660,7 +1680,6 @@
         <div class="upcoming-grid">
           <article class="upcoming-card recess"><div class="upcoming-meta"><span>Receso</span><time datetime="2026-09-17">17 sep</time></div><h3>Semana de Fiestas Patrias</h3></article>
 
-          <article class="upcoming-card" data-guided-guide="27"><div class="upcoming-meta"><span>Guía 27</span><time datetime="2026-10-29">29 oct</time></div><h3>Inferencias globales: voz, símbolos y omisiones</h3></article>
           <article class="upcoming-card" data-guided-guide="28"><div class="upcoming-meta"><span>Guía 28</span><time datetime="2026-11-05">5 nov</time></div><h3>Simulacro PAES 2: tres cuartos del instrumento</h3></article>
           <article class="upcoming-card" data-guided-guide="29"><div class="upcoming-meta"><span>Guía 29</span><time datetime="2026-11-12">12 nov</time></div><h3>Retroalimentación y plan personal</h3></article>
           <article class="upcoming-card" data-guided-guide="30"><div class="upcoming-meta"><span>Guía 30</span><time datetime="2026-11-19">19 nov</time></div><h3>Ensayo final PAES: tres cuartos del instrumento</h3></article>
@@ -1744,7 +1763,7 @@
     const entryParams = new URLSearchParams(window.location.search);
     const next = entryParams.get('next') || '';
     const nextPath = next === 'mi-espacio' ? '/paes/mi-espacio.html'
-      : /^guia(?:[1-9]|1[0-9]|2[0156])(?:-guiada)?\.html$/.test(next) ? '/paes/' + next : '';
+      : /^guia(?:[1-9]|1[0-9]|2[01567])(?:-guiada)?\.html$/.test(next) ? '/paes/' + next : '';
     function updatePasswordField() {
       const student = typeof NOMINAS_PAES === 'undefined' ? null
         : NOMINAS_PAES.find(item => cleanRut(item.rut) === cleanRut(rutInput.value));
@@ -1901,7 +1920,7 @@
     // ============ DASHBOARD RENDER ============
     function showDashboard(student) {
       const grid = document.querySelector('.ensayo-grid');
-      ['cardGuia26', 'cardGuia25', 'guia24Card', 'miniOctubreCard', 'miniInviernoCard', ...Array.from({ length: 21 }, (_, i) => `cardGuia${21 - i}`), 'cardEnsayo2', 'cardEnsayo1', 'cardGuias']
+      ['cardGuia27', 'cardGuia26', 'cardGuia25', 'guia24Card', 'miniOctubreCard', 'miniInviernoCard', ...Array.from({ length: 21 }, (_, i) => `cardGuia${21 - i}`), 'cardEnsayo2', 'cardEnsayo1', 'cardGuias']
         .forEach(id => grid.append(document.getElementById(id)));
       document.getElementById('loginSection').style.display = 'none';
       
@@ -1929,6 +1948,9 @@
       // 5-nov: la Guía 26 es de 3.º A y B HC; en 4.º HC no se muestra. La cuenta de prueba la ve para revisarla.
       document.getElementById('cardGuia26').hidden = !/^3[AB]HC$/.test(String(student.curso || '').replace(/[^0-9A-Z]/gi, '').toUpperCase())
         && cleanRut(student.rut) !== '111111111';
+      // 12-nov: la Guía 27 (repaso de contenidos) también es de 3.º A y B HC.
+      document.getElementById('cardGuia27').hidden = !/^3[AB]HC$/.test(String(student.curso || '').replace(/[^0-9A-Z]/gi, '').toUpperCase())
+        && cleanRut(student.rut) !== '111111111';
       applyGuidedPaesRoute(student);
       syncMiniInvierno();
       syncMiniOctubre();
@@ -1945,7 +1967,7 @@
     }
 
     // ============ MIS NOTAS ============
-    const GUIAS_NOTAS = [11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26];
+    const GUIAS_NOTAS = [11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27];
     function renderMisNotas(rut) {
       const panel = document.getElementById('misNotasPanel');
       fetch('/api/paes?action=get-mis-notas&rut=' + encodeURIComponent(rut))
@@ -2090,9 +2112,9 @@
           const allowed = (data && data.config && data.config.allowed) || {};
           const lockGuides = [];
           for (let n = 10; n <= 21; n++) lockGuides.push(n);
-          lockGuides.push(25, 26);
+          lockGuides.push(25, 26, 27);
           for (const n of lockGuides) {
-            if (cleanRut(rut) === GUIDED_PAES_RUT && [17, 18, 19, 20, 21].concat(25, 26).includes(n)) continue;
+            if (cleanRut(rut) === GUIDED_PAES_RUT && [17, 18, 19, 20, 21].concat(25, 26, 27).includes(n)) continue;
             if (!blocked['g' + n] || allowed['g' + n]) continue;
             const card = document.getElementById('cardGuia' + n);
             if (!card) continue;

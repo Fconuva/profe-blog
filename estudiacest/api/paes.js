@@ -10,6 +10,7 @@ const G20 = require('./_paes-g20');
 const G21 = require('./_paes-g21');
 const G25 = require('./_paes-g25');
 const G26 = require('./_paes-g26');
+const G27 = require('./_paes-g27');
 const FOUNDATIONS = require('./_paes-foundations');
 const PREMIOS_PAES = require('./_premios-paes');
 const NOTA_AUTO = require('./_paes-nota-auto');
@@ -27,7 +28,7 @@ Object.assign(GUIDED_GUIDE_FEEDBACK, FOUNDATIONS.GUIDED_FEEDBACK);
 const DEFAULT_DATABASE_URL = 'https://estudiacest-default-rtdb.firebaseio.com';
 const BASE = 'plataforma_paes';
 const ADMIN_BASE = 'plataforma_estudiantes';
-const SECOND_SEMESTER_GUIDES = ['11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26'];
+const SECOND_SEMESTER_GUIDES = ['11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27'];
 const PAES_TEST_RUT = '111111111';
 
 function normalizePrivateKey(raw) {
@@ -214,6 +215,7 @@ const INTERACTIVE_GUIDE_FEEDBACK = {
     ...FOUNDATIONS.FEEDBACK,
     '25': G25.feedback,
     '26': G26.feedback,
+    '27': G27.feedback,
     '21': G21.feedback,
     '20': G20.feedback,
     '18': G18_FEEDBACK,
@@ -224,6 +226,7 @@ const INTERACTIVE_GUIDE_KEYS = {
     ...FOUNDATIONS.KEYS,
     '25': G25.key,
     '26': G26.key,
+    '27': G27.key,
     '21': G21.key,
     '20': G20.key,
     '10': G10_KEY,
@@ -880,6 +883,7 @@ async function handleGetMisNotas(req, res) {
     if (/^4[AB]HC$/.test(normalizedCourse) && !notas['23']) omitidos.push('23');
     // La Guía 26 es de 3.º A y B HC; en 4.º HC no aplica salvo que tenga nota registrada.
     if (/^4[AB]HC$/.test(normalizedCourse) && !notas['26']) omitidos.push('26');
+    if (/^4[AB]HC$/.test(normalizedCourse) && !notas['27']) omitidos.push('27');
     return res.status(200).json({
         success: true,
         libro: {
@@ -887,7 +891,7 @@ async function handleGetMisNotas(req, res) {
             notas,
             omitidos,
             desde: 11,
-            hasta: 26
+            hasta: 27
         }
     });
 }

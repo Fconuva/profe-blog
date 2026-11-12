@@ -127,11 +127,15 @@ const currentCard25 = portal.match(/<article\b[^>]*id="cardGuia25"[^>]*>([\s\S]*
 assert(currentCard25 && /href="guia25\.html"/.test(currentCard25[1]), 'G25 debe tener su tarjeta publicada y destino regular.');
 assert(!/<article\b[^>]*class="upcoming-card"[^>]*data-guided-guide="25"/.test(portal), 'G25 no debe duplicarse como futura.');
 const currentCard26 = portal.match(/<article\b[^>]*id="cardGuia26"[^>]*>([\s\S]*?)<\/article>/);
-assert(currentCard26 && /href="guia26\.html"/.test(currentCard26[1]) && /<span class="ensayo-tag">Sesión actual<\/span>/.test(currentCard26[1]), 'G26 debe ser la sesión actual con destino regular.');
+assert(currentCard26 && /href="guia26\.html"/.test(currentCard26[1]) && /<span class="ensayo-tag">Sesión anterior<\/span>/.test(currentCard26[1]), 'G26 debe quedar como sesión anterior con destino regular.');
+const currentCard27 = portal.match(/<article\b[^>]*id="cardGuia27"[^>]*>([\s\S]*?)<\/article>/);
+assert(currentCard27 && /href="guia27\.html"/.test(currentCard27[1]) && /<span class="ensayo-tag">Sesión actual<\/span>/.test(currentCard27[1]), 'G27 debe ser la sesión actual con destino regular.');
+assert(/getElementById\('cardGuia27'\)\.hidden = !\/\^3\[AB\]HC\$\//.test(portal), 'G27 debe mostrarse solo a 3.º A y B HC.');
+assert(!/<article\b[^>]*class="upcoming-card"[^>]*data-guided-guide="27"/.test(portal), 'G27 no debe duplicarse como futura.');
 assert(/getElementById\('cardGuia26'\)\.hidden = !\/\^3\[AB\]HC\$\//.test(portal), 'G26 debe mostrarse solo a 3.º A y B HC.');
-assert(portal.includes("2[0156])(?:-guiada)?\\.html$/.test(next)"), 'El regreso tras el ingreso debe aceptar la G26.');
+assert(portal.includes("2[01567])(?:-guiada)?\\.html$/.test(next)"), 'El regreso tras el ingreso debe aceptar la G26 y la G27.');
 assert(!/<article\b[^>]*class="upcoming-card"[^>]*data-guided-guide="26"/.test(portal), 'G26 no debe duplicarse como futura.');
-for (let guide = 27; guide <= 31; guide += 1) {
+for (let guide = 28; guide <= 31; guide += 1) {
   if (guide === 21) continue;
   assert(portal.includes(`Guía ${guide}</span>`), `Falta la tarjeta futura gris de la Guía ${guide}.`);
 }
@@ -156,6 +160,16 @@ inlineScripts.forEach((script, index) => {
   try { new Function(script); }
   catch (error) { failures.push(`Script embebido ${index + 1} inválido: ${error.message}`); }
 });
+
+// 12-nov-2026: G27, primer repaso de contenidos (4 contenidos con infografía, 20 preguntas).
+{
+  const g27 = require('../api/_paes-g27');
+  const data27 = JSON.parse(fs.readFileSync(path.join(root, 'paes/data/guia27.json'), 'utf8'));
+  assert(Object.keys(g27.key).length === 20 && Object.keys(g27.feedback).length === 20, 'G27 debe tener clave y retroalimentación para 20 preguntas.');
+  assert(data27.texts.length === 4 && data27.questions.length === 20, 'G27 debe tener 4 contenidos y 20 preguntas.');
+  assert(!JSON.stringify(data27).includes('"key"'), 'La clave de G27 no debe publicarse en el JSON.');
+  assert(data27.texts.every(text => text.review && text.review.images.every(image => fs.existsSync(path.join(root, 'paes', image.src)))), 'Cada contenido de G27 debe tener su infografía publicada.');
+}
 
 if (failures.length) {
   console.error('Auditoría PAES G18 fallida:\n- ' + failures.join('\n- '));

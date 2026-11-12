@@ -17,12 +17,19 @@
     if(target) $(target).scrollIntoView({block:'start'}); else $('session').scrollIntoView({block:'start'});
   }
   function render() {
+    // 12-nov: la guía pasó de 4 a 10 contenidos. Las pestañas salen de los datos y el panel de
+    // revisión deja de usar un id numérico, que chocaba con el contenido 5.
+    const tabs=document.querySelector('.tabs');
+    tabs.innerHTML=activity.texts.map((text,index)=>`<button type="button" data-tab="${index+1}" aria-pressed="${index===0}">${index+1} · ${escape(text.tab||text.content)}</button>`).join('')+'<button type="button" class="tab-entrega" data-tab="entrega" aria-pressed="false">Revisión y entrega</button>';
+    tabs.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>switchTab(b.dataset.tab)));
+    $('answerMap').closest('.panel').id='panel-entrega';
+    $('progress').max=QUESTIONS.length;$('answerMap').setAttribute('aria-label',`Estado de las ${QUESTIONS.length} preguntas`);
     $('readingPanels').innerHTML = activity.texts.map((text,index) => {
       const n=index+1, review=text.review;
       const repaso=`<section class="repaso" aria-labelledby="repaso-${n}"><p class="eyebrow">Paso 1 · Repasa el contenido</p><h2 id="repaso-${n}">${escape(text.content)}</h2><p>${escape(review.intro)}</p><div class="repaso-grid">${review.images.map(image=>`<figure><a href="${escape(image.src)}" target="_blank" rel="noopener"><img src="${escape(image.src)}" alt="${escape(image.alt)}" width="880" height="1168" loading="lazy"></a><figcaption><a href="${escape(image.src)}" target="_blank" rel="noopener">Ver la infografía en grande</a></figcaption></figure>`).join('')}</div><h3>Lo esencial</h3><dl>${review.essentials.map(([term,meaning])=>`<dt>${escape(term)}</dt><dd>${escape(meaning)}</dd>`).join('')}</dl><p class="clave">${escape(review.recuerda)}</p></section>`;
       const paragraphs=text.paragraphs.map((p,i)=>text.labels?`<p class="fragmento"><strong>${escape(text.labels[i])}</strong>${escape(p)}</p>`:`<p><span class="pn">${i+1}</span>${escape(p)}</p>`).join('');
       const questions=QUESTIONS.filter(q=>q.texto===n).map(q=>`<article class="question" id="question-${q.n}" data-q="${q.n}"><h3><span class="qnum">${q.n}.</span>${escape(q.text)}</h3><div role="group" aria-label="Pregunta ${q.n}">${Object.entries(q.opts).map(([letter,value])=>`<button type="button" class="option" data-letter="${letter}" aria-pressed="false"><span class="letter">${letter}</span><span>${escape(value)}</span></button>`).join('')}</div><button type="button" class="flag" aria-pressed="false">Marcar para revisar</button>${(q.open||[]).map(item=>`<label class="reflection" for="${escape(item.id)}">${escape(item.label)}<textarea id="${escape(item.id)}" maxlength="500" data-dev="${escape(item.id)}"></textarea></label>`).join('')}<p class="feedback" id="feedback-${q.n}" hidden></p></article>`).join('');
-      return `<section class="panel" id="panel-${n}" ${n===1?'':'hidden'}>${repaso}<p class="eyebrow paso2">Paso 2 · Aplica el contenido en la lectura</p><div class="reading-layout"><article class="reading"><p class="eyebrow">Lectura ${n} · ${escape(text.genre)}</p><h2>${escape(text.title)}</h2>${paragraphs}<p class="source">${escape(text.source)}</p></article><div class="questions">${questions}</div></div><div class="next-row"><button type="button" data-next="${n+1}">${n===activity.texts.length?'Revisión y entrega':'Siguiente contenido'}</button></div></section>`;
+      return `<section class="panel" id="panel-${n}" ${n===1?'':'hidden'}>${repaso}<p class="eyebrow paso2">Paso 2 · Aplica el contenido en la lectura</p><div class="reading-layout"><article class="reading"><p class="eyebrow">Lectura ${n} · ${escape(text.genre)}</p><h2>${escape(text.title)}</h2>${paragraphs}<p class="source">${escape(text.source)}</p></article><div class="questions">${questions}</div></div><div class="next-row"><button type="button" data-next="${n===activity.texts.length?'entrega':n+1}">${n===activity.texts.length?'Revisión y entrega':'Siguiente contenido'}</button></div></section>`;
     }).join('');
     document.querySelectorAll('.option').forEach(button=>button.addEventListener('click',()=>{if(isSubmitted||submitting)return;local.answers[button.closest('.question').dataset.q]=button.dataset.letter;changed();}));
     document.querySelectorAll('.flag').forEach(button=>button.addEventListener('click',()=>{if(isSubmitted||submitting)return;const id=button.closest('.question').dataset.q;local.flags[id]=!local.flags[id];changed();}));
@@ -77,7 +84,6 @@
   $('loginForm').addEventListener('submit',login);$('submit').addEventListener('click',submitGuide);
   $('closeDialog').addEventListener('click',()=>{$('confirmDialog').hidden=true;$('deliveryConfirmation').scrollIntoView();});
   $('confirmDialog').addEventListener('keydown',e=>{if(e.key==='Tab'){e.preventDefault();$('closeDialog').focus();}if(e.key==='Escape')$('closeDialog').click();});
-  document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>switchTab(b.dataset.tab)));
   document.querySelectorAll('[data-dev]').forEach(bindDev);
   window.addEventListener('beforeunload',event=>{if(student&&!isSubmitted){store();if(submitting||$('savedState').textContent==='Cambios pendientes'||$('savedState').textContent==='Guardando…'){event.preventDefault();event.returnValue='';}}});
   $('loginForm').querySelector('button').disabled=true;

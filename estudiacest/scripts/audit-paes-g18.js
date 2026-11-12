@@ -161,12 +161,20 @@ inlineScripts.forEach((script, index) => {
   catch (error) { failures.push(`Script embebido ${index + 1} inválido: ${error.message}`); }
 });
 
-// 12-nov-2026: G27, primer repaso de contenidos (4 contenidos con infografía, 20 preguntas).
+// 12-nov-2026: G27, primer repaso de contenidos. El mismo día pasó de 4 contenidos y 20 preguntas
+// a 10 contenidos y 44 preguntas; lo enviado con 20 se corrige sobre 20.
 {
   const g27 = require('../api/_paes-g27');
   const data27 = JSON.parse(fs.readFileSync(path.join(root, 'paes/data/guia27.json'), 'utf8'));
-  assert(Object.keys(g27.key).length === 20 && Object.keys(g27.feedback).length === 20, 'G27 debe tener clave y retroalimentación para 20 preguntas.');
-  assert(data27.texts.length === 4 && data27.questions.length === 20, 'G27 debe tener 4 contenidos y 20 preguntas.');
+  assert(Object.keys(g27.key).length === 44 && Object.keys(g27.feedback).length === 44, 'G27 debe tener clave y retroalimentación para 44 preguntas.');
+  assert(data27.texts.length === 10 && data27.questions.length === 44, 'G27 debe tener 10 contenidos y 44 preguntas.');
+  assert(data27.questions.every((question, index) => question.n === index + 1 && g27.key[question.n] && g27.feedback[question.n]), 'Cada pregunta de G27 debe tener clave y retroalimentación.');
+  assert(data27.texts.every((text, index) => data27.questions.filter(question => question.texto === index + 1).length >= 4), 'Cada contenido de G27 debe tener al menos 4 preguntas.');
+  const api27 = fs.readFileSync(path.join(root, 'api/paes.js'), 'utf8');
+  assert(/String\(guideId\) === '27' && key && key === G27\.key && Number\(total\) === 20/.test(api27), 'La API debe corregir sobre 20 lo enviado desde la G27 de 20 preguntas.');
+  assert((api27.match(/'27' && (?:!guided && )?Number\(record\??\.total\) === 20\) ids = ids\.slice\(0, 20\)/g) || []).length === 2, 'El ranking y el panel deben puntuar sobre 20 las entregas de la G27 de 20 preguntas.');
+  const html27 = fs.readFileSync(path.join(root, 'paes/guia27.html'), 'utf8');
+  assert(/10 contenidos · 44 preguntas/.test(html27) && !/20 preguntas|panel-5/.test(html27), 'La página de G27 debe anunciar 10 contenidos y 44 preguntas.');
   assert(!JSON.stringify(data27).includes('"key"'), 'La clave de G27 no debe publicarse en el JSON.');
   assert(data27.texts.every(text => text.review && text.review.images.every(image => fs.existsSync(path.join(root, 'paes', image.src)))), 'Cada contenido de G27 debe tener su infografía publicada.');
 }

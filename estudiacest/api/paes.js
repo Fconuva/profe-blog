@@ -157,7 +157,12 @@ function guideKeyFor(guideId, rut) {
 
 // 5-nov-2026: la Guía 26 pasó de 8 a 24 preguntas (dos lecturas más). Lo
 // guardado o enviado desde la versión de 8 se corrige sobre esas 8 preguntas.
+// 12-nov-2026: la Guía 27 pasó de 20 a 44 preguntas (seis contenidos más). Lo
+// guardado o enviado desde la versión de 20 se corrige sobre esas 20 preguntas.
 function keyForRecordTotal(guideId, key, total) {
+    if (String(guideId) === '27' && key && key === G27.key && Number(total) === 20) {
+        return Object.fromEntries(Object.entries(key).filter(([id]) => Number(id) <= 20));
+    }
     if (String(guideId) !== '26' || !key || key !== G26.key || Number(total) !== 8) return key;
     return Object.fromEntries(Object.entries(key).filter(([id]) => Number(id) <= 8));
 }
@@ -1186,6 +1191,7 @@ function scoreRankingLegacy(guideId, record) {
     let ids = Object.keys(key);
     if (guideId === '16' && [15, 20].includes(Number(record.total))) ids = ids.slice(0, Number(record.total));
     if (guideId === '26' && Number(record.total) === 8) ids = ids.slice(0, 8);
+    if (guideId === '27' && Number(record.total) === 20) ids = ids.slice(0, 20);
     return { correct: ids.filter(id => answers[id] === key[id]).length, total: ids.length };
 }
 
@@ -1228,6 +1234,7 @@ module.exports = async (req, res) => {
                 let ids = Object.keys(key || {});
                 if (id === '16' && !guided && [15, 20].includes(Number(record?.total))) ids = ids.slice(0, Number(record.total));
                 if (id === '26' && !guided && Number(record?.total) === 8) ids = ids.slice(0, 8);
+                if (id === '27' && !guided && Number(record?.total) === 20) ids = ids.slice(0, 20);
                 const compatible = ids.length > 0 && (!record ||
                     (!FOUNDATIONS.KEYS[id] || record.contentVersion === FOUNDATIONS.VERSION) &&
                     (id !== '14' || guided || isCurrentGuia14Record(record)) &&

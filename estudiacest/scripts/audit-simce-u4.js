@@ -184,6 +184,11 @@ async function browserTests(stats){
   fs.writeFileSync(path.join(evidence,'measurement.json'),JSON.stringify({checks,stats,errors,failed},null,2));console.log('Evidencia local: '+evidence);
  }finally{await browser.close();await new Promise(resolve=>running.server.close(resolve));}
 }
-async function main(){const stats=measure();await apiTests();if(process.argv.includes('--browser'))await browserTests(stats);console.log(`SIMCE U4: ${checks} comprobaciones aprobadas; 5 miniensayos, 17 textos, 102 preguntas, demanda individual, claves privadas, entrega, reapertura y permisos. Solo fixtures.`);if(process.argv.includes('--details'))console.log(JSON.stringify(stats,null,2));}
+// Las pruebas del periodo abierto usan un reloj anterior al cierre del servidor (api.CLOSE_AT):
+// con el reloj real dejaron de pasar el 11-nov-2026 y bloqueaban todo despliegue.
+// El cierre por fecha se comprueba aparte, con el reloj puesto en el instante de cierre.
+async function conRelojAbierto(fn){const real=Date.now,shift=Math.min(0,api.CLOSE_AT-86400000-real());Date.now=()=>real()+shift;try{return await fn();}finally{Date.now=real;}}
+async function cierrePorFecha(){const real=Date.now;Date.now=()=>api.CLOSE_AT;try{const db=mockDb(),all=Object.fromEntries(exams[0].texts.flatMap(t=>t.questions).map(q=>[q.id,q.key]));check((await call(db,'simce-u4-save','student',{answers:{q1:'A'}})).status===423,'Cierre por fecha: no guarda');check((await call(db,'simce-u4-submit','student',{answers:all})).status===423,'Cierre por fecha: no entrega');check(get(db.state,BASE+'/respuestas/sesion-u4-1/student')==null,'Cierre por fecha: sin escritura');}finally{Date.now=real;}}
+async function main(){const stats=measure();await conRelojAbierto(async()=>{await apiTests();if(process.argv.includes('--browser'))await browserTests(stats);});await cierrePorFecha();console.log(`SIMCE U4: ${checks} comprobaciones aprobadas; 5 miniensayos, 17 textos, 102 preguntas, demanda individual, claves privadas, entrega, reapertura y permisos. Solo fixtures.`);if(process.argv.includes('--details'))console.log(JSON.stringify(stats,null,2));}
 if(require.main===module){if(process.argv.includes('--serve'))serve().then(({url})=>console.log(url));else main().catch(e=>{console.error(e.stack);process.exitCode=1;});}
-module.exports={fixture,mockDb,serve,measure};
+module.exports={fixture,mockDb,serve,measure,conRelojAbierto};

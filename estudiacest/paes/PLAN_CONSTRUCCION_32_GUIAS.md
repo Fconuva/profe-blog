@@ -155,6 +155,16 @@ Fechas G22–G31 tomadas de la portada al construir este plan, conservadas como 
 
 No ubicar automáticamente G32 una semana después de G31 como preparación previa a la prueba: el calendario publicado ya sitúa la PAES entre el 30 de noviembre y el 2 de diciembre. La numeración describe la biblioteca, no autoriza a inventar una clase disponible.
 
+### Cambio del 12-nov-2026: G27 a G30 pasan a repaso de contenidos
+
+Decisión de Francisco (12-nov-2026): «DE LA 27 , 28 , 29 Y 30 SERÁN DE REPASO DE CONTENIDOS , HICE IMAGENES E INFOGRAFIAS DE TODOS LOS CONTENIDOS DESDE PRIMERO MEDIO MIRANDO LOS LIBROS DE ESTUDIANTE ENTONCES ESAS 4 CLASES SERÁN DE REVISAR EL CONTENIDO APLICARLO EN EJERCICIOS». Las filas G27 a G30 de la tabla quedan como antecedente histórico y no se construyen con ese diseño.
+
+- Formato de cada sesión: por contenido, infografía y «lo esencial», una lectura breve original y preguntas A–D que aplican ese contenido, más respuestas breves de aplicación y un cierre. Clave y retroalimentación solo en servidor.
+- G27 «Repaso 1 · Leer para comprender» (12-nov-2026, 3.º A y B HC): tema e ideas principales y secundarias, propósito comunicativo, inferencias locales y globales, y vocabulario en contexto. Cuatro lecturas originales, 20 preguntas, 5 respuestas breves y cierre; 60 minutos; admite entrega con pendientes. Nota de laboriosidad automática al entregar.
+- G28 a G30: sin construir. Reparto propuesto, pendiente de que Francisco lo confirme: G28 narrativa y lírica, G29 argumentación, G30 medios y géneros. Las infografías disponibles se toman de su banco; cada guía usa solo las de sus contenidos.
+- G27 se publicó sin strikes, igual que G25 y G26. El punto 8 de la lista de publicación (strikes en toda actividad nueva) queda pendiente de decisión de Francisco para estas cuatro guías.
+- La ruta guiada individual de la 27 conserva su contenido anterior (inferencia global, seis preguntas).
+
 ## 7. Tiempo, volumen y secuencia de enseñanza
 
 - Conservar la referencia de 90 minutos formales y aproximadamente 70 efectivos. Los 70 no son obligatoriamente 70 minutos de preguntas: incluyen enseñanza y práctica según el propósito de la sesión.

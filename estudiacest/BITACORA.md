@@ -4,7 +4,9 @@
 
 - Francisco pide publicar el ejemplo terminado junto a la guía y destacar la clase del viernes 13 de noviembre. Se publican el manual original de 7 páginas y el ejemplo de 18 páginas ilustradas, con estructura y colores de Canva (recreación visual), sin alterar los PDF recibidos y aprobados.
 - La tarjeta de la clase 2 en NM3 abre el bloque con ambos PDF; la portada del proyecto muestra fecha completa, propósito, contenido y orientación de impresión. La guía completa anterior y sus instrucciones permanecen accesibles. Los dos PDF quedan registrados con SHA-256 en el manifiesto de publicación.
-- Verificación y publicación: pendientes al preparar este registro.
+- Verificación local: tarjeta y recursos en Chromium a 390, 1440 y 3840 px, sin desbordes ni imágenes rotas; capturas móvil y escritorio abiertas. Ambos PDF conservan sus bytes y abren con 7 páginas A4 vertical y 18 A4 horizontal. Build integral aprobado desde checkout limpio de 5a20b68c: 1.015 recursos críticos; los cambios PAES ajenos en curso de la carpeta compartida no entran en este despliegue.
+- Publicación con `npm run deploy:prod:safe`: `dpl_DVb186r34bqFGSPtMzZKtFsaA2zu`, READY y alias `www.estudiacest.com`. Por HTTP, ambas páginas y ambos PDF responden 200 y coinciden byte por byte con el commit publicado; PDF públicos abiertos con pdf-lib: 7 y 18 páginas. Chromium público: seis vistas a 390/1440/3840 px sin desbordes, imágenes rotas, errores de página ni respuestas HTTP fallidas; capturas de tarjeta móvil y bloque de recursos de escritorio abiertas. Se espera el contenido visible y la carga de imágenes: `networkidle` agota su espera en NM3 por tráfico continuo.
+- Entrega a Francisco: `https://www.estudiacest.com/nm3/mi-dia-en-imagenes/#clase-13-noviembre`, también enlazado desde la tarjeta «Creación del libreto en Canva», con fecha «Viernes 13 de noviembre de 2026».
 
 ## 2026-11-12, PAES: Guía 27 ampliada a 10 contenidos y 44 preguntas, y plan de las guías 28 a 30
 

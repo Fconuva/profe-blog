@@ -1,5 +1,11 @@
 # Bitácora de Estudia CEST
 
+## 2026-11-12, NM3: manual y ejemplo completo para la clase del 13 de noviembre
+
+- Francisco pide publicar el ejemplo terminado junto a la guía y destacar la clase del viernes 13 de noviembre. Se publican el manual original de 7 páginas y el ejemplo de 18 páginas ilustradas, con estructura y colores de Canva (recreación visual), sin alterar los PDF recibidos y aprobados.
+- La tarjeta de la clase 2 en NM3 abre el bloque con ambos PDF; la portada del proyecto muestra fecha completa, propósito, contenido y orientación de impresión. La guía completa anterior y sus instrucciones permanecen accesibles. Los dos PDF quedan registrados con SHA-256 en el manifiesto de publicación.
+- Verificación y publicación: pendientes al preparar este registro.
+
 ## 2026-11-12, PAES: Guía 27 ampliada a 10 contenidos y 44 preguntas, y plan de las guías 28 a 30
 
 - Francisco 12-nov, con la guía ya publicada: «Esta super bien la guía pero sin embargo , es breve , incluye más contenidos y ejercicios de aplicacion. la idea es que repases nuevmaente de los libros de 1 , 2 , 3 y 4 medio el libro del estudiante la lista de contenidos.» y después «Publica y comienza a planificar las restantes ademas».

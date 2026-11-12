@@ -11,6 +11,9 @@ const G21 = require('./_paes-g21');
 const G25 = require('./_paes-g25');
 const G26 = require('./_paes-g26');
 const G27 = require('./_paes-g27');
+const G28 = require('./_paes-g28');
+const G29 = require('./_paes-g29');
+const G30 = require('./_paes-g30');
 const FOUNDATIONS = require('./_paes-foundations');
 const PREMIOS_PAES = require('./_premios-paes');
 const NOTA_AUTO = require('./_paes-nota-auto');
@@ -28,7 +31,7 @@ Object.assign(GUIDED_GUIDE_FEEDBACK, FOUNDATIONS.GUIDED_FEEDBACK);
 const DEFAULT_DATABASE_URL = 'https://estudiacest-default-rtdb.firebaseio.com';
 const BASE = 'plataforma_paes';
 const ADMIN_BASE = 'plataforma_estudiantes';
-const SECOND_SEMESTER_GUIDES = ['11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27'];
+const SECOND_SEMESTER_GUIDES = ['11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30'];
 const PAES_TEST_RUT = '111111111';
 
 function normalizePrivateKey(raw) {
@@ -221,6 +224,9 @@ const INTERACTIVE_GUIDE_FEEDBACK = {
     '25': G25.feedback,
     '26': G26.feedback,
     '27': G27.feedback,
+    '28': G28.feedback,
+    '29': G29.feedback,
+    '30': G30.feedback,
     '21': G21.feedback,
     '20': G20.feedback,
     '18': G18_FEEDBACK,
@@ -232,6 +238,9 @@ const INTERACTIVE_GUIDE_KEYS = {
     '25': G25.key,
     '26': G26.key,
     '27': G27.key,
+    '28': G28.key,
+    '29': G29.key,
+    '30': G30.key,
     '21': G21.key,
     '20': G20.key,
     '10': G10_KEY,
@@ -888,7 +897,8 @@ async function handleGetMisNotas(req, res) {
     if (/^4[AB]HC$/.test(normalizedCourse) && !notas['23']) omitidos.push('23');
     // La Guía 26 es de 3.º A y B HC; en 4.º HC no aplica salvo que tenga nota registrada.
     if (/^4[AB]HC$/.test(normalizedCourse) && !notas['26']) omitidos.push('26');
-    if (/^4[AB]HC$/.test(normalizedCourse) && !notas['27']) omitidos.push('27');
+    // Las guías 27 a 30 (repaso de contenidos) son de 3.º A y B HC.
+    ['27', '28', '29', '30'].forEach((id) => { if (/^4[AB]HC$/.test(normalizedCourse) && !notas[id]) omitidos.push(id); });
     return res.status(200).json({
         success: true,
         libro: {
@@ -896,7 +906,7 @@ async function handleGetMisNotas(req, res) {
             notas,
             omitidos,
             desde: 11,
-            hasta: 27
+            hasta: 30
         }
     });
 }

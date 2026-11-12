@@ -138,7 +138,7 @@ assert(/getElementById\('cardGuia27'\)\.hidden = !\/\^3\[AB\]HC\$\//.test(portal
 assert(!/<article\b[^>]*class="upcoming-card"[^>]*data-guided-guide="27"/.test(portal), 'G27 no debe duplicarse como futura.');
 assert(/getElementById\('cardGuia26'\)\.hidden = !\/\^3\[AB\]HC\$\//.test(portal), 'G26 debe mostrarse solo a 3.º A y B HC.');
 assert(!/<article\b[^>]*class="upcoming-card"[^>]*data-guided-guide="26"/.test(portal), 'G26 no debe duplicarse como futura.');
-for (let guide = 28; guide <= 31; guide += 1) {
+for (let guide = 31; guide <= 31; guide += 1) {
   assert(portal.includes(`Guía ${guide}</span>`), `Falta la tarjeta futura gris de la Guía ${guide}.`);
 }
 

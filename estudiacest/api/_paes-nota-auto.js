@@ -39,6 +39,8 @@ async function registrar(db, { rut, guia, contestadas, total }) {
   if (g === '26' && /^4[AB]HC$/.test(c)) return { escrita: false, motivo: 'g26-4hc' };
   // La Guía 27 (repaso de contenidos) también es de 3.º A y B HC.
   if (g === '27' && /^4[AB]HC$/.test(c)) return { escrita: false, motivo: 'g27-4hc' };
+  // Las guías 28 a 30 (repasos 2 a 4) también son de 3.º A y B HC.
+  if (['28', '29', '30'].includes(g) && /^4[AB]HC$/.test(c)) return { escrita: false, motivo: 'g' + g + '-4hc' };
   let escrita = null;
   const tx = await db.ref(BASE + '/' + r + '/notas/' + g).transaction(actual => {
     escrita = decidir(actual, nueva);

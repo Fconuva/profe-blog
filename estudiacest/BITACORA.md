@@ -1,5 +1,12 @@
 # Bitácora de Estudia CEST
 
+## 2026-11-16, NM2 HC: enseñanza visual con 13 ilustraciones de IA
+
+- Francisco pide «TODO MUY VISUAL CREA IMAGENES CON IA QUE EXPLIQUEN Y EJEMPLIFIQUEN PARA QUE LUEGO ELLOS APLIQUEN». Se crean 13 láminas originales con OpenAI image_gen, revisadas individualmente: narradores, tiempo, personajes; figuras y poesía; argumentación, respaldo y falacias; teatro, conflicto, medios y persuasión. Originales PNG, prompts, proveedor y SHA-256 conservados en `paes/nm2/assets/ia/`; solo WebP y metadatos se publican.
+- Cada clase muestra una lámina a la vez, con explicación breve, ejemplo resuelto y aplicación nueva en el cuaderno. Incluye ampliación dentro de la misma página y lectura en voz alta compatible con el navegador. Portada con imágenes, fichas vinculadas, presentaciones con una pantalla de explicación y otra de aplicación, y cuatro guías PDF A4 de 17/17/17/18 páginas. Las 237 entradas siguen disponibles en la biblioteca; preguntas, claves, intentos, versiones y respuestas anteriores se conservan.
+- Verificación local: 501 comprobaciones del catálogo/backend y validación de los 13 archivos contra sus hashes; contrato de entrega aprobado para 75 clases; build integral aprobado con 1.061 recursos críticos. Navegador con datos ficticios: guardado, recarga y entrega en ambos cursos y recorrido acompañado. Galería: 78 vistas a 390/1440/3840 px, 24 ampliaciones y 150 pantallas de presentación sin desbordes ni errores de JavaScript. Las 69 páginas de PDF se revisaron en contactos, con páginas ilustradas ampliadas y sin solapamientos con el pie; hoja de ruta de cada planificación en una página.
+- Publicación pendiente en esta entrada. Se mantiene el límite documentado del ingreso E2E con cuentas reales; no se escribieron respuestas ni se cambiaron credenciales de estudiantes. Evidencia local en `scratch/nm2-20261116/`.
+
 ## 2026-11-16, NM2 HC: cuatro clases de aplicación hasta el 9 de diciembre
 
 - Francisco pide rehacer las sesiones del 18/25 de noviembre y 2/9 de diciembre a partir de los textos MINEDUC de 1.º y 2.º medio: explicar con fichas e infografías y aplicar en definiciones, oraciones y lecturas tipo PAES. Se usa el inventario verificado de 237 entradas, sin reproducir los libros ni atribuirles los ejercicios originales CEST.

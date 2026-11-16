@@ -4,6 +4,8 @@ Las 237 entradas tienen definición, ejemplo y consigna en la biblioteca. Las fi
 
 Los tiempos de 90 minutos por clase son estimaciones. No es viable desarrollar con igual profundidad 237 entradas en 360 minutos: la hoja de ruta prioriza los núcleos, y la biblioteca permite repaso entre sesiones hasta el 9 de diciembre.
 
+Desde el ajuste visual del 16 de noviembre, la explicación principal se organiza en 13 láminas didácticas creadas con IA: 3 de narración, 3 de poesía, 3 de argumentación y 4 de teatro y medios. Cada una compara casos, explica un ejemplo y propone una aplicación nueva. La clase y la presentación las muestran de una en una; los cuatro PDF incluyen las mismas imágenes y consignas. Las fichas completas siguen en la biblioteca. La relación de conceptos con cada imagen consta en `data/visuales.json`; originales, prompts y hashes, en `assets/ia/`.
+
 | ID | Contenido | Área | Primera sesión | Fuente 1M | Fuente 2M | Enseñanza y aplicación |
 |---|---|---|---:|---|---|---|
 | C001 | Autor y narrador | Narración | 1 | 32 | 139, 365 | Ficha: definición + ejemplo + consigna; respuesta libre en cuaderno o biblioteca digital. |

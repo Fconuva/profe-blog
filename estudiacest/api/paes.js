@@ -19,6 +19,7 @@ const PREMIOS_PAES = require('./_premios-paes');
 const NOTA_AUTO = require('./_paes-nota-auto');
 const CARTAS = require('./_paes-cartas');
 const MINI_INVIERNO = require('./_paes-mini-invierno');
+const NM2 = require('./_paes-nm2');
 const MINI_OCTUBRE = require('./_paes-mini-octubre');
 const G24 = require('./_paes-g24');
 const EF4HC = require('./_paes-ensayo-final-4hc');
@@ -1255,6 +1256,7 @@ module.exports = async (req, res) => {
         if (action === 'ranking') return await RANKING.handle(req, res, { db, auth, scoreLegacy: scoreRankingLegacy });
 
         // Public actions
+        if (['nm2-dashboard','nm2-state','nm2-start','nm2-save','nm2-submit','nm2-incident'].includes(action)) return await NM2.handle(action, req, res, { db, auth });
         if (['tp-state','tp-start','tp-save','tp-submit','tp-incident','tp-source'].includes(action)) return await TP.handle(action, req, res, { db, auth });
         if (['g24-state','g24-start','g24-save','g24-submit','g24-incident'].includes(action)) return await G24.handle(action.replace('g24-','mini-'), req, res, { db, auth });
         if (['ef4hc-state','ef4hc-start','ef4hc-save','ef4hc-submit','ef4hc-incident'].includes(action)) return await EF4HC.handle(action.replace('ef4hc-','mini-'), req, res, { db, auth });
@@ -1302,6 +1304,7 @@ module.exports = async (req, res) => {
 
         // Admin actions (Token verification required)
         const decoded = await verifyAdmin(req);
+        if (String(action).startsWith('admin-nm2-')) return await NM2.handle(action, req, res, { db, auth, adminUid: decoded.uid });
         if (String(action).startsWith('admin-tp-')) return await TP.handle(action, req, res, { db, auth, adminUid: decoded.uid });
         if (String(action).startsWith('admin-g24-')) return await G24.handle(action.replace('admin-g24-','admin-mini-'), req, res, { db, auth, adminUid: decoded.uid });
         if (String(action).startsWith('admin-ef4hc-')) return await EF4HC.handle(action.replace('admin-ef4hc-','admin-mini-'), req, res, { db, auth, adminUid: decoded.uid });

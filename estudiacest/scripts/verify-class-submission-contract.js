@@ -28,7 +28,7 @@ const required = [
   ['confirmación visible', /Entrega confirmada/g, 2],
   ['diálogo accesible', /role=["']dialog["'][^>]*aria-modal=["']true["']/g, 1],
   ['estado accesible', /role=["']status["'][^>]*aria-live=["']polite["']/g, 1],
-  ['regreso al panel o ruta personal', /\/estudiantes\/dashboard\.html|href=["']#inicio["']|href=["']\/paes\/(?:tp\/)?["']|href=["']\/estudiantes\/apoyo-personal\/["']/g, 1],
+  ['regreso al panel o ruta personal', /\/estudiantes\/dashboard\.html|href=["']#inicio["']|href=["']\/paes\/(?:(?:tp|nm2)\/)?["']|href=["']\/estudiantes\/apoyo-personal\/["']/g, 1],
   ['manejo de error', /catch\s*\(/g, 1]
 ];
 
@@ -110,7 +110,7 @@ for (const entry of registry.files || []) {
   if (entry.atomicResult === true && !/(?:db\.ref\(BASE\)\.(?:update|transaction)|responseRef\.transaction)\(/.test(source)) {
     failures.push(`${relativePath}: respuesta y resultado no se escriben en una actualización atómica.`);
   }
-  if (storage === 'api' && (!/(?:get-guia-state|personal-guided-state|simce-u3s12-state|simce-u4-state|cards-state|mini-state|1d-state)/.test(source) || !/attempt\.completada\s*!==\s*true/.test(source))) {
+  if (storage === 'api' && (!/(?:get-guia-state|personal-guided-state|simce-u3s12-state|simce-u4-state|cards-state|mini-state|nm2-state|1d-state)/.test(source) || !/attempt\.completada\s*!==\s*true/.test(source))) {
     failures.push(`${relativePath}: falta la lectura final de confirmación mediante API.`);
   }
   if (relativePath.startsWith('estudiantes/guia-') && !/work-telemetry\.js["'][^>]*data-session=["'][^"']+["']/.test(source)) {

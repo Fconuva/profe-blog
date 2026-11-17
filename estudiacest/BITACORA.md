@@ -1,5 +1,14 @@
 # Bitácora de Estudia CEST
 
+## 2026-11-17 · NM2: ampliación construida, revisión independiente pendiente
+
+- Francisco ordena construir y aplicar la skill y las reglas PAES. Se leen las skills de plataforma, material docente y ensayos impresos, y sus referencias de reactivos/PAES. Se aplican controles editoriales de ítems dentro de una clase de enseñanza, sin presentar el banco como ensayo oficial ni copiar actividades MINEDUC.
+- Cada fecha (18/25-nov, 2/9-dic) contiene ahora 48 alternativas, cuatro lecturas y seis tareas: 192 alternativas y 24 tareas totales, con 96 alternativas, cuatro lecturas originales y 12 tareas nuevas. Mantiene 237 fichas y 13 imágenes IA. Microejercicios de cuatro en cuatro, lecturas con ocho preguntas y numeración visible continua. Se prioriza una lectura y dos tareas en 90 minutos; el resto continúa según el avance hasta el 9-dic.
+- Versión v2 con compatibilidad: preguntas q01–q24, w1–w3 y rutas acompañadas idénticas a v1; entregas anteriores conservan 24 preguntas y tres tareas en revisión, puntaje y panel. Los borradores preservan respuestas y continúan en v2; guardado admite w4–w6. Sin mutación de Firebase real ni cambios de notas.
+- Audit NM2: 813 comprobaciones aprobadas; 116 adicionales de compatibilidad e inmutabilidad de originales. Chromium ficticio: 12 recorridos completos a 390/1440/3840, guardado/recarga, entrega sobre 48 e históricos cerrados sobre 24, sin errores JS ni desbordes. QA general de 15 vistas y recorrido acompañado aprobados. PDF A4 regenerados: 27/27/27/28 páginas, 109 páginas sin invasión del pie; contactos y páginas nuevas ampliadas abiertos visualmente. Evidencias en `scratch/nm2-audio-20261117/`.
+- No publicado: falta el dictamen independiente exigido por `paes/PLAN_CONSTRUCCION_32_GUIAS.md`, §9.6. Se solicitó autorización para dos revisores acotados conforme al AGENTS de Francisco; pendiente, sin subagentes iniciados. Las pautas nuevas tienen evidencia, fundamento y tres descartes específicos, pero la autorrevisión no equivale a dictamen independiente. Estado: `docs/QA_NM2_AMPLIACION_2026-11-17.md`.
+- La voz natural permanece pendiente: el parche de audio incompleto y sus copias se conservaron en scratch, sin mezclar la función con la ampliación ni exigir archivos que no existen. Los tres MP3 HeyGen siguen locales, faltan 34 y manifiesto; no hay recarga confirmada ni gasto Higgsfield. No afirmar que la voz está corregida. El ingreso con credenciales reales de 2A/2B tampoco está acreditado por estas pruebas ficticias.
+
 ## 2026-11-17 · NM2: solicitud de mayor ejercitación y continuidad de audio
 
 - Francisco solicita ampliar las cuatro clases porque 24 alternativas y tres tareas de escritura resultan breves. Meta anunciada: 48 alternativas, cuatro lecturas y seis tareas por clase. La ampliación **todavía no está construida ni publicada**.

@@ -1,5 +1,17 @@
 # Retomar NM2 HC: ejercicios y voz · 17 de noviembre de 2026
 
+## Actualización tras la orden «Construye»
+
+La ampliación está construida: v2, 48 alternativas, cuatro lecturas y seis tareas por clase; 192 alternativas y 24 tareas en total. Conserva los originales y la variante acompañada. El cliente muestra cuatro microejercicios por bloque; los históricos v1 conservan 24 preguntas y tres tareas en cliente, panel y calificación. Los borradores continúan en v2 con sus respuestas.
+
+813 comprobaciones del audit y 116 adicionales aprobadas. Navegador ficticio: cuatro clases a 390/1440/3840, numeración 1–48, guardado/recarga de q25/q48/w6, entrega sobre 48 e históricos sobre 24. PDF A4 de 27/27/27/28 páginas sin desbordes. Estado completo: [QA_NM2_AMPLIACION_2026-11-17.md](QA_NM2_AMPLIACION_2026-11-17.md).
+
+**No publicado.** Falta revisión independiente de reactivos conforme al plan PAES §9.6. Se preguntó a Francisco si autoriza dos revisores acotados, sin edición ni publicación; respuesta pendiente. No se iniciaron subagentes. Después del dictamen: corregir lo necesario, regenerar PDF si cambia contenido, build limpio, `deploy:prod:safe` y verificar producción.
+
+El trabajo incompleto de voz quedó aislado: parche `C:/dev/profe-blog/scratch/nm2-audio-20261117/audio-pendiente.patch` y copias `.audio-pendiente`. Los tres MP3 permanecen sin commit. El cliente de esta ampliación conserva la voz publicada del navegador; no declarar solucionada la queja de voz. El audit nuevo no exige archivos de audio inexistentes porque esa función pendiente no forma parte del cambio.
+
+**Las secciones siguientes conservan el estado previo a la construcción; son antecedentes históricos y no el estado vigente.**
+
 ## Encargo vigente
 
 Francisco considera insuficientes los ejercicios de las clases del 18/25 de noviembre y 2/9 de diciembre para 2A-HC y 2B-HC. Ampliar las cuatro clases con aplicación de contenidos MINEDUC de 1.º/2.º medio en definiciones, oraciones, textos tipo PAES y escritura. Conservar las imágenes IA y la navegación visual, sin volver a una página extensa de texto colapsado.

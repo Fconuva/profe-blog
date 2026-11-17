@@ -88,6 +88,7 @@ Está prohibido usar `git push --force`, `git reset --hard`, restaurar versiones
 ## Audit Expectations
 
 - NM2 HC (16-nov-2026): `2A-HC` y `2B-HC` ingresan por `/lecturas/` a `/paes/nm2/`. Cuatro clases: 18/25 de noviembre y 2/9 de diciembre; biblioteca de 237 fichas y prácticas independientes. `/paes/?historico=nm2` conserva las guías 1–9. Los intentos y publicaciones nuevos viven en `plataforma_paes/nm2_intentos` y `nm2_config`; no cambian respuestas ni notas SIMCE históricas. Panel docente autenticado: `/paes/nm2/docente.html`. Auditoría: `node scripts/audit-paes-nm2.js` desde `estudiacest/`.
+- NM2 v2 (construido 17-nov, pendiente de revisión y despliegue): 48 alternativas, cuatro lecturas y seis tareas por clase. Entregas v1 conservan sus 24 preguntas, clave y tres tareas; los borradores pasan a v2 preservando respuestas. La variante acompañada conserva seis ítems. No recalificar históricos con el banco completo actual. Dictamen y estado en `estudiacest/docs/QA_NM2_AMPLIACION_2026-11-17.md`.
 
 - SIMCE: Results offers `Reabrir` per student. Use the authenticated `simce-admin-reopen` API; preserve answers and archive the prior response/result/grade together before clearing submission flags. Grant only the student's exception, mark the prior labor grade pending review, and verify readback. Never use a full reset to allow corrections.
 

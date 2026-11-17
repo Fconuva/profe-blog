@@ -8,14 +8,14 @@ const delivered=r=>r?.submitted===true&&r?.completada===true;
 const LESSONS=MATERIAL.lessons;
 const getLesson=value=>LESSONS.find(l=>l.id===value||String(l.n)===String(value));
 const sidFor=(l,g)=>l.id+(g?'-guiada':'');
-const questions=(l,g)=>g?l.guided.questions:[...l.micro,...l.texts.flatMap(t=>t.questions)];
-const keyFor=(l,g)=>KEYS[g?'guided':'regular'][l.id];
-function grade(l,g,answers){const key=keyFor(l,g),activity={questions:questions(l,g)};const TOTAL=activity.questions.length;let correct=0;const skills={};for(const [id,k]of Object.entries(key)){const s=skills[k.skill]||(skills[k.skill]={correct:0,total:0});s.total++;if(answers[id]===k.key){correct++;s.correct++;}}return {score:correct,correct,total:TOTAL,percentage:Math.round(correct/TOTAL*1000)/10,skills};}
+const questions=(l,g,version=MATERIAL.version)=>{const all=g?l.guided.questions:[...l.micro,...l.texts.flatMap(t=>t.questions)];return !g&&version===MATERIAL.legacyVersion?all.filter(q=>MATERIAL.legacyRegularQuestionIds.includes(q.id)):all;};
+const keyFor=(l,g,version=MATERIAL.version)=>Object.fromEntries(questions(l,g,version).map(q=>[q.id,KEYS[g?'guided':'regular'][l.id][q.id]]));
+function grade(l,g,answers,version=MATERIAL.version){const key=keyFor(l,g,version),activity={questions:questions(l,g,version)};const TOTAL=activity.questions.length;let correct=0;const skills={};for(const [id,k]of Object.entries(key)){const s=skills[k.skill]||(skills[k.skill]={correct:0,total:0});s.total++;if(answers[id]===k.key){correct++;s.correct++;}}return {score:correct,correct,total:TOTAL,percentage:Math.round(correct/TOTAL*1000)/10,skills};}
 function publicRecord(r,released,l,g){
  if(!r||r.resetAt)return null;
  const out={};for(const k of ['sessionId','uid','curso','answers','notes','reflection','version','revision','startedAt','updatedAt','submittedAt','completadaAt','integrityEpoch','strikes','incidents','endedBy','resetEpoch'])if(r[k]!==undefined)out[k]=r[k];
  out.submitted=r.submitted===true;out.completada=r.completada===true;
- if(delivered(r)&&released){out.result=grade(l,g,r.answers||{});out.review=keyFor(l,g);}
+ if(delivered(r)){const version=r.version||MATERIAL.legacyVersion;out.assignedQuestionIds=questions(l,g,version).map(q=>q.id);out.assignedWritingIds=g?[]:version===MATERIAL.legacyVersion?MATERIAL.legacyWritingIds:l.writing.map(w=>w.id);if(released){out.result=grade(l,g,r.answers||{},version);out.review=keyFor(l,g,version);}}
  return out;
 }
 async function identity(req,db,auth){
@@ -34,7 +34,7 @@ function validate(b,l,g){
  const ids=new Set(questions(l,g).map(q=>q.id)),answers={},notes={},reflection={};
  if(b.answers&&(typeof b.answers!=='object'||Array.isArray(b.answers)))throw fail(400,'Respuestas no válidas.');
  for(const [id,v]of Object.entries(b.answers||{})){if(!ids.has(id)||!['A','B','C','D'].includes(v))throw fail(400,'Respuesta no válida.');answers[id]=v;}
- const noteIds=new Set(['w1','w2','w3',...MATERIAL.cards.map(c=>c.id)]);
+ const noteIds=new Set([...l.writing.map(w=>w.id),...MATERIAL.cards.map(c=>c.id)]);
  if(b.notes&&(typeof b.notes!=='object'||Array.isArray(b.notes)))throw fail(400,'Escritura no válida.');
  for(const [id,v]of Object.entries(b.notes||{})){if(!noteIds.has(id)||typeof v!=='string')throw fail(400,'Campo de escritura no válido.');notes[id]=v.slice(0,3000);}
  for(const id of ['comprendi','evidencia','mejorare'])reflection[id]=String(b.reflection?.[id]||'').slice(0,1500);
@@ -48,7 +48,7 @@ async function handle(action,req,res,{db,auth,adminUid}){
   if(action.startsWith('admin-nm2-')){
    if(!adminUid)throw fail(403,'No autorizado.');
    if(action==='admin-nm2-list'){
-    const rows=[];for(const g of [false,true]){const sid=sidFor(l,g),all=(await db.ref(BASE+'/'+sid).once('value')).val()||{};for(const [uid,r]of Object.entries(all))rows.push({...r,uid,sessionId:sid,guided:g,result:delivered(r)?grade(l,g,r.answers||{}):null});}
+    const rows=[];for(const g of [false,true]){const sid=sidFor(l,g),all=(await db.ref(BASE+'/'+sid).once('value')).val()||{};for(const [uid,r]of Object.entries(all))rows.push({...r,uid,sessionId:sid,guided:g,assignedQuestionIds:delivered(r)?questions(l,g,r.version||MATERIAL.legacyVersion).map(q=>q.id):questions(l,g).map(q=>q.id),result:delivered(r)?grade(l,g,r.answers||{},r.version||MATERIAL.legacyVersion):null});}
     return res.status(200).json({success:true,rows,publication:(await db.ref(CONFIG+'/'+l.id+'/publicacion').once('value')).val()||{},keys:KEYS.regular[l.id],guidedKeys:KEYS.guided[l.id],writing:KEYS.writing[l.id]});
    }
    if(req.method!=='POST')throw fail(405,'Usa POST.');

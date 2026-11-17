@@ -47,6 +47,8 @@ local indicado por `REGLAS.md`. Ningún análisis asistido asigna la nota final.
 
 NM2 HC · 16 de noviembre de 2026: las clases del 18/25 de noviembre y 2/9 de diciembre están en `/paes/nm2/`. La biblioteca contiene 237 fichas con definición, ejemplo y consigna; cada clase regular tiene tres lecturas, 24 alternativas y escritura. Las claves están solo en `api/_paes-nm2-keys.json`; guardado y entrega usan `nm2-*`, con revisión/publicación autenticada en `/paes/nm2/docente.html`. Las guías anteriores siguen en `/paes/?historico=nm2`. No se cambian notas ni respuestas SIMCE. Los generadores `generate-paes-nm2*.py` usan el inventario versionado, sin publicar los PDF MINEDUC.
 
+NM2 HC · ampliación construida el 17-nov, pendiente de revisión independiente y despliegue: `nm2-contenidos-2026-v2` contiene 48 alternativas (16 micro y cuatro lecturas de ocho), seis tareas escritas y las mismas 237 fichas y 13 imágenes IA por conjunto de clases. Conservar q01–q24 y w1–w3. Las entregas v1 mantienen 24 preguntas y tres tareas en cliente, calificación y panel; los borradores conservan su avance al continuar con v2. La ruta acompañada conserva seis preguntas. Consultar `docs/QA_NM2_AMPLIACION_2026-11-17.md`; no confundir construcción con publicación.
+
 ## PAES TP · 26 de octubre de 2026
 
 4A-TP, 4B-TP, 4C-TP, 4D-TP y 4E-TP tienen entrada por defecto

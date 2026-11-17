@@ -9,8 +9,8 @@ slides=[
  {html:`<p class="eyebrow">Normas</p><h1>Escuchar, fundamentar y revisar</h1><ul><li>Escuchen y respeten los turnos.</li><li>Apoyen sus respuestas en ejemplos y pistas.</li><li>Corrijan una respuesta antes de entregar.</li><li>No se permite el uso de celular.</li></ul>`},
  {html:`<p class="eyebrow">Objetivo</p><h1>${e(l.title)}</h1><p>${e(l.objective)}</p>`},
  ...visualSlides,
- {html:`<p class="eyebrow">Aplicamos</p><h1>De las frases a las lecturas</h1><ol><li>Responde los 12 ejercicios breves.</li><li>Lee los tres textos y responde sus preguntas.</li><li>Justifica una decisión con evidencia.</li></ol><p>Trabaja individualmente en tu guía o computador. Consulta las fichas si necesitas una definición.</p>`},
- {html:`<p class="eyebrow">Escritura y revisión</p><h1>Crea, explica y mejora</h1><p>Realiza las tres tareas escritas de tu guía. En parejas, revisen una respuesta: definición, ejemplo y evidencia. Corrige antes de entregar.</p>`},
+ {html:`<p class="eyebrow">Aplicamos</p><h1>De las frases a las lecturas</h1><ol><li>Responde los ${l.micro.length} ejercicios breves.</li><li>Lee los ${l.texts.length} textos y responde sus preguntas.</li><li>Justifica una decisión con evidencia.</li></ol><p>Trabaja individualmente en tu guía o computador. Consulta las fichas si necesitas una definición. Guarda tu avance y continúa los bloques pendientes según indique el profesor.</p>`},
+ {html:`<p class="eyebrow">Escritura y revisión</p><h1>Crea, explica y mejora</h1><p>Realiza las ${l.writing.length} tareas escritas de tu guía. En parejas, revisen una respuesta: definición, ejemplo y evidencia. Corrige antes de entregar.</p>`},
  {html:`<p class="eyebrow">Cierre</p><h1>¿Qué cambió en tu forma de leer?</h1><p>Explica un contenido con un ejemplo propio. Cita una pista de la lectura y señala qué conclusión permite sostener.</p>`}
 ];
 function render(){$('slide').classList.toggle('visual-slide',!!slides[i].visual);$('slide').innerHTML=slides[i].html;$('position').textContent=(i+1)+' / '+slides.length;$('prev').disabled=i===0;$('next').disabled=i===slides.length-1;}

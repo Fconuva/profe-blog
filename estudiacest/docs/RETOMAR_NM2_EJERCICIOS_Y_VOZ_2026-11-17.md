@@ -8,6 +8,8 @@ La ampliación está construida: v2, 48 alternativas, cuatro lecturas y seis tar
 
 **No publicado.** Falta revisión independiente de reactivos conforme al plan PAES §9.6. Se preguntó a Francisco si autoriza dos revisores acotados, sin edición ni publicación; respuesta pendiente. No se iniciaron subagentes. Después del dictamen: corregir lo necesario, regenerar PDF si cambia contenido, build limpio, `deploy:prod:safe` y verificar producción.
 
+Build integral aprobado: 1.061 recursos críticos, desde `C:/dev/worktrees/nm2-ampliacion-20261117`. Borrador en rama `codex/nm2-ampliacion-20261117`, código `6bf33bfa`, separado de main; no fusionado ni desplegado. Retomar esa rama y consultar su estado remoto antes de editar. El árbol canónico compartido conserva cambios del encargo y cambios ajenos; no limpiarlo ni agregarlos globalmente.
+
 El trabajo incompleto de voz quedó aislado: parche `C:/dev/profe-blog/scratch/nm2-audio-20261117/audio-pendiente.patch` y copias `.audio-pendiente`. Los tres MP3 permanecen sin commit. El cliente de esta ampliación conserva la voz publicada del navegador; no declarar solucionada la queja de voz. El audit nuevo no exige archivos de audio inexistentes porque esa función pendiente no forma parte del cambio.
 
 **Las secciones siguientes conservan el estado previo a la construcción; son antecedentes históricos y no el estado vigente.**

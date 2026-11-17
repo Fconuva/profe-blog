@@ -32,6 +32,11 @@ La exigencia de revisión independiente está en `paes/PLAN_CONSTRUCCION_32_GUIA
 - Chromium con autenticación y base ficticias: 12 recorridos completos (cuatro clases a 390/1440/3840 px), numeración continua 1–48, cuatro bloques micro, cuatro lecturas, seis tareas, guardado/recarga y entrega confirmada. Entregas históricas: tres bloques micro, tres textos y tres tareas cerradas. Sin errores de JavaScript ni desbordes.
 - Guías A4 de 27/27/27/28 páginas: 109 páginas sin invasión del pie. Contactos de las cuatro guías abiertos visualmente y páginas nuevas ampliadas, incluida la tabla. Cada texto permanece seguido por sus preguntas; escritura con renglones de 7 mm. Las hojas de ruta caben en una página.
 - Evidencias locales reproducibles: `C:/dev/profe-blog/scratch/nm2-audio-20261117/qa.cjs`, `qa.json`, `qa-navegacion.cjs`, `qa-navegacion.json`, `qa-compat.cjs`, capturas y contactos PDF. Usan datos ficticios; no acreditan ingreso con credenciales de estudiantes reales.
+- Build integral aprobado desde el worktree aislado `C:/dev/worktrees/nm2-ampliacion-20261117`: todas las auditorías de `prebuild`/`build` y 1.061 recursos críticos. Se conserva el contrato de total dinámico ligado a la versión del intento. Log: `scratch/nm2-audio-20261117/build-ampliacion.log`.
+
+## Respaldo del borrador
+
+Rama `codex/nm2-ampliacion-20261117`, código `6bf33bfa`, separada de `main`. No fusionar ni ejecutar despliegue hasta resolver la revisión independiente. El árbol canónico compartido conserva las modificaciones de este encargo y los cambios ajenos; no usar un `git add` global ni asumir que ese árbol está limpio. El worktree de la rama contiene únicamente las 33 rutas explícitas de este encargo, sin los MP3 pendientes ni juegos/videos ajenos.
 
 ## Audio separado
 

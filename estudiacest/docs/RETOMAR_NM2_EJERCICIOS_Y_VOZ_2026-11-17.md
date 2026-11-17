@@ -1,5 +1,11 @@
 # Retomar NM2 HC: ejercicios y voz · 17 de noviembre de 2026
 
+## Voz aprobada e integrada: estado más reciente
+
+Francisco eligió «Usar esta voz» tras la muestra de Diego (es), de Higgsfield. Los 37 MP3 están completos e integrados en `assets/audio/diego/`: 13 explicaciones y 24 preguntas acompañadas con texto y alternativas. Sustituyen speechSynthesis con pausa/continuación y detención al navegar. Guiones, integridad, decodificación y cotejo automático de transcripciones comprobados; dos clips reemplazados tras revisar señales del cotejo. Chromium final aprobado (37 rutas, reproducción real, 12 vistas a tres anchos, errores/recuperación y ausencia de solapamiento). Build completo aprobado con 1.099 recursos críticos. Coste total: 80 créditos, incluidos muestra y dos reemplazos; saldo final observado 133,45. Sin compras, instalaciones ni actualización.
+
+Dictamen y evidencias: [QA_NM2_VOZ_DIEGO_2026-11-17.md](QA_NM2_VOZ_DIEGO_2026-11-17.md). Publicación efectiva en la última entrada de BITACORA.md. Los apartados siguientes describen estados anteriores: ya no existe una recarga HeyGen ni una elección de proveedor pendiente. No volver a ejecutar generadores: los trabajos y archivos finales ya están completos. El ingreso con cuentas reales de 2A/2B sigue pendiente.
+
 ## Actualización tras la orden «Construye»
 
 **Cierre vigente: dos revisiones independientes aprobadas; publicación bloqueada por conectividad.** Código revisado `e3bc464b` en `main` y `origin/main`, build final aprobado desde el worktree limpio. El alias comprobado sigue en `502a2f3c`; no se ha publicado la ampliación. Ver el apartado «Respaldo y publicación pendiente» del dictamen QA y la última entrada de BITACORA.md. No declarar disponibles las 48 preguntas en producción hasta desplegar y comprobar la versión v2.

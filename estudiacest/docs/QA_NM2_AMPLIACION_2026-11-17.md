@@ -59,4 +59,4 @@ Se probaron ajustes locales de transporte (concurrencia, reutilización de conex
 
 ## Audio separado
 
-La voz HeyGen sigue pendiente de saldo: tres clips generados, faltan 34 y el manifiesto. El parche de audio incompleto se conservó en `scratch/nm2-audio-20261117/audio-pendiente.patch` y copias de sus tres archivos; no se mezcló con esta ampliación. La voz publicada del navegador sigue vigente. No se generó ni cobró audio en Higgsfield.
+Actualización posterior: Francisco aprobó Diego (es), de Higgsfield. Los 37 MP3 están completos e integrados, con pausa/continuación y detención al navegar; desaparece speechSynthesis del cliente. Audit, reproducción real en Chromium y build con 1.099 recursos críticos aprobados. El estado anterior de HeyGen y del parche incompleto se conserva solo como antecedente en el handoff. Véase [QA_NM2_VOZ_DIEGO_2026-11-17.md](QA_NM2_VOZ_DIEGO_2026-11-17.md). El resultado de publicación se registra en la última entrada de BITACORA.md.

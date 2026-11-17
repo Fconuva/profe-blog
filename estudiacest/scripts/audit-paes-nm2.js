@@ -3,6 +3,28 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('n
 const B=require('../api/_paes-nm2'),D=require('../paes/nm2/data/clases.json'),K=require('../api/_paes-nm2-keys.json');
 const V=require('../paes/nm2/data/visuales.json'),IM=require('../paes/nm2/assets/ia/imagenes-ia.json');
 const visuals=Object.values(V.lessons).flat();
+function auditAudio(){
+ const base=path.join(__dirname,'../paes/nm2/assets/audio/diego'),data=JSON.parse(fs.readFileSync(path.join(base,'audios.json'),'utf8'));
+ const expected=[];
+ for(const [lesson,rows] of Object.entries(V.lessons))for(const v of rows){
+  const transcript=[v.title,v.alt,...v.explain,'Por ejemplo: '+v.example,'Ahora, aplica. '+v.apply].join('\n\n').replaceAll(' / ','. ').replaceAll('portal/cristal','portal y cristal');
+  expected.push({id:v.id,lesson:Number(lesson),kind:'explanation',transcript});
+ }
+ for(const l of D.lessons)for(const [i,q] of l.guided.questions.entries())expected.push({id:`guiada-${l.n}-${q.id}`,lesson:l.n,kind:'guided',transcript:[l.guided.title,...l.guided.paragraphs,`Pregunta ${i+1}. `+q.text,...q.options.map((o,i)=>`Alternativa ${'ABCD'[i]}. ${o}`)].join('\n\n')});
+ assert.equal(data.clips.length,37,'13 explicaciones y 24 lecturas acompañadas');
+ assert.equal(new Set(data.clips.map(c=>c.id)).size,37,'audios únicos');
+ assert.equal(new Set(data.clips.map(c=>c.jobId)).size,37,'procedencia sin trabajos duplicados');
+ for(const item of expected){
+  const clip=data.clips.find(c=>c.id===item.id);assert.ok(clip,'audio presente: '+item.id);
+  for(const key of ['lesson','kind','transcript'])assert.equal(clip[key],item[key],'audio corresponde al contenido actual: '+item.id+' '+key);
+  assert.equal(clip.file,item.id+'.mp3');assert.equal(clip.provider,'Higgsfield');assert.equal(clip.model,'inworld_text_to_speech');assert.equal(clip.voice,'Diego (es)');assert.equal(clip.language,'es');
+  const bytes=fs.readFileSync(path.join(base,clip.file));assert.equal(bytes.length,clip.bytes);assert.ok(bytes.length>5000&&clip.duration>5&&clip.duration<180);
+  assert.equal(require('node:crypto').createHash('sha256').update(bytes).digest('hex'),clip.sha256,'integridad del MP3');
+ }
+ const common=fs.readFileSync(path.join(__dirname,'../paes/nm2/common.js'),'utf8'),lesson=fs.readFileSync(path.join(__dirname,'../paes/nm2/lesson.js'),'utf8');
+ assert.ok(!/speechSynthesis/.test(common+lesson),'sin voz del navegador');assert.ok(common.includes('assets/audio/diego/${e(v.id)}.mp3')&&lesson.includes('assets/audio/diego/guiada-${n}-${q.id}.mp3'),'rutas de voz aprobada');
+ console.log('NM2 audio: 37 MP3 íntegros, voz Diego y guiones cotejados con las cuatro clases.');
+}
 for(const l of D.lessons){
  const added=B.questions(l,false).filter(q=>!D.legacyRegularQuestionIds.includes(q.id)),keys=K.regular[l.id];
  assert.equal(new Set(B.questions(l,false).map(q=>q.id)).size,48,'IDs sin duplicados');
@@ -47,4 +69,4 @@ check(a.submitted&&a.completada&&a.endedBy==='strikes','tercer strike entrega pa
 r=await call(db,'nm2-submit','pareja',payload(a));a=r.body.attempt;await call(db,'admin-nm2-clear-strikes','profesor',{...clear,requestId:'fixture-clear-02',integrityEpoch:1},1,false,true);check((await call(db,'nm2-state','pareja')).body.attempt.completada,'no reabre entrega voluntaria');
 for(const n of [1,2,3,4]){r=await call(db,'nm2-start','apoyo',payload(),n,true);a=r.body.attempt;check(a.sessionId.endsWith('-guiada'),'intento separado');check((await call(db,'nm2-save','apoyo',payload(a,{answers:{q01:'A'}}),n,true)).status===400,'no acepta preguntas regulares en acompañado');const all=Object.fromEntries(Object.entries(K.guided[D.lessons[n-1].id]).map(([id,k])=>[id,k.key]));r=await call(db,'nm2-submit','apoyo',payload(a,{answers:all}),n,true);check(r.body.attempt.completada,'entrega acompañada');const raw=(await db.ref(B.BASE+'/'+a.sessionId+'/apoyo').once('value')).val();check(raw.total===6&&raw.score===6&&raw.variant==='guided-access-2026','servidor selecciona pauta y total acompañados');}
 await auditVersions(check);const root=path.join(__dirname,'..');for(const f of ['clase.html','guiada.html','index.html','fichas.html']){const s=fs.readFileSync(path.join(root,'paes/nm2',f),'utf8');check(!/<details\b/i.test(s),'sin contenido esencial colapsado');}console.log('NM2: '+count+' comprobaciones de contenidos, identidad, guardado, entrega, variantes y publicación correctas.');return {count,database,call,auth};}
-if(require.main===module)audit().catch(e=>{console.error(e);process.exitCode=1;});module.exports={audit,database,call,auth};
+if(require.main===module)Promise.resolve().then(auditAudio).then(audit).catch(e=>{console.error(e);process.exitCode=1;});module.exports={audit,database,call,auth,auditAudio};

@@ -1,5 +1,12 @@
 # Bitácora de Estudia CEST
 
+## 2026-11-17 · NM2: voz Diego aprobada, 37 MP3 integrados y comprobados
+
+- Francisco autoriza Higgsfield y aprueba la muestra de Diego (es) con «Usar esta voz». Se generan los 37 audios (13 explicaciones ilustradas y 24 preguntas acompañadas con texto y opciones), con guiones fieles al contenido vigente, procedencia y hashes en `paes/nm2/assets/audio/diego/audios.json`. Se sustituyen dos clips tras cotejar transcripciones. Coste del bloque: 80 créditos incluyendo muestra y reemplazos; saldo observado 213,45 → 133,45. Sin compra, instalación ni actualización. Edge TTS gratuito instalado devuelve 403 en la prueba; no se presenta una alternativa no generada como superior.
+- Cliente con pausa/continuación, una narración activa, detención al navegar/ocultarse y error recuperable; sin voz del navegador. Los 37 MP3 pasan decodificación completa y cotejo de guiones; transcripción local de todo el lote y revisión de tramos. Chromium ficticio final aprobado: 37 rutas, reproducción real, pausa, continuación, fin, navegación, cambios rápidos, error/recuperación y 12 vistas a 390/1440/3840, sin desbordes ni errores JS. No se modifican datos reales.
+- Build completo desde worktree aislado aprobado: 1.099 recursos críticos, 813 comprobaciones NM2 más auditoría de audio. Guías y dictámenes independientes de contenido conservados. Registro: `docs/QA_NM2_VOZ_DIEGO_2026-11-17.md`; evidencias `scratch/nm2-audio-20261117/qa-audio-final.log` y `build-diego.log`.
+- Publicación aún pendiente en esta entrada; se ejecutará el despliegue seguro desde fuente limpia y se anotará su resultado. No confundir archivos y pruebas locales con disponibilidad pública. El acceso con credenciales reales de 2A/2B continúa pendiente.
+
 ## 2026-11-17 · NM2: correcciones integradas; despliegue bloqueado por conectividad
 
 - Dos revisores autorizados y a ciegas aprueban la segunda pasada. Código, pauta, registro privado y PDF corregidos en `e3bc464b`, integrado por fast-forward y respaldado en `origin/main`. Las cuatro clases contienen 48 alternativas, cuatro lecturas y seis tareas; 192 alternativas y 24 tareas en total. Sin cambios en intentos, respuestas o notas reales.

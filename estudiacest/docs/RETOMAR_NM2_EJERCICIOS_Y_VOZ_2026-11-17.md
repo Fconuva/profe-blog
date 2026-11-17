@@ -6,7 +6,7 @@ La ampliación está construida: v2, 48 alternativas, cuatro lecturas y seis tar
 
 813 comprobaciones del audit y 116 adicionales aprobadas. Navegador ficticio: cuatro clases a 390/1440/3840, numeración 1–48, guardado/recarga de q25/q48/w6, entrega sobre 48 e históricos sobre 24. PDF A4 de 27/27/27/28 páginas sin desbordes. Estado completo: [QA_NM2_AMPLIACION_2026-11-17.md](QA_NM2_AMPLIACION_2026-11-17.md).
 
-**No publicado.** Falta revisión independiente de reactivos conforme al plan PAES §9.6. Se preguntó a Francisco si autoriza dos revisores acotados, sin edición ni publicación; respuesta pendiente. No se iniciaron subagentes. Después del dictamen: corregir lo necesario, regenerar PDF si cambia contenido, build limpio, `deploy:prod:safe` y verificar producción.
+**Revisión independiente aprobada por ambos lectores el 17-nov**, con autorización expresa de Francisco. Cada uno resolvió 96 ítems y revisó 12 tareas, sin abrir la pauta. Se corrigieron parentesco, secuencia inmediata y unidades de conteo, además de forma y distractores de seis ítems y claridad de dos consignas. Ambos aprobaron la segunda pasada de los diez ítems modificados. Registro privado: `api/_paes-nm2-review.json`; dictamen sin claves: `docs/QA_NM2_AMPLIACION_2026-11-17.md`. No hay más autorización pendiente para los revisores. Publicación y verificación efectiva se registran en BITACORA.md.
 
 Build integral aprobado: 1.061 recursos críticos, desde `C:/dev/worktrees/nm2-ampliacion-20261117`. Borrador en rama `codex/nm2-ampliacion-20261117`, código `6bf33bfa`, separado de main; no fusionado ni desplegado. Retomar esa rama y consultar su estado remoto antes de editar. El árbol canónico compartido conserva cambios del encargo y cambios ajenos; no limpiarlo ni agregarlos globalmente.
 

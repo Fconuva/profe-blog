@@ -1,6 +1,6 @@
 # Estudia CEST
 
-NM2 HC, ampliación construida el 17-nov-2026, pendiente de revisión independiente y despliegue: cada clase v2 tiene 48 alternativas, cuatro lecturas y seis tareas. Las entregas v1 conservan 24 alternativas y tres tareas; los borradores continúan con sus respuestas preservadas. La escritura se revisa cualitativamente con el profesor, sin ponderación automática nueva. Estado en `docs/QA_NM2_AMPLIACION_2026-11-17.md`.
+NM2 HC, ampliación construida el 17-nov-2026, con revisión independiente aprobada el 17-nov; publicación registrada en BITACORA.md: cada clase v2 tiene 48 alternativas, cuatro lecturas y seis tareas. Las entregas v1 conservan 24 alternativas y tres tareas; los borradores continúan con sus respuestas preservadas. La escritura se revisa cualitativamente con el profesor, sin ponderación automática nueva. Estado en `docs/QA_NM2_AMPLIACION_2026-11-17.md`.
 
 En SIMCE, `Admin > Resultados > Reabrir` habilita la corrección individual de una entrega. Conserva respuestas, respalda la entrega anterior y permite volver a entregar aunque la clase esté cerrada para el curso. La nota de laboriosidad anterior queda pendiente de revisión y se excluye del promedio hasta una nueva publicación docente. El estudiante debe recargar la guía tras la reapertura.
 

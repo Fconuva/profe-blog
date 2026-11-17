@@ -1,6 +1,6 @@
 # Ampliación NM2 HC · 17 de noviembre de 2026
 
-**Estado: construido y verificado técnicamente en local; revisión pedagógica independiente y publicación pendientes.** No se modificaron intentos ni notas reales. La solicitud de autorización para dos revisores está pendiente; no se iniciaron subagentes.
+**Estado: construido, verificado técnicamente y aprobado por dos revisores independientes; publicación en curso.** Francisco autorizó expresamente a los dos revisores el 17-nov. Trabajaron por separado, a ciegas y solo con material público; no abrieron las claves ni editaron o publicaron archivos. No se modificaron intentos ni notas reales.
 
 ## Material construido
 
@@ -23,7 +23,20 @@ Se leyeron las skills canónicas `estudiacest-material-docente` y `ensayos-impre
 
 Cada nuevo ítem tiene clave privada, evidencia, razonamiento, descarte específico de sus tres distractores, operación y versión. Autorrevisión: consigna única, límite de inferencia, opciones comparables, separación entre observación y causa, autor y hablante, opinión y evidencia. Se redujeron pistas de longitud en tres opciones. Las 24 claves nuevas de cada clase tienen seis A, seis B, seis C y seis D, sin ciclos breves reiterados ni rachas de cuatro. Esto comprueba estructura; **no sustituye la resolución independiente ni acredita dificultad empírica**.
 
-La exigencia de revisión independiente está en `paes/PLAN_CONSTRUCCION_32_GUIAS.md`, §9, criterio 6. Falta resolver a ciegas los nuevos ítems, conciliar discrepancias y registrar dictamen y correcciones antes de publicar. No hay dictamen independiente emitido.
+La revisión exigida por `paes/PLAN_CONSTRUCCION_32_GUIAS.md`, §9, criterio 6, está completada. Cada lector resolvió los 96 ítems nuevos y revisó las 12 tareas, leyendo las 16 lecturas. Ambos mapas coinciden con las 96 claves previstas, pero los dictámenes iniciales exigieron precisiones. Coincidir con la clave no bastó para aprobar.
+
+| Localización | Hallazgo | Corrección del autor |
+|---|---|---|
+| 18-nov q43/q46 | Se añadía un parentesco no acreditado | Mantener abuelo de Clara; no inferir padre de Rosa |
+| 25-nov q29 | Dos acciones precedían a la risa | Preguntar por la acción inmediatamente anterior |
+| 2-dic q42 | Se cambiaba personas consultantes por interacciones | Conservar personas en la alternativa y el fundamento |
+| 25-nov q25; 9-dic q29 | Opciones desiguales en forma/extensión | Homogeneizar nombre y explicación o ubicaciones |
+| 2-dic q27/q36; 9-dic q40/q48 | Distractores demasiado ajenos o errores manifiestos | Incorporar errores de lectura plausibles; precisar el resultado de ampliar la colección |
+| 18-nov w4; 25-nov w6 | Extensión ambigua o corrección artificial | 4–6 líneas cada versión; corregir una frase si hace falta |
+
+Segunda pasada: ambos lectores resolvieron de nuevo los diez ítems modificados y revisaron las dos consignas aclaradas. **Dos dictámenes finales: APROBAR**, sin claves modificadas ni ambigüedades pendientes. Las observaciones opcionales de 25-nov q28/q48 no bloquean la aprobación de esta clase de enseñanza, según confirmación explícita de ambos lectores. No se atribuye dificultad empírica ni pilotaje.
+
+Registro privado de los dos mapas, relecturas, alcance y SHA-256 del material: `api/_paes-nm2-review.json`. No se publican las letras en este documento ni en el catálogo del estudiante.
 
 ## Compatibilidad y validación
 
@@ -36,7 +49,7 @@ La exigencia de revisión independiente está en `paes/PLAN_CONSTRUCCION_32_GUIA
 
 ## Respaldo del borrador
 
-Rama `codex/nm2-ampliacion-20261117`, código `6bf33bfa`, separada de `main`. No fusionar ni ejecutar despliegue hasta resolver la revisión independiente. El árbol canónico compartido conserva las modificaciones de este encargo y los cambios ajenos; no usar un `git add` global ni asumir que ese árbol está limpio. El worktree de la rama contiene únicamente las 33 rutas explícitas de este encargo, sin los MP3 pendientes ni juegos/videos ajenos.
+Construcción inicial respaldada en `codex/nm2-ampliacion-20261117`, código `6bf33bfa`; dictámenes y correcciones del 17-nov integrados desde la fuente canónica. La bitácora registra el commit y despliegue efectivos tras verificar producción. El árbol compartido contiene cambios ajenos: no usar un `git add` global. Los MP3 pendientes y juegos/videos ajenos quedan fuera del lote de publicación.
 
 ## Audio separado
 

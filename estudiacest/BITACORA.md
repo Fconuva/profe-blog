@@ -1,5 +1,12 @@
 # Bitácora de Estudia CEST
 
+## 2026-11-17 · NM2: dos revisiones independientes aprobadas tras corrección
+
+- Francisco autoriza expresamente los dos revisores acotados, sin edición ni publicación. Cada lector resuelve a ciegas las 96 preguntas nuevas, revisa las 12 tareas y lee las 16 lecturas. Sus 192 decisiones coinciden con las claves, pero ambos solicitan correcciones antes de aprobar; no se confunde concordancia con validez.
+- Correcciones necesarias: q43/q46 del 18-nov conserva abuelo de Clara sin inferir padre de Rosa; q29 del 25-nov pide la acción inmediatamente anterior para eliminar dos respuestas defendibles; q42 del 2-dic conserva personas que consultan, sin convertirlas en número de interacciones. También se mejora forma o plausibilidad en seis ítems y se aclaran dos consignas escritas. Las claves, los ítems históricos, la ruta acompañada y los registros reales se conservan.
+- Segunda pasada independiente de los diez ítems modificados y las dos consignas: dos dictámenes APROBAR. Registro privado de mapas, relecturas y hash del material en `api/_paes-nm2-review.json`; dictamen sin claves en `docs/QA_NM2_AMPLIACION_2026-11-17.md`. Sin pilotaje ni afirmación de dificultad empírica. La voz HeyGen sigue pendiente de saldo.
+- Guías regeneradas tras las correcciones. Audit NM2 (813), compatibilidad (116) y navegador con base ficticia aprobados; cuatro PDF A4 de 27/27/27/28 páginas sin invasión del pie. La publicación se realiza después del build limpio y la comprobación final de origin/main; el resultado efectivo se registrará en una entrada posterior.
+
 ## 2026-11-17 · NM2: ampliación construida, revisión independiente pendiente
 
 - Francisco ordena construir y aplicar la skill y las reglas PAES. Se leen las skills de plataforma, material docente y ensayos impresos, y sus referencias de reactivos/PAES. Se aplican controles editoriales de ítems dentro de una clase de enseñanza, sin presentar el banco como ensayo oficial ni copiar actividades MINEDUC.

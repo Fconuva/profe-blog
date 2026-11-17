@@ -19,7 +19,7 @@ user-invocable: true
 - Will the writing grade come from stored Firebase responses or from an external rubric file?
 
 ## Rules
-- NM2 HC v2 (construido 17-nov-2026, pendiente de revisión/despliegue): las entregas `nm2-contenidos-2026-v1` conservan denominador 24; v2 usa 48. Usar la versión almacenada, no el largo del catálogo vigente. La ruta acompañada sigue sobre seis. No combinar automáticamente escritura y alternativas; seis tareas nuevas no implican una nota o ponderación autorizada. Estado: `estudiacest/docs/QA_NM2_AMPLIACION_2026-11-17.md`.
+- NM2 HC v2 (construido 17-nov-2026, revisión independiente aprobada el 17-nov): las entregas `nm2-contenidos-2026-v1` conservan denominador 24; v2 usa 48. Usar la versión almacenada, no el largo del catálogo vigente. La ruta acompañada sigue sobre seis. No combinar automáticamente escritura y alternativas; seis tareas nuevas no implican una nota o ponderación autorizada. Estado: `estudiacest/docs/QA_NM2_AMPLIACION_2026-11-17.md`.
 - Do not assume admin `1/1 notas`, `notas_evaluadas`, or an existing `nota` means written evidence exists.
 - Do not assume every session stores writing in `notes`.
 - Find the owner surface for the `sessionId` before exporting or mutating data.

@@ -21,4 +21,6 @@ Evidencia local: `C:/dev/profe-blog/scratch/nm2-audio-20261117/`: `guiones.json`
 
 ## Publicación
 
-Construcción, pruebas y respaldo son distintos de publicación. Se intentará únicamente `npm run deploy:prod:safe` desde fuente limpia. El resultado efectivo y la comprobación del alias se registran en BITACORA.md. El ingreso con cuentas reales de 2A/2B sigue pendiente; estas pruebas ficticias no lo acreditan.
+Código `f8da9daf` en `main` y `origin/main`; worktree de publicación limpio. `npm run deploy:prod:safe` aprobó fuente, Git y los **1.099 recursos críticos** utilizando un auxiliar local de fetch nativo secuencial tras comprobar 40 respuestas. Solo serializa lecturas públicas: no cambia TLS, URL, estados, plazos, reintentos ni criterios. Log `scratch/nm2-audio-20261117/deploy-diego-secuencial.log`. El intento normal previo se interrumpió durante conexiones sin completar; no se cuenta como aprobado.
+
+La subida posterior termina con código 134: `Committing semi space failed. Allocation failed - JavaScript heap out of memory`. Windows tenía aproximadamente 581 MiB de memoria comprometible libre. No se cierran otras apps ni se cambia la configuración del sistema. **No publicado**: el alias posterior sigue en `dpl_EYu5xEgNxxmLMsw3LNPPpHyx3HWe`, READY, código `502a2f3c`. No hay nueva URL ni ID que acredite publicación. No quedan procesos de este bloque activos. Reanudar desde el handoff tras liberar memoria; no regenerar ni pagar nuevamente el lote. El ingreso con cuentas reales de 2A/2B sigue pendiente; estas pruebas ficticias no lo acreditan.

@@ -1,5 +1,12 @@
 # Bitácora de Estudia CEST
 
+## 2026-11-17 · NM2: correcciones integradas; despliegue bloqueado por conectividad
+
+- Dos revisores autorizados y a ciegas aprueban la segunda pasada. Código, pauta, registro privado y PDF corregidos en `e3bc464b`, integrado por fast-forward y respaldado en `origin/main`. Las cuatro clases contienen 48 alternativas, cuatro lecturas y seis tareas; 192 alternativas y 24 tareas en total. Sin cambios en intentos, respuestas o notas reales.
+- Build integral posterior a las correcciones aprobado desde `C:/dev/worktrees/nm2-ampliacion-20261117`: 1.061 recursos críticos; audit NM2 813, compatibilidad 116 y pruebas de navegador con datos ficticios aprobadas. PDF 27/27/27/28 páginas. Evidencia final de build: `scratch/nm2-audio-20261117/build-revisado.log`.
+- Publicación no realizada. Las pasadas completas de `npm run deploy:prod:safe` se bloquean por errores de conexión contra recursos existentes y diferentes entre pasadas, con `UND_ERR_CONNECT_TIMEOUT`. Una pasada verifica todos salvo una imagen, que devuelve 200 en la consulta directa; otra falla en cuatro recursos distintos. Curl también registra un fallo de conexión. Los ajustes locales de transporte conservan TLS, plazos y criterios, pero no resuelven el bloqueo integral; no se modifican las compuertas ni se ejecuta deploy directo. Logs `scratch/nm2-audio-20261117/deploy-revisado*.log`. Los procesos de diagnóstico interrumpidos no cuentan como aprobados.
+- Alias consultado durante el cierre: `dpl_EYu5xEgNxxmLMsw3LNPPpHyx3HWe`, READY, código `502a2f3c`, conserva las clases anteriores de 24 preguntas. No hay verificación pública de v2. Reanudar consultando remoto y alias, con despliegue seguro desde fuente limpia y después `scratch/nm2-audio-20261117/production-v2.cjs`. Estado y límites en `docs/QA_NM2_AMPLIACION_2026-11-17.md` y `docs/RETOMAR_NM2_EJERCICIOS_Y_VOZ_2026-11-17.md`. El ingreso con cuentas reales y la voz HeyGen siguen pendientes; no se cambia proveedor ni se consume saldo de audio.
+
 ## 2026-11-17 · NM2: dos revisiones independientes aprobadas tras corrección
 
 - Francisco autoriza expresamente los dos revisores acotados, sin edición ni publicación. Cada lector resuelve a ciegas las 96 preguntas nuevas, revisa las 12 tareas y lee las 16 lecturas. Sus 192 decisiones coinciden con las claves, pero ambos solicitan correcciones antes de aprobar; no se confunde concordancia con validez.

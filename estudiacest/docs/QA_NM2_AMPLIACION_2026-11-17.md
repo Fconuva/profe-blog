@@ -1,6 +1,6 @@
 # Ampliación NM2 HC · 17 de noviembre de 2026
 
-**Estado: construido, verificado técnicamente y aprobado por dos revisores independientes; publicación en curso.** Francisco autorizó expresamente a los dos revisores el 17-nov. Trabajaron por separado, a ciegas y solo con material público; no abrieron las claves ni editaron o publicaron archivos. No se modificaron intentos ni notas reales.
+**Estado: construido, verificado técnicamente y aprobado por dos revisores independientes; publicación bloqueada por conectividad.** Código `e3bc464b` integrado y respaldado en `origin/main`. Francisco autorizó expresamente a los dos revisores el 17-nov. Trabajaron por separado, a ciegas y solo con material público; no abrieron las claves ni editaron o publicaron archivos. No se modificaron intentos ni notas reales. La ampliación no está publicada: el alias verificado conserva el código `502a2f3c`.
 
 ## Material construido
 
@@ -47,9 +47,15 @@ Registro privado de los dos mapas, relecturas, alcance y SHA-256 del material: `
 - Evidencias locales reproducibles: `C:/dev/profe-blog/scratch/nm2-audio-20261117/qa.cjs`, `qa.json`, `qa-navegacion.cjs`, `qa-navegacion.json`, `qa-compat.cjs`, capturas y contactos PDF. Usan datos ficticios; no acreditan ingreso con credenciales de estudiantes reales.
 - Build integral aprobado desde el worktree aislado `C:/dev/worktrees/nm2-ampliacion-20261117`: todas las auditorías de `prebuild`/`build` y 1.061 recursos críticos. Se conserva el contrato de total dinámico ligado a la versión del intento. Log: `scratch/nm2-audio-20261117/build-ampliacion.log`.
 
-## Respaldo del borrador
+## Respaldo y publicación pendiente
 
-Construcción inicial respaldada en `codex/nm2-ampliacion-20261117`, código `6bf33bfa`; dictámenes y correcciones del 17-nov integrados desde la fuente canónica. La bitácora registra el commit y despliegue efectivos tras verificar producción. El árbol compartido contiene cambios ajenos: no usar un `git add` global. Los MP3 pendientes y juegos/videos ajenos quedan fuera del lote de publicación.
+Construcción inicial `6bf33bfa`; correcciones, registro privado y dictámenes finales `e3bc464b`, integrados por fast-forward en `main` y respaldados en `origin/main`. Build final aprobado después de las correcciones: `scratch/nm2-audio-20261117/build-revisado.log`. El árbol compartido contiene cambios ajenos: no usar un `git add` global. Los MP3 pendientes y juegos/videos ajenos quedan fuera del lote de publicación.
+
+Se ejecutó `npm run deploy:prod:safe` desde el worktree limpio, sin modificar el verificador ni el inventario para aceptar fallos. Las pasadas completas se bloquearon por errores de conexión en recursos ya publicados, diferentes entre ejecuciones. Una pasada solo falló en `verificar-documentos-original.png`, que respondió 200 al consultar nuevamente; otra falló en cuatro recursos distintos. Diagnóstico posterior: `UND_ERR_CONNECT_TIMEOUT` y conexiones TCP que no se completan. También falló una consulta independiente con `curl.exe`; no se acredita una caída general de Vercel ni un defecto del contenido.
+
+Se probaron ajustes locales de transporte (concurrencia, reutilización de conexiones y reintentos dentro del mismo plazo) conservando URL, TLS, respuestas y criterios de aceptación. La prueba acotada de 100 HEAD obtuvo 100 respuestas 200, pero no resolvió la inestabilidad de la comprobación integral. No se guardó ningún ajuste de red en el código del sitio. Logs: `scratch/nm2-audio-20261117/deploy-revisado*.log`; auxiliar local `transporte-predeploy.cjs`. Las ejecuciones de diagnóstico interrumpidas no se consideran aprobadas.
+
+Último alias inspeccionado: `dpl_EYu5xEgNxxmLMsw3LNPPpHyx3HWe`, READY, código `502a2f3c`. No hay despliegue nuevo acreditado ni verificación pública de v2. Al recuperar conectividad: consultar de nuevo `origin/main` y el alias, ejecutar el despliegue seguro sin auxiliares de diagnóstico y después `scratch/nm2-audio-20261117/production-v2.cjs` contra el checkout publicado. El script público está preparado, no ejecutado contra v2. Mantener pendiente el ingreso con cuentas reales de ambos cursos.
 
 ## Audio separado
 

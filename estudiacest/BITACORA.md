@@ -1,5 +1,11 @@
 # Bitácora de Estudia CEST
 
+## 2026-11-17 · NM2: solicitud de mayor ejercitación y continuidad de audio
+
+- Francisco solicita ampliar las cuatro clases porque 24 alternativas y tres tareas de escritura resultan breves. Meta anunciada: 48 alternativas, cuatro lecturas y seis tareas por clase. La ampliación **todavía no está construida ni publicada**.
+- Reemplazo de voz en curso: tres audios HeyGen generados; faltan 34 y el manifiesto. Francisco eligió mantener HeyGen y recargar saldo; recarga no confirmada. Higgsfield tiene TTS disponible, sin generación ni gasto en esta revisión. Cliente y audit de audio permanecen incompletos, sin commit ni despliegue.
+- Fetch confirma `origin/main` en `96c47157`. No se alteraron respuestas, entregas ni notas. Continuidad técnica, evidencias y preservación de entregas antiguas en `docs/RETOMAR_NM2_EJERCICIOS_Y_VOZ_2026-11-17.md`. Cierre por regla de sesión nueva tras compactación; no equivale a entrega del encargo.
+
 ## 2026-11-16, NM2 HC: enseñanza visual con 13 ilustraciones de IA
 
 - Francisco pide «TODO MUY VISUAL CREA IMAGENES CON IA QUE EXPLIQUEN Y EJEMPLIFIQUEN PARA QUE LUEGO ELLOS APLIQUEN». Se crean 13 láminas originales con OpenAI image_gen, revisadas individualmente: narradores, tiempo, personajes; figuras y poesía; argumentación, respaldo y falacias; teatro, conflicto, medios y persuasión. Originales PNG, prompts, proveedor y SHA-256 conservados en `paes/nm2/assets/ia/`; solo WebP y metadatos se publican.

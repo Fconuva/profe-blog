@@ -4370,10 +4370,12 @@ function updateUnlockUI(sesId){
 
 function pendingGuidesFor(stu,entries){
     if(!planillaEvidenceLoaded)return null;
-    return entries.filter(s=>!gradeIsExcluded(s.id,stu.curso)).filter(s=>!/^sesion-u4-[45]$/.test(s.id)||Object.keys(allResponses[s.id]||{}).length>0).filter(s=>{const a=getSessionAssignedTargets(s);return !a.length||a.includes(stu.curso)||a.includes(stu.uid);}).filter(s=>{
-        const response=allResponses[s.id]?.[stu.uid],result=allResults[s.id]?.[stu.uid];
-        if(response&&(response.uid&&response.uid!==stu.uid||response.curso&&response.curso!==stu.curso||response.sessionId&&response.sessionId!==s.id))return true;
-        return !classifyAdminSubmission(response,result).completed;
+    return entries.filter(s=>s.id!=='feedback-plataforma'&&!gradeIsExcluded(s.id,stu.curso)).filter(s=>!/^sesion-u4-[45]$/.test(s.id)||Object.keys(allResponses[s.id]||{}).length>0).filter(s=>{const a=getSessionAssignedTargets(s);return !a.length||a.includes(stu.curso)||a.includes(stu.uid);}).filter(s=>{
+        const ids=[s.id,...Object.keys(allResponses).filter(id=>id!==s.id&&gradeSessionId(id)===s.id)];
+        return !ids.some(id=>{const response=allResponses[id]?.[stu.uid],result=allResults[id]?.[stu.uid];
+            if(response&&(response.uid&&response.uid!==stu.uid||response.curso&&response.curso!==stu.curso||response.sessionId&&response.sessionId!==id))return false;
+            return classifyAdminSubmission(response,result).completed;
+        });
     });
 }
 function pendingGuideLabel(s){return getSessionUnitLabel(getSessionUnit(s))+' · '+(s.titulo||s.id);}
@@ -4397,7 +4399,7 @@ function renderPlanilla(){
     const {pupils,entries}=planillaScope();let count=0,total=0,approved=0;
     const gradeFor=(stu,s)=>gradeIsExcluded(s.id,stu.curso)?null:getGradeValue(stu.uid,s.id,allResults[s.id]?.[stu.uid]);
     document.getElementById('planillaHead').innerHTML='<tr><th style="position:sticky;left:0;z-index:2;background:#f1f5f9;min-width:180px">Estudiante</th><th>Curso</th>'+entries.map(s=>`<th style="min-width:125px" title="${esc(s.titulo||s.id)}">${getSessionUnitLabel(getSessionUnit(s))}<br>${sessionClassOrder(s)?'Clase '+sessionClassOrder(s):esc(s.titulo||s.id)}</th>`).join('')+'<th>Promedio</th><th>Guías sin entrega</th></tr>';
-    document.getElementById('planillaBody').innerHTML=pupils.map(stu=>{let sum=0,n=0;const cells=entries.map(s=>{const value=gradeFor(stu,s),pending=getPublishedGrade(stu.uid,s.id)?.needsReview===true;if(value!==null&&!pending){sum+=value;n++;}const label=pending?'En revisión':value===null?'—':value.toFixed(1).replace('.',',');return `<td style="text-align:center"><span data-grade-value="${stu.uid}/${s.id}">${label}</span><br>${gradeEditor(stu.uid,s.id)}</td>`;}).join('');const average=n?sum/n:null;if(average!==null){count++;total+=average;if(average>=4)approved++;}return `<tr><td style="position:sticky;left:0;background:#fff;z-index:1">${esc(stu.nombre||'')}</td><td>${cShort(stu.curso)}</td>${cells}<td>${average===null?'—':average.toFixed(1).replace('.',',')}</td><td style="min-width:240px">${pendingGuidesFor(stu,entries)?.map(x=>esc(pendingGuideLabel(x))).join('<br>')||(planillaEvidenceLoaded?'Sin pendientes':'Cargando entregas…')}</td></tr>`;}).join('')||`<tr><td colspan="${entries.length+3}">No hay estudiantes en este filtro.</td></tr>`;
+    document.getElementById('planillaBody').innerHTML=pupils.map(stu=>{let sum=0,n=0;const cells=entries.map(s=>{const value=gradeFor(stu,s),pending=getPublishedGrade(stu.uid,s.id)?.needsReview===true;if(value!==null&&!pending){sum+=value;n++;}const label=pending?'En revisión':value===null?'—':value.toFixed(1).replace('.',',');return `<td style="text-align:center"><span data-grade-value="${stu.uid}/${s.id}">${label}</span><br>${gradeEditor(stu.uid,s.id)}</td>`;}).join('');const average=n?sum/n:null;if(average!==null){count++;total+=average;if(average>=4)approved++;}return `<tr><td style="position:sticky;left:0;background:#fff;z-index:1">${esc(stu.nombre||'')}</td><td>${cShort(stu.curso)}</td>${cells}<td>${average===null?'—':average.toFixed(1).replace('.',',')}</td><td style="min-width:240px">${pendingGuidesFor(stu,entries)?.map(x=>esc(pendingGuideLabel(x))).join('<br>')||(planillaEvidenceLoaded?'Sin pendientes':'Cargando entregas…')}</td></tr>`;}).join('')||`<tr><td colspan="${entries.length+4}">No hay estudiantes en este filtro.</td></tr>`;
     document.getElementById('planillaStats').innerHTML=`<div class="stat-card"><div class="label">Estudiantes</div><div class="value">${pupils.length}</div></div><div class="stat-card"><div class="label">Clases</div><div class="value">${entries.length}</div></div><div class="stat-card"><div class="label">Promedio</div><div class="value">${count?(total/count).toFixed(1).replace('.',','):'—'}</div></div><div class="stat-card"><div class="label">Promedio igual o superior a 4,0</div><div class="value">${approved}</div></div>`;
     status.textContent='Notas actuales del libro · ordenadas por unidad y clase · las pendientes de revisión no se incluyen en el promedio.';
 }

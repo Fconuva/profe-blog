@@ -1,3 +1,7 @@
+## 18-nov-2026 · Planilla SIMCE actualizada y exportada
+
+Lectura autenticada de producción a las 08:47 (Chile), sin mutaciones. Excel privado con 87 estudiantes activos de 2A/2B HC, 1.025 notas vigentes, 33 guías, promedios con fórmulas, pendientes y entregas por calificar. Reabierto: 46 y 41 filas nominales, cero errores de fórmula; sin cuentas QA ni RUT duplicados. El catálogo combina metadatos vigentes del panel; conserva cierres y excluye encuesta y actividades no aplicadas de las deudas. La exportación no se publica como recurso web. El admin reconoce entregas del recorrido acompañado sin duplicar la clase regular. Publicación web en curso.
+
 ## 18-nov-2026 · Admin: guías NM2 y pendientes SIMCE
 
 Acceso visible a las cuatro clases NM2 desde el admin, con enlaces a la revisión y controles autenticados existentes. La planilla y su CSV incorporan guías sin entrega por estudiante, incluyendo archivadas; no se convierten ausencias en notas y el promedio conserva las reglas del libro. Exportación privada de notas solicitada, sin mutación de calificaciones.

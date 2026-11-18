@@ -137,5 +137,5 @@
     });
   }
 
-  window.SimceSessionGate = { check: check, isClosed: isClosed, isLoaded:function (sessionId,uid) {return store(sessionId,uid).loaded;}, beginLoad:function (sessionId,uid) {store(sessionId,uid).loaded=false;loadLayer(false);}, markLoaded:markLoaded, failLoad:function () {loadLayer(true);}, saveDraft:saveDraft, submit:submit };
+  window.SimceSessionGate = { confirmDelivery:confirmDelivery, check: check, isClosed: isClosed, isLoaded:function (sessionId,uid) {return store(sessionId,uid).loaded;}, beginLoad:function (sessionId,uid) {store(sessionId,uid).loaded=false;loadLayer(false);}, markLoaded:markLoaded, failLoad:function () {loadLayer(true);}, saveDraft:saveDraft, submit:submit };
 })();

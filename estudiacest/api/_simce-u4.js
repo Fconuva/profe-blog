@@ -32,8 +32,8 @@ function validateIdentity(record, exam, uid, course) {
   }
 }
 function available(session, uid, now) {
-  return !!session && now < CLOSE_AT && ((session.activa !== false && session.respuestas_bloqueadas !== true)
-    || session.excepciones_desbloqueo?.[uid] === true);
+  return !!session && (session.excepciones_desbloqueo?.[uid] === true
+    || (now < CLOSE_AT && session.activa !== false && session.respuestas_bloqueadas !== true));
 }
 function assigned(session, uid, course) {
   return Array.isArray(session?.asignados) && (session.asignados.includes(course) || session.asignados.includes(uid));

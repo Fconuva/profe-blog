@@ -111,11 +111,15 @@ async function apiTests(){
  const rules=JSON.parse(fs.readFileSync(path.join(ROOT,'firebase-rules.json'))).rules.plataforma_estudiantes;
  for(const node of ['respuestas','resultados']){
   const rule=rules[node].$sesionId.$uid['.write'].replaceAll('.matches(','.match(');
-  const evaluate=(session,admin,completed=false,closed=false)=>new Function('auth','$uid','$sesionId','root','data','newData',`return ${rule}`)({uid:'student'},'student',session,{child:p=>{const ref=path=>({child:key=>ref(path+'/'+key),val:()=>path.endsWith('/cierre_final')?closed:admin});return ref(p);}},{exists:()=>false,child:()=>({val:()=>completed})},{child:()=>({val:()=>false})});
+  const evaluate=(session,admin,completed=false,closed=false,exception=false)=>new Function('auth','$uid','$sesionId','root','data','newData',`return ${rule}`)({uid:'student'},'student',session,{child:p=>{const ref=path=>({child:key=>ref(path+'/'+key),val:()=>path.endsWith('/cierre_final')?closed:path.includes('/excepciones_desbloqueo/')?exception:admin});return ref(p);}},{exists:()=>false,child:()=>({val:()=>completed})},{child:()=>({val:()=>false})});
   for(let n=1;n<=5;n++)check(!evaluate(`sesion-u4-${n}`,false),'Firebase rechaza escritura directa del alumno');
   check(evaluate('sesion-u4-1',true),'Admin conserva administración');check(evaluate('sesion-u3-1',false),'Sesiones previas conservadas');
   check(!evaluate('sesion-u3-1',false,false,true),'Cierre final rechaza escritura del alumno en clases antiguas');
   check(evaluate('sesion-u3-1',true,false,true),'Cierre final conserva administración');
+  check(evaluate('sesion-u3-1',false,false,true,true),'Excepción individual permite regularizar una clase archivada');
+  for(let n=1;n<=5;n++)check(!evaluate('sesion-u4-'+n,false,false,true,true),'Excepción no abre escrituras directas de U4');
+  check(!evaluate('ensayo-simce-n3-nm2-2026',false,false,true,true) || node==='respuestas','N3 conserva entrega mediante servidor');
+  if(node==='respuestas')check(!evaluate('sesion-u3-1',false,true,true,true),'Excepción conserva entrega inmutable');
  }
 }
 function snapshot(value,key){return {key,val:()=>clone(value),exists:()=>value!=null,forEach(fn){Object.entries(value||{}).forEach(([k,v])=>fn(snapshot(v,k)));}};}
@@ -188,7 +192,15 @@ async function browserTests(stats){
 // con el reloj real dejaron de pasar el 11-nov-2026 y bloqueaban todo despliegue.
 // El cierre por fecha se comprueba aparte, con el reloj puesto en el instante de cierre.
 async function conRelojAbierto(fn){const real=Date.now,shift=Math.min(0,api.CLOSE_AT-86400000-real());Date.now=()=>real()+shift;try{return await fn();}finally{Date.now=real;}}
-async function cierrePorFecha(){const real=Date.now;Date.now=()=>api.CLOSE_AT;try{const db=mockDb(),all=Object.fromEntries(exams[0].texts.flatMap(t=>t.questions).map(q=>[q.id,q.key]));check((await call(db,'simce-u4-save','student',{answers:{q1:'A'}})).status===423,'Cierre por fecha: no guarda');check((await call(db,'simce-u4-submit','student',{answers:all})).status===423,'Cierre por fecha: no entrega');check(get(db.state,BASE+'/respuestas/sesion-u4-1/student')==null,'Cierre por fecha: sin escritura');}finally{Date.now=real;}}
+async function cierrePorFecha(){const real=Date.now;Date.now=()=>api.CLOSE_AT;try{const db=mockDb(),all=Object.fromEntries(exams[0].texts.flatMap(t=>t.questions).map(q=>[q.id,q.key]));check((await call(db,'simce-u4-save','student',{answers:{q1:'A'}})).status===423,'Cierre por fecha: no guarda');check((await call(db,'simce-u4-submit','student',{answers:all})).status===423,'Cierre por fecha: no entrega');check(get(db.state,BASE+'/respuestas/sesion-u4-1/student')==null,'Cierre por fecha: sin escritura');
+ db.state[BASE].sesiones['sesion-u4-1'].excepciones_desbloqueo={student:true};
+ check((await call(db,'simce-u4-state')).data.session.active===true,'Excepción activa U4 después del cierre por fecha');
+ check((await call(db,'simce-u4-save','student',{answers:{q1:'A'}})).status===200,'Excepción después del cierre permite guardar');
+ check((await call(db,'simce-u4-submit','student',{answers:all})).status===200,'Excepción después del cierre permite entregar');
+ const saved=get(db.state,BASE+'/respuestas/sesion-u4-1/student');
+ check(saved.submitted===true&&saved.completada===true,'Relectura conserva ambas marcas');
+ check((await call(db,'simce-u4-save','studentB',{answers:{q1:'A'}})).status===423,'Excepción no habilita a otro estudiante');
+ }finally{Date.now=real;}}
 async function main(){const stats=measure();await conRelojAbierto(async()=>{await apiTests();if(process.argv.includes('--browser'))await browserTests(stats);});await cierrePorFecha();console.log(`SIMCE U4: ${checks} comprobaciones aprobadas; 5 miniensayos, 17 textos, 102 preguntas, demanda individual, claves privadas, entrega, reapertura y permisos. Solo fixtures.`);if(process.argv.includes('--details'))console.log(JSON.stringify(stats,null,2));}
 if(require.main===module){if(process.argv.includes('--serve'))serve().then(({url})=>console.log(url));else main().catch(e=>{console.error(e.stack);process.exitCode=1;});}
 module.exports={fixture,mockDb,serve,measure,conRelojAbierto};

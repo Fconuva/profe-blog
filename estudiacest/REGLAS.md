@@ -262,6 +262,7 @@ Antes de editar y nuevamente antes de publicar:
   del pase siguen disponibles después. La llave original conserva su acceso.
 - Todo panel con información de estudiantes requiere autenticación y autorización
   verificadas en servidor; una URL difícil de adivinar no protege datos.
+- Las excepciones SIMCE individuales autorizadas permiten regularizar una guía archivada incluso con `cierre_final` o el plazo histórico de U4 vencido. Se habilitan solo pendientes por UID y sesión, conservando las entregas y notas previas. N3 y U4 entregan mediante API; sus escrituras finales de cliente siguen bloqueadas.
 - El admin debe permitir filtrar por curso y sesión, revisar evidencia, habilitar
   excepciones individuales, restablecer intentos y publicar resultados según el
   contrato de cada área.

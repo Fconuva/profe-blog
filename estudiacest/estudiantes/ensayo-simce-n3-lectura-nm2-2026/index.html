@@ -438,7 +438,7 @@
   <script>
     (function(){
       const data=window.ENSAYO_N3_DATA,SESSION_ID='ensayo-simce-n3-nm2-2026',BASE='plataforma_estudiantes';
-      const answers={},openAnswers={};let uid=null,student=null,submitted=false,timer=null;
+      const answers={},openAnswers={};let uid=null,student=null,submitted=false,submitting=false,timer=null;
       const config={apiKey:"AIzaSyCuDQ_iHDHmTd8bPeqUbsXQqdxw2SObt8w",authDomain:"estudiacest.firebaseapp.com",databaseURL:"https://estudiacest-default-rtdb.firebaseio.com",projectId:"estudiacest",storageBucket:"estudiacest.firebasestorage.app",messagingSenderId:"999002169815",appId:"1:999002169815:web:51203237bc77c2e74deb92"};
       if(!firebase.apps.length)firebase.initializeApp(config);
       const auth=firebase.auth(),db=firebase.database();auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
@@ -446,42 +446,51 @@
         const n=Number(card.querySelector('.qnum').textContent);
         card.querySelectorAll('.opt').forEach((opt,index)=>{
           const letter=String.fromCharCode(65+index);opt.dataset.q=n;opt.dataset.letter=letter;opt.tabIndex=0;opt.setAttribute('role','button');
-          const choose=()=>{if(submitted)return;answers[n]=letter;card.querySelectorAll('.opt').forEach(item=>item.classList.toggle('selected',item===opt));scheduleSave();};
+          const choose=()=>{if(submitted||submitting)return;answers[n]=letter;card.querySelectorAll('.opt').forEach(item=>item.classList.toggle('selected',item===opt));scheduleSave();};
           opt.addEventListener('click',choose);opt.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();choose();}});
         });
         const lines=card.querySelector('.answer-lines');
         if(lines){const area=document.createElement('textarea');area.className='open-answer';area.dataset.open=n;area.setAttribute('aria-label',`Respuesta pregunta ${n}`);lines.replaceWith(area);area.addEventListener('input',()=>{openAnswers[n]=area.value;scheduleSave();});}
       });
       const panel=document.createElement('section');panel.className='submit-panel';
-      panel.innerHTML='<span class="save-status" id="saveStatus">Conectando...</span><button type="button" id="submitEssay">Entregar ensayo SIMCE</button>';
+      panel.innerHTML='<span class="save-status" id="saveStatus" role="status" aria-live="polite">Conectando...</span><button type="button" id="submitGuide">Entregar ensayo SIMCE</button>';
       document.getElementById('app').appendChild(panel);
       const status=text=>document.getElementById('saveStatus').textContent=text;
-      const payload=completed=>({answers:{...answers},respuestas_abiertas:{...openAnswers},completada:!!completed,nombre:student?.nombre||'',curso:student?.curso||'',last_save:Date.now()});
-      function scheduleSave(){if(submitted)return;status('Guardando avance...');clearTimeout(timer);timer=setTimeout(async()=>{if(!uid)return;try{await db.ref(`${BASE}/respuestas/${SESSION_ID}/${uid}`).update(payload(false));status('Avance guardado automaticamente.');}catch(e){status('Sin conexion: no cierres esta pagina.');}},700);}
+      const payload=completed=>({uid,sessionId:SESSION_ID,answers:{...answers},respuestas_abiertas:{...openAnswers},completada:!!completed,nombre:student?.nombre||'',curso:student?.curso||'',last_save:Date.now()});
+      function scheduleSave(){if(submitted)return;status('Guardando avance...');clearTimeout(timer);timer=setTimeout(async()=>{if(!uid)return;try{await window.SimceSessionGate.saveDraft(db,BASE,SESSION_ID,uid,payload(false));status('Avance guardado automaticamente.');}catch(e){status('Sin conexion: no cierres esta pagina.');}},700);}
       function hydrate(saved){
         if(!saved)return;
         Object.entries(saved.answers||{}).forEach(([n,letter])=>{answers[n]=letter;document.querySelectorAll(`[data-q="${n}"]`).forEach(item=>item.classList.toggle('selected',item.dataset.letter===letter));});
         Object.entries(saved.respuestas_abiertas||{}).forEach(([n,value])=>{openAnswers[n]=value;const area=document.querySelector(`[data-open="${n}"]`);if(area)area.value=value;});
-        if(saved.completada){submitted=true;document.querySelectorAll('.opt,.open-answer').forEach(el=>{el.disabled=true;el.tabIndex=-1;});document.getElementById('submitEssay').disabled=true;status('Ensayo ya entregado.');}
+        if(saved.completada){submitted=true;document.querySelectorAll('.opt,.open-answer').forEach(el=>{el.disabled=true;el.tabIndex=-1;});document.getElementById('submitGuide').disabled=true;status('Ensayo ya entregado.');}
       }
-      document.getElementById('submitEssay').addEventListener('click',async()=>{
+      document.getElementById('submitGuide').addEventListener('click',async()=>{
         if(!uid||submitted)return;
         const missing=data.questions.filter(q=>!answers[q.n]);
-        if(missing.length){alert(`Faltan ${missing.length} preguntas de alternativas.`);document.querySelector(`[data-q="${missing[0].n}"]`).scrollIntoView({behavior:'smooth',block:'center'});return;}
+        if(missing.length){status(`Faltan ${missing.length} preguntas de alternativas.`);document.querySelector(`[data-q="${missing[0].n}"]`).scrollIntoView({behavior:'smooth',block:'center'});return;}
         const missingOpen=data.openQuestions.filter(q=>!(openAnswers[q.n]||'').trim());
-        if(missingOpen.length){alert('Faltan las dos respuestas de desarrollo.');document.querySelector(`[data-open="${missingOpen[0].n}"]`).scrollIntoView({behavior:'smooth',block:'center'});return;}
+        if(missingOpen.length){status('Faltan las dos respuestas de desarrollo.');document.querySelector(`[data-open="${missingOpen[0].n}"]`).scrollIntoView({behavior:'smooth',block:'center'});return;}
         if(!confirm('¿Entregar el ensayo? Despues no podras modificar tus respuestas.'))return;
-        const correct=data.questions.filter(q=>answers[q.n]===q.correct).length,now=Date.now(),detail={};
-        data.questions.forEach(q=>detail[q.id||`q${q.n}`]={respuesta:answers[q.n],correcta:q.correct,esCorrecta:answers[q.n]===q.correct,habilidad:q.hab});
-        const result={puntaje:correct,total:data.questions.length,porcentaje:Math.round(correct/data.questions.length*100),detalle,nombre:student?.nombre||'',curso:student?.curso||'',respuestas_abiertas:{...openAnswers},submitted_at:now,timestamp:now};
-        try{const finalData=payload(true);finalData.submitted_at=now;await Promise.all([db.ref(`${BASE}/respuestas/${SESSION_ID}/${uid}`).update(finalData),db.ref(`${BASE}/resultados/${SESSION_ID}/${uid}`).set(result)]);submitted=true;document.querySelectorAll('.opt,.open-answer').forEach(el=>{el.disabled=true;el.tabIndex=-1;});document.getElementById('submitEssay').disabled=true;status('Respuestas recibidas. El resultado permanecera oculto hasta que el profesor lo habilite.');}catch(e){console.error(e);alert('No se pudo entregar. El avance sigue guardado; intenta nuevamente.');}
+        const button=document.getElementById('submitGuide');button.disabled=true;submitting=true;document.querySelectorAll('.open-answer').forEach(el=>el.disabled=true);clearTimeout(timer);
+        try{
+          await window.SimceSessionGate.saveDraft(db,BASE,SESSION_ID,uid,payload(false));
+          const token=await auth.currentUser.getIdToken();
+          const response=await fetch('/api/estudiantes?action=simce-n3-submit',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},body:JSON.stringify(payload(false))});
+          const result=await response.json();if(!response.ok)throw Error(result.error||'No se pudo entregar.');
+          const check=await fetch('/api/estudiantes?action=simce-n3-state',{headers:{Authorization:'Bearer '+token}});if(!check.ok)throw Error('No se pudo verificar tu entrega.');
+          const attempt=(await check.json()).attempt;
+          if(!attempt||attempt.submitted!==true||attempt.completada !== true)throw Error('La plataforma aún no confirma tu entrega.');
+          submitted=true;document.querySelectorAll('.opt,.open-answer').forEach(el=>{el.disabled=true;el.tabIndex=-1;});status('Entrega confirmada. Tu trabajo quedó guardado.');
+          window.SimceSessionGate.confirmDelivery();
+        }catch(e){console.error(e);status(e.message+' Tu avance se conserva; puedes reintentar.');}
+        finally{submitting=false;button.disabled=submitted;document.querySelectorAll('.open-answer').forEach(el=>el.disabled=submitted);}
       });
       auth.onAuthStateChanged(async user=>{
         if(!user){location.href='/lecturas/?next='+encodeURIComponent(location.pathname);return;}
         uid=user.uid;
-        if(window.SimceSessionGate&&await window.SimceSessionGate.check(db,BASE,SESSION_ID,uid))return;
-        try{const [studentSnap,responseSnap]=await Promise.all([db.ref(`${BASE}/estudiantes/${uid}`).once('value'),db.ref(`${BASE}/respuestas/${SESSION_ID}/${uid}`).once('value')]);student=studentSnap.val();if(!student){await auth.signOut();return;}hydrate(responseSnap.val());if(!submitted)status('Puedes responder. El avance se guarda automaticamente.');}
-        catch(e){console.error(e);status('No se pudo cargar tu avance. Actualiza la pagina.');}
+        if(window.SimceSessionGate&&await window.SimceSessionGate.check(db,BASE,SESSION_ID,uid,true))return;
+        try{const [studentSnap,responseSnap]=await Promise.all([db.ref(`${BASE}/estudiantes/${uid}`).once('value'),db.ref(`${BASE}/respuestas/${SESSION_ID}/${uid}`).once('value')]);student=studentSnap.val();if(!student){await auth.signOut();return;}hydrate(responseSnap.val());window.SimceSessionGate.markLoaded(SESSION_ID,uid);if(!submitted)status('Puedes responder. El avance se guarda automaticamente.');}
+        catch(e){window.SimceSessionGate.failLoad();console.error(e);status('No se pudo cargar tu avance. Actualiza la pagina.');}
       });
     }());
   </script>

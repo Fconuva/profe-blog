@@ -1,3 +1,7 @@
+## 18-nov-2026 · Ingreso NM2 conserva el enlace directo
+
+Los avisos individuales deben abrir la guía indicada después del ingreso. Se conserva `next` del mismo origen en el acceso compartido para 2A/2B HC; sin destino explícito se mantiene la portada NM2. La actividad sigue comprobando asignación, identidad, cierre y excepción. El inventario de avisos incluye las guías PAES iniciales 1–9 que el catálogo NM2 tiene asignadas y estén sin entregar.
+
 ## 18-nov-2026 · Regularización individual de pendientes SIMCE y avisos
 
 Francisco solicita enviar desde su correo institucional todas las guías pendientes de 2A/2B HC y la clase del 18-nov, con acceso directo y entrega habilitada; excluye a un estudiante retirado. Revisión detecta cierres finales que anulaban excepciones, fecha histórica U4 y entrega N3 cliente rechazada por reglas. Parche: cierre por defecto conservado y excepción por UID/sesión; N3 entrega calificada en servidor, guarda ambas marcas y confirma mediante API. Auditorías focalizadas de cierre, permisos y conservación aprobadas. No se modifican respuestas ni notas reales. Publicación, habilitación nominal, prueba real y envío pendientes en esta entrada.

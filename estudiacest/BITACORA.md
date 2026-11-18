@@ -1,3 +1,11 @@
+## 18-nov-2026 · Seis rebotes y aviso general a ambos cursos
+
+Después de los 81 envíos individuales, Gmail registra seis rechazos de direcciones de segundo B: cuenta destinataria inexistente, estado 5.1.3. Los otros 75 no registran rebote en este corte; ello no acredita recepción. Las direcciones rechazadas coinciden con las registradas en los perfiles. Búsquedas de correo y contactos no acreditan una dirección alternativa de esas identidades; no se adivinan direcciones ni se sustituyen perfiles por homónimos.
+
+Francisco indica usar los grupos institucionales de segundo A y segundo B. Se envía desde frnunez un mensaje general separado a cada grupo con acceso directo a la clase del 18-nov y a las guías PAES/SIMCE anteriores del curso, sin nombres, notas ni deudas individuales. Explica entregar solo lo pendiente, ingreso habitual y confirmación final; conserva el acceso individual y las excepciones ya habilitadas. Los dos mensajes se releen completos desde Gmail y se cotejan remitente, grupo destinatario, asunto, cuerpo y etiqueta SENT. Cero rebotes de esos dos grupos al comprobar, sin afirmar recepción ni lectura. El aviso grupal sustituye la búsqueda pendiente de dirección individual por indicación expresa; las direcciones individuales sin evidencia quedan pendientes de depuración.
+
+Evidencia privada en Entregas/Correos-pendientes-20261118 del workspace docente: rebotes-lectura-privada.json, mensajes-grupos-privados.json, envios-grupos-privados.json, envios-grupos-lectura-privada.json y estado-rebotes-y-grupos.json. Solo documentación; sin cambio de código, datos académicos ni despliegue nuevo.
+
 ## 18-nov-2026 · Pendientes habilitados y 81 avisos enviados y cotejados
 
 Publicación efectiva de los parches anteriores: commit 6b3e8f6e, despliegue dpl_EVxcDKQdTJXbuREEBQ7dqwbjyoiK READY/production en www.estudiacest.com. Procedimiento seguro completado, 1.105 recursos críticos y contrato de 80 clases aprobados. Reglas Firebase publicadas por su procedimiento separado. Habilitadas y releídas 344 excepciones individuales en 30 sesiones SIMCE; respuestas y notas reales conservadas.

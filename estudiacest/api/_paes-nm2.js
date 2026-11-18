@@ -92,8 +92,11 @@ async function handle(action,req,res,{db,auth,adminUid}){
   if(i.preview)throw fail(403,'La vista docente no crea intentos.');
   if(!['nm2-start','nm2-save','nm2-submit','nm2-incident'].includes(action))throw fail(400,'Acción no válida.');
   if(req.method!=='POST')throw fail(405,'Usa POST para guardar.');
+  if(action==='nm2-submit'&&b.confirmed!==true)throw fail(400,'Confirma la entrega antes de enviar. Recarga la página si no aparece la pregunta.');
   const data=validate(b,l,g),now=Date.now(),incident=action==='nm2-incident';
   if(incident&&(!/^[\w-]{8,100}$/.test(b.eventId||'')||!['hidden','blur','fullscreen','geometry'].includes(b.reason)))throw fail(400,'Incidencia no válida.');
+  // Las páginas antiguas pueden enviar incidencias: conservar el estado canónico sin sancionar ni sobrescribir borradores.
+  if(incident){const current=(await ref.once('value')).val();if(!current||current.resetAt)throw fail(409,'Recupera el estado antes de continuar.');return res.status(200).json({success:true,resetEpoch:current.resetEpoch||null,attempt:publicRecord(current,await publication(db,l,i),l,g)});}
   const tx=await ref.transaction(r=>{
    // Firebase puede invocar primero con null aunque el intento exista en servidor.
    // Devolver null permite recuperar ese estado; undefined abortaría sin consultarlo.
@@ -105,18 +108,16 @@ async function handle(action,req,res,{db,auth,adminUid}){
    if(action==='nm2-start'&&r&&!r.resetAt)return r;
    if(action!=='nm2-start'&&(!r||r.resetAt))return;
    if(action!=='nm2-start'&&(r.revision||0)!==b.revision)return;
-   if(incident&&(r.incidents?.[b.eventId]||r.forgivenIncidents?.[b.eventId]))return r;
    const fresh=!r||r.resetAt;
    const next={...(fresh?{uid:i.uid,sessionId:sid,curso:i.curso,nombre:i.nombre,startedAt:now,resetEpoch:r?.resetEpoch||null,integrityEpoch:0,strikes:0}:r),...data,version:MATERIAL.version,variant:g?'guided-access-2026':'regular',revision:(r?.revision||0)+1,lastRequestId:b.requestId,updatedAt:now,submitted:false,completada:false};
    if(fresh&&r?.archivedAttempt)next.archivedAttempt=r.archivedAttempt;
-   if(incident){next.incidents={...(r.incidents||{}),[b.eventId]:{reason:b.reason,at:now}};next.strikes=(r.strikes||0)+1;}
-   if(action==='nm2-submit'||next.strikes>=3)Object.assign(next,{submitted:true,completada:true,submittedAt:now,completadaAt:now,endedBy:next.strikes>=3?'strikes':'student',...grade(l,g,next.answers)});
+   if(action==='nm2-submit')Object.assign(next,{submitted:true,completada:true,submittedAt:now,completadaAt:now,endedBy:'student',...grade(l,g,next.answers)});
    return next;
   },undefined,false);
   const current=tx.snapshot.val();if(!tx.committed||!current)throw fail(409,delivered(current)?'La clase ya está entregada.':'El intento cambió. Recupera el estado antes de continuar.');
   // Lectura independiente después de la escritura: jamás anunciar una entrega solo por su petición.
   const confirmed=(await ref.once('value')).val();
-  if((action==='nm2-submit'||(confirmed?.strikes||0)>=3)&&!delivered(confirmed))throw fail(502,'La entrega todavía no está confirmada. Reintenta.');
+  if(action==='nm2-submit'&&!delivered(confirmed))throw fail(502,'La entrega todavía no está confirmada. Reintenta.');
   return res.status(200).json({success:true,resetEpoch:confirmed?.resetEpoch||null,attempt:publicRecord(confirmed,await publication(db,l,i),l,g)});
  }catch(e){return res.status(e.status||500).json({error:e.status?e.message:'No se pudo conectar. Tu avance se conserva en este dispositivo; reintenta.'});}
 }

@@ -228,6 +228,7 @@ Antes de editar y nuevamente antes de publicar:
   de 5 segundos. Una salida sostenida genera una sola incidencia, sin duplicar
   los eventos de foco, visibilidad y tamaño. Conservar ajustes de móvil, zoom,
   orientación, teclado y audio del recorrido guiado.
+- Excepción NM2 HC del 18-nov-2026 por instrucción expresa: se retiran los strikes, sus bloqueos y el cierre automático; páginas antiguas que envían incidencias conservan el estado guardado sin modificarlo. El botón abre una pregunta de confirmación y solo «Sí, entregar» realiza el envío; cancelar o Escape conserva el borrador. Las entregas históricas permanecen intactas.
 - Cada incidencia tiene un identificador único y se cuenta en servidor. Al
   tercer strike se entregan las respuestas disponibles con `submitted` y
   `completada` juntas, leyendo confirmación. El guardado usa cola, conserva

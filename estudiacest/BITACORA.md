@@ -1,3 +1,7 @@
+## 18-nov-2026 · NM2: entrega voluntaria con confirmación previa
+
+Francisco informa envíos involuntarios y solicita confirmar antes de entregar. Se identifica entrega inmediata del botón y cierre automático al tercer strike. Francisco además ordena quitar los strikes por los problemas en aula. En las cuatro clases NM2 regulares y acompañadas, la entrega abre una pregunta con cancelación o confirmación explícita; la API rechaza envíos sin confirmación. Se retiran el control de foco, los bloqueos y el registro de strikes; peticiones de incidencias desde páginas antiguas conservan el estado guardado sin modificarlo. Conserva autoguardado, cola, última escritura, readback y aviso posterior de entrega confirmada. No se modifican respuestas, notas ni entregas históricas. Publicación y verificación pendientes en esta entrada.
+
 ## 18-nov-2026 · Seis rebotes y aviso general a ambos cursos
 
 Después de los 81 envíos individuales, Gmail registra seis rechazos de direcciones de segundo B: cuenta destinataria inexistente, estado 5.1.3. Los otros 75 no registran rebote en este corte; ello no acredita recepción. Las direcciones rechazadas coinciden con las registradas en los perfiles. Búsquedas de correo y contactos no acreditan una dirección alternativa de esas identidades; no se adivinan direcciones ni se sustituyen perfiles por homónimos.

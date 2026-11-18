@@ -46,7 +46,7 @@ Este documento define el comportamiento mínimo de toda clase, guía o ensayo de
 ## 4. Entrega final
 
 - Debe existir un solo botón `Entregar clase`, de tipo `button`, y un solo controlador de envío.
-- El primer clic inicia la entrega. No se exige una segunda marcación ni un segundo botón ambiguo.
+- El primer clic inicia la entrega. No se exige una segunda marcación ni un segundo botón ambiguo. Excepción NM2 HC, por instrucción del 18-nov-2026: abre «¿Confirmas que quieres entregar tu trabajo?», con «Seguir trabajando» y «Sí, entregar». Solo la confirmación envía; las salidas de ventana no entregan automáticamente.
 - Durante la escritura el botón queda deshabilitado y cambia a `Entregando…`.
 - La página debe esperar la respuesta de Firebase, directamente o mediante la API oficial de la sección, y leer de vuelta `completada` antes de anunciar éxito.
 - Solo después de confirmar `completada: true` se cambia el botón a `Clase entregada`.

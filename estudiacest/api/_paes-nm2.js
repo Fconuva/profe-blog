@@ -95,6 +95,9 @@ async function handle(action,req,res,{db,auth,adminUid}){
   const data=validate(b,l,g),now=Date.now(),incident=action==='nm2-incident';
   if(incident&&(!/^[\w-]{8,100}$/.test(b.eventId||'')||!['hidden','blur','fullscreen','geometry'].includes(b.reason)))throw fail(400,'Incidencia no válida.');
   const tx=await ref.transaction(r=>{
+   // Firebase puede invocar primero con null aunque el intento exista en servidor.
+   // Devolver null permite recuperar ese estado; undefined abortaría sin consultarlo.
+   if(r===null&&(action!=='nm2-start'||b.resetEpoch))return null;
    if(r?.lastRequestId===b.requestId)return r;
    if(delivered(r))return;
    if((r?.resetEpoch||null)!==(b.resetEpoch||null))return;
@@ -110,7 +113,7 @@ async function handle(action,req,res,{db,auth,adminUid}){
    if(action==='nm2-submit'||next.strikes>=3)Object.assign(next,{submitted:true,completada:true,submittedAt:now,completadaAt:now,endedBy:next.strikes>=3?'strikes':'student',...grade(l,g,next.answers)});
    return next;
   },undefined,false);
-  const current=tx.snapshot.val();if(!tx.committed)throw fail(409,delivered(current)?'La clase ya está entregada.':'El intento cambió. Recupera el estado antes de continuar.');
+  const current=tx.snapshot.val();if(!tx.committed||!current)throw fail(409,delivered(current)?'La clase ya está entregada.':'El intento cambió. Recupera el estado antes de continuar.');
   // Lectura independiente después de la escritura: jamás anunciar una entrega solo por su petición.
   const confirmed=(await ref.once('value')).val();
   if((action==='nm2-submit'||(confirmed?.strikes||0)>=3)&&!delivered(confirmed))throw fail(502,'La entrega todavía no está confirmada. Reintenta.');

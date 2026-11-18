@@ -1,3 +1,7 @@
+## 18-nov-2026 · NM2: corrección de conflicto al guardar y entregar
+
+Prueba real con cuenta técnica de segundo HC reproduce HTTP 409 al entregar y ausencia de autoguardado correcto. La transacción Firebase abortaba al recibir null inicial sin caché, antes de recuperar el intento existente. Corrección limitada a NM2: permite resolver ese estado y rechaza un intento realmente inexistente. La auditoría ahora respeta el aborto inicial del SDK: falla antes del parche y aprueba las 813 comprobaciones después, incluidas variantes, conservación histórica y protección ante escrituras atrasadas. Sin modificación de respuestas ni calificaciones reales. Publicación y comprobación final en ambos cursos pendientes en esta entrada.
+
 ## 18-nov-2026 · Publicación NM2 y administración confirmada
 
 Publicado mediante `npm run deploy:prod:safe` desde árbol limpio sincronizado con main. Predeploy: 1.099 recursos correctos; compilación remota completada. Despliegue `dpl_BarQXBnbm5gjWiBNoiLrvSd7PHBk`, commit `4dd0aa4cdc51e478bcfe8809246f217fac48105b`; alias `www.estudiacest.com` y `estudiacest.com` confirmados READY/production. Incluye inicio automático al ingresar, cuatro accesos administrativos NM2, voz Diego aprobada, ampliación revisada y pendientes SIMCE. Sin pruebas funcionales de estudiantes por instrucción expresa de Francisco; validación en vivo a su cargo. Planilla privada entregada por enlace, sin modificar notas ni respuestas. El primer transporte de red se detuvo durante el predeploy y el segundo completó con conexión reutilizada, sin modificar compuertas.

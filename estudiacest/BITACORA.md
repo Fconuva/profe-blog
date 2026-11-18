@@ -1,3 +1,7 @@
+## 18-nov-2026 · NM2: responder sin botón de inicio
+
+Por instrucción urgente de Francisco, las clases y el recorrido acompañado inician o recuperan el trabajo automáticamente después de autenticar. Se conserva guardado serializado, historial, entregas y vista docente. El botón restante solo permite ingresar si no hay sesión. Sin pruebas funcionales por solicitud expresa: Francisco verifica con estudiantes en vivo. Publicación pendiente.
+
 # Bitácora de Estudia CEST
 
 ## 2026-11-17 · NM2: predeploy aprobado; subida bloqueada por memoria de Windows

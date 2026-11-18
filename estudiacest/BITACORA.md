@@ -1,3 +1,7 @@
+## 18-nov-2026 · Admin: guías NM2 y pendientes SIMCE
+
+Acceso visible a las cuatro clases NM2 desde el admin, con enlaces a la revisión y controles autenticados existentes. La planilla y su CSV incorporan guías sin entrega por estudiante, incluyendo archivadas; no se convierten ausencias en notas y el promedio conserva las reglas del libro. Exportación privada de notas solicitada, sin mutación de calificaciones.
+
 ## 18-nov-2026 · NM2: responder sin botón de inicio
 
 Por instrucción urgente de Francisco, las clases y el recorrido acompañado inician o recuperan el trabajo automáticamente después de autenticar. Se conserva guardado serializado, historial, entregas y vista docente. El botón restante solo permite ingresar si no hay sesión. Sin pruebas funcionales por solicitud expresa: Francisco verifica con estudiantes en vivo. Publicación pendiente.

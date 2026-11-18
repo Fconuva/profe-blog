@@ -202,6 +202,7 @@
         <div class="nav-divider"></div>
         <div class="nav-group">Evaluación</div>
         <a href="#" data-section="results" onclick="showSection('results',this)"><span class="icon">📈</span>Resultados</a>
+        <a href="#" data-section="nm2" onclick="showSection('nm2',this)"><span class="icon">📖</span>4 guías · 2.º HC</a>
         <a href="#" data-section="planilla" onclick="showSection('planilla',this);renderPlanilla()"><span class="icon">📝</span>Planilla Notas</a>
         <a href="#" data-section="ranking" onclick="showSection('ranking',this)"><span class="icon">🏆</span>Ranking</a>
         <a href="#" data-section="chatcasas" onclick="showSection('chatcasas',this);cargarChatCasas()"><span class="icon">🏠</span>Chat de casas</a>
@@ -209,6 +210,8 @@
     </nav>
 
     <div class="content">
+<section class="section" id="sec-nm2"><h2>Cuatro guías · 2.º A y B HC</h2><p>Revisar respuestas y escritura, quitar strikes, reiniciar un intento conservando su historial y publicar u ocultar resultados por curso.</p><div class="stat-row"><article class="stat-card"><h3>18/11 · Clase 1</h3><p>Quién cuenta y cómo se construye un relato</p><a class="btn btn-primary" href="/paes/nm2/docente.html?clase=1">Administrar y revisar</a> <a class="btn btn-secondary" href="/paes/nm2/clase.html?clase=1">Ver clase</a></article><article class="stat-card"><h3>25/11 · Clase 2</h3><p>Cómo el lenguaje transforma lo que leemos</p><a class="btn btn-primary" href="/paes/nm2/docente.html?clase=2">Administrar y revisar</a> <a class="btn btn-secondary" href="/paes/nm2/clase.html?clase=2">Ver clase</a></article><article class="stat-card"><h3>02/12 · Clase 3</h3><p>Qué razones sostienen una opinión</p><a class="btn btn-primary" href="/paes/nm2/docente.html?clase=3">Administrar y revisar</a> <a class="btn btn-secondary" href="/paes/nm2/clase.html?clase=3">Ver clase</a></article><article class="stat-card"><h3>09/12 · Clase 4</h3><p>Cómo una escena y un mensaje orientan nuestra mirada</p><a class="btn btn-primary" href="/paes/nm2/docente.html?clase=4">Administrar y revisar</a> <a class="btn btn-secondary" href="/paes/nm2/clase.html?clase=4">Ver clase</a></article></div></section>
+
         <!-- ================== CHAT DE CASAS ================== -->
         <div class="section" id="sec-chatcasas">
             <h2>🏠 Chat de casas</h2>
@@ -657,6 +660,7 @@ let students={};
 let sessions={};
 let allResults={};
 let allResponses={};
+let planillaEvidenceLoaded=false;
 let allGrades={};
 let gradebookLoaded=false;
 const manualGradeBusy=new Set();
@@ -1206,7 +1210,7 @@ async function loadAllData(){
         readOnceWithRetry(BASE+'/respuestas')
     ]);
     allResults=resS.val()||{};
-    allResponses=respS.val()||{};
+    allResponses=respS.val()||{};planillaEvidenceLoaded=true;
     renderOverview();
     if(document.getElementById('sec-planilla').classList.contains('active'))renderPlanilla();
     renderStudents();
@@ -1485,6 +1489,7 @@ function initMobileNav(){
         {id:'sessions',icon:'📚',label:'Sesiones'},
         {id:'results',icon:'📈',label:'Resultados'},
         {id:'planilla',icon:'📝',label:'Planilla'},
+        {id:'nm2',icon:'📖',label:'4 guías HC'},
         {id:'ranking',icon:'🏆',label:'Ranking'},
         {id:'reports',icon:'📋',label:'Reportes'}
     ];
@@ -1571,7 +1576,7 @@ async function refreshLiveData(){
             db.ref(BASE+'/respuestas').once('value')
         ]);
         allResults=resS.val()||{};
-        allResponses=respS.val()||{};
+        allResponses=respS.val()||{};planillaEvidenceLoaded=true;
         document.getElementById('liveLastUpdate').textContent='Actualizado: '+new Date().toLocaleTimeString('es-CL');
         renderLiveProgress();
         toast('Datos actualizados','ok');
@@ -4363,6 +4368,15 @@ function updateUnlockUI(sesId){
     }
 }
 
+function pendingGuidesFor(stu,entries){
+    if(!planillaEvidenceLoaded)return null;
+    return entries.filter(s=>!gradeIsExcluded(s.id,stu.curso)).filter(s=>{const a=getSessionAssignedTargets(s);return !a.length||a.includes(stu.curso)||a.includes(stu.uid);}).filter(s=>{
+        const response=allResponses[s.id]?.[stu.uid],result=allResults[s.id]?.[stu.uid];
+        if(response&&(response.uid&&response.uid!==stu.uid||response.curso&&response.curso!==stu.curso||response.sessionId&&response.sessionId!==s.id))return true;
+        return !classifyAdminSubmission(response,result).completed;
+    });
+}
+function pendingGuideLabel(s){return getSessionUnitLabel(getSessionUnit(s))+' · '+(s.titulo||s.id);}
 function planillaScope(){
     const course=document.getElementById('planillaCourse').value,unit=document.getElementById('planillaUnit').value;
     const pupils=Object.entries(students).map(([uid,s])=>({...s,uid})).filter(s=>isMiCurso(s.curso)&&s.activo!==false&&progFromCurso(s.curso)==='simce'&&(!course||(course==='__nm2hc'?['2A-HC','2B-HC'].includes(s.curso):s.curso===course))).sort((a,b)=>a.curso.localeCompare(b.curso)||(a.nombre||'').localeCompare(b.nombre||'','es'));
@@ -4372,7 +4386,7 @@ function planillaScope(){
 }
 async function refreshGradebook(){
     const status=document.getElementById('planillaLoadStatus');status.textContent='Actualizando notas…';
-    try{allGrades=(await readOnceWithRetry(BASE+'/calificaciones_clase')).val()||{};gradebookLoaded=true;renderPlanilla();loadResults();}
+    try{allGrades=(await readOnceWithRetry(BASE+'/calificaciones_clase')).val()||{};gradebookLoaded=true;const [res,resp]=await Promise.all([readOnceWithRetry(BASE+'/resultados'),readOnceWithRetry(BASE+'/respuestas')]);allResults=res.val()||{};allResponses=resp.val()||{};planillaEvidenceLoaded=true;renderPlanilla();loadResults();}
     catch(_){status.textContent='No se pudieron actualizar las notas. Conservamos la última lectura; vuelve a intentar.';}
 }
 function renderPlanilla(){
@@ -4382,17 +4396,17 @@ function renderPlanilla(){
     if(!gradebookLoaded){status.textContent='Cargando las notas actuales…';return;}
     const {pupils,entries}=planillaScope();let count=0,total=0,approved=0;
     const gradeFor=(stu,s)=>gradeIsExcluded(s.id,stu.curso)?null:getGradeValue(stu.uid,s.id,allResults[s.id]?.[stu.uid]);
-    document.getElementById('planillaHead').innerHTML='<tr><th style="position:sticky;left:0;z-index:2;background:#f1f5f9;min-width:180px">Estudiante</th><th>Curso</th>'+entries.map(s=>`<th style="min-width:125px" title="${esc(s.titulo||s.id)}">${getSessionUnitLabel(getSessionUnit(s))}<br>${sessionClassOrder(s)?'Clase '+sessionClassOrder(s):esc(s.titulo||s.id)}</th>`).join('')+'<th>Promedio</th></tr>';
-    document.getElementById('planillaBody').innerHTML=pupils.map(stu=>{let sum=0,n=0;const cells=entries.map(s=>{const value=gradeFor(stu,s),pending=getPublishedGrade(stu.uid,s.id)?.needsReview===true;if(value!==null&&!pending){sum+=value;n++;}const label=pending?'En revisión':value===null?'—':value.toFixed(1).replace('.',',');return `<td style="text-align:center"><span data-grade-value="${stu.uid}/${s.id}">${label}</span><br>${gradeEditor(stu.uid,s.id)}</td>`;}).join('');const average=n?sum/n:null;if(average!==null){count++;total+=average;if(average>=4)approved++;}return `<tr><td style="position:sticky;left:0;background:#fff;z-index:1">${esc(stu.nombre||'')}</td><td>${cShort(stu.curso)}</td>${cells}<td>${average===null?'—':average.toFixed(1).replace('.',',')}</td></tr>`;}).join('')||`<tr><td colspan="${entries.length+3}">No hay estudiantes en este filtro.</td></tr>`;
+    document.getElementById('planillaHead').innerHTML='<tr><th style="position:sticky;left:0;z-index:2;background:#f1f5f9;min-width:180px">Estudiante</th><th>Curso</th>'+entries.map(s=>`<th style="min-width:125px" title="${esc(s.titulo||s.id)}">${getSessionUnitLabel(getSessionUnit(s))}<br>${sessionClassOrder(s)?'Clase '+sessionClassOrder(s):esc(s.titulo||s.id)}</th>`).join('')+'<th>Promedio</th><th>Guías sin entrega</th></tr>';
+    document.getElementById('planillaBody').innerHTML=pupils.map(stu=>{let sum=0,n=0;const cells=entries.map(s=>{const value=gradeFor(stu,s),pending=getPublishedGrade(stu.uid,s.id)?.needsReview===true;if(value!==null&&!pending){sum+=value;n++;}const label=pending?'En revisión':value===null?'—':value.toFixed(1).replace('.',',');return `<td style="text-align:center"><span data-grade-value="${stu.uid}/${s.id}">${label}</span><br>${gradeEditor(stu.uid,s.id)}</td>`;}).join('');const average=n?sum/n:null;if(average!==null){count++;total+=average;if(average>=4)approved++;}return `<tr><td style="position:sticky;left:0;background:#fff;z-index:1">${esc(stu.nombre||'')}</td><td>${cShort(stu.curso)}</td>${cells}<td>${average===null?'—':average.toFixed(1).replace('.',',')}</td><td style="min-width:240px">${pendingGuidesFor(stu,entries)?.map(x=>esc(pendingGuideLabel(x))).join('<br>')||(planillaEvidenceLoaded?'Sin pendientes':'Cargando entregas…')}</td></tr>`;}).join('')||`<tr><td colspan="${entries.length+3}">No hay estudiantes en este filtro.</td></tr>`;
     document.getElementById('planillaStats').innerHTML=`<div class="stat-card"><div class="label">Estudiantes</div><div class="value">${pupils.length}</div></div><div class="stat-card"><div class="label">Clases</div><div class="value">${entries.length}</div></div><div class="stat-card"><div class="label">Promedio</div><div class="value">${count?(total/count).toFixed(1).replace('.',','):'—'}</div></div><div class="stat-card"><div class="label">Promedio igual o superior a 4,0</div><div class="value">${approved}</div></div>`;
     status.textContent='Notas actuales del libro · ordenadas por unidad y clase · las pendientes de revisión no se incluyen en el promedio.';
 }
 function exportPlanillaCSV(){
     const course=document.getElementById('planillaCourse').value;if(course&&course!=='__nm2hc'&&progFromCurso(course)!=='simce'){exportLegacyPlanillaCSV();return;}
-    if(!gradebookLoaded){toast('Espera a que carguen las notas.','err');return;}
+    if(!gradebookLoaded||!planillaEvidenceLoaded){toast('Espera a que carguen las notas y entregas.','err');return;}
     const {pupils,entries}=planillaScope(),quote=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
-    const rows=[['Estudiante','Curso',...entries.map(s=>getSessionUnitLabel(getSessionUnit(s))+' · '+(s.titulo||s.id)),'Promedio']];
-    for(const stu of pupils){let sum=0,n=0;const grades=entries.map(s=>{const v=gradeIsExcluded(s.id,stu.curso)?null:getGradeValue(stu.uid,s.id,allResults[s.id]?.[stu.uid]);if(getPublishedGrade(stu.uid,s.id)?.needsReview)return 'En revisión';if(v!==null){sum+=v;n++;}return v??'';});rows.push([stu.nombre,stu.curso,...grades,n?(sum/n).toFixed(1):'']);}
+    const rows=[['Estudiante','Curso',...entries.map(s=>getSessionUnitLabel(getSessionUnit(s))+' · '+(s.titulo||s.id)),'Promedio','Cantidad sin entrega','Guías sin entrega']];
+    for(const stu of pupils){let sum=0,n=0;const grades=entries.map(s=>{const v=gradeIsExcluded(s.id,stu.curso)?null:getGradeValue(stu.uid,s.id,allResults[s.id]?.[stu.uid]);if(getPublishedGrade(stu.uid,s.id)?.needsReview)return 'En revisión';if(v!==null){sum+=v;n++;}return v??'';});const pending=pendingGuidesFor(stu,entries);rows.push([stu.nombre,stu.curso,...grades,n?(sum/n).toFixed(1):'',pending?.length??'',pending?pending.map(pendingGuideLabel).join(' | '):'Cargando entregas']);}
     const blob=new Blob(['\uFEFF'+rows.map(row=>row.map(quote).join(',')).join('\n')],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='notas-simce-'+new Date().toISOString().slice(0,10)+'.csv';a.click();URL.revokeObjectURL(url);
 }
 

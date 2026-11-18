@@ -1,0 +1,1458 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clase 2 · Unidad 2 · Tesis, argumentos y contraargumentos</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --ink: #1d2433;
+            --ink-soft: #56657d;
+            --paper: #f6f1e7;
+            --paper-strong: #fffdf8;
+            --line: rgba(29, 36, 51, 0.12);
+            --navy: #1d3557;
+            --navy-soft: rgba(29, 53, 87, 0.10);
+            --gold: #c3872b;
+            --gold-soft: rgba(195, 135, 43, 0.14);
+            --teal: #157a6e;
+            --teal-soft: rgba(21, 122, 110, 0.12);
+            --rose: #b24c63;
+            --rose-soft: rgba(178, 76, 99, 0.12);
+            --indigo: #3757c8;
+            --indigo-soft: rgba(55, 87, 200, 0.12);
+            --amber: #9a5f0b;
+            --amber-soft: rgba(154, 95, 11, 0.14);
+            --violet: #6d4aa8;
+            --violet-soft: rgba(109, 74, 168, 0.14);
+            --shadow: 0 18px 48px rgba(29, 36, 51, 0.14);
+            --radius-xl: 28px;
+            --radius-lg: 22px;
+            --radius-md: 16px;
+            --radius-sm: 12px;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html {
+            background:
+                radial-gradient(circle at top left, rgba(109, 74, 168, 0.14), transparent 28%),
+                radial-gradient(circle at top right, rgba(21, 122, 110, 0.12), transparent 24%),
+                linear-gradient(180deg, #efe7d9 0%, #f8f5ee 52%, #ede6da 100%);
+        }
+        body {
+            min-height: 100vh; font-family: 'Sora', sans-serif; color: var(--ink);
+            background: linear-gradient(180deg, rgba(255,255,255,0.68), rgba(255,255,255,0.88)),
+                repeating-linear-gradient(135deg, rgba(29,36,51,0.018) 0 14px, transparent 14px 28px);
+            padding: 22px 18px 72px;
+        }
+        button, input, textarea { font: inherit; }
+        .topbar {
+            position: sticky; top: 12px; z-index: 30; max-width: 1220px; margin: 0 auto 18px;
+            padding: 14px 18px; border-radius: 999px; display: flex; align-items: center;
+            gap: 12px; flex-wrap: wrap; background: rgba(255,253,248,0.82);
+            backdrop-filter: blur(18px); border: 1px solid rgba(29,36,51,0.10);
+            box-shadow: 0 12px 35px rgba(29,36,51,0.08);
+        }
+        .topbar-pill { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px;
+            border-radius: 999px; font-size: 12px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; }
+        .topbar-pill.primary { background: var(--violet-soft); color: var(--violet); }
+        .topbar-pill.preview { background: var(--gold-soft); color: var(--amber); }
+        .status-banner { display: none; padding: 18px 20px; border-radius: var(--radius-lg);
+            border: 1px solid rgba(21,122,110,0.18);
+            background: linear-gradient(135deg, rgba(21,122,110,0.12), rgba(29,53,87,0.10));
+            color: #155e57; box-shadow: 0 12px 26px rgba(29,36,51,0.10); }
+        .status-banner.show { display: block; }
+        .status-banner strong { display: block; font-size: 15px; margin-bottom: 6px; color: var(--teal); }
+        .status-banner span { display: block; font-size: 13px; line-height: 1.6; }
+        .topbar-meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; color: var(--ink-soft); font-size: 12px; font-weight: 700; }
+        .topbar-meta span { padding: 7px 11px; border-radius: 999px; background: rgba(29,36,51,0.05); }
+        .topbar-btn { margin-left: auto; border: none; border-radius: 999px; padding: 10px 16px;
+            background: linear-gradient(135deg, #202939, #36455f); color: #fff; font-size: 12px;
+            font-weight: 800; cursor: pointer; box-shadow: 0 10px 24px rgba(32,41,57,0.22);
+            transition: transform .18s ease, box-shadow .18s ease; }
+        .topbar-btn:hover { transform: translateY(-1px); }
+        .page { max-width: 1220px; margin: 0 auto; display: grid;
+            grid-template-columns: minmax(0, 1fr) 320px; gap: 22px; align-items: start; }
+        .main-column { display: grid; gap: 20px; }
+        .panel { border-radius: var(--radius-xl); border: 1px solid var(--line);
+            background: rgba(255,253,248,0.86); box-shadow: var(--shadow); overflow: hidden; }
+        .hero { position: relative; padding: 28px;
+            background: linear-gradient(135deg, rgba(54,32,99,0.96), rgba(82,52,138,0.94)),
+                linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0));
+            color: #f8fafc; }
+        .hero::before { content: ''; position: absolute; inset: auto -80px -120px auto;
+            width: 280px; height: 280px;
+            background: radial-gradient(circle, rgba(195,135,43,0.28) 0%, transparent 70%);
+            pointer-events: none; }
+        .eyebrow { display: inline-flex; align-items: center; gap: 8px; padding: 7px 12px;
+            border-radius: 999px; background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.14);
+            font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase;
+            color: #fde7c2; margin-bottom: 14px; }
+        .hero-grid { display: grid; grid-template-columns: 1fr; gap: 18px; align-items: start; }
+        .hero h1 { font-size: clamp(32px,5vw,46px); line-height: 1.02; margin-bottom: 12px; max-width: 900px; }
+        .hero p { max-width: 900px; color: rgba(241,245,249,0.92); line-height: 1.75; font-size: 14px; }
+        .hero-tags { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+        .hero-tag { padding: 8px 12px; border-radius: 999px; background: rgba(255,255,255,0.10);
+            border: 1px solid rgba(255,255,255,0.12); color: #e2e8f0; font-size: 12px; font-weight: 700; }
+        .hero-side { position: relative; z-index: 1; border-radius: 22px;
+            background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); padding: 18px; }
+        .hero-side h2 { font-size: 14px; margin-bottom: 10px; color: #fcd9a6; }
+        .hero-side ul { padding-left: 18px; display: grid; gap: 8px; }
+        .hero-side li { color: #dbe7f3; font-size: 12px; line-height: 1.55; }
+        .section-body { padding: 24px; }
+        .section-head { display: flex; justify-content: space-between; align-items: start; gap: 14px; margin-bottom: 18px; }
+        .section-kicker { display: inline-flex; align-items: center; gap: 8px; padding: 6px 11px;
+            border-radius: 999px; background: var(--violet-soft); color: var(--violet);
+            font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 10px; }
+        .section-head h2 { font-size: 28px; line-height: 1.06; margin-bottom: 8px; }
+        .section-head p { color: var(--ink-soft); font-size: 14px; line-height: 1.7; max-width: 720px; }
+        .section-side-note { flex-shrink: 0; padding: 10px 14px; border-radius: 18px;
+            background: var(--gold-soft); color: var(--amber); font-size: 12px; font-weight: 800; text-align: right; }
+        .focus-grid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 14px; }
+        .focus-card { padding: 18px; border-radius: 20px; background: #ffffff;
+            border: 1px solid rgba(29,36,51,0.10); display: flex; flex-direction: column; gap: 10px;
+            box-shadow: 0 6px 18px rgba(29,36,51,0.06); }
+        .focus-card .tag { display: inline-flex; align-items: center; gap: 6px; padding: 6px 11px;
+            border-radius: 999px; font-size: 11px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; }
+        .focus-card[data-tone="gold"] .tag { background: var(--gold-soft); color: var(--amber); }
+        .focus-card[data-tone="navy"] .tag { background: var(--navy-soft); color: var(--navy); }
+        .focus-card[data-tone="teal"] .tag { background: var(--teal-soft); color: var(--teal); }
+        .focus-card[data-tone="rose"] .tag { background: var(--rose-soft); color: var(--rose); }
+        .focus-card[data-tone="violet"] .tag { background: var(--violet-soft); color: var(--violet); }
+        .focus-card h3 { font-size: 16px; color: var(--ink); margin: 2px 0 4px; }
+        .focus-card .focus-def { font-size: 13px; line-height: 1.6; color: var(--ink); }
+        .focus-card .focus-example { font-size: 12.5px; line-height: 1.6; color: #155e57;
+            background: rgba(21,122,110,0.08); border-left: 3px solid var(--teal);
+            padding: 10px 12px; border-radius: 10px; font-style: italic; }
+        .focus-card .focus-example strong { font-style: normal; color: var(--teal); }
+        .column-layout { display: grid; grid-template-columns: 1fr; gap: 18px; align-items: start; }
+        .article-shell { padding: 24px; border-radius: 22px; background: #fffdfa;
+            border: 1px solid rgba(29,36,51,0.08); box-shadow: inset 0 1px 0 rgba(255,255,255,0.85); }
+        .article-shell h3 { font-family: 'Source Serif 4', serif; font-size: 33px; line-height: 1.04; margin-bottom: 8px; }
+        .article-deck { color: #6b7280; font-size: 14px; line-height: 1.7; margin-bottom: 18px; }
+        .article-body { display: grid; gap: 16px; }
+        .article-body p { font-family: 'Source Serif 4', serif; font-size: 18px; line-height: 1.9; color: #273245; text-align: justify; }
+        .p-num { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px;
+            margin-right: 10px; border-radius: 999px; background: rgba(109,74,168,0.12); color: var(--violet);
+            font-size: 12px; font-weight: 800; vertical-align: text-top; }
+        .signal-card { border-radius: 22px;
+            background: linear-gradient(180deg, rgba(54,32,99,0.96), rgba(54,32,99,0.88));
+            color: #f8fafc; padding: 18px; display: grid; gap: 14px; }
+        .signal-card h3 { font-size: 16px; }
+        .signal-card p { font-size: 13px; line-height: 1.65; color: rgba(226,232,240,0.92); }
+        .signal-list { display: grid; gap: 10px; }
+        .signal-item { padding: 12px 14px; border-radius: 16px;
+            background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.10); }
+        .signal-item strong { display: block; font-size: 12px; margin-bottom: 4px; color: #fde7c2; }
+        .signal-item span { font-size: 12px; color: #e2e8f0; line-height: 1.55; }
+        .radar-grid { display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap: 12px; }
+        .radar-card { padding: 16px; border-radius: 20px; background: rgba(255,255,255,0.74);
+            border: 1px solid rgba(29,36,51,0.08); display: flex; flex-direction: column; gap: 10px; }
+        .radar-tag { display: inline-flex; align-items: center; gap: 6px; width: fit-content;
+            padding: 5px 9px; border-radius: 999px; background: var(--indigo-soft); color: var(--indigo);
+            font-size: 11px; font-weight: 800; }
+        .radar-card h3 { font-size: 15px; }
+        .radar-card p { font-size: 12px; color: var(--ink-soft); line-height: 1.6; }
+        .reveal-btn { margin-top: auto; border: none; border-radius: 12px; padding: 10px 12px;
+            background: rgba(109,74,168,0.10); color: var(--violet); font-size: 12px; font-weight: 800; cursor: pointer; }
+        .reveal-box { display: none; padding: 12px 14px; border-radius: 14px;
+            background: rgba(21,122,110,0.10); border: 1px solid rgba(21,122,110,0.16);
+            font-size: 12px; line-height: 1.65; color: #155e57; }
+        .reveal-box.show { display: block; }
+        .question-list { display: grid; gap: 14px; }
+        .question-card { padding: 18px; border-radius: 22px; background: rgba(255,255,255,0.80);
+            border: 1px solid rgba(29,36,51,0.08); }
+        .question-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+        .question-number { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px;
+            border-radius: 999px; background: var(--violet-soft); color: var(--violet); font-size: 13px; font-weight: 800; }
+        .question-type { padding: 6px 10px; border-radius: 999px; background: var(--gold-soft); color: var(--amber); font-size: 11px; font-weight: 800; }
+        .question-stem { font-size: 15px; line-height: 1.7; margin-bottom: 14px; }
+        .option-list { display: grid; gap: 10px; }
+        .option-btn { border: 1px solid rgba(29,36,51,0.10); border-radius: 16px; padding: 13px 14px;
+            background: #fff; color: var(--ink); font-size: 13px; line-height: 1.6; text-align: left;
+            cursor: pointer; position: relative;
+            transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease, background-color .16s ease, color .16s ease; }
+        .option-btn:hover { transform: translateY(-1px); border-color: rgba(109,74,168,0.28); box-shadow: 0 8px 20px rgba(109,74,168,0.10); }
+        .option-btn.selected { border-color: rgba(109,74,168,0.72);
+            background: linear-gradient(135deg, rgba(109,74,168,0.15), rgba(238,230,250,0.92));
+            box-shadow: 0 0 0 3px rgba(109,74,168,0.16), 0 12px 26px rgba(109,74,168,0.12); padding-right: 104px; }
+        .option-btn.selected strong { color: #5a3a92; }
+        .option-btn.selected::after { content: '✓ Marcada'; position: absolute; top: 10px; right: 12px;
+            padding: 4px 8px; border-radius: 999px; background: rgba(90,58,146,0.12); color: #5a3a92;
+            font-size: 10px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; }
+        .option-btn.correct { border-color: rgba(21,122,110,0.34); background: rgba(21,122,110,0.08); color: #155e57; }
+        .option-btn.wrong { border-color: rgba(178,76,99,0.30); background: rgba(178,76,99,0.07); color: #8a3146; }
+        .feedback-box { display: none; margin-top: 12px; padding: 14px 16px; border-radius: 18px; font-size: 13px; line-height: 1.7; }
+        .feedback-box.show { display: block; }
+        .feedback-box.correct { background: rgba(21,122,110,0.10); border: 1px solid rgba(21,122,110,0.18); color: #155e57; }
+        .feedback-box.wrong { background: rgba(178,76,99,0.08); border: 1px solid rgba(178,76,99,0.16); color: #8a3146; }
+        .feedback-box strong { display: block; margin-bottom: 6px; }
+
+        .anti-guess { margin-top: 18px; padding: 16px 18px; border-radius: 20px;
+            background: linear-gradient(135deg, rgba(154,95,11,0.10), rgba(195,135,43,0.10));
+            border: 1px solid rgba(195,135,43,0.24); }
+        .anti-guess strong { display: block; font-size: 13px; color: var(--amber); margin-bottom: 6px;
+            letter-spacing: 0.05em; text-transform: uppercase; }
+        .anti-guess p { font-size: 12px; line-height: 1.65; color: #6e4a08; }
+        .anti-guess ul { margin-top: 8px; padding-left: 18px; display: grid; gap: 4px; }
+        .anti-guess li { font-size: 12px; line-height: 1.55; color: #6e4a08; }
+
+        .ticket-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 12px; }
+        .ticket-card { padding: 16px; border-radius: 20px; background: rgba(255,255,255,0.78);
+            border: 1px solid rgba(29,36,51,0.08); }
+        .ticket-card h3 { font-size: 15px; margin-bottom: 8px; }
+        .ticket-card p { font-size: 12px; line-height: 1.6; color: var(--ink-soft); margin-bottom: 10px; }
+        .ticket-field { width: 100%; min-height: 128px; padding: 12px 13px; border-radius: 16px;
+            border: 1px solid rgba(29,36,51,0.10); background: rgba(255,255,255,0.92); color: var(--ink); resize: vertical; line-height: 1.6; }
+        .ticket-field:focus { outline: none; border-color: rgba(109,74,168,0.34); box-shadow: 0 0 0 4px rgba(109,74,168,0.10); }
+        .ticket-note { margin-top: 14px; padding: 12px 14px; border-radius: 18px;
+            background: var(--gold-soft); color: var(--amber); font-size: 12px; line-height: 1.6; font-weight: 700; }
+
+        /* Tesis rules callout */
+        .tesis-rules { padding: 18px; border-radius: 20px; margin-top: 14px;
+            background: linear-gradient(135deg, rgba(109,74,168,0.08), rgba(178,76,99,0.06));
+            border: 1px solid rgba(109,74,168,0.18); }
+        .tesis-rules h4 { font-size: 14px; color: var(--violet); margin-bottom: 10px; }
+        .tesis-rules .rule-list { display: grid; gap: 8px; padding-left: 0; list-style: none; }
+        .tesis-rules .rule-item { display: flex; gap: 10px; align-items: start; padding: 10px 12px;
+            border-radius: 14px; background: rgba(255,255,255,0.72); border: 1px solid rgba(29,36,51,0.06); }
+        .tesis-rules .rule-icon { flex-shrink: 0; width: 28px; height: 28px; border-radius: 999px;
+            display: flex; align-items: center; justify-content: center; font-size: 14px; }
+        .tesis-rules .rule-icon.check { background: rgba(21,122,110,0.12); }
+        .tesis-rules .rule-icon.cross { background: rgba(178,76,99,0.12); }
+        .tesis-rules .rule-text { font-size: 12.5px; line-height: 1.6; color: var(--ink); }
+        .tesis-rules .rule-text strong { color: var(--violet); }
+        .tesis-example-box { margin-top: 14px; padding: 14px 16px; border-radius: 16px;
+            background: rgba(21,122,110,0.08); border-left: 4px solid var(--teal); }
+        .tesis-example-box .ex-label { font-size: 11px; font-weight: 800; text-transform: uppercase;
+            letter-spacing: 0.06em; margin-bottom: 6px; }
+        .tesis-example-box .ex-label.good { color: var(--teal); }
+        .tesis-example-box .ex-label.bad { color: var(--rose); }
+        .tesis-example-box .ex-text { font-size: 13px; line-height: 1.6; color: var(--ink); font-style: italic; }
+        .tesis-bad-box { margin-top: 10px; padding: 14px 16px; border-radius: 16px;
+            background: rgba(178,76,99,0.07); border-left: 4px solid var(--rose); }
+
+        /* Completion table for exercises */
+        .completion-table { width: 100%; border-collapse: separate; border-spacing: 0; border-radius: 18px;
+            overflow: hidden; border: 1px solid rgba(29,36,51,0.10); }
+        .completion-table thead th { padding: 14px 16px; background: linear-gradient(135deg, rgba(54,32,99,0.96), rgba(82,52,138,0.94));
+            color: #f8fafc; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em;
+            text-align: left; }
+        .completion-table tbody td { padding: 12px 14px; background: rgba(255,255,255,0.90);
+            border-top: 1px solid rgba(29,36,51,0.06); vertical-align: top; }
+        .completion-table tbody tr:nth-child(even) td { background: rgba(109,74,168,0.04); }
+        .completion-table .tesis-cell { font-size: 13px; font-weight: 700; color: var(--violet); line-height: 1.55;
+            min-width: 220px; }
+        .completion-table .write-cell { min-width: 180px; }
+        .completion-table .write-field { width: 100%; min-height: 60px; padding: 10px 12px; border-radius: 12px;
+            border: 1px solid rgba(29,36,51,0.10); background: rgba(255,255,255,0.95); color: var(--ink);
+            resize: vertical; line-height: 1.55; font-size: 12.5px; font-family: 'Sora', sans-serif; }
+        .completion-table .write-field:focus { outline: none; border-color: rgba(109,74,168,0.34);
+            box-shadow: 0 0 0 3px rgba(109,74,168,0.10); }
+        .completion-table .row-num { display: inline-flex; align-items: center; justify-content: center;
+            width: 24px; height: 24px; border-radius: 999px; background: var(--violet-soft); color: var(--violet);
+            font-size: 11px; font-weight: 800; margin-right: 8px; }
+        .sidebar { position: sticky; top: 92px; display: grid; gap: 16px; }
+        .side-card { padding: 20px; border-radius: var(--radius-lg); border: 1px solid var(--line);
+            background: rgba(255,253,248,0.86); box-shadow: var(--shadow); }
+        .side-card h3 { font-size: 14px; margin-bottom: 12px; }
+        .side-copy { font-size: 12px; line-height: 1.65; color: var(--ink-soft); margin-bottom: 14px; }
+        .side-action-row { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px; margin-bottom: 12px; }
+        .side-btn { border: none; border-radius: 14px; padding: 12px 14px; font-size: 12px; font-weight: 800;
+            cursor: pointer; transition: transform .18s ease, box-shadow .18s ease, opacity .18s ease; }
+        .side-btn.primary { background: linear-gradient(135deg, #362063, #6d4aa8); color: #fff;
+            box-shadow: 0 10px 24px rgba(54,32,99,0.18); }
+        .side-btn.secondary { background: rgba(54,32,99,0.08); color: var(--violet); border: 1px solid rgba(54,32,99,0.12); }
+        .side-btn:hover { transform: translateY(-1px); }
+        .side-btn:disabled { opacity: .48; cursor: not-allowed; transform: none; box-shadow: none; }
+        .side-status { font-size: 12px; line-height: 1.55; color: var(--ink-soft); }
+        .progress-bar { height: 12px; border-radius: 999px; background: rgba(29,36,51,0.08); overflow: hidden; margin-bottom: 8px; }
+        .progress-fill { width: 0%; height: 100%; border-radius: 999px;
+            background: linear-gradient(90deg, #362063, #6d4aa8, #c3872b); transition: width .28s ease; }
+        .progress-copy { display: flex; justify-content: space-between; gap: 12px; font-size: 12px; color: var(--ink-soft); margin-bottom: 16px; }
+        .milestone-list { display: grid; gap: 10px; }
+        .milestone { padding: 12px 14px; border-radius: 16px; background: rgba(255,255,255,0.78); border: 1px solid rgba(29,36,51,0.08); }
+        .milestone.done { background: rgba(21,122,110,0.08); border-color: rgba(21,122,110,0.18); }
+        .milestone strong { display: block; font-size: 13px; margin-bottom: 4px; }
+        .milestone span { font-size: 12px; line-height: 1.55; color: var(--ink-soft); }
+        .footer-note { max-width: 1220px; margin: 22px auto 0; padding: 14px 18px; border-radius: 18px;
+            background: rgba(255,253,248,0.78); border: 1px solid rgba(29,36,51,0.08); color: var(--ink-soft); font-size: 12px; line-height: 1.6; }
+        @media (max-width: 1100px) {
+            .page, .column-layout, .hero-grid, .focus-grid, .radar-grid, .ticket-grid { grid-template-columns: 1fr; }
+            .sidebar { position: static; }
+            .topbar-btn { margin-left: 0; }
+        }
+        @media (max-width: 720px) {
+            body { padding: 14px 12px 60px; }
+            .topbar, .hero, .section-body, .side-card { padding-left: 16px; padding-right: 16px; }
+            .section-head h2 { font-size: 24px; }
+            .article-shell h3 { font-size: 28px; }
+            .article-body p { font-size: 17px; }
+        }
+    </style>
+<script src="/estudiantes/js/simce-session-gate.js"></script>
+</head>
+<body>
+    <div class="topbar">
+        <span class="topbar-pill primary">Unidad 2 · Clase 2</span>
+        <span class="topbar-pill preview" id="sessionModePill">Vista previa local</span>
+        <div class="topbar-meta">
+            <span id="progressPill">0/8 avances</span>
+            <span id="scorePill">0/5 correctas</span>
+            <span>Tesis · argumentos · contraargumento · propósito</span>
+        </div>
+    </div>
+
+    <div class="page">
+        <div class="main-column">
+            <section class="panel hero">
+                <div class="eyebrow">Segundo paso del bloque argumentativo</div>
+                <div class="hero-grid">
+                    <div>
+                        <h1>Clase 2 · Tesis, Base, Garantía y Respaldo</h1>
+                        <p>Hoy aprendes a leer y construir un argumento usando las <strong>4 piezas del Modelo Toulmin</strong>: la <strong>Tesis</strong> (qué defiendes), la <strong>Base</strong> (tu primer porqué), la <strong>Garantía</strong> (el puente lógico) y el <strong>Respaldo</strong> (los datos que lo prueban). Identificarás cada pieza en un texto modelo y luego redactarás tu propio argumento paso a paso.</p>
+                        <div class="hero-tags">
+                            <span class="hero-tag">90 min en clase</span>
+                            <span class="hero-tag">4 piezas Toulmin</span>
+                            <span class="hero-tag">2 textos modelo</span>
+                            <span class="hero-tag">5 preguntas de análisis</span>
+                            <span class="hero-tag">Tabla de 5 tesis</span>
+                            <span class="hero-tag">Redacción guiada</span>
+                        </div>
+                        <div style="background-color: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.16); padding: 16px; border-radius: 16px; margin-top: 18px;">
+                            <strong style="color: #fde7c2; font-size: 13.5px; display: block; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em;">🚀 ¿Qué vas a hacer hoy?</strong>
+                            <ol style="margin: 0; padding-left: 20px; font-size: 13px; line-height: 1.7; color: #f1f5f9;">
+                                <li><strong style="color:#fff;">Aprende las 4 piezas Toulmin</strong> en las tarjetas de arriba (Tesis · Base · Garantía · Respaldo).</li>
+                                <li><strong style="color:#fff;">Identifica las 4 piezas</strong> en la columna modelo sobre el uso de la IA en el liceo.</li>
+                                <li><strong style="color:#fff;">Responde las 5 preguntas</strong> de análisis basándote en evidencia del texto.</li>
+                                <li><strong style="color:#fff;">Redacta tu propio argumento</strong> Toulmin de 4 pasos sobre eliminar las notas tradicionales.</li>
+                                <li><strong style="color:#fff;">Entrega</strong> usando los botones de la barra lateral derecha.</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <div class="status-banner" id="submittedBanner"></div>
+
+            <section class="panel">
+                <div class="section-body">
+                    <div class="section-head">
+                        <div>
+                            <div class="section-kicker">Modelo Toulmin</div>
+                            <h2>Las 4 piezas para sostener un argumento</h2>
+                            <p>Cualquier argumento sólido se arma con estas 4 piezas. Léelas con calma: cada tarjeta trae la definición y un ejemplo real extraído de la columna sobre la IA que leerás más abajo. Luego vas a identificarlas en el texto y redactar las tuyas.</p>
+                        </div>
+                        <div class="section-side-note">Tesis · Base · Garantía · Respaldo</div>
+                    </div>
+                    <div class="focus-grid">
+                        <article class="focus-card" data-tone="violet">
+                            <span class="tag">📌 1 · Tesis</span>
+                            <h3>Tu opinión polémica que debes defender</h3>
+                            <p class="focus-def">La tesis es una <strong>idea polémica</strong> que genera debate y que tú debes defender con argumentos. Es una <strong>opinión</strong>, no un hecho comprobado. <strong>Nunca puede ser una pregunta</strong> y siempre debe expresarse como una afirmación clara que otros podrían rechazar.</p>
+                            <div class="focus-example"><strong>Ejemplo:</strong> "La selección de Brasil actual es una de las peores de su historia."</div>
+                        </article>
+                        <article class="focus-card" data-tone="navy">
+                            <span class="tag">🎯 2 · Base</span>
+                            <h3>El porqué directo</h3>
+                            <p class="focus-def">El argumento principal que sostiene la tesis. Es la razón más fuerte e inmediata: el "porque..." que justifica tu postura.</p>
+                            <div class="focus-example"><strong>Ejemplo:</strong> "Porque en los últimos tres mundiales Brasil no ha logrado pasar de cuartos de final, siendo eliminada por equipos a los que históricamente superaba."</div>
+                        </article>
+                        <article class="focus-card" data-tone="teal">
+                            <span class="tag">🔗 3 · Garantía</span>
+                            <h3>El puente lógico</h3>
+                            <p class="focus-def">La regla o principio que conecta la Base con la Tesis. Explica <em>por qué</em> ese porqué realmente prueba la postura.</p>
+                            <div class="focus-example"><strong>Ejemplo:</strong> "El rendimiento en los mundiales es el indicador más fiable de la calidad de una selección, ya que es la competencia más exigente del fútbol y donde juegan los mejores del mundo."</div>
+                        </article>
+                        <article class="focus-card" data-tone="rose">
+                            <span class="tag">📊 4 · Respaldo</span>
+                            <h3>Los datos reales</h3>
+                            <p class="focus-def">Las pruebas empíricas: cifras, estudios, citas de autoridad. Lo que demuestra con datos que tu Base es cierta.</p>
+                            <div class="focus-example"><strong>Ejemplo:</strong> "Brasil tiene 5 títulos mundiales (1958, 1962, 1970, 1994, 2002), pero desde 2006 no llega a una semifinal. En 2014 sufrió el histórico 7-1 ante Alemania y en 2022 fue eliminada en cuartos por Croacia."</div>
+                        </article>
+                    </div>
+
+                    <!-- Reglas de la Tesis: qué es y qué NO es -->
+                    <div class="tesis-rules">
+                        <h4>⚡ ¿Qué es y qué NO es una tesis?</h4>
+                        <ul class="rule-list">
+                            <li class="rule-item">
+                                <span class="rule-icon check">✅</span>
+                                <div class="rule-text"><strong>Es una OPINIÓN polémica:</strong> algo que genera debate y que no todos aceptan. Alguien podría estar en desacuerdo contigo.</div>
+                            </li>
+                            <li class="rule-item">
+                                <span class="rule-icon check">✅</span>
+                                <div class="rule-text"><strong>Se expresa como AFIRMACIÓN:</strong> una frase declarativa con sujeto y predicado. Nunca como pregunta.</div>
+                            </li>
+                            <li class="rule-item">
+                                <span class="rule-icon check">✅</span>
+                                <div class="rule-text"><strong>Debe ser DEFENDIBLE:</strong> necesitas poder respaldarla con razones, datos y lógica. Si no puedes argumentarla, no sirve como tesis.</div>
+                            </li>
+                            <li class="rule-item">
+                                <span class="rule-icon cross">❌</span>
+                                <div class="rule-text"><strong>NO es una pregunta:</strong> "¿Es la selección de Brasil la peor de su historia?" → Esto NO es una tesis, es una pregunta.</div>
+                            </li>
+                            <li class="rule-item">
+                                <span class="rule-icon cross">❌</span>
+                                <div class="rule-text"><strong>NO es un hecho comprobado:</strong> "Brasil tiene 5 copas del mundo" → Esto es un dato, no una opinión. Nadie puede discutirlo.</div>
+                            </li>
+                            <li class="rule-item">
+                                <span class="rule-icon cross">❌</span>
+                                <div class="rule-text"><strong>NO es el tema general:</strong> "La selección de Brasil" → Esto es solo el tema, no dice nada que se pueda debatir.</div>
+                            </li>
+                        </ul>
+                        <div class="tesis-example-box">
+                            <div class="ex-label good">✅ TESIS CORRECTA</div>
+                            <div class="ex-text">"La selección de Brasil actual es una de las peores de su historia."</div>
+                        </div>
+                        <div class="tesis-bad-box">
+                            <div class="ex-label bad">❌ ESTO NO ES TESIS</div>
+                            <div class="ex-text">"¿Será que la selección de Brasil ya no es tan buena?" → Es pregunta, no afirmación.</div>
+                        </div>
+                        <div class="tesis-bad-box">
+                            <div class="ex-label bad">❌ ESTO NO ES TESIS</div>
+                            <div class="ex-text">"Brasil ha ganado 5 mundiales." → Es un hecho, no una opinión.</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="panel">
+                <div class="section-body">
+                    <div class="section-head">
+                        <div>
+                            <div class="section-kicker">Texto modelo</div>
+                            <h2>Identifica las 4 piezas Toulmin en esta columna</h2>
+                            <p>Lee la columna completa con atención. Mientras lees, marca mentalmente (o subraya en papel) dónde aparece cada pieza: <strong>Tesis</strong> (párrafo 1), <strong>Base</strong> (párrafo 2), <strong>Garantía</strong> (párrafo 9) y <strong>Respaldo</strong> (párrafo 8). Después responderás 5 preguntas sobre el texto.</p>
+                        </div>
+                        <div class="section-side-note">10 párrafos · ~1.250 palabras</div>
+                    </div>
+                    <div class="column-layout">
+                        <article class="article-shell">
+                            <h3>La IA no estudia por ti, pero puede enseñarte a estudiar</h3>
+                            <p class="article-deck">Los chatbots educativos se instalaron en las salas antes que cualquier reglamento. La discusión ya no es si los estudiantes los usarán; es cómo evitar que reemplacen el trabajo cognitivo que la escuela debe enseñar.</p>
+                            <div class="article-body">
+                                <p><span class="p-num">1</span>En casi cualquier curso de segundo medio de nuestro país aparece hoy con alarmante frecuencia la misma escena: el estudiante abre el chatbot, copia la consigna dada por el profesor y, en menos de tres segundos, recibe un texto pulido que luego entrega como propio. Frente a esta imagen de vaciamiento intelectual, las respuestas institucionales suelen oscilar de forma pendular entre dos extremos igualmente nocivos: la prohibición absoluta de cariz punitivo, y la celebración incondicional de los tecnófilos que asumen que toda innovación tecnológica es intrínsecamente educativa. Sostengo que ninguna de las dos sirve: la inteligencia artificial generativa debería incorporarse a la sala de clases como herramienta de aprendizaje guiado y mediación cognitiva, no como sustituto del discernimiento reflexivo que la enseñanza formal tiene la misión ineludible de fundar.</p>
+                                <p><span class="p-num">2</span>El motivo principal que sostiene esta postura es de orden estrictamente pedagógico y constituye la base de la discusión. Aprender a argumentar, interpretar un texto literario complejo o asimilar dinámicas de abstracción matemática requiere inexorablemente demorarse en la dificultad, convivir con el error y ensayar estrategias de corrección sucesivas. Cuando un modelo de lenguaje automatizado proporciona una respuesta inmediata y gramaticalmente impecable, esa fricción deliberada desaparece de golpe y, en consecuencia, se destruye la operación mental que justifica la asignación pedagógica. El estudiante que recurre sistemáticamente al atajo tecnológico obtiene, en efecto, un producto evaluable satisfactorio, pero pierde de manera definitiva el proceso del pensamiento profundo que le habría permitido asimilar ese conocimiento.</p>
+                                <p><span class="p-num">3</span>En este sentido, la reificación del resultado instrumental en desmedro de la mediación conceptual genera un fenómeno de descalificación o desentrenamiento mental en el mediano plazo. La escuela no evalúa para acopiar textos o carpetas correctas, sino para transformar las estructuras neuronales y el andamiaje lógico de los adolescentes. Si aceptamos con pasividad pedagógica que los aparatos resuelvan toda tensión lógica por el estudiante, estaremos consolidando una simulación educativa peligrosa. En lugar de formar ciudadanos críticos con voces propias y autoría razonada, la institución escolar corre el riesgo de delegar el intelecto en algoritmos privados y entrenados bajo sesgos que el alumno ni siquiera alcanza a sospechar.</p>
+                                <p><span class="p-num">4</span>No se puede soslayar un segundo argumento estrechamente vinculado a las brechas socioeconómicas y la asimetría informativa de la alfabetización digital. Aquellos estudiantes que emplean la herramienta simplemente como una máquina de dictados sin cuestionar las fuentes ni contrastar los datos, sufren un severo retroceso en sus capacidades de discriminación epistemológica. Se acostumbran a una docilidad de lectura que acepta cualquier alucinación conceptual de los algoritmos como una verdad revelada. Por el contrario, un uso crítico exige que el alumno asuma el rol de evaluador, detectando inconsistencias lógicas en el output del programa y forzando contrastaciones empíricas razonadas.</p>
+                                <p><span class="p-num">5</span>Para garantizar la validez de este enfoque dialogante, los docentes debemos entender que la IA funciona de forma diametralmente opuesta según sea el contrato de uso. Si se le pide al chatbot el resultado final (por ejemplo: "escribe la tesis de este autor"), el nivel cognitivo ejercitado por el estudiante se reduce a cero. En cambio, si la consigna se reestructura pedagógicamente para obligar a un diálogo de andamiaje socrático (pidiendo al bot contraejemplos de una tesis previa, comparando sus sesgos o solicitando que identifique debilidades lógicas en un borrador propio), la dificultad cognitiva se duplica y el aprendizaje se potencia.</p>
+                                <p><span class="p-num">6</span>Algunos defensores de la ortodoxia pedagógica sostienen que prohibir radicalmente la herramienta en el liceo es la única manera viable de proteger la integridad del proceso académico de los estudiantes. Quienes promueven este veto absoluto sugieren que solo el retorno nostálgico al lápiz y papel presencial impide el fraude. Aunque este grupo de docentes y directivos comparte sin duda una preocupación legítima sobre la erosión del esfuerzo intelectual, su propuesta ignora por completo la abrumadora realidad del ecosistema juvenil.</p>
+                                <p><span class="p-num">7</span>Esa salida prohibitiva elude el hecho práctico de que los estudiantes ya utilizan y continuarán utilizando estas herramientas de manera masiva fuera de los límites de la sala de clases. Un veto institucional no erradica su uso; simplemente desplaza la IA hacia los espacios domésticos y privados donde la escuela carece de toda posibilidad de orientar, andamiar o modelar éticamente sus alcances. Por consiguiente, pretender anular una tecnología disponible equivale a renunciar al rol de la escuela como espacio de socialización de los hábitos de pensamiento críticos. Conviene, por ende, superar la fase de la vigilancia punitiva y migrar resueltamente hacia un modelo de integración guiada con pautas transparentes de uso y exclusión.</p>
+                                <p><span class="p-num">8</span>La solidez empírica de esta alternativa queda registrada en investigaciones de campo sistemáticas de nuestro entorno escolar. En un estudio piloto llevado a cabo por el departamento de evaluación curricular en tres establecimientos subvencionados de nuestra provincia durante el año 2025, los estudiantes que recibieron un protocolo interactivo en el cual utilizaban asistentes virtuales como tutores dialécticos socráticos (solicitando pautas de auto-corrección, contrastes conceptuales y explicaciones analíticas paso a paso), obtuvieron progresos significativamente mayores, superando en 18 puntos la media de la prueba regional simulada. En sentido opuesto, los estudiantes pertenecientes al grupo de control, quienes utilizaron el chatbot meramente para copiar y pegar respuestas enteras en sus cuestionarios, mostraron un declive promedio en sus habilidades argumentativas reales o simplemente se estancaron. La variable crítica no residió en la presencia de la máquina, sino en la naturaleza de la mediación exigida en el contrato didáctico.</p>
+                                <p><span class="p-num">9</span>Este hallazgo fáctico activa un nexo lógico indudable que sirve como garantía fundamental de nuestro argumento: el aprendizaje significativo de la escritura y la argumentación no se produce por la mera producción formal del código lingüístico final, sino por la interacción metalingüística que ocurre mientras el sujeto duda, planifica, confronta y reformula su pensamiento. Una inteligencia artificial generativa programada o guiada para desafiar las premisas lógicas de un joven, en lugar de condescender con soluciones llanas, cumple la función exacta de un contra-interrogador de alto nivel pedagógico. La garantía del razonamiento estriba precisamente en mantener encendida la chispa de la contradicción intelectual mediante el andamiaje crítico cooperativo.</p>
+                                <p><span class="p-num">10</span>En otras palabras, la pregunta verdaderamente urgente que la escuela contemporánea debe formularse no es si los estudiantes tienen permitido abrir una ventana del navegador, sino con qué rigor y para qué propósitos cognitivos se les enseña a interactuar con ella. La reforma curricular que urge no pasa por renovar el blindaje reglamentario del siglo anterior, sino por diseñar guías con criterios de evaluación tan exigentes que ningún chatbot pueda resolverlos sin el esfuerzo activo, el juicio crítico y la voz insustituible del estudiante que está aprendiendo.</p>
+                            </div>
+                        </article>
+                    </div>
+                </div>
+            </section>
+
+            <section class="panel">
+                <div class="section-body">
+                    <div class="section-head">
+                        <div>
+                            <div class="section-kicker">Texto 2 · Lectura complementaria</div>
+                            <h2>Segundo texto: identifica tesis, base, garantía y respaldo</h2>
+                            <p>Lee esta segunda columna de opinión con atención. Aplica lo que aprendiste: busca la <strong>Tesis</strong> (la opinión polémica que defiende el autor), la <strong>Base</strong> (su porqué directo), la <strong>Garantía</strong> (el puente lógico) y el <strong>Respaldo</strong> (los datos que lo prueban).</p>
+                        </div>
+                        <div class="section-side-note">6 párrafos · ~600 palabras</div>
+                    </div>
+                    <div class="column-layout">
+                        <article class="article-shell">
+                            <h3>El recreo que desapareció dentro de una pantalla</h3>
+                            <p class="article-deck">Las redes sociales prometen conexión, pero el precio que pagan los adolescentes es su bienestar emocional. La evidencia ya no admite ambigüedades: necesitamos regular, no prohibir.</p>
+                            <div class="article-body">
+                                <p><span class="p-num">1</span>Cada vez que un estudiante de enseñanza media desbloquea su teléfono en el recreo, ingresa a un ecosistema diseñado con precisión quirúrgica para capturar su atención y monetizar cada segundo de ella. Lo que aparece como una herramienta inocente de comunicación es, en realidad, una máquina de estimulación dopamínica continua que compite directamente con el descanso físico, la socialización cara a cara y la recuperación cognitiva que el recreo debería ofrecer. Las redes sociales, tal como están diseñadas hoy, representan un riesgo concreto para la salud mental de los adolescentes y deberían regularse con protocolos educativos claros en cada establecimiento escolar.</p>
+                                <p><span class="p-num">2</span>La razón principal de esta postura es que los algoritmos de las plataformas están optimizados para maximizar el tiempo de permanencia, no para proteger el bienestar del usuario. Cada scroll infinito, cada notificación y cada sistema de likes funciona como un mecanismo de refuerzo intermitente que genera dependencia conductual. Un adolescente que revisa su teléfono 96 veces al día —cifra promedio reportada por estudios recientes— no lo hace por elección libre, sino por un diseño intencional que explota la vulnerabilidad neurológica de un cerebro que aún no ha terminado de desarrollar su corteza prefrontal.</p>
+                                <p><span class="p-num">3</span>El puente lógico que conecta este fenómeno con la necesidad de regulación escolar es directo: si la exposición prolongada a estímulos digitales diseñados para generar adicción reduce la capacidad de concentración, aumenta la ansiedad social y deteriora la calidad del sueño, entonces la escuela —como institución formadora de hábitos— tiene la obligación ética de intervenir en el espacio donde esa exposición ocurre de manera más intensa y menos supervisada: el recreo y los tiempos muertos entre clases.</p>
+                                <p><span class="p-num">4</span>Los datos respaldan esta urgencia de manera contundente. Según el informe del Surgeon General de Estados Unidos publicado en 2023, los adolescentes que dedican más de tres horas diarias a redes sociales duplican su riesgo de desarrollar síntomas de depresión y ansiedad. En Chile, la Encuesta Nacional de Salud Mental Adolescente de 2024 reveló que el 43% de los estudiantes entre 14 y 17 años reporta sentirse peor emocionalmente después de usar redes sociales, y un 28% reconoce que les cuesta concentrarse en clases tras períodos de uso prolongado en los recreos.</p>
+                                <p><span class="p-num">5</span>Quienes objetan cualquier forma de regulación argumentan que restringir el acceso al teléfono en el colegio vulnera la autonomía del estudiante y constituye una medida paternalista. Si bien la preocupación por la libertad individual es legítima, este argumento ignora que la autonomía genuina requiere información y capacidad de discernimiento, precisamente las herramientas que la escuela debe proveer. Regular no significa confiscar dispositivos: significa educar sobre los mecanismos de manipulación, establecer espacios libres de pantallas y modelar alternativas de descanso que efectivamente restauren la energía cognitiva.</p>
+                                <p><span class="p-num">6</span>En definitiva, la cuestión no es si los adolescentes van a usar redes sociales —eso es inevitable y en muchos sentidos deseable—, sino si la escuela va a asumir su rol de mediadora crítica o va a dejar que los algoritmos de Silicon Valley definan cómo descansan, socializan y procesan sus emociones nuestros estudiantes. El recreo debería ser un espacio de recuperación, no un segundo turno de estimulación digital.</p>
+                            </div>
+                        </article>
+                    </div>
+                </div>
+            </section>
+
+            <section class="panel">
+                <div class="section-body">
+                    <div class="section-head">
+                        <div>
+                            <div class="section-kicker">Ejercicio práctico · Completar la tabla</div>
+                            <h2>5 tesis: completa la Base, Garantía y Respaldo</h2>
+                            <p>A continuación te entregamos <strong>5 tesis</strong> (opiniones polémicas). Tu trabajo es completar para cada una la <strong>Base</strong> (el porqué directo), la <strong>Garantía</strong> (el puente lógico) y el <strong>Respaldo</strong> (datos, cifras o citas que lo prueben). Escribe directamente en cada celda.</p>
+                        </div>
+                        <div class="section-side-note">5 tesis · 15 respuestas</div>
+                    </div>
+
+                    <div style="overflow-x: auto; margin-top: 4px;">
+                        <table class="completion-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 5%;">#</th>
+                                    <th style="width: 25%;">📌 Tesis (dada)</th>
+                                    <th style="width: 23%;">🎯 Base (completa tú)</th>
+                                    <th style="width: 23%;">🔗 Garantía (completa tú)</th>
+                                    <th style="width: 24%;">📊 Respaldo (completa tú)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><span class="row-num">1</span></td>
+                                    <td class="tesis-cell">Los uniformes escolares deberían eliminarse porque limitan la identidad de los estudiantes.</td>
+                                    <td class="write-cell"><textarea class="write-field" id="tableBase1" placeholder="¿Por qué los uniformes limitan la identidad? Escribe tu razón principal..."></textarea></td>
+                                    <td class="write-cell"><textarea class="write-field" id="tableGarantia1" placeholder="¿Qué principio conecta tu Base con la Tesis?"></textarea></td>
+                                    <td class="write-cell"><textarea class="write-field" id="tableRespaldo1" placeholder="¿Qué dato, estudio o cifra lo demuestra?"></textarea></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="row-num">2</span></td>
+                                    <td class="tesis-cell">El reggaetón actual es más dañino que beneficioso para los adolescentes.</td>
+                                    <td class="write-cell"><textarea class="write-field" id="tableBase2" placeholder="¿Por qué sería dañino? Tu razón directa..."></textarea></td>
+                                    <td class="write-cell"><textarea class="write-field" id="tableGarantia2" placeholder="¿Qué principio conecta esa razón con la Tesis?"></textarea></td>
+                                    <td class="write-cell"><textarea class="write-field" id="tableRespaldo2" placeholder="¿Qué dato o evidencia lo respalda?"></textarea></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="row-num">3</span></td>
+                                    <td class="tesis-cell">Las pruebas estandarizadas como la PAES no miden realmente lo que sabe un estudiante.</td>
+                                    <td class="write-cell"><textarea class="write-field" id="tableBase3" placeholder="¿Por qué no medirían lo real? Tu porqué..."></textarea></td>
+                                    <td class="write-cell"><textarea class="write-field" id="tableGarantia3" placeholder="¿Qué regla o principio conecta la Base con la Tesis?"></textarea></td>
+                                    <td class="write-cell"><textarea class="write-field" id="tableRespaldo3" placeholder="¿Qué cifra, estudio o cita lo prueba?"></textarea></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="row-num">4</span></td>
+                                    <td class="tesis-cell">Los videojuegos desarrollan más habilidades cognitivas que la lectura tradicional.</td>
+                                    <td class="write-cell"><textarea class="write-field" id="tableBase4" placeholder="¿Por qué los videojuegos serían mejores? Tu razón..."></textarea></td>
+                                    <td class="write-cell"><textarea class="write-field" id="tableGarantia4" placeholder="¿Qué principio lógico une la Base con la Tesis?"></textarea></td>
+                                    <td class="write-cell"><textarea class="write-field" id="tableRespaldo4" placeholder="¿Qué dato empírico lo respalda?"></textarea></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="row-num">5</span></td>
+                                    <td class="tesis-cell">El celular debería estar prohibido dentro de la sala de clases durante toda la jornada.</td>
+                                    <td class="write-cell"><textarea class="write-field" id="tableBase5" placeholder="¿Por qué debería prohibirse? Tu porqué directo..."></textarea></td>
+                                    <td class="write-cell"><textarea class="write-field" id="tableGarantia5" placeholder="¿Qué garantía conecta la Base con la Tesis?"></textarea></td>
+                                    <td class="write-cell"><textarea class="write-field" id="tableRespaldo5" placeholder="¿Qué dato concreto lo demuestra?"></textarea></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="ticket-note" style="margin-top: 16px;">📝 Recuerda: la Base es el «porque...» directo. La Garantía es el principio que explica por qué esa razón prueba la tesis. El Respaldo son datos duros: cifras, estudios, citas de expertos.</div>
+                </div>
+            </section>
+
+            <section class="panel">
+                <div class="section-body">
+                    <div class="section-head">
+                        <div>
+                            <div class="section-kicker">Práctica</div>
+                            <h2>Preguntas de análisis crítico y evaluación de argumentos</h2>
+                            <p>Las opciones de esta sección evalúan tu capacidad de interpretar, inferir y evaluar la validez de los argumentos expuestos. Fundamenta tu postura en la propuesta formal del autor.</p>
+                        </div>
+                        <div class="section-side-note">Respuesta por evidencia</div>
+                    </div>
+                    <div class="anti-guess">
+                        <strong>Guía de análisis reflexivo</strong>
+                        <p>Antes de marcar, revisa este checklist mental para cada pregunta:</p>
+                        <ul>
+                            <li>¿He identificado la <strong>evidencia textual exacta</strong> en la columna que respalda mi opción seleccionada?</li>
+                            <li>¿Puedo justificar de manera razonable el descarte de las demás opciones basándome en el texto?</li>
+                            <li>¿Evito supuestos o interpretaciones personales que no estén sustentados en las líneas del escrito?</li>
+                            <li>¿He verificado que las palabras de la opción guarden el mismo peso discursivo que las intenciones expresadas por el enunciador?</li>
+                        </ul>
+                    </div>
+                    <div class="question-list" id="questionList" style="margin-top:18px;"></div>
+                </div>
+            </section>
+
+            <section class="panel">
+                <div class="section-body">
+                    <div class="section-head">
+                        <div>
+                            <div class="section-kicker">Práctica de redacción · Modelo Toulmin</div>
+                            <h2>Construye tu propio argumento en 4 pasos</h2>
+                            <p><strong>Tema:</strong> ¿Debería el liceo eliminar las notas tradicionales (1.0 a 7.0) y reemplazarlas solo por informes escritos y carpetas de progreso?</p>
+                            <p style="margin-top:8px;">Aplica las mismas 4 piezas que identificaste en el texto modelo. Sigue el orden: primero tu postura, luego el porqué directo, después el puente lógico y finalmente los datos que lo prueban.</p>
+                        </div>
+                        <div class="section-side-note">4 pasos · 1 argumento</div>
+                    </div>
+
+                    <div class="ticket-grid">
+                        <article class="ticket-card">
+                            <h3>📌 Paso 1 · Tesis</h3>
+                            <p>Tu postura clara y debatible en una sola frase. ¿Estás a favor o en contra de eliminar las notas?</p>
+                            <textarea class="ticket-field" id="thesisContext1" placeholder="Ej: Las notas numéricas tradicionales deben reemplazarse por informes escritos porque... / No deben eliminarse porque..."></textarea>
+                        </article>
+                        <article class="ticket-card">
+                            <h3>🎯 Paso 2 · Base</h3>
+                            <p>El porqué directo que sostiene tu Tesis. La razón principal de tu opinión.</p>
+                            <textarea class="ticket-field" id="thesisContext2" placeholder="Ej: Porque las notas numéricas no reflejan el aprendizaje real, solo miden memoria a corto plazo y generan competencia que distrae del proceso..."></textarea>
+                        </article>
+                        <article class="ticket-card">
+                            <h3>🔗 Paso 3 · Garantía</h3>
+                            <p>El puente lógico: explica por qué tu Base realmente prueba tu Tesis.</p>
+                            <textarea class="ticket-field" id="thesisContext3" placeholder="Ej: Cuando un estudiante recibe comentarios escritos sobre cómo mejorar en lugar de un dígito, se enfoca en superar su dificultad real y no en memorizar para la prueba..."></textarea>
+                        </article>
+                        <article class="ticket-card">
+                            <h3>📊 Paso 4 · Respaldo</h3>
+                            <p>Un dato, estudio o cita de autoridad (MINEDUC, OCDE, universidad) que demuestre empíricamente tu Base.</p>
+                            <textarea class="ticket-field" id="thesisContext4" placeholder="Ej: Según un estudio piloto de la Universidad Católica en 2024, los colegios con evaluación formativa por portafolio redujeron el estrés escolar en un 40%..."></textarea>
+                        </article>
+                    </div>
+                </div>
+            </section>
+
+            <section class="panel">
+                <div class="section-body">
+                    <div class="section-head">
+                        <div>
+                            <div class="section-kicker">Ticket de salida</div>
+                            <h2>Cierre breve para fijar los conceptos clave</h2>
+                            <p>El cierre articula los tres focos de la sesión: propósito comunicativo del texto base, jerarquía de argumentos identificada y un marcador discursivo elegido con su función exacta.</p>
+                        </div>
+                        <div class="section-side-note">3 focos para llevarse</div>
+                    </div>
+                    <div class="ticket-grid">
+                        <article class="ticket-card">
+                            <h3>Propósito comunicativo</h3>
+                            <p>En una oración: ¿qué busca lograr la columna sobre la IA en el lector? Distingue entre informar, convencer, criticar o invitar a un cambio.</p>
+                            <textarea class="ticket-field" id="ticketTesis" placeholder="Ejemplo: 'El propósito es convencer a... de que...'"></textarea>
+                        </article>
+                        <article class="ticket-card">
+                            <h3>Jerarquía de argumentos</h3>
+                            <p>Indica cuál es el argumento principal y cuál es uno secundario. Justifica brevemente la jerarquía con una pista textual del texto base.</p>
+                            <textarea class="ticket-field" id="ticketContra" placeholder="Argumento principal: ... | Secundario: ... | Pista textual: ..."></textarea>
+                        </article>
+                        <article class="ticket-card">
+                            <h3>Marcador con función</h3>
+                            <p>Elige un marcador del texto base ("aunque", "sin embargo", "por eso", "en otras palabras") y nombra con precisión su función (concesión, refutación, consecuencia o reformulación).</p>
+                            <textarea class="ticket-field" id="ticketMarkers" placeholder="Marcador: ... | Función: ... | Dónde aparece: párrafo..."></textarea>
+                        </article>
+                    </div>
+                    <div class="ticket-note" id="ticketNote">Vista previa local: estas respuestas se guardan solo en este navegador para que puedas revisar la experiencia sin subirla todavía a la plataforma.</div>
+                </div>
+            </section>
+        </div>
+
+        <aside class="sidebar">
+            <section class="side-card">
+                <h3>Estado de la sesión</h3>
+                <p class="side-copy" id="sessionStatusCopy">Vista previa local: puedes revisar la experiencia completa, pero la clase no se envía todavía a la plataforma.</p>
+                <div class="side-action-row">
+                    <button type="button" class="side-btn secondary" id="saveGuideBtn">Guardar avance</button>
+                    <button type="button" class="side-btn primary" id="submitGuide" disabled>Entregar clase</button>
+                </div>
+                <div class="side-status" id="sessionSaveStatus" role="status" aria-live="polite">Sin cambios pendientes.</div>
+            </section>
+
+            <section class="side-card">
+                <h3>Progreso de la revisión</h3>
+                <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+                <div class="progress-copy">
+                    <span id="progressCopy">0 de 8 avances completados</span>
+                    <span id="accuracyCopy">0 correctas</span>
+                </div>
+                <div class="milestone-list">
+                    <div class="milestone" id="msQuestions">
+                        <strong>Responder 5 preguntas críticas</strong>
+                        <span>Análisis del texto modelo con evidencia textual.</span>
+                    </div>
+                    <div class="milestone" id="msToulmin">
+                        <strong>Redactar argumento Toulmin (4 pasos)</strong>
+                        <span>Tesis · Base · Garantía · Respaldo sobre el tema de notas.</span>
+                    </div>
+                    <div class="milestone" id="msThesis">
+                        <strong>Cierre · Propósito comunicativo</strong>
+                        <span>Distingue informar, convencer, criticar o invitar a un cambio.</span>
+                    </div>
+                    <div class="milestone" id="msCounter">
+                        <strong>Cierre · Jerarquía de argumentos</strong>
+                        <span>Diferencia principal y secundario con pista textual.</span>
+                    </div>
+                    <div class="milestone" id="msMarkers">
+                        <strong>Cierre · Marcador con función</strong>
+                        <span>Concesión, refutación, consecuencia o reformulación.</span>
+                    </div>
+                </div>
+            </section>
+        </aside>
+    </div>
+
+    <div class="footer-note" id="footerNote">Esta sesión continúa la Clase 1 de la Unidad 2 y se enlaza con la planificación LIRMI Clase 3 del bloque mayo-junio: tesis, argumentos, contraargumentos y marcadores discursivos en columnas de opinión.</div>
+
+    <script src="js/security-protection.js"></script>
+    <script src="js/avatar-levels.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+    <script src="js/forced-refresh.js"></script>
+    <script>
+        const FIREBASE_CONFIG = {
+            apiKey: "AIzaSyCuDQ_iHDHmTd8bPeqUbsXQqdxw2SObt8w",
+            authDomain: "estudiacest.firebaseapp.com",
+            databaseURL: "https://estudiacest-default-rtdb.firebaseio.com",
+            projectId: "estudiacest",
+            storageBucket: "estudiacest.firebasestorage.app",
+            messagingSenderId: "999002169815",
+            appId: "1:999002169815:web:51203237bc77c2e74deb92"
+        };
+        if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+        const auth = firebase.auth();
+        auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+        const db = firebase.database();
+        const BASE = 'plataforma_estudiantes';
+        const SESSION_ID = 'sesion-u2-2';
+        const STORAGE_KEY = 'nm2_u2_s2_tesis_argumentos_preview';
+        const SHARED_LOGIN_URL = '/lecturas/?next=' + encodeURIComponent('/estudiantes/guia-u2-s2-tesis-argumentos.html');
+        const IS_LOCAL_PREVIEW = window.location.protocol === 'file:';
+        const AUTOSAVE_DELAY = 4000;
+        initStudentForcedRefresh({ auth, db, base: BASE });
+
+        // Configuración y definición de las preguntas de la experiencia:
+        // - Cada ítem cuenta con alternativas plausibles basadas en la lectura de la columna.
+        // - Se detalla una justificación analítica en el feedback de manera pedagógica.
+        // - Cada clave ofrece una cita textual de respaldo para el estudiante
+        const QUESTIONS = [
+            {
+                id: 'q1',
+                type: 'propósito',
+                stem: '¿Cuál es el propósito comunicativo primordial que persigue el autor a lo largo de la columna recién leída?',
+                options: [
+                    { letter: 'A', text: 'Persuadir a la comunidad liceana para integrar la IA generativa de forma crítica y guiada, rechazando tanto el veto absoluto como la adopción ingenua.' },
+                    { letter: 'B', text: 'Exponer de manera neutral los riesgos de adicción digital y dependencia cognitiva que amenazan a los estudiantes de educación media.' },
+                    { letter: 'C', text: 'Documentar pormenorizadamente los múltiples sesgos algorítmicos e ideológicos que portan los chatbots creados por empresas privadas.' },
+                    { letter: 'D', text: 'Denunciar penalmente a los establecimientos subvencionados que continúan aplicando reglamentos prohibitivos obsoletos del siglo pasado.' }
+                ],
+                correct: 'A',
+                feedback: {
+                    A: 'Correcta. El texto busca persuadir activamente hacia una postura de mediación intermedia: "la inteligencia artificial generativa debería incorporarse a la sala de clases como herramienta de aprendizaje guiado v mediación cognitiva, no como sustituto del razonamiento..." (párrafo 1) y concluye reiterando esa necesidad transformadora en el párrafo 10.',
+                    B: 'No es correcta. Falla por sobregeneralización y cambio de foco: si bien aborda los riesgos cognitivos en el párrafo 2, no es un texto expositivo neutral sobre adicción digital, sino una columna de opinión argumentativa.',
+                    C: 'No es correcta. Falla por cambio de foco: menciona tangencialmente "algoritmos privados y entrenados bajo sesgos" (párrafo 3) únicamente como apoyo colateral, no como el objeto o propósito central del escrito.',
+                    D: 'No es correcta. Falla por invención plausible: el autor utiliza un tono académico y crítico para proponer un cambio, mas en ningún caso realiza denuncias judiciales o de orden punitivo contra colegios.'
+                },
+                evidence: 'Evidencia textual: "Sostengo que ninguna de las dos sirve: la inteligencia artificial generativa debería incorporarse a la sala de clases como herramienta de aprendizaje guiado..." (Párrafo 1).'
+            },
+            {
+                id: 'q2',
+                type: 'jerarquía',
+                stem: 'Al analizar la estructura de la columna, ¿cuál de los siguientes enunciados constituye el argumento principal que sostiene la tesis del autor?',
+                options: [
+                    { letter: 'A', text: 'La evidencia de que los estudiantes ya acceden de forma masiva a la inteligencia artificial en sus hogares fuera del control escolar.' },
+                    { letter: 'B', text: 'La existencia de un preocupante retroceso epistemológico en aquellos alumnos que asumen toda respuesta automatizada como verdad absoluta.' },
+                    { letter: 'C', text: 'El hecho de que la inmediatez del chatbot suprime la dificultad cognitiva y la demora reflexiva que posibilitan el aprendizaje genuino.' },
+                    { letter: 'D', text: 'El diseño innovador de pautas de evaluación de un alto nivel de exigencia que ningún robot conversacional sea capaz de superar sin esfuerzo.' }
+                ],
+                correct: 'C',
+                feedback: {
+                    A: 'No es correcta. Falla por jerarquización incorrecta: que los jóvenes usen la IA en casa es un dato de diagnóstico para refutar la prohibición (párrafo 7), no el argumento pedagógico fundamental del texto.',
+                    B: 'No es correcta. Falla por literalización forzada: este punto se describe como consecuencia colateral del mal uso en el párrafo 4, operando como un soporte secundario dentro de la línea interpretativa.',
+                    C: 'Correcta. El autor sitúa explícitamente este razonamiento como el pilar de su postura: "El motivo principal que sostiene esta postura es de orden estrictamente pedagógico... la demora desaparece y, en consecuencia, se destruye la operación mental que justifica la asignación" (párrafo 2).',
+                    D: 'No es correcta. Es una propuesta procedimental o conclusión que se expone al final del texto (párrafo 10) para operativizar la tesis, no el porqué de la tesis.'
+                },
+                evidence: 'Evidencia textual: "El motivo principal que sostiene esta postura es de orden estrictamente pedagógico... Cuando un modelo de lenguaje proporciona una respuesta inmediata, esa fricción deliberada desaparece" (Párrafo 2).'
+            },
+            {
+                id: 'q3',
+                type: 'refutación',
+                stem: 'En los párrafos 6 y 7, ¿qué estrategia argumentativa utiliza el autor para neutralizar de manera sólida la postura de los defensores de la prohibición radical de la IA?',
+                options: [
+                    { letter: 'A', text: 'Descalifica de plano las credenciales morales de los promotores del papel y lápiz, acusándolo de una resistencia irresponsable.' },
+                    { letter: 'B', text: 'Muestra que rechazar la tecnología obedece simplemente a un temor psicológico injustificado frente a los avances del nuevo siglo.' },
+                    { letter: 'C', text: 'Desvia la discusión escolar hacia un debate legislativo en el senado para eximir de responsabilidad a los profesores jefe.' },
+                    { letter: 'D', text: 'Concede validez inicial a la preocupación por el esfuerzo intelectual, pero demuestra la inviabilidad fáctica de aislar el uso de la IA.' }
+                ],
+                correct: 'D',
+                feedback: {
+                    A: 'No es correcta. Falla por literalización forzada: el autor reconoce explícitamente a sus contrapartes diciendo que "comparte sin duda una preocupación legítima" (párrafo 6), manteniendo el rigor dialéctico.',
+                    B: 'No es correcta. Falla por invención plausible: el autor fundamenta su respuesta en asimetrías de control espacial y desvío de uso juvenil (párrafo 7), no en atribuciones psicológicas de miedo de los docentes.',
+                    C: 'No es correcta. Falla por cambio de foco: no se sugiere intervención del congreso nacional ni exenciones normativas internas para estamentos específicos.',
+                    D: 'Correcta. El autor aplica una clásica estructura de concesión-límite. Valida la preocupación del grupo detractor ("Aunque este grupo... comparte sin duda una preocupación legítima") pero inmediatamente delimita su efectividad revelando que solo "desplaza la IA hacia los espacios domésticos" donde la escuela no puede intervenir.'
+                },
+                evidence: 'Evidencia textual: "Aunque este grupo... comparte sin duda una preocupación legítima... esa salida prohibitiva elude el hecho práctico de que los estudiantes ya utilizan y continuarán utilizando estas herramientas..." (Párrafos 6 y 7).'
+            },
+            {
+                id: 'q4',
+                type: 'marcadores',
+                stem: '¿Qué función táctica cumple el organizador discursivo "En otras palabras" al dar inicio al décimo párrafo del texto?',
+                options: [
+                    { letter: 'A', text: 'Establecer una digresión temática que le permite al autor introducir variables científicas externas al foco inicial del liceo.' },
+                    { letter: 'B', text: 'Reformular conceptualmente la discusión para reconducir la atención del lector desde la prohibición hacia el propósito formativo.' },
+                    { letter: 'C', text: 'Señalar una fuerte oposición semántica respecto de la sólida evidencia estadística del estudio piloto presentado en el párrafo 8.' },
+                    { letter: 'D', text: 'Declarar la consecuente deducción deductiva lógica de que los chatbots reemplazarán inevitablemente a los profesores.' }
+                ],
+                correct: 'B',
+                feedback: {
+                    A: 'No es correcta. Falla por cambio de foco: la reformulación no es una digresión ni aparta el foco, por el contrario, simplifica y precisa la tesis inicial del aula escolar.',
+                    B: 'Correcta. "En otras palabras" es un conector de reformulación y aclaración clarificadora. El autor sintetiza todo el debate anterior reencuadrando la pregunta medular: "no es si los estudiantes tienen permitido abrir una ventana del navegador, sino con qué rigor y para qué propósitos cognitivos se les enseña a interactuar con ella".',
+                    C: 'No es correcta. Falla por literalización forzada: el conector no introduce antítesis ni opone ideas al párrafo 8; de hecho, asume inductivamente las conclusiones para sintetizarlas.',
+                    D: 'No es correcta. Falla por invención plausible: el autor sostiene justamente la tesis de que la mediación del docente es insustituible frente a los robots.'
+                },
+                evidence: 'Evidencia textual: "En otras palabras, la pregunta verdaderamente urgente... no es si los estudiantes tienen permitido abrir una ventana... sino con qué rigor y para qué propósitos..." (Párrafo 10).'
+            },
+            {
+                id: 'q5',
+                type: 'función argumentativa',
+                stem: 'A la luz de la estructura del modelo Toulmin, ¿cuál es la función de los datos del "estudio piloto de 2025" que reporta "18 puntos de mejora" en el párrafo 8?',
+                options: [
+                    { letter: 'A', text: 'Constituye la garantía o regla general implícita que fundamenta el valor formativo intrínseco de los chatbots.' },
+                    { letter: 'B', text: 'Funciona como la tesis secundaria y autónoma con la cual el autor aspira a reemplazar las notas numéricas.' },
+                    { letter: 'C', text: 'Provee el respaldo científico y objetivo que valida empíricamente la efectividad de la base referida a la mediación reflexiva.' },
+                    { letter: 'D', text: 'Sirve como un distractor anecdótico diseñado para ilustrar la precaria realidad de la educación chilena actual.' }
+                ],
+                correct: 'C',
+                feedback: {
+                    A: 'No es correcta. Falla por redefinición conceptual: el dato empírico y estadístico sistemático funciona como respaldo objetivo denso, no como la regla de garantía racional lógica (la cual aparece definida en el párrafo 9).',
+                    B: 'No es correcta. Falla por cambio de foco: el estudio evalúa metodologías de andamiaje socrático del chatbot vs copia directa, no propone derogar el reglamento de evaluación.',
+                    C: 'Correcta. En el esquema Toulmin, el respaldo es la corroboración factual y dura que le otorga fuerza probatoria a los argumentos. El promedio controlado de "18 puntos" fundamenta empíricamente que el aprendizaje mejora significativamente en el modo guiado dialéctico asertivo.',
+                    D: 'No es correcta. Falla por literalización forzada: el dato es metodológicamente coherente con el recorrido persuasivo del autor y sustenta su veracidad.'
+                },
+                evidence: 'Evidencia textual: "los estudiantes que pidieron explicaciones paso a paso... mejoraron en torno a 18 puntos... en cambio... copia y pega... declive promedio... La variable crítica no residió en la presencia de la máquina, sino en la mediación..." (Párrafo 8).'
+            }
+        ];
+
+        const state = {
+            answers: {},
+            ticket: { tesis: '', contra: '', markers: '' },
+            thesisContexts: { c1: '', c2: '', c3: '', c4: '' },
+            tableExercises: { b1:'',g1:'',r1:'', b2:'',g2:'',r2:'', b3:'',g3:'',r3:'', b4:'',g4:'',r4:'', b5:'',g5:'',r5:'' }
+        };
+        let currentUID = null;
+        let studentData = null;
+        let isSubmitted = false;
+        let savePending = false;
+        let saveTimer = null;
+        let resultsVisible = false;
+        let initialHydrationComplete = IS_LOCAL_PREVIEW;
+
+        function escapeHtml(text) {
+            return String(text || '').replace(/&/g, '&amp;').replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+
+        function loadPreviewState() {
+            if (!IS_LOCAL_PREVIEW) return;
+            try {
+                const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+                if (saved.answers && typeof saved.answers === 'object') state.answers = saved.answers;
+                if (saved.ticket && typeof saved.ticket === 'object') {
+                    state.ticket.tesis = saved.ticket.tesis || '';
+                    state.ticket.contra = saved.ticket.contra || '';
+                    state.ticket.markers = saved.ticket.markers || '';
+                }
+                if (saved.thesisContexts && typeof saved.thesisContexts === 'object') {
+                    for (let i = 1; i <= 4; i++) {
+                        state.thesisContexts['c' + i] = saved.thesisContexts['c' + i] || '';
+                    }
+                }
+                if (saved.tableExercises && typeof saved.tableExercises === 'object') {
+                    Object.keys(state.tableExercises).forEach(k => {
+                        state.tableExercises[k] = saved.tableExercises[k] || '';
+                    });
+                }
+            } catch (error) { console.error('No se pudo recuperar el estado local.', error); }
+        }
+
+        function persistState() {
+            if (!IS_LOCAL_PREVIEW) return;
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        }
+
+        function hydrateTicketFields() {
+            document.getElementById('ticketTesis').value = state.ticket.tesis || '';
+            document.getElementById('ticketContra').value = state.ticket.contra || '';
+            document.getElementById('ticketMarkers').value = state.ticket.markers || '';
+            for (let i = 1; i <= 4; i++) {
+                document.getElementById('thesisContext' + i).value = state.thesisContexts['c' + i] || '';
+            }
+            // Hydrate table exercise fields
+            for (let i = 1; i <= 5; i++) {
+                const bField = document.getElementById('tableBase' + i);
+                const gField = document.getElementById('tableGarantia' + i);
+                const rField = document.getElementById('tableRespaldo' + i);
+                if (bField) bField.value = state.tableExercises['b' + i] || '';
+                if (gField) gField.value = state.tableExercises['g' + i] || '';
+                if (rField) rField.value = state.tableExercises['r' + i] || '';
+            }
+        }
+
+        function percentageToGrade(percentage) {
+            if (percentage <= 0) return 1.0;
+            if (percentage < 60) return Math.round((1.0 + (percentage / 60) * 3.0) * 10) / 10;
+            return Math.round((4.0 + ((percentage - 60) / 40) * 3.0) * 10) / 10;
+        }
+
+        function isExtended2AHCMode() {
+            if (IS_LOCAL_PREVIEW) return true;
+            return String(studentData && studentData.curso || '').trim().toUpperCase() === '2A-HC';
+        }
+
+        function countWords(text) {
+            const trimmed = String(text || '').trim();
+            return trimmed ? trimmed.split(/\s+/).length : 0;
+        }
+
+        function hasAnyFragment(text, fragments) {
+            const lower = String(text || '').toLowerCase();
+            return fragments.some(fragment => lower.includes(fragment));
+        }
+
+        function countListedMarkers(text) {
+            const lower = String(text || '').toLowerCase();
+            const markers = ['sin embargo', 'por eso', 'en otras palabras', 'aunque', 'ademas', 'además', 'por ejemplo', 'en cambio', 'por lo tanto'];
+            return markers.filter(marker => lower.includes(marker)).length;
+        }
+
+        function getDevelopmentScore() {
+            if (!isExtended2AHCMode()) return { earned: 0, total: 0, detail: {} };
+
+            const detail = {
+                tesis: {
+                    label: 'Ticket · propósito comunicativo',
+                    respuesta: state.ticket.tesis || '',
+                    earned: (countWords(state.ticket.tesis) >= 10 && hasAnyFragment(state.ticket.tesis, ['convenc', 'persua', 'orient', 'invit', 'inform', 'critic'])) ? 1 : 0,
+                    max: 1,
+                    criterio: 'Nombra el propósito (convencer / persuadir / orientar / invitar / informar / criticar) con al menos 10 palabras.'
+                },
+                contra: {
+                    label: 'Ticket · jerarquía de argumentos',
+                    respuesta: state.ticket.contra || '',
+                    earned: (countWords(state.ticket.contra) >= 14 && hasAnyFragment(state.ticket.contra, ['principal', 'secundario', 'pedagóg', 'pedagog', 'demora', 'motivo'])) ? 1 : 0,
+                    max: 1,
+                    criterio: 'Distingue principal de secundario y apoya con pista textual (mínimo 14 palabras).'
+                },
+                markers: {
+                    label: 'Ticket · marcador con función',
+                    respuesta: state.ticket.markers || '',
+                    earned: (countListedMarkers(state.ticket.markers) >= 1 && hasAnyFragment(state.ticket.markers, ['conces', 'refut', 'consecuencia', 'reformul'])) ? 1 : 0,
+                    max: 1,
+                    criterio: 'Nombra un marcador y asigna función (concesión, refutación, consecuencia o reformulación).'
+                },
+                toulminGarantia: {
+                    label: 'Toulmin · Garantía (paso 3)',
+                    respuesta: state.thesisContexts.c3 || '',
+                    earned: (countWords(state.thesisContexts.c3) >= 20) ? 1 : 0,
+                    max: 1,
+                    criterio: 'Redacta el puente lógico que conecta Base y Tesis (mínimo 20 palabras).'
+                },
+                toulminRespaldo: {
+                    label: 'Toulmin · Respaldo (paso 4)',
+                    respuesta: state.thesisContexts.c4 || '',
+                    earned: (countWords(state.thesisContexts.c4) >= 20) ? 1 : 0,
+                    max: 1,
+                    criterio: 'Aporta dato, estudio o cita de autoridad (mínimo 20 palabras).'
+                }
+            };
+
+            const earned = Object.values(detail).reduce((sum, item) => sum + item.earned, 0);
+            const total = Object.values(detail).reduce((sum, item) => sum + item.max, 0);
+            return { earned, total, detail };
+        }
+
+        function formatGuideScoreSummary(guideState) {
+            if (guideState.isExtended) {
+                return guideState.correctCount + '/5 alternativas · ' + guideState.developmentEarned + '/5 desarrollo · ' + guideState.totalEarned + '/' + guideState.totalPoints + ' puntos · Nota ' + guideState.note.toFixed(1);
+            }
+            return guideState.correctCount + '/5 correctas · Nota ' + guideState.note.toFixed(1);
+        }
+
+        function applyCourseMode() { /* sin secciones extra: nada que mostrar/ocultar */ }
+
+        function getGuideState() {
+            const isExtended = isExtended2AHCMode();
+            const answeredCount = QUESTIONS.filter(q => !!state.answers[q.id]).length;
+            const correctCount = QUESTIONS.filter(q => state.answers[q.id] === q.correct).length;
+            const thesisReady = state.ticket.tesis.trim().length > 0;
+            const counterReady = state.ticket.contra.trim().length > 0;
+            const markersReady = state.ticket.markers.trim().length > 0;
+            const toulminReady = [1,2,3,4].every(i => (state.thesisContexts['c'+i] || '').trim().length > 0);
+            const ticketCount = (thesisReady ? 1 : 0) + (counterReady ? 1 : 0) + (markersReady ? 1 : 0);
+            const developmentScore = getDevelopmentScore();
+            const totalMilestones = QUESTIONS.length + 1 + 3; // 5 preguntas + Toulmin + 3 cierres ticket
+            const completed = answeredCount + ticketCount + (toulminReady ? 1 : 0);
+            const totalPoints = isExtended ? QUESTIONS.length + developmentScore.total : QUESTIONS.length;
+            const totalEarned = isExtended ? correctCount + developmentScore.earned : correctCount;
+            const percentage = totalPoints ? Math.round((totalEarned / totalPoints) * 100) : 0;
+            const alternativesPct = QUESTIONS.length ? Math.round((correctCount / QUESTIONS.length) * 100) : 0;
+            const writingPct = isExtended && developmentScore.total ? Math.round((developmentScore.earned / developmentScore.total) * 100) : null;
+            const note = percentageToGrade(percentage);
+            const sessionXP = isExtended
+                ? (correctCount * 14) + (ticketCount * 10) + (toulminReady ? 20 : 0) + (answeredCount === QUESTIONS.length ? 18 : 0)
+                : (correctCount * 18) + (ticketCount * 12) + (toulminReady ? 16 : 0) + (answeredCount === QUESTIONS.length ? 20 : 0);
+
+            return {
+                isExtended, answeredCount, correctCount,
+                thesisReady, counterReady, markersReady, toulminReady,
+                ticketCount, completed, totalMilestones, totalPoints, totalEarned,
+                alternativesPct, writingPct, note,
+                developmentEarned: developmentScore.earned,
+                developmentTotal: developmentScore.total,
+                developmentDetail: developmentScore.detail,
+                percentage, sessionXP,
+                canSubmit: answeredCount === QUESTIONS.length && thesisReady && counterReady && markersReady && toulminReady
+            };
+        }
+
+        function buildDetail() {
+            return QUESTIONS.reduce((detail, question, index) => {
+                const answer = state.answers[question.id] || null;
+                detail['q' + (index + 1)] = {
+                    pregunta: question.stem,
+                    respuesta: answer,
+                    correcta: question.correct,
+                    esCorrecta: answer === question.correct,
+                    tipo: question.type
+                };
+                return detail;
+            }, {});
+        }
+
+        function buildSaveData(completedFlag) {
+            const guideState = getGuideState();
+            const saveData = {
+                answers: state.answers, ticket: state.ticket, thesisContexts: state.thesisContexts,
+                tableExercises: state.tableExercises,
+                preguntas_respondidas: guideState.answeredCount,
+                preguntas_correctas: guideState.correctCount,
+                total_preguntas: QUESTIONS.length,
+                porcentaje: guideState.percentage,
+                detalle: buildDetail(),
+                xp: guideState.sessionXP,
+                completada: completedFlag,
+                last_save: Date.now(),
+                nombre: studentData && studentData.nombre ? studentData.nombre : '',
+                curso: studentData && studentData.curso ? studentData.curso : ''
+            };
+            if (guideState.isExtended) {
+                saveData.puntaje_alternativas = guideState.correctCount;
+                saveData.total_alternativas = QUESTIONS.length;
+                saveData.alternativas_pct = guideState.alternativesPct;
+                saveData.puntaje_desarrollo = guideState.developmentEarned;
+                saveData.total_desarrollo = guideState.developmentTotal;
+                saveData.escritura_pct = guideState.writingPct;
+                saveData.detalle_desarrollo = guideState.developmentDetail;
+                saveData.porcentaje_final = guideState.percentage;
+                saveData.grading_mode = 'alternativas_50_desarrollo_50';
+                saveData.grading_weights = { alternativas: 0.5, desarrollo: 0.5 };
+            }
+            return saveData;
+        }
+
+        function updateSubmittedBanner(guideState) {
+            const banner = document.getElementById('submittedBanner');
+            if (!isSubmitted) { banner.classList.remove('show'); banner.innerHTML = ''; return; }
+            banner.innerHTML = '<strong>Clase entregada</strong><span>' +
+                (resultsVisible
+                    ? formatGuideScoreSummary(guideState) + ' · +' + guideState.sessionXP + ' XP asignados. Tus resultados ya están visibles en el panel.'
+                    : (guideState.isExtended
+                        ? 'Tus 5 alternativas y 5 desarrollos quedaron enviados. El puntaje aparecerá cuando el profesor abra la revisión.'
+                        : 'Tus respuestas quedaron enviadas. El puntaje aparecerá cuando el profesor abra la revisión.')
+                ) + '</span>';
+            banner.classList.add('show');
+        }
+
+        function updateSessionCard(guideState) {
+            const modePill = document.getElementById('sessionModePill');
+            const statusCopy = document.getElementById('sessionStatusCopy');
+            const statusLine = document.getElementById('sessionSaveStatus');
+            const saveBtn = document.getElementById('saveGuideBtn');
+            const submitBtn = document.getElementById('submitGuide');
+            const ticketNote = document.getElementById('ticketNote');
+            const footerNote = document.getElementById('footerNote');
+
+            if (IS_LOCAL_PREVIEW) {
+                modePill.textContent = 'Vista previa local';
+                statusCopy.textContent = 'Puedes revisar la experiencia completa, pero el guardado y la entrega en Firebase están desactivados en modo local.';
+                statusLine.textContent = 'Se conserva solo en este navegador para revisión.';
+                ticketNote.textContent = 'Vista previa local: estas respuestas se guardan solo en este navegador para que puedas revisar la experiencia sin subirla todavía a la plataforma.';
+                footerNote.textContent = 'Esta sesión continúa la Clase 1 de la Unidad 2 y se enlaza con la planificación LIRMI Clase 3 del bloque mayo-junio.';
+                saveBtn.disabled = true; submitBtn.disabled = true; return;
+            }
+
+            modePill.textContent = 'Sesión activa';
+            ticketNote.textContent = guideState && guideState.isExtended
+                ? 'Responde las 5 preguntas, analiza los 2 textos comparados y completa el ticket de salida.'
+                : 'Responde las 5 preguntas y completa el cierre antes de entregar la clase.';
+            footerNote.textContent = guideState && guideState.isExtended
+                ? 'Clase 2 con extensión 2A-HC: análisis comparado de 3 columnas, identificación de propósito, jerarquía y refutación.'
+                : 'Avanza con calma, guarda si lo necesitas y entrega cuando completes toda la clase.';
+
+            if (!initialHydrationComplete) {
+                statusCopy.textContent = 'Sincronizando tu avance guardado antes de habilitar la edición.';
+                statusLine.textContent = 'Cargando respuestas guardadas...';
+                saveBtn.disabled = true; submitBtn.disabled = true; return;
+            }
+
+            if (isSubmitted) {
+                statusCopy.textContent = resultsVisible
+                    ? 'La clase ya fue entregada y sus resultados ya están visibles en tu panel.'
+                    : 'La clase ya fue entregada. El XP quedó asignado y la revisión se mostrará cuando el profesor la habilite.';
+                statusLine.textContent = 'Entrega final registrada.';
+                saveBtn.disabled = true; submitBtn.disabled = true; return;
+            }
+
+            statusCopy.textContent = guideState && guideState.isExtended
+                ? 'Tus respuestas se guardan automáticamente. Para 2A-HC debes completar 5 alternativas, 2 analisis de texto y el ticket de salida antes de entregar.'
+                : 'Tus respuestas se guardan automáticamente cada pocos segundos. Cuando completes las 5 preguntas y el ticket, podrás entregar la clase.';
+            if (!currentUID) statusLine.textContent = 'Esperando autenticación de estudiante...';
+            else if (savePending) statusLine.textContent = 'Hay cambios pendientes por guardar.';
+            else statusLine.textContent = 'Autoguardado activo.';
+            saveBtn.disabled = !currentUID;
+            submitBtn.disabled = !currentUID || !guideState.canSubmit;
+        }
+
+        function setTicketLockState(locked) {
+            ['ticketTesis','ticketContra','ticketMarkers'].forEach(id => {
+                document.getElementById(id).disabled = locked;
+            });
+            for (let i = 1; i <= 4; i++) {
+                document.getElementById('thesisContext' + i).disabled = locked;
+            }
+            // Lock/unlock table exercise fields
+            for (let i = 1; i <= 5; i++) {
+                ['tableBase','tableGarantia','tableRespaldo'].forEach(prefix => {
+                    const el = document.getElementById(prefix + i);
+                    if (el) el.disabled = locked;
+                });
+            }
+        }
+
+        function buildQuestionCard(question, index) {
+            const selected = state.answers[question.id] || '';
+            const isAnswered = !!selected;
+            const revealAnswers = isSubmitted && resultsVisible;
+            const isCorrect = revealAnswers && isAnswered && selected === question.correct;
+            const feedbackText = revealAnswers && isAnswered ? question.feedback[selected] : '';
+            const feedbackClass = revealAnswers && isAnswered ? (isCorrect ? 'correct' : 'wrong') : '';
+            const disabledAttr = (isSubmitted || !initialHydrationComplete) ? ' disabled' : '';
+
+            const optionsHtml = question.options.map(option => {
+                const selectedClass = selected === option.letter ? ' selected' : '';
+                let resultClass = '';
+                if (revealAnswers && option.letter === question.correct) resultClass = ' correct';
+                if (revealAnswers && selected === option.letter && option.letter !== question.correct) resultClass = ' wrong';
+                return '<button type="button" class="option-btn' + selectedClass + resultClass + '" data-question="' + question.id + '" data-letter="' + option.letter + '"' + disabledAttr + '><strong>' + option.letter + '.</strong> ' + escapeHtml(option.text) + '</button>';
+            }).join('');
+
+            return '<article class="question-card">' +
+                '<div class="question-head">' +
+                '<span class="question-number">' + (index + 1) + '</span>' +
+                '<span class="question-type">' + escapeHtml(question.type) + '</span>' +
+                '</div>' +
+                '<p class="question-stem">' + escapeHtml(question.stem) + '</p>' +
+                '<div class="option-list">' + optionsHtml + '</div>' +
+                '<div class="feedback-box ' + feedbackClass + (revealAnswers && isAnswered ? ' show' : '') + '">' +
+                '<strong>' + (isCorrect ? 'Respuesta correcta' : 'Todavía no') + '</strong>' +
+                escapeHtml(feedbackText) +
+                '<br><br><strong>Evidencia</strong>' + escapeHtml(question.evidence) +
+                '</div></article>';
+        }
+
+        function renderQuestions() {
+            const container = document.getElementById('questionList');
+            container.innerHTML = QUESTIONS.map(buildQuestionCard).join('');
+            container.querySelectorAll('.option-btn').forEach(button => {
+                button.addEventListener('click', () => {
+                    state.answers[button.dataset.question] = button.dataset.letter;
+                    persistState();
+                    renderQuestions();
+                    markDirty();
+                });
+            });
+        }
+
+        function updateProgress() {
+            const guideState = getGuideState();
+            const completed = guideState.completed;
+            const percentage = Math.round((completed / guideState.totalMilestones) * 100);
+            applyCourseMode(guideState);
+            document.getElementById('progressFill').style.width = percentage + '%';
+            document.getElementById('progressCopy').textContent = completed + ' de ' + guideState.totalMilestones + ' avances completados';
+            document.getElementById('progressPill').textContent = completed + '/' + guideState.totalMilestones + ' avances';
+            if (isSubmitted && resultsVisible) {
+                document.getElementById('accuracyCopy').textContent = guideState.isExtended
+                    ? 'Alternativas ' + guideState.correctCount + '/5 · Desarrollo ' + guideState.developmentEarned + '/5'
+                    : guideState.correctCount + ' correctas';
+                document.getElementById('scorePill').textContent = guideState.isExtended
+                    ? guideState.totalEarned + '/' + guideState.totalPoints + ' pts'
+                    : guideState.correctCount + '/5 correctas';
+            } else {
+                document.getElementById('accuracyCopy').textContent = guideState.answeredCount + ' alternativas respondidas';
+                document.getElementById('scorePill').textContent = guideState.answeredCount + '/5 respondidas';
+            }
+            document.getElementById('msQuestions').classList.toggle('done', guideState.answeredCount === QUESTIONS.length);
+            const msToulmin = document.getElementById('msToulmin');
+            if (msToulmin) msToulmin.classList.toggle('done', guideState.toulminReady);
+            document.getElementById('msThesis').classList.toggle('done', guideState.thesisReady);
+            document.getElementById('msCounter').classList.toggle('done', guideState.counterReady);
+            document.getElementById('msMarkers').classList.toggle('done', guideState.markersReady);
+            updateSessionCard(guideState);
+            updateSubmittedBanner(guideState);
+            return guideState;
+        }
+
+        function scheduleAutoSave() {
+            if (IS_LOCAL_PREVIEW || isSubmitted || !currentUID) return;
+            clearTimeout(saveTimer);
+            saveTimer = setTimeout(() => { if (savePending) saveDraft(true); }, AUTOSAVE_DELAY);
+        }
+
+        function markDirty() {
+            savePending = true;
+            const guideState = updateProgress();
+            scheduleAutoSave();
+            return guideState;
+        }
+
+        function wireTicketFields() {
+            const bindings = [
+                { id: 'ticketTesis', key: 'tesis' },
+                { id: 'ticketContra', key: 'contra' },
+                { id: 'ticketMarkers', key: 'markers' }
+            ];
+            hydrateTicketFields();
+            bindings.forEach(({ id, key }) => {
+                const field = document.getElementById(id);
+                field.addEventListener('input', () => {
+                    state.ticket[key] = field.value;
+                    persistState();
+                    markDirty();
+                });
+            });
+            for (let i = 1; i <= 4; i++) {
+                const field = document.getElementById('thesisContext' + i);
+                field.addEventListener('input', () => {
+                    state.thesisContexts['c' + i] = field.value;
+                    persistState();
+                    markDirty();
+                });
+            }
+            // Wire table exercise fields
+            for (let i = 1; i <= 5; i++) {
+                const mapping = [
+                    { id: 'tableBase' + i, key: 'b' + i },
+                    { id: 'tableGarantia' + i, key: 'g' + i },
+                    { id: 'tableRespaldo' + i, key: 'r' + i }
+                ];
+                mapping.forEach(({ id, key }) => {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        el.addEventListener('input', () => {
+                            state.tableExercises[key] = el.value;
+                            persistState();
+                            markDirty();
+                        });
+                    }
+                });
+            }
+        }
+
+        function wireRevealButtons() {
+            document.querySelectorAll('.reveal-btn').forEach(button => {
+                button.addEventListener('click', () => {
+                    const target = document.getElementById(button.dataset.target);
+                    if (!target) return;
+                    const willShow = !target.classList.contains('show');
+                    target.classList.toggle('show', willShow);
+                    button.textContent = willShow ? 'Ocultar lectura guiada' : 'Ver lectura guiada';
+                });
+            });
+        }
+
+        async function saveDraft(silent) {
+            if (IS_LOCAL_PREVIEW) {
+                if (!silent) showToast('Vista previa local: el avance se guarda solo en este navegador.');
+                return;
+            }
+            if (!currentUID || isSubmitted) return;
+            try {
+                const saveData = buildSaveData(false);
+                await window.SimceSessionGate.saveDraft(db,BASE,SESSION_ID,currentUID,saveData);
+                savePending = false;
+                document.getElementById('sessionSaveStatus').textContent = '✓ Avance guardado hace un momento.';
+                if (!silent) showToast('💾 Avance guardado');
+                updateProgress();
+            } catch (error) {
+                console.error('Save error:', error);
+                if (!silent) showToast('No se pudo guardar el avance.');
+            }
+        }
+
+        async function awardSessionXP(sessionXP) {
+            if (!currentUID || !sessionXP) return;
+            try {
+                const [existingSnap, totalSnap] = await Promise.all([
+                    db.ref(BASE + '/avatar/' + currentUID + '/sesiones/' + SESSION_ID).once('value'),
+                    db.ref(BASE + '/avatar/' + currentUID + '/xp_total').once('value')
+                ]);
+                if (existingSnap.exists()) return;
+                const currentTotal = totalSnap.val() || 0;
+                const newTotal = currentTotal + sessionXP;
+                const level = AvatarSystem.getLevel(newTotal);
+                const updates = {};
+                updates['/avatar/' + currentUID + '/sesiones/' + SESSION_ID] = { xp: sessionXP, timestamp: Date.now() };
+                updates['/avatar/' + currentUID + '/xp_total'] = newTotal;
+                updates['/avatar/' + currentUID + '/nivel'] = level.level;
+                updates['/avatar/' + currentUID + '/titulo'] = level.title;
+                updates['/avatar/' + currentUID + '/emoji'] = level.emoji;
+                await db.ref(BASE).update(updates);
+            } catch (error) { console.error('XP award error:', error); }
+        }
+
+        async function submitGuide() {
+            if (IS_LOCAL_PREVIEW) { showToast('Vista previa local: la entrega está desactivada.'); return; }
+            if (!currentUID || isSubmitted) return;
+            const guideState = getGuideState();
+            if (!guideState.canSubmit) {
+                showToast('Debes responder las 5 preguntas, redactar los 4 pasos Toulmin y completar el ticket de salida.');
+                return;
+            }
+            if (!confirm('¿Enviar esta clase? Después de entregarla ya no podrás editar tus respuestas.')) return;
+            const submitButton = document.getElementById('submitGuide');
+            submitButton.disabled = true;
+            try {
+                const submittedAt = Date.now();
+                const saveData = buildSaveData(true);
+                saveData.submitted_at = submittedAt;
+                const resultData = {
+                    puntaje: guideState.isExtended ? guideState.totalEarned : guideState.correctCount,
+                    total: guideState.isExtended ? guideState.totalPoints : QUESTIONS.length,
+                    porcentaje: guideState.percentage,
+                    nota: guideState.note,
+                    detalle: buildDetail(),
+                    ticket: state.ticket,
+                    thesisContexts: state.thesisContexts,
+                    xp: guideState.sessionXP,
+                    submitted_at: submittedAt,
+                    timestamp: submittedAt,
+                    nombre: studentData && studentData.nombre ? studentData.nombre : '',
+                    curso: studentData && studentData.curso ? studentData.curso : ''
+                };
+                if (guideState.isExtended) {
+                    resultData.puntaje_alternativas = guideState.correctCount;
+                    resultData.total_alternativas = QUESTIONS.length;
+                    resultData.alternativas_pct = guideState.alternativesPct;
+                    resultData.nota_alternativas = percentageToGrade(guideState.alternativesPct);
+                    resultData.puntaje_desarrollo = guideState.developmentEarned;
+                    resultData.total_desarrollo = guideState.developmentTotal;
+                    resultData.escritura_pct = guideState.writingPct;
+                    resultData.nota_escritura = percentageToGrade(guideState.writingPct);
+                    resultData.detalle_desarrollo = guideState.developmentDetail;
+                    resultData.porcentaje_final = guideState.percentage;
+                    resultData.grading_mode = 'alternativas_50_desarrollo_50';
+                    resultData.grading_weights = { alternativas: 0.5, desarrollo: 0.5 };
+                }
+                clearTimeout(saveTimer);
+                    await window.SimceSessionGate.submit(db,BASE,SESSION_ID,currentUID,saveData,resultData);
+                await awardSessionXP(guideState.sessionXP);
+                isSubmitted = true;
+                savePending = false;
+                clearTimeout(saveTimer);
+                renderQuestions();
+                setTicketLockState(true);
+                updateProgress();
+                showToast(resultsVisible ? ('✅ Clase entregada. +' + guideState.sessionXP + ' XP') : '✅ Clase entregada.');
+            } catch (error) {
+                console.error('Submit error:', error);
+                submitButton.disabled = false;
+                showToast('No se pudo enviar la clase.');
+            }
+        }
+
+        function hydrateFromSaved(saved) {
+            if (!saved || typeof saved !== 'object') return;
+            if (saved.answers && typeof saved.answers === 'object') state.answers = saved.answers;
+            if (saved.ticket && typeof saved.ticket === 'object') {
+                state.ticket.tesis = saved.ticket.tesis || '';
+                state.ticket.contra = saved.ticket.contra || '';
+                state.ticket.markers = saved.ticket.markers || '';
+            }
+            if (saved.thesisContexts && typeof saved.thesisContexts === 'object') {
+                for (let i = 1; i <= 4; i++) {
+                    state.thesisContexts['c' + i] = saved.thesisContexts['c' + i] || '';
+                }
+            }
+            if (saved.tableExercises && typeof saved.tableExercises === 'object') {
+                Object.keys(state.tableExercises).forEach(k => {
+                    state.tableExercises[k] = saved.tableExercises[k] || '';
+                });
+            }
+        }
+
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.className = 'topbar-pill preview';
+            toast.style.position = 'fixed';
+            toast.style.right = '18px';
+            toast.style.bottom = '18px';
+            toast.style.zIndex = '80';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 2200);
+        }
+
+        function wireSessionActions() {
+            document.getElementById('saveGuideBtn').addEventListener('click', () => saveDraft(false));
+            document.getElementById('submitGuide').addEventListener('click', submitGuide);
+        }
+
+        function listenResultVisibility() {
+            if (IS_LOCAL_PREVIEW || !currentUID) return;
+            db.ref(BASE + '/sesiones/' + SESSION_ID + '/resultados_visibles').on('value', snap => {
+                resultsVisible = !!snap.val();
+                updateProgress();
+            });
+        }
+
+        loadPreviewState();
+        renderQuestions();
+        wireTicketFields();
+        wireRevealButtons();
+        wireSessionActions();
+        if (!IS_LOCAL_PREVIEW) setTicketLockState(true);
+        updateProgress();
+
+        if (IS_LOCAL_PREVIEW) {
+            hydrateTicketFields();
+            updateProgress();
+        } else {
+            auth.onAuthStateChanged(async user => {
+                if (!user) { window.location.href = SHARED_LOGIN_URL; return; }
+                currentUID = user.uid;
+                if(await window.SimceSessionGate.check(db,BASE,SESSION_ID,currentUID,true))return;
+                try {
+                    const [studentSnap, savedSnap, visibilitySnap] = await Promise.all([
+                        db.ref(BASE + '/estudiantes/' + user.uid).once('value'),
+                        db.ref(BASE + '/respuestas/' + SESSION_ID + '/' + user.uid).once('value'),
+                        db.ref(BASE + '/sesiones/' + SESSION_ID + '/resultados_visibles').once('value')
+                    ]);
+                    studentData = studentSnap.val();
+                    if (!studentData) { auth.signOut(); return; }
+                    resultsVisible = !!visibilitySnap.val();
+                    const saved = savedSnap.val();
+                    if (saved) {
+                        hydrateFromSaved(saved);
+                        if (saved.completada) {
+                            isSubmitted = true;
+                            await awardSessionXP(saved.xp || getGuideState().sessionXP);
+                        }
+                    }
+                    window.SimceSessionGate.markLoaded(SESSION_ID,currentUID);
+                    initialHydrationComplete = true;
+                    hydrateTicketFields();
+                    renderQuestions();
+                    setTicketLockState(isSubmitted);
+                    updateProgress();
+                    listenResultVisibility();
+                } catch (error) {
+                    window.SimceSessionGate.failLoad();
+                    console.error('Guide init error:', error);
+                    showToast('No se pudo cargar la sesión.');
+                }
+            });
+        }
+    </script>
+<script src="/estudiantes/js/work-telemetry.js" data-session="sesion-u2-2"></script>
+</body>
+</html>

@@ -1,3 +1,7 @@
+## 18-nov-2026 · Recuperación de las cuatro guías U2
+
+La prueba real previa al correo detecta enlaces U2 inexistentes y resúmenes sin alternativas en el formulario genérico. Se recuperan las cuatro páginas originales desde la copia histórica, sin alterar textos, preguntas, identificadores ni criterios originales. Se integra el contrato de entrega compartido: restauración previa, cola, escritura atómica, ambas marcas y confirmación leída. La escritura individual conserva calificación docente; su contador de completitud no asigna nota. Se conservan respuestas y calificaciones reales. Fuente histórica y hashes registrados en evidencia privada del bloque. Publicación y comprobación real pendientes en esta entrada.
+
 ## 18-nov-2026 · Ingreso NM2 conserva el enlace directo
 
 Los avisos individuales deben abrir la guía indicada después del ingreso. Se conserva `next` del mismo origen en el acceso compartido para 2A/2B HC; sin destino explícito se mantiene la portada NM2. La actividad sigue comprobando asignación, identidad, cierre y excepción. El inventario de avisos incluye las guías PAES iniciales 1–9 que el catálogo NM2 tiene asignadas y estén sin entregar.

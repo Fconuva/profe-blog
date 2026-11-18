@@ -4370,7 +4370,7 @@ function updateUnlockUI(sesId){
 
 function pendingGuidesFor(stu,entries){
     if(!planillaEvidenceLoaded)return null;
-    return entries.filter(s=>!gradeIsExcluded(s.id,stu.curso)).filter(s=>{const a=getSessionAssignedTargets(s);return !a.length||a.includes(stu.curso)||a.includes(stu.uid);}).filter(s=>{
+    return entries.filter(s=>!gradeIsExcluded(s.id,stu.curso)).filter(s=>!/^sesion-u4-[45]$/.test(s.id)||Object.keys(allResponses[s.id]||{}).length>0).filter(s=>{const a=getSessionAssignedTargets(s);return !a.length||a.includes(stu.curso)||a.includes(stu.uid);}).filter(s=>{
         const response=allResponses[s.id]?.[stu.uid],result=allResults[s.id]?.[stu.uid];
         if(response&&(response.uid&&response.uid!==stu.uid||response.curso&&response.curso!==stu.curso||response.sessionId&&response.sessionId!==s.id))return true;
         return !classifyAdminSubmission(response,result).completed;
@@ -4386,7 +4386,7 @@ function planillaScope(){
 }
 async function refreshGradebook(){
     const status=document.getElementById('planillaLoadStatus');status.textContent='Actualizando notas…';
-    try{allGrades=(await readOnceWithRetry(BASE+'/calificaciones_clase')).val()||{};gradebookLoaded=true;const [res,resp]=await Promise.all([readOnceWithRetry(BASE+'/resultados'),readOnceWithRetry(BASE+'/respuestas')]);allResults=res.val()||{};allResponses=resp.val()||{};planillaEvidenceLoaded=true;renderPlanilla();loadResults();}
+    try{allGrades=(await readOnceWithRetry(BASE+'/calificaciones_clase')).val()||{};gradebookLoaded=true;renderPlanilla();const [res,resp]=await Promise.all([readOnceWithRetry(BASE+'/resultados'),readOnceWithRetry(BASE+'/respuestas')]);allResults=res.val()||{};allResponses=resp.val()||{};planillaEvidenceLoaded=true;renderPlanilla();loadResults();}
     catch(_){status.textContent='No se pudieron actualizar las notas. Conservamos la última lectura; vuelve a intentar.';}
 }
 function renderPlanilla(){

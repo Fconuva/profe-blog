@@ -14,7 +14,6 @@ const GUIDED_GUIDE_KEYS = {
   '27': { 1:'A', 2:'C', 3:'B', 4:'D', 5:'A', 6:'C' },
   '28': { 1:'B', 2:'D', 3:'A', 4:'C', 5:'B', 6:'D' },
   '29': { 1:'C', 2:'A', 3:'D', 4:'C', 5:'B', 6:'C' },
-  '30': { 1:'D', 2:'B', 3:'C', 4:'A', 5:'D', 6:'B' },
   '31': { 1:'A', 2:'C', 3:'B', 4:'D', 5:'A', 6:'B' }
 };
 
@@ -122,14 +121,6 @@ const GUIDED_GUIDE_FEEDBACK = {
     4:'Subrayar una palabra amplia y comprobarla es una conducta específica que puede observarse durante la guía.',
     5:'El indicador registra si la estrategia se realizó y permite comprobar si disminuyó el patrón de error seleccionado.',
     6:'Un plan se revisa con nueva evidencia: aciertos, errores y aplicación de la estrategia permiten mantenerlo o ajustarlo.'
-  },
-  '30': {
-    1:'El primer párrafo describe la rutina completa: revisar seguros, encender música y dar una vuelta con asientos vacíos.',
-    2:'Óscar vuelve para realizar un cierre personal mediante una última vuelta de la rutina que sostuvo durante veinte años.',
-    3:'La falta de música separa el gesto final de una jornada común y refuerza su carácter íntimo y definitivo.',
-    4:'El ensayo distingue almacenar de recordar: un registro ayuda, pero una persona debe seleccionarlo y darle sentido.',
-    5:'El archivo conserva una huella disponible; solo la interpretación personal puede integrarla como recuerdo.',
-    6:'El texto rechaza que más archivos produzcan necesariamente mejor memoria. Acumular no equivale a comprender.'
   },
   '31': {
     1:'Antonia avanza sin abandonar la pregunta: deja una tarea concreta, comparar alcance, para su segunda vuelta.',

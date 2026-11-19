@@ -51,7 +51,10 @@ async function test() {
 
   const src=fs.readFileSync(path.join(__dirname,'..','api','paes.js'),'utf8');
   const submit=src.slice(src.indexOf('async function handleSubmitGuia'),src.indexOf('async function handleGetGuiaDraft'));
-  assert.match(submit,/!draft && serverKey && !isPaesTestRut\(rutLimpio\)[\s\S]*NOTA_AUTO\.registrar/,'El envío llama a la nota automática.');
+  assert.match(submit,/\(!draft \|\| NOTA_AL_GUARDAR\.has\(guideId\)\) && serverKey && !isPaesTestRut\(rutLimpio\)[\s\S]*NOTA_AUTO\.registrar/,'El envío llama a la nota automática.');
+  assert.ok(src.includes("const NOTA_AL_GUARDAR = new Set(['28', '29']);"),'Solo las guías 28 y 29 se califican al guardar el avance.');
+  assert.match(submit,/if \(borradorDeReenvio\) \{\s*await notaAutomatica\(Object\.keys\(safeAnswers\)\.length\);/,'El avance de una guía reabierta también se califica.');
+  assert.match(submit,/const notaAuto=await notaAutomatica\(Object\.keys\(saved\.answers\|\|\{\}\)\.length\);/,'La respuesta del envío informa la nota escrita.');
   assert.match(submit,/catch\(e\)/,'Un error de la nota no rompe la entrega.');
   console.log('PAES nota automática: tramos, guardas y conexión al envío verificados');
 }

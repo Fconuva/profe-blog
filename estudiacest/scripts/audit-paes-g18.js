@@ -133,7 +133,7 @@ assert(currentCard27 && /href="guia27\.html"/.test(currentCard27[1]) && /<span c
 assert(/getElementById\('cardGuia27'\)\.hidden = !\/\^3\[AB\]HC\$\//.test(portal), 'G27 debe mostrarse solo a 3.º A y B HC.');
 assert(!/<article\b[^>]*class="upcoming-card"[^>]*data-guided-guide="27"/.test(portal), 'G27 no debe duplicarse como futura.');
 assert(/getElementById\('cardGuia26'\)\.hidden = !\/\^3\[AB\]HC\$\//.test(portal), 'G26 debe mostrarse solo a 3.º A y B HC.');
-assert(portal.includes("2[015-9]|30)(?:-guiada)?\\.html$/.test(next)"), 'El regreso tras el ingreso debe aceptar las guías 26 a 30.');
+assert(portal.includes("2[015-9])(?:-guiada)?\\.html$/.test(next)"), 'El regreso tras el ingreso debe aceptar las guías 26 a 29.');
 assert(!/<article\b[^>]*class="upcoming-card"[^>]*data-guided-guide="26"/.test(portal), 'G26 no debe duplicarse como futura.');
 for (let guide = 31; guide <= 31; guide += 1) {
   assert(portal.includes(`Guía ${guide}</span>`), `Falta la tarjeta futura gris de la Guía ${guide}.`);
@@ -178,9 +178,9 @@ inlineScripts.forEach((script, index) => {
   assert(data27.texts.every(text => text.review && text.review.images.every(image => fs.existsSync(path.join(root, 'paes', image.src)))), 'Cada contenido de G27 debe tener su infografía publicada.');
 }
 
-// 12-nov-2026: G28 a G30, repasos 2 a 4 con el molde de la G27 (10 contenidos y 44 preguntas),
+// 12-nov-2026: G28 y G29, repasos 2 y 3 (la G30 se eliminó el 19-nov: la G29 es la última) con el molde de la G27 (10 contenidos y 44 preguntas),
 // solo para 3.º A y B HC.
-for (const n of [28, 29, 30]) {
+for (const n of [28, 29]) {
   const keyMod = require(`../api/_paes-g${n}`);
   const data = JSON.parse(fs.readFileSync(path.join(root, `paes/data/guia${n}.json`), 'utf8'));
   assert(Object.keys(keyMod.key).length === 44 && Object.keys(keyMod.feedback).length === 44, `G${n} debe tener clave y retroalimentación para 44 preguntas.`);
@@ -197,7 +197,8 @@ for (const n of [28, 29, 30]) {
   assert(card && new RegExp(`href="guia${n}\\.html"`).test(card[1]), `G${n} debe tener su tarjeta publicada y destino regular.`);
   assert(!new RegExp(`<article\\b[^>]*class="upcoming-card"[^>]*data-guided-guide="${n}"`).test(portal), `G${n} no debe duplicarse como futura.`);
 }
-assert(portal.includes("['cardGuia28', 'cardGuia29', 'cardGuia30'].forEach((id) => {") && portal.includes("document.getElementById(id).hidden = document.getElementById('cardGuia27').hidden;"), 'G28 a G30 deben mostrarse solo a 3.º A y B HC, como la G27.');
+assert(portal.includes("['cardGuia28', 'cardGuia29'].forEach((id) => {") && portal.includes("document.getElementById(id).hidden = document.getElementById('cardGuia27').hidden;"), 'G28 y G29 deben mostrarse solo a 3.º A y B HC, como la G27.');
+assert(!portal.includes('cardGuia30') && !fs.existsSync(path.join(root, 'paes/guia30.html')) && !fs.existsSync(path.join(root, 'api/_paes-g30.js')), 'La G30 fue eliminada y no debe quedar publicada.');
 
 if (failures.length) {
   console.error('Auditoría PAES G18 fallida:\n- ' + failures.join('\n- '));

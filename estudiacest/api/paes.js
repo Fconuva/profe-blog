@@ -13,7 +13,6 @@ const G26 = require('./_paes-g26');
 const G27 = require('./_paes-g27');
 const G28 = require('./_paes-g28');
 const G29 = require('./_paes-g29');
-const G30 = require('./_paes-g30');
 const FOUNDATIONS = require('./_paes-foundations');
 const PREMIOS_PAES = require('./_premios-paes');
 const NOTA_AUTO = require('./_paes-nota-auto');
@@ -32,7 +31,7 @@ Object.assign(GUIDED_GUIDE_FEEDBACK, FOUNDATIONS.GUIDED_FEEDBACK);
 const DEFAULT_DATABASE_URL = 'https://estudiacest-default-rtdb.firebaseio.com';
 const BASE = 'plataforma_paes';
 const ADMIN_BASE = 'plataforma_estudiantes';
-const SECOND_SEMESTER_GUIDES = ['11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30'];
+const SECOND_SEMESTER_GUIDES = ['11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29'];
 const PAES_TEST_RUT = '111111111';
 
 function normalizePrivateKey(raw) {
@@ -227,7 +226,6 @@ const INTERACTIVE_GUIDE_FEEDBACK = {
     '27': G27.feedback,
     '28': G28.feedback,
     '29': G29.feedback,
-    '30': G30.feedback,
     '21': G21.feedback,
     '20': G20.feedback,
     '18': G18_FEEDBACK,
@@ -241,7 +239,6 @@ const INTERACTIVE_GUIDE_KEYS = {
     '27': G27.key,
     '28': G28.key,
     '29': G29.key,
-    '30': G30.key,
     '21': G21.key,
     '20': G20.key,
     '10': G10_KEY,
@@ -256,6 +253,8 @@ const INTERACTIVE_GUIDE_KEYS = {
 };
 
 const INCOMPLETE_SUBMISSION_GUIDES = new Set(Object.keys(GUIDED_GUIDE_KEYS));
+// 19-nov-2026: las dos últimas guías se califican al guardar el avance, no solo al enviar.
+const NOTA_AL_GUARDAR = new Set(['28', '29']);
 
 const G14_KEY = {
     q01:'A',q02:'C',q03:'B',q04:'D',q05:'A',q06:'A',q07:'C',q08:'D',q09:'A',q10:'B',
@@ -541,7 +540,22 @@ async function handleSubmitGuia(req, res) {
     if (!tx.committed) {
         return res.status(409).json({ error: 'La guía ya fue enviada. El docente debe restablecerla para responder nuevamente.' });
     }
+    // 29-oct: la nota de laboriosidad llega sola al libro (lo ve el estudiante y el docente).
+    // 19-nov: en las guías 28 y 29 también al guardar el avance, así la nota queda lista aunque
+    // no se pulse «enviar». La nota solo sube: guardar con menos respuestas no la baja.
+    const notaAutomatica = async (contestadas) => {
+        if ((!draft || NOTA_AL_GUARDAR.has(guideId)) && serverKey && !isPaesTestRut(rutLimpio)) {
+            // Un 1,0 nunca se escribe solo: al guardar se evita la consulta al libro.
+            if (draft && NOTA_AUTO.notaLaboriosidad(contestadas, safeTotal) === '1.0') return null;
+            try {
+                const r=await NOTA_AUTO.registrar(db,{rut:rutLimpio,guia:guideId,contestadas,total:safeTotal});
+                if (r.escrita) return r.nota;
+            } catch(e) {console.error('nota automática PAES',guideId,e&&e.message);}
+        }
+        return null;
+    };
     if (borradorDeReenvio) {
+        await notaAutomatica(Object.keys(safeAnswers).length);
         return res.status(200).json({ success: true, status: 'draft', submitted: false, completada: false,
             submittedAt: null, completadaAt: null, reenvio: true });
     }
@@ -550,15 +564,7 @@ async function handleSubmitGuia(req, res) {
     if (!draft && PREMIOS_PAES.completada(guideId,saved)) {
         try {await PREMIOS_PAES.alEntregar(db,rutLimpio,guideId);} catch(_) {premioPendiente=true;}
     }
-    // 29-oct: la nota de laboriosidad llega sola al libro (lo ve el estudiante y el docente).
-    let notaAuto=null;
-    if (!draft && serverKey && !isPaesTestRut(rutLimpio)) {
-        try {
-            const r=await NOTA_AUTO.registrar(db,{rut:rutLimpio,guia:guideId,
-                contestadas:Object.keys(saved.answers||{}).length,total:safeTotal});
-            if (r.escrita) notaAuto=r.nota;
-        } catch(e) {console.error('nota automática PAES',guideId,e&&e.message);}
-    }
+    const notaAuto=await notaAutomatica(Object.keys(saved.answers||{}).length);
     return res.status(200).json({
         success: true,
         premioPendiente,
@@ -908,8 +914,8 @@ async function handleGetMisNotas(req, res) {
     if (/^4[AB]HC$/.test(normalizedCourse) && !notas['23']) omitidos.push('23');
     // La Guía 26 es de 3.º A y B HC; en 4.º HC no aplica salvo que tenga nota registrada.
     if (/^4[AB]HC$/.test(normalizedCourse) && !notas['26']) omitidos.push('26');
-    // Las guías 27 a 30 (repaso de contenidos) son de 3.º A y B HC.
-    ['27', '28', '29', '30'].forEach((id) => { if (/^4[AB]HC$/.test(normalizedCourse) && !notas[id]) omitidos.push(id); });
+    // Las guías 27 a 29 (repaso de contenidos) son de 3.º A y B HC.
+    ['27', '28', '29'].forEach((id) => { if (/^4[AB]HC$/.test(normalizedCourse) && !notas[id]) omitidos.push(id); });
     return res.status(200).json({
         success: true,
         libro: {
@@ -917,7 +923,7 @@ async function handleGetMisNotas(req, res) {
             notas,
             omitidos,
             desde: 11,
-            hasta: 30
+            hasta: 29
         }
     });
 }

@@ -47,9 +47,9 @@ const validateQuestion = (file, question) => {
 });
 
 const catalog = JSON.parse(read('paes/data/guias-guiadas-20-31.json'));
-const futureIds = Array.from({ length: 12 }, (_, index) => String(index + 20));
+const futureIds = Array.from({ length: 12 }, (_, index) => String(index + 20)).filter((id) => id !== '30'); // la Guía 30 se eliminó el 19-nov
 expect(catalog.version === 'guided-access-2026-20-31-v1', 'El catálogo futuro no tiene la versión esperada.');
-expect(Object.keys(catalog.guides || {}).join(',') === futureIds.join(','), 'El catálogo guiado debe cubrir sin vacíos las guías 20 a 31.');
+expect(Object.keys(catalog.guides || {}).join(',') === futureIds.join(','), 'El catálogo guiado debe cubrir sin vacíos las guías 20 a 29 y 31 (sin la 30, eliminada).');
 
 futureIds.forEach((guideId) => {
   const guide = catalog.guides[guideId];

@@ -51,10 +51,13 @@ async function handle(req,res,ctx){
   })]);
  }
  // Con nota en el libro (G11–G24), la guía ya no es deuda aunque el registro diga borrador o falte.
+ // Guías 25 en adelante (19-nov-2026): siguen abiertas, así que un borrador a medias con nota parcial
+ // continúa «En progreso» porque todavía puede subirla; con nota máxima, entrega previa o sin borrador, ya no es deuda.
  let notas={};try{notas=(await ctx.db.ref('plataforma_paes/libro_notas/'+rut+'/notas').once('value')).val()||{};}catch(_){}
  for(const row of rows){
   const [id,p]=row,nota=Number(String(notas[id]??'').replace(',','.'));
-  if(+id>=11&&+id<=24&&p.required&&['missing','draft','incomplete'].includes(p.state)&&nota>=1&&nota<=7)row[1]={...p,state:'graded',nota:nota.toFixed(1)};
+  const sinMejoraPosible=+id<=24||p.state!=='draft'||p.previouslySubmitted===true||nota>=7;
+  if(+id>=11&&sinMejoraPosible&&p.required&&['missing','draft','incomplete'].includes(p.state)&&nota>=1&&nota<=7)row[1]={...p,state:'graded',nota:nota.toFixed(1)};
  }
  return res.status(200).json({success:true,guides:Object.fromEntries(rows)});
 }

@@ -1151,8 +1151,12 @@ async function handleAdminSaveStudent(req, res, decoded) {
         rut_formato: rutFormato ? String(rutFormato).trim() : rutLimpio,
         updatedAt: Date.now()
     });
+    // Caso (19-nov-2026): el alta no abría libro de notas y las notas automáticas del
+    // estudiante nuevo se descartaban. Un fallo aquí no deshace el alta.
+    let libro = 'error';
+    try { libro = await NOTA_AUTO.abrirLibro(db, student); } catch (e) { console.error('[admin-save-student] libro de notas', e && e.message); }
 
-    return res.status(200).json({ success: true, cuenta });
+    return res.status(200).json({ success: true, cuenta, libro });
 }
 
 // Misma cuenta que crea el admin de estudiantes: correo RUT@est, clave inicial

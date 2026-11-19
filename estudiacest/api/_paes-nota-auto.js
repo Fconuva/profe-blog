@@ -51,4 +51,18 @@ async function registrar(db, { rut, guia, contestadas, total }) {
   return { escrita: true, nota: escrita };
 }
 
-module.exports = { notaLaboriosidad, decidir, registrar };
+// Alta tardía (19-nov-2026): «Agregar estudiante» dejaba cuenta y nómina, pero no libro, y las
+// notas automáticas de ese estudiante se descartaban con «sin-libro-hc». El alta abre el libro
+// vacío de un curso HC; nunca toca un libro que ya existe.
+async function abrirLibro(db, { rut, nombre, curso: cursoAlumno }) {
+  const r = rutLimpio(rut);
+  if (!r || !CURSOS_HC.has(curso(cursoAlumno))) return 'no-hc';
+  let abierto = false;
+  const tx = await db.ref(BASE + '/' + r).transaction(actual => {
+    abierto = actual === null || actual === undefined;
+    return abierto ? { nombre: String(nombre || '').trim(), curso: String(cursoAlumno).trim(), updatedAt: Date.now() } : undefined;
+  }, undefined, false);
+  return tx.committed && abierto ? 'abierto' : 'existente';
+}
+
+module.exports = { notaLaboriosidad, decidir, registrar, abrirLibro };

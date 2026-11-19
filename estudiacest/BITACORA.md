@@ -1,3 +1,20 @@
+## 19-nov-2026 · PAES HC: guías 25 a 29 con nota dejan de salir pendientes y el alta de un estudiante abre su libro
+
+Francisco pide revisar si hay un error generalizado: estudiantes de 3.º A y B HC dicen que les salen guías sin hacer que sí respondieron, y en sus notas ven «pendiente» o un guion.
+
+Diagnóstico sobre los 84 estudiantes de la nómina, simulando su tarjeta de avance con el código real y los datos de producción: no hay pérdida generalizada de respuestas ni evidencia huérfana (0 registros guardados bajo otra identidad, 0 perfiles duplicados, 0 tarjetas en revisión). De las 156 celdas sin nota entre las guías 11 y 28, 150 no tienen ningún registro en el servidor y 6 tienen menos del 25 % contestado. Sí había dos errores del sistema:
+
+1. La regla «con nota en el libro, la guía ya no es deuda» de `_paes-progress.js` valía solo para las guías 11 a 24. En las guías 25 a 29, que siguen abiertas, una guía con nota seguía apareciendo en el contador de pendientes del estudiante. A las 10:31, 19 estudiantes tenían al menos una guía con nota o ya entregada contada como pendiente.
+2. «Agregar estudiante» creaba cuenta y nómina, pero no el libro de notas, y la nota automática descartaba todo lo de ese estudiante con `sin-libro-hc`. Había un caso de alta tardía con tres guías hechas y sin nota.
+
+Cambio (commit 9fd50950, cuatro archivos: `api/_paes-progress.js`, `api/_paes-nota-auto.js`, `api/paes.js`, `scripts/audit-paes-nota-auto.js`): la regla de la tarjeta se extiende a las guías 25 a 29, con una excepción pensada para que nadie deje de completar: el borrador a medias con nota parcial sigue «En progreso», porque todavía puede subirla. `abrirLibro` abre el libro vacío de un curso HC al dar de alta y nunca toca uno que ya existe. La auditoría `audit-paes-nota-auto.js`, que corre dentro de `npm run build`, cubre ambos casos.
+
+Datos, con simulación, aplicación condicional, relectura y comparación: se abrió el libro que faltaba (0 a 1) y se escribieron 4 celdas (3 nuevas del estudiante de alta tardía y 1 subida por un borrador que ya superaba el 75 %). Libros 154 a 154; celdas 3311 a 3314; del plan 4; plan no aplicado 0; 1 celda más subió sola por la nota al guardar durante la clase; bajaron 0, borradas 0, «A» pisadas 0.
+
+Despliegue estudiacest-1dq4xt1lb en producción con el procedimiento seguro desde un worktree limpio en LF (predeploy: fuente canónica, Git y 1082 recursos críticos correctos). Verificado a las 10:52: figura «Ready» y alias de `www.estudiacest.com`, `student-progress` responde 401 sin sesión como corresponde, `/paes/` y `/paes/admin/` responden 200 y `/paes/` carga sin errores de consola a ancho de escritorio y a 375 px. Con el código publicado y los datos de las 10:53, la simulación de los 84 da 0 guías con nota completa mostradas como pendientes; los 19 estudiantes bajan a 10, todos por una de dos razones que no son error: 8 borradores con nota parcial que siguen «En progreso» (uno en la 27, seis en la 28 y uno en la 29) y 3 entregas con menos del 25 %.
+
+Sin verificar: la tarjeta en pantalla con una sesión de estudiante iniciada (no se ingresaron credenciales) y lo que un estudiante haya marcado en su navegador sin que llegara al servidor, que no deja rastro. Quedan a decisión de Francisco los 3 entregados con menos del 25 % (uno en la 22, uno en la 24 y uno en la 29), que no reciben nota automática porque sería un 1,0 nuevo, y si la Guía 27 también debe calificarse al guardar como la 28 y la 29. Seguimientos: dos celdas de la Guía 14 en 4.º B HC siguen sin calcular por instrumento no reconocido, y editar el curso de un estudiante desde el panel no actualiza el curso de su libro.
+
 ## 19-nov-2026 · Admin: el panel general queda con SIMCE, notas de 3.º A, B y D y PAES HC, y se retiran tres tarjetas
 
 Francisco pide reorganizar el panel general de administración (`/admin/`): quitar las tarjetas de la salida pedagógica al cine, la bitácora de La Odisea y las carpetas del Anuario de 4.º D TP, y dejar ordenados SIMCE, las notas de 3.º A, B y D y PAES HC.

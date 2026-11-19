@@ -1,3 +1,17 @@
+## 19-nov-2026 · Admin: el panel general queda con SIMCE, notas de 3.º A, B y D y PAES HC, y se retiran tres tarjetas
+
+Francisco pide reorganizar el panel general de administración (`/admin/`): quitar las tarjetas de la salida pedagógica al cine, la bitácora de La Odisea y las carpetas del Anuario de 4.º D TP, y dejar ordenados SIMCE, las notas de 3.º A, B y D y PAES HC.
+
+Cambio (commit 4ac37a8e, un archivo: `estudiacest/admin/index.html`): el panel muestra primero, en este orden, «Admin SIMCE y Plataforma Estudiantes» (con sus dos botones, admin SIMCE y Bachillerato lector), «Notas de 3.º A, B y D TP» y «Admin PAES HC». Las notas de proceso dejan de ser un botón secundario de la tarjeta de Lecturas y pasan a tarjeta propia, con el mismo destino `/lecturas/adminprofe/#notas-proceso`. Debajo, con el rótulo «Otros paneles», quedan las dos tarjetas que no se pidió quitar ni dejar: «Admin Lecturas» y «Admin PAES TP · Cuartos medios» (semanas 1 a 3). La lista de la portada del acceso nombra ahora las tres áreas principales. Se agrega un único estilo, `.panel-group-title`, para el rótulo. No cambia el JavaScript de ingreso ni de permisos, y el archivo conserva sus saltos de línea originales.
+
+Las tres tarjetas se retiran solo del panel. Sus páginas (`/nm3/salida-muvix-admin.html`, `/nm3/odisea-antes-del-cine/admin.html` y `/4dtp/admin.html`) y sus datos no se tocan y siguen respondiendo por su dirección.
+
+Validaciones antes de publicar: inventario previo de 7 tarjetas y 8 destinos, todos con respuesta 200; `node scripts/audit-paes-house-admin.js` aprobado; identificadores únicos y presentes los que usa el script de ingreso; revisión en navegador con una copia local a 1280 px y a 375 px, mostrando el panel sin iniciar sesión: sin desborde horizontal, sin errores de consola y sin recursos rotos. No se revisó con una sesión de administrador iniciada, porque el ingreso con contraseña es de Francisco.
+
+Despliegue estudiacest-mnis2bpcr en producción con el procedimiento seguro desde un worktree limpio en LF (predeploy: fuente canónica, Git y 1082 recursos críticos correctos). Un primer intento terminó sin publicar y se repitió. Verificado a las 09:29 por el código servido: `/admin/` es idéntico byte a byte al del commit, trae 5 tarjetas en el orden descrito y ninguna mención a las tres retiradas; los 7 destinos del panel responden 200, igual que la sección de notas de proceso y las tres páginas retiradas del panel. En el navegador, la página publicada carga sin errores de consola.
+
+Queda a decisión de Francisco, sin tocar: la descripción de la tarjeta PAES HC todavía habla de «Ensayos 1 y 2» y «las 12 guías», y el README describe el panel como de dos destinos.
+
 ## 19-nov-2026 · PAES HC: se elimina la Guía 30, «Mis notas» de la 29 a la 11, planilla fija y nota al guardar en las guías 28 y 29
 
 Francisco informa que el 4 de diciembre todo debe estar en Lirmi, por lo que la Guía 29 (26-nov) será la última. Pide borrar la Guía 30, ordenar «Mis notas del segundo semestre» de la 29 hacia abajo, dejar las notas al día hasta la Guía 28 respetando las que puso a mano y retomando las de quienes volvieron a responder, que las guías 28 y 29 se califiquen apenas el estudiante responde, y que en la planilla del panel docente queden fijos el nombre y el número de guía al desplazarla.

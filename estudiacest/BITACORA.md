@@ -1,3 +1,12 @@
+## 24-nov-2026 · SIMCE y NM2 2.º HC: dos correos de estudiantes revisados, una clave restablecida
+
+Francisco pide revisar los correos de estudiantes con problemas en las guías y responderles. Todo se leyó por UID, con `submitted` y `completada` juntos.
+
+1. Un estudiante de 2.º A HC no podía entrar «con su RUT» y creía haber perdido el avance. Había cambiado su clave en septiembre (`password_changed=true`). La cuenta estaba activa y no tenía duplicados. Su clase 1 de NM2 (`nm2-2026-1118`) estaba guardada sin entregar, y esa clase no tiene ventana de cierre. Con el OK de Francisco se restableció la clave como lo hace `resetStudentPassword` de `api/estudiantes.js`: clave por defecto, y `password_changed`, `password_reset_pending` y `perfil_completo` en false. Se probó el ingreso: HTTP 200, misma UID.
+2. Un estudiante de 2.º B HC decía haber entregado todo. Tenía entregadas la clase 1 de NM2 y las guías PAES 1 a 6. No tenía nada en `sesion-u3-10` ni `sesion-u3-12`, tenía `sesion-u3-11` guardada sin enviar, `retro-idee-nm2` iniciada y nada en las guías PAES 7 a 9. Las cuatro sesiones SIMCE tienen `excepciones_desbloqueo` para su UID, así que los enlaces le sirven. No se tocaron datos.
+
+Se respondió a los dos desde el correo institucional, con el OK de Francisco. Sin cambios de código.
+
 ## 19-nov-2026 · PAES HC: guías 25 a 29 con nota dejan de salir pendientes y el alta de un estudiante abre su libro
 
 Francisco pide revisar si hay un error generalizado: estudiantes de 3.º A y B HC dicen que les salen guías sin hacer que sí respondieron, y en sus notas ven «pendiente» o un guion.

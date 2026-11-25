@@ -1,3 +1,13 @@
+## 25-nov-2026 · Lirmi: promedio del 2.º semestre de 2.º A y 2.º B HC cargado en una columna «PROMEDIO»
+
+- Orden de Francisco: «sube las notas a lirmi». Dio el OK («Sí, súbelos») después de ver la simulación.
+- Se hizo como en 4A/4B-HC: una columna nueva «PROMEDIO» en el Segundo Semestre de cada curso (Taller de Comprensión Lectora 1). Es sumativa y parcial, con fecha 25-11-2026, y se creó con el formulario «Agregar evaluación».
+- Las notas se enviaron por la API interna del libro desde una pestaña ya autenticada del Chrome de Francisco. Se usó una sola conexión CDP y los tokens quedaron solo en memoria.
+- Fuente: el campo `promedioFinal` del nodo `plataforma_estudiantes/planillas_semestre/2026-s2`, después de las correcciones del día. Se emparejó por nombre completo con la nómina de Lirmi sin retirados: 42 de 42 en 2A-HC y 32 de 33 en 2B-HC, todos por nombre exacto.
+- Simulación previa: en ambos cursos se llenó el formulario sin guardarlo y se armó el envío.
+- Aplicado en 2A-HC (instrumento 11814071) y en 2B-HC (instrumento 11814134). Releído tras recargar: 42 de 42 y 32 de 32 iguales, sin celdas de más. La otra columna del semestre en 2B-HC («Evaluación proceso», 5-nov) quedó idéntica.
+- En 2B-HC queda en blanco a propósito el estudiante al que se le cerró el año, porque su nota de cierre ya está en la columna del 5-nov. El primer semestre no se tocó.
+
 ## 25-nov-2026 · Planilla del 2.º semestre: sin piso de 6,0; pendientes «P» fuera del promedio o 1,0 con más de 5
 
 - Orden de Francisco para 2A-HC y 2B-HC: con 5 pendientes o menos, las pendientes quedan «P» y no entran al promedio; con más de 5, todas valen 1,0 y entran; sin piso de 6,0; promedio final = promedio de las notas que cuentan. En 2A-HC la clase 1 de NM2 sigue sin contar.

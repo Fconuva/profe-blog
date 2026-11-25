@@ -1,3 +1,11 @@
+## 25-nov-2026 · Notas del 2.º semestre 2A/2B-HC: revisión por envíos nuevos y dos alzas
+
+- Revisión de solo lectura del semestre completo: dry-run de `scripts/close-simce-2026.js` (U3 clases 1–7 y 10–12, U4 miniensayos 1–3) y lectura de `plataforma_paes/nm2_intentos`. La salida quedó fuera del repo.
+- Solo faltaban 2 notas de un estudiante de 2A-HC que entregó el 23-nov (U3-12 y U3-3). Con OK de Francisco se escribieron solo esas 2 rutas de `calificaciones_clase`. Antes se simuló, sin nota del profesor y con alza en ambas; esperado 2, aplicado 2, comprobado por relectura.
+- El script de cierre no se aplicó tal cual porque también cierra las sesiones SIMCE y deja `excepciones_desbloqueo` en null, lo que revocaría los desbloqueos del 18-nov. No se tocaron sesiones ni excepciones.
+- Hay 3 «Cuenta técnica temporal» activas en 2A-HC: quedan fuera de la nómina, que tiene 84 estudiantes.
+- Pendientes de decisión de Francisco: si NM2 clase 1 entra al semestre (no está en la planilla ni tiene nota guardada; hay 25 borradores casi completos en 2A-HC), y si los 59 casos de U4 sin evidencia van con 1,0 o fuera del promedio. Después siguen el PDF y los correos por estudiante.
+
 ## 25-nov-2026 · SIMCE y NM2 2.º HC: tercer correo de estudiante, clave restablecida
 
 - Un estudiante de 2B-HC escribió que no podía entrar. Cuenta activa y sin duplicado por RUT, sin ingresos desde el 4-nov; no tiene intento NM2 de la clase 1 (18-nov) ni respuestas en U3 clases 11 y 12 ni en U4 miniensayos 1 a 3 (siguen con nota 1, no entregado; no hay nada guardado que calificar por laboriosidad).

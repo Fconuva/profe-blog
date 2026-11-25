@@ -1,3 +1,10 @@
+## 25-nov-2026 · Planilla web del 2.º semestre: se quita la fila de un estudiante de 2B-HC con el año cerrado
+
+- Orden de Francisco: el estudiante al que se le cerró el año sale de la planilla como los retirados («Sí, sácalo»). El OK se volvió a confirmar con él justo antes de escribir.
+- Se borró solo esa fila del nodo `plataforma_estudiantes/planillas_semestre/2026-s2` y `meta.total` quedó en 74 (42 de 2A-HC y 32 de 2B-HC). La simulación previa contra el nodo vivo dio esperado = aplicado, y las otras 74 filas quedaron idénticas. Las notas, las respuestas y Lirmi no se tocaron.
+- Comprobado con el módulo publicado contra Firebase: los 74 ven exactamente su fila; el estudiante recibe `planilla: null` y la página le muestra lo mismo que a un retirado. Se agregó a la lista privada de retirados, que está fuera del repositorio, así que una nueva carga también da 74.
+- Los PDF de curso enviados a las 8:52 y 8:53 no se pueden retirar. No se regeneraron. Los 73 correos individuales siguen sin enviarse.
+
 ## 25-nov-2026 · Notas del 2.º semestre 2A/2B-HC publicadas: cada estudiante ve solo su fila
 
 - Pedido de Francisco: subir la planilla a la página para que cada estudiante sepa lo que tiene pendiente. Eligió que cada uno vea solo su fila, con sesión iniciada.

@@ -1,3 +1,12 @@
+## 25-nov-2026 · Notas del 2.º semestre 2A/2B-HC: ¿las guías cerradas aceptan a quien la tiene pendiente?
+
+- Pedido: comprobar, leyendo código y Firebase en solo lectura, si un estudiante con una guía pendiente de la planilla puede enviarla aunque la sesión esté cerrada. No se escribió nada ni se probó con cuenta real de estudiante.
+- Las 13 sesiones de la planilla (U3 1–7 y 10–12, U4 1–3) están cerradas (`activa=false`, `respuestas_bloqueadas`, `cierre_final`). Las reglas desplegadas son iguales a `firebase-rules.json`: con `cierre_final` solo escribe quien tiene `excepciones_desbloqueo/{uid}=true`. Lo mismo exigen `SimceSessionGate`, `api/_simce-u4.js`, `api/_simce-u3s12.js` y las rutas `personal-guided-*` de `api/estudiantes.js`.
+- Cruce de las celdas «Pendiente» con las excepciones: 175 de 186 pueden enviarse. Las 11 restantes son de dos estudiantes: un retirado de 2B-HC (10 celdas, fuera de la planilla) y un estudiante de 2B-HC con la Clase 12 en ruta personal, que tiene excepción en `personal-u3-12-entrevista` y debe entrar por `/estudiantes/apoyo-personal/actividad.html?sesion=12`; el enlace C12 estándar le muestra «Clase cerrada».
+- NM2 clase 1: `api/_paes-nm2.js` no revisa fecha ni cierre en `nm2-save`/`nm2-submit`; los 24 pendientes pueden enviarla.
+- El arreglo `ccb9466d` («Guías anteriores» → `/estudiantes/dashboard.html?guias=simce`) está publicado en www.estudiacest.com (panel y `/paes/nm2/` lo traen).
+- Un envío nuevo no cambia la nota por sí solo: hay que recalificar por laboriosidad, simular y pedir el OK de Francisco antes de escribir.
+
 ## 25-nov-2026 · NM2 2.º HC: «Guías anteriores» lleva a las guías SIMCE y botón al dashboard SIMCE
 
 - Pedido de Francisco: 2A-HC y 2B-HC hicieron SIMCE todo el año y solo tienen 4 guías PAES nuevas. La entrada SIMCE sigue llevando a `/paes/nm2/`; lo que estaba mal era «Guías anteriores», que abría `/paes/?historico=nm2` (guías PAES 1–9 de otros cursos).

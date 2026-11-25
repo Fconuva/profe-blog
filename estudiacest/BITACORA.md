@@ -4,7 +4,7 @@
 - Nodo `plataforma_estudiantes/planillas_semestre/2026-s2`: simulación previa sobre el nodo vivo (2A: 2 cambian; 2B: 15 cambian, con bajas de 0,1 en filas sostenidas antes por el piso); se escribieron 17 filas, esperado = aplicado y las otras 57 idénticas. Después, dos correcciones individuales ordenadas por Francisco (una de 2B con dos pendientes perdonadas con 7,0; una de 2A con dos notas llevadas a 7,0): esperado 2 = aplicado 2, resto idéntico.
 - Página: `paes/nm2/notas.js` (tooltip y resumen sin piso; «las P no entran» o «valen 1,0») y la leyenda de `notas.html`; `scripts/audit-planilla-semestre.js` cubre el caso de más de 5 pendientes. Auditoría OK.
 - Commit `3c31832d`, desplegado con `deploy:prod:safe` (`dpl_BtdMNfiawic1s663EZgBcHojfCzJ`) desde una instantánea limpia en `C:/dev/worktrees/`. En producción, 74 de 74 ven exactamente su fila; `notas.js` y `notas.html` servidos idénticos al commit.
-- PDF «_definitivas» de los dos cursos generados desde el nodo final, fuera del repositorio. Los correos a los cursos esperan el OK de Francisco. Lirmi no se tocó.
+- PDF «_definitivas» de los dos cursos generados desde el nodo final, fuera del repositorio. Con el OK de Francisco se enviaron como respuesta en el hilo de notas de cada curso, desde el correo del colegio, con su PDF adjunto: 2A-HC a las 12:39 y 2B-HC a las 12:40; ambos verificados en Enviados. Lirmi no se tocó.
 
 ## 25-nov-2026 · Planilla del 2.º semestre: en 2.º A HC la clase 1 de NM2 deja de contar
 

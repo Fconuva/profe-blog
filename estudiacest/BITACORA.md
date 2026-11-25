@@ -1,3 +1,11 @@
+## 25-nov-2026 · Vlog 3.º TP «Mi día en imágenes y voz»: regla de evaluación nueva publicada en la guía
+
+- Orden de Francisco: el video vale si llega por Canva o por correo; la base son los cuatro criterios del video (16 puntos, 16 de 16 = 7,0); el libreto suma +4 si está completo con tiempos y +2 si está incompleto o sin tiempos; nota sobre 16, 60 % de exigencia, tope 7,0; una nota por video para cada integrante, en pareja o individual. Pidió publicarla en la guía («Sí, publícala»).
+- `scripts/generate-nm3-mi-dia.py`: la rúbrica de la p. 19 queda con los cuatro criterios del video; salen las filas «Libreto visual en Canva» y «Planificación del tiempo» y entra el bloque «Puntaje adicional · Libreto visual» (+4, +2, 0). «Proceso y entrega» ya no exige el libreto. La ficha dice «16 puntos + 4 adicionales»; la portada y la p. 17 piden el video por Canva o por correo. Sale el texto de 24 puntos y 14,4; entra el cálculo sobre 16 (10 puntos = 4,0). Se regeneraron `guia.html` y el PDF.
+- Mismo cambio en `nm3/mi-dia-en-imagenes/index.html`, `docente.html` y la tarjeta de la clase 4 en `nm3/index.html`.
+- Validaciones: `render-nm3-mi-dia.cjs` (19 páginas, sin invasión del pie), `check-nm3-mi-dia.cjs` (390, 1366 y 3840 px, sin errores ni desbordes), build correcto, revisión en navegador de la p. 19 a 375 y escritorio.
+- Commit `6bbed978`, desplegado con `deploy:prod:safe` (`dpl_25NjhYZHTvJKuL3azEAsQVCxaGxV`) desde una instantánea limpia en `C:/dev/worktrees/`, porque la carpeta compartida tenía cambios sin commit de otros agentes. No se tocaron notas, Firebase ni Lirmi.
+
 ## 25-nov-2026 · Planilla del 2.º semestre: aviso de reorganización NM2, foto de las 9:35 y reenvío a 2A y 2B
 
 - Orden de Francisco para 2A-HC: de las 4 clases PAES (NM2) solo se hizo la 1, y las clases 2, 3 y 4 no entran en el conteo. Todo lo anterior a la clase 1 debe estar completo. Las notas no cambian, solo se agrega el aviso («Solo agregar el aviso»). Después aprobó extender el aviso a 2B-HC.

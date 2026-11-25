@@ -21,6 +21,7 @@
 - NM2 clase 1: `api/_paes-nm2.js` no revisa fecha ni cierre en `nm2-save`/`nm2-submit`; los 24 pendientes pueden enviarla.
 - El arreglo `ccb9466d` («Guías anteriores» → `/estudiantes/dashboard.html?guias=simce`) está publicado en www.estudiacest.com (panel y `/paes/nm2/` lo traen).
 - Un envío nuevo no cambia la nota por sí solo: hay que recalificar por laboriosidad, simular y pedir el OK de Francisco antes de escribir.
+- Seguimiento: con el OK de Francisco se redactó en Gmail u/3 el aviso al estudiante de la C12 personal, pero Francisco informó que a ese estudiante se le cerró el año anticipadamente. El correo no se envió y el borrador se descartó. No se le escribe.
 
 ## 25-nov-2026 · NM2 2.º HC: «Guías anteriores» lleva a las guías SIMCE y botón al dashboard SIMCE
 

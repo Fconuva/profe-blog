@@ -1,3 +1,11 @@
+## 25-nov-2026 · Planilla del 2.º semestre: sin piso de 6,0; pendientes «P» fuera del promedio o 1,0 con más de 5
+
+- Orden de Francisco para 2A-HC y 2B-HC: con 5 pendientes o menos, las pendientes quedan «P» y no entran al promedio; con más de 5, todas valen 1,0 y entran; sin piso de 6,0; promedio final = promedio de las notas que cuentan. En 2A-HC la clase 1 de NM2 sigue sin contar.
+- Nodo `plataforma_estudiantes/planillas_semestre/2026-s2`: simulación previa sobre el nodo vivo (2A: 2 cambian; 2B: 15 cambian, con bajas de 0,1 en filas sostenidas antes por el piso); se escribieron 17 filas, esperado = aplicado y las otras 57 idénticas. Después, dos correcciones individuales ordenadas por Francisco (una de 2B con dos pendientes perdonadas con 7,0; una de 2A con dos notas llevadas a 7,0): esperado 2 = aplicado 2, resto idéntico.
+- Página: `paes/nm2/notas.js` (tooltip y resumen sin piso; «las P no entran» o «valen 1,0») y la leyenda de `notas.html`; `scripts/audit-planilla-semestre.js` cubre el caso de más de 5 pendientes. Auditoría OK.
+- Commit `3c31832d`, desplegado con `deploy:prod:safe` (`dpl_BtdMNfiawic1s663EZgBcHojfCzJ`) desde una instantánea limpia en `C:/dev/worktrees/`. En producción, 74 de 74 ven exactamente su fila; `notas.js` y `notas.html` servidos idénticos al commit.
+- PDF «_definitivas» de los dos cursos generados desde el nodo final, fuera del repositorio. Los correos a los cursos esperan el OK de Francisco. Lirmi no se tocó.
+
 ## 25-nov-2026 · Planilla del 2.º semestre: en 2.º A HC la clase 1 de NM2 deja de contar
 
 - Orden de Francisco, solo para 2A-HC: la clase 1 de PAES (NM2) no cuenta en la nómina; 2B-HC no cambia. Ante las siete bajas de 0,1 (estudiantes con 7,0 en NM2) decidió «que bajen 0,1». Para el aviso y el PDF eligió «cambiar aviso y reenviar».

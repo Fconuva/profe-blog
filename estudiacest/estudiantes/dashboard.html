@@ -37,6 +37,7 @@
             display:flex; align-items:center; gap:6px;
         }
         .btn-avatar:hover { background:rgba(255,255,255,.25); transform:translateY(-1px); }
+        .btn-avatar[hidden] { display:none; }
         .btn-avatar .av-label { font-size:11px; font-weight:700; letter-spacing:.3px; }
         .avatar-btn-mini { width:24px; height:24px; display:inline-flex; align-items:center; justify-content:center; }
         /* MAIN */
@@ -371,6 +372,7 @@
             </div>
         </div>
         <div class="header-right">
+            <a href="/paes/nm2/" class="btn-avatar" id="btnGuiasPaes2hc" hidden><span class="av-label">Guías PAES</span></a>
             <a href="#miEspacio" class="btn-avatar" id="btnAvatar" title="Mi espacio"><span class="avatar-btn-mini" id="headerAvatarEmoji"></span><span class="av-label">Mi espacio</span></a>
             <button class="bell-btn" id="bellBtn" onclick="toggleMsgPopup()" title="Mensajes del profesor">🔔<span class="bell-dot" id="bellDot"></span></button>
             <button class="btn-logout" id="btnLogout">Cerrar Sesión</button>
@@ -620,7 +622,18 @@
         auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
         const db = firebase.database();
         const BASE = 'plataforma_estudiantes';
-        const SHARED_LOGIN_URL = '/lecturas/?next=' + encodeURIComponent('/estudiantes/dashboard.html');
+        const SHARED_LOGIN_URL = '/lecturas/?next=' + encodeURIComponent('/estudiantes/dashboard.html' + location.search);
+        // 25-nov: 2.º A y B HC entran por defecto a sus cuatro guías PAES (/paes/nm2/).
+        // Con ?guias=simce (botón de esa página) ven aquí sus guías SIMCE del año; la marca
+        // dura la pestaña para que «Volver al panel» desde una sesión no los devuelva a PAES.
+        const SIMCE_2HC_KEY = 'estudiacest_guias_simce_2hc';
+        const verGuiasSimce2hc = (() => {
+            const pedido = new URLSearchParams(location.search).get('guias') === 'simce';
+            try {
+                if (pedido) sessionStorage.setItem(SIMCE_2HC_KEY, '1');
+                return pedido || sessionStorage.getItem(SIMCE_2HC_KEY) === '1';
+            } catch (e) { return pedido; }
+        })();
         initStudentForcedRefresh({ auth, db, base: BASE });
         initGatoChallengeAlerts({ auth, db, base: BASE, openUrl: 'arena-gato.html', storageScope: 'estudiantes' });
         const CURSO_LABELS = {'1A-HC':'1°A HC','1B-HC':'1°B HC','2A-HC':'2°A HC','2B-HC':'2°B HC','2A-TP':'2°A TP','2B-TP':'2°B TP','2C-TP':'2°C TP','2D-TP':'2°D TP','2E-TP':'2°E TP','3A-HC':'3°A HC','3B-HC':'3°B HC','4A-HC':'4°A HC','4B-HC':'4°B HC','4A-TP':'4°A TP','4B-TP':'4°B TP','4C-TP':'4°C TP','4D-TP':'4°D TP','4E-TP':'4°E TP'};
@@ -1109,7 +1122,9 @@
                 const studentSnap = await db.ref(BASE + '/estudiantes/' + user.uid).once('value');
                 const student = studentSnap.val();
                 if (!student) { auth.signOut(); window.location.href = SHARED_LOGIN_URL; return; }
-                if (/^2[AB]-HC$/.test(student.curso || '')) { window.location.replace('/paes/nm2/'); return; }
+                const esSegundoHc = /^2[AB]-HC$/.test(student.curso || '');
+                if (esSegundoHc && !verGuiasSimce2hc) { window.location.replace('/paes/nm2/'); return; }
+                document.getElementById('btnGuiasPaes2hc').hidden = !esSegundoHc;
                 if (!student.perfil_completo) { window.location.href = 'perfil.html'; return; }
                 if (String(student.ruta_personal || '').startsWith('/estudiantes/')) {
                     window.location.replace(student.ruta_personal);

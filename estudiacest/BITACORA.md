@@ -1,3 +1,11 @@
+## 25-nov-2026 · Notas del 2.º semestre 2A/2B-HC: PDF de promedios, borradores de correo y cruce con retirados de Lirmi
+
+- Solo lectura de RTDB (`plataforma_estudiantes` y `plataforma_paes/nm2_intentos`): nota por tarea de U3 (clases 1–7 y 10–12), U4 (miniensayos 1–3) y NM2 clase 1, por laboriosidad, sin bajar notas publicadas y respetando `teacherGradeOverride`. U4 o NM2 sin evidencia quedan fuera del promedio. Las clases anteriores al ingreso de un estudiante quedan N/A.
+- Regla de Francisco: con 5 pendientes o menos, el promedio final no baja de 6,0; con más de 5 se mantiene y queda para revisión.
+- Cruce con Lirmi (libro de calificaciones, 2.º semestre): 2.º A HC sin retirados; 2.º B HC con 9 filas tachadas como retiradas, 8 de ellas con cuenta en la plataforma. Se excluyeron del PDF y de los correos. Quedan 75 estudiantes vigentes.
+- PDF privado para Francisco fuera del repositorio y 73 borradores de correo por estudiante; 2 vigentes sin correo institucional válido. No se envió ningún correo ni se escribió en Firebase o en Lirmi: espera el OK de Francisco.
+- Pendiente: la nota NM2 clase 1 de 2B-HC sigue sin publicarse para los estudiantes.
+
 ## 25-nov-2026 · Notas del 2.º semestre 2A/2B-HC: revisión por envíos nuevos y dos alzas
 
 - Revisión de solo lectura del semestre completo: dry-run de `scripts/close-simce-2026.js` (U3 clases 1–7 y 10–12, U4 miniensayos 1–3) y lectura de `plataforma_paes/nm2_intentos`. La salida quedó fuera del repo.

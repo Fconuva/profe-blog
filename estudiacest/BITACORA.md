@@ -1,3 +1,11 @@
+## 25-nov-2026 · NM2 2.º HC: «Guías anteriores» lleva a las guías SIMCE y botón al dashboard SIMCE
+
+- Pedido de Francisco: 2A-HC y 2B-HC hicieron SIMCE todo el año y solo tienen 4 guías PAES nuevas. La entrada SIMCE sigue llevando a `/paes/nm2/`; lo que estaba mal era «Guías anteriores», que abría `/paes/?historico=nm2` (guías PAES 1–9 de otros cursos).
+- `paes/nm2/index.html`: «Guías anteriores (SIMCE)» y un botón nuevo «Mis guías SIMCE del año», visible también después de ingresar, llevan a `/estudiantes/dashboard.html?guias=simce`.
+- `estudiantes/dashboard.html`: con `?guias=simce` (o la marca de la misma pestaña en sessionStorage) el dashboard ya no redirige a 2A/2B-HC hacia `/paes/nm2/`, así «Volver al panel» desde una clase o desde U4 no los devuelve a PAES. Muestra un botón «Guías PAES» de vuelta. Sin el parámetro, el comportamiento de antes se mantiene. Las rutas de 3.º/4.º HC y TP no cambian.
+- `AGENTS.md` actualizado. La ruta `/paes/?historico=nm2` sigue existiendo, pero ya no se enlaza desde NM2.
+- Validaciones: build (1082 recursos críticos) y auditoría NM2 (827 comprobaciones) correctas. Commit `ccb9466d`, desplegado con `deploy:prod:safe` (`dpl_FbjjR55JWKnFqBJqrdHG8SCidMeK`, READY, alias www.estudiacest.com) desde una instantánea limpia en `C:/dev/worktrees/` porque había cambios sin commit de otros agentes en `api/`. Comprobado en el navegador con una sesión técnica simulada (sin datos reales): 2A/2B-HC sin parámetro van a `/paes/nm2/`, con el botón quedan en el dashboard SIMCE y «Volver al panel» no rebota; 3.º/4.º HC sin cambios; sin errores JS ni desborde a 390 y 1280 px. En producción, sin sesión, el botón pasa por el login y conserva `?guias=simce` en `next`. Sin cambios en notas, respuestas ni Firebase.
+
 ## 25-nov-2026 · Notas del 2.º semestre 2A/2B-HC: PDF de promedios, borradores de correo y cruce con retirados de Lirmi
 
 - Solo lectura de RTDB (`plataforma_estudiantes` y `plataforma_paes/nm2_intentos`): nota por tarea de U3 (clases 1–7 y 10–12), U4 (miniensayos 1–3) y NM2 clase 1, por laboriosidad, sin bajar notas publicadas y respetando `teacherGradeOverride`. U4 o NM2 sin evidencia quedan fuera del promedio. Las clases anteriores al ingreso de un estudiante quedan N/A.

@@ -1,3 +1,11 @@
+## 25-nov-2026 · Planilla del 2.º semestre: en 2.º A HC la clase 1 de NM2 deja de contar
+
+- Orden de Francisco, solo para 2A-HC: la clase 1 de PAES (NM2) no cuenta en la nómina; 2B-HC no cambia. Ante las siete bajas de 0,1 (estudiantes con 7,0 en NM2) decidió «que bajen 0,1». Para el aviso y el PDF eligió «cambiar aviso y reenviar».
+- Nodo `plataforma_estudiantes/planillas_semestre/2026-s2`: en las 42 filas de 2A-HC la celda `nm2-1` queda sin nota ni pendiente y se recalcularon promedio de tareas, pendientes, final y piso con la fórmula de la planilla. Simulación previa sobre el nodo vivo (74 de 74 reproducidas): 21 suben, 14 iguales, 7 bajan 0,1 y 2 pierden una pendiente; ningún piso cambia. Esperado 42 = aplicado 42; las 32 filas de 2B-HC y `meta` idénticas.
+- Página: `paes/nm2/notas.js` muestra la celda NM2 de 2A-HC como «No cuenta en 2.º A HC», sin botón a la clase NM2; `notas.html` muestra a cada curso solo su aviso (2A: ninguna clase NM2 cuenta; 2B: solo hasta la clase 1). `scripts/audit-planilla-semestre.js` cubre los dos casos. Build correcto (1085 recursos).
+- Commit `1efe34aa`, desplegado con `deploy:prod:safe` (`dpl_AYyyEWDNZeSx2j9sKRL4Xctc2gZ3`, alias www.estudiacest.com) desde una instantánea limpia en `C:/dev/worktrees/`. En producción, con el módulo publicado contra Firebase, 74 de 74 ven exactamente su fila; `notas.js` y `notas.html` servidos son idénticos al commit.
+- PDF nuevo de 2A-HC, sin la columna NM2, generado desde el nodo ya escrito; queda fuera del repositorio. El correo al curso espera el OK de Francisco al texto. Notas, respuestas y Lirmi no se tocaron.
+
 ## 25-nov-2026 · Vlog 3.º TP «Mi día en imágenes y voz»: regla de evaluación nueva publicada en la guía
 
 - Orden de Francisco: el video vale si llega por Canva o por correo; la base son los cuatro criterios del video (16 puntos, 16 de 16 = 7,0); el libreto suma +4 si está completo con tiempos y +2 si está incompleto o sin tiempos; nota sobre 16, 60 % de exigencia, tope 7,0; una nota por video para cada integrante, en pareja o individual. Pidió publicarla en la guía («Sí, publícala»).

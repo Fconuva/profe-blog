@@ -14,6 +14,7 @@
 - PDF privado para Francisco fuera del repositorio y 73 borradores de correo por estudiante; 2 vigentes sin correo institucional válido. No se envió ningún correo ni se escribió en Firebase o en Lirmi: espera el OK de Francisco.
 - Pendiente: la nota NM2 clase 1 de 2B-HC sigue sin publicarse para los estudiantes.
 - 25-nov: Francisco pidió informar por curso. Se envió desde el correo institucional un correo a la dirección de curso de 2.º A HC y otro a la de 2.º B HC, cada uno con su planilla en PDF, sin notas internas ni retirados. Los 73 correos individuales siguen sin enviarse. Pendiente: publicar la planilla en la plataforma.
+- 25-nov, 9:00 y 9:01: en el mismo hilo de cada curso se respondió con el enlace de cada guía de la planilla (Unidad 3 C1–C7 y C10–C12, miniensayos U4 1–3 y NM2 clase 1). Los 14 enlaces responden en www.estudiacest.com. No se comprobó con una cuenta real de estudiante si las guías cerradas dejan enviar.
 
 ## 25-nov-2026 · Notas del 2.º semestre 2A/2B-HC: revisión por envíos nuevos y dos alzas
 

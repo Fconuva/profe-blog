@@ -84,11 +84,11 @@ expect(Boolean(reconciliationSource), 'El dashboard no reconcilia la calificaciÃ
 expect(dashboard.includes('const submissionStatus = classifySubmissionStatus(myResp);'), 'La tarjeta no reutiliza classifySubmissionStatus.');
 expect(dashboard.includes('if (classifySubmissionStatus(respuestas[ses.id]).completed)'), 'El contador no reutiliza classifySubmissionStatus.');
 expect(!/completada\s*===\s*true\s*\|\|[^\n]*submitted\s*===\s*true/.test(dashboard), 'Queda un OR disperso entre completada y submitted.');
-expect(dashboard.includes('function renderLaborGrades(grades, respuestas)'), 'La tabla de calificaciones no recibe las respuestas vivas.');
+expect(dashboard.includes('function renderLaborGrades(grades, respuestas, planilla)'), 'La tabla de calificaciones no recibe las respuestas vivas.');
 expect(dashboard.includes('sessionId: item.sessionId || sessionId'), 'La tabla de calificaciones pierde la clave de sesiÃ³n necesaria para reconciliar.');
-expect(dashboard.includes('renderLaborGrades(laborGrades, respuestas);'), 'La tabla de calificaciones no se renderiza con respuestas vivas.');
+expect(dashboard.includes('renderLaborGrades(laborGrades, respuestas, planilla);'), 'La tabla de calificaciones no se renderiza con respuestas vivas.');
 const responseReadIndex = dashboard.indexOf('await Promise.all(sesiones.map(async (ses) =>');
-const reconciledRenderIndex = dashboard.indexOf('renderLaborGrades(laborGrades, respuestas);', responseReadIndex);
+const reconciledRenderIndex = dashboard.indexOf('renderLaborGrades(laborGrades, respuestas, planilla);', responseReadIndex);
 expect(responseReadIndex >= 0 && reconciledRenderIndex > responseReadIndex, 'La tabla se renderiza antes de cargar las respuestas vivas.');
 
 if (classifierSource && reconciliationSource) {

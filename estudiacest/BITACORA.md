@@ -1,3 +1,10 @@
+## 25-nov-2026 · SIMCE y NM2 2.º HC: tercer correo de estudiante, clave restablecida
+
+- Un estudiante de 2B-HC escribió que no podía entrar. Cuenta activa y sin duplicado por RUT, sin ingresos desde el 4-nov; no tiene intento NM2 de la clase 1 (18-nov) ni respuestas en U3 clases 11 y 12 ni en U4 miniensayos 1 a 3 (siguen con nota 1, no entregado; no hay nada guardado que calificar por laboriosidad).
+- Con OK de Francisco: clave restablecida por UID igual que `resetStudentPassword()` (clave por defecto, `perfil_completo=false`), comprobada por lectura (`tokensValidAfterTime` de hoy, perfil para elegir clave nueva). Respuesta enviada en su hilo de frnunez: entrar, cambiar la clave y hacer hoy las clases 1 y 2 de NM2 con «Entregar mi trabajo».
+- No se reabrieron sesiones SIMCE cerradas el 10-nov.
+- Queda sin empezar el encargo de notas del 2.º semestre de 2A/2B-HC (promedios por tarea, flexibilidad por laboriosidad, PDF y correo a cada estudiante): pasa a una sesión nueva.
+
 ## 24-nov-2026 · SIMCE y NM2 2.º HC: dos correos de estudiantes revisados, una clave restablecida
 
 Francisco pide revisar los correos de estudiantes con problemas en las guías y responderles. Todo se leyó por UID, con `submitted` y `completada` juntos.

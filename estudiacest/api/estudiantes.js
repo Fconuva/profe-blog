@@ -1006,6 +1006,8 @@ const SIMCE_ADMIN_ATTEMPTS = require('./_simce-admin-attempts.js');
 const SIMCE_ADMIN_GRADES = require('./_simce-admin-grades.js');
 const SIMCE_HONOR = require('./_simce-honor.js');
 const SIMCE_BACHILLERATO = require('./_simce-bachillerato.js');
+// Planilla del 2.º semestre de 2.º HC: cada estudiante ve solo su fila.
+const PLANILLA_SEMESTRE = require('./_planilla-semestre.js');
 
 module.exports = async (req, res) => {
     res.setHeader('Access-Control-Allow-Origin', resolveAllowedOrigin(req));
@@ -1021,6 +1023,7 @@ module.exports = async (req, res) => {
 
         if (action === 'simce-admin-grade') return await SIMCE_ADMIN_GRADES.manejar(req, res, db, auth);
         if (action === 'simce-honor') return await SIMCE_HONOR.manejar(req, res, db, auth);
+        if (action === 'planilla-semestre') return await PLANILLA_SEMESTRE.manejar(req, res, db, auth);
         if (action.startsWith('bachillerato-')) return await SIMCE_BACHILLERATO.manejar(req, res, action.slice('bachillerato-'.length), db, auth);
         if (action.startsWith('simce-admin-')) return await SIMCE_ADMIN_ATTEMPTS.manejar(req, res, action.slice('simce-admin-'.length), db, auth);
         if (action.startsWith('simce-u3s7-')) return await handleU3S7(req, res, action);

@@ -1,3 +1,11 @@
+## 25-nov-2026 · Planilla del 2.º semestre: aviso de reorganización NM2, foto de las 9:35 y reenvío a 2A y 2B
+
+- Orden de Francisco para 2A-HC: de las 4 clases PAES (NM2) solo se hizo la 1, y las clases 2, 3 y 4 no entran en el conteo. Todo lo anterior a la clase 1 debe estar completo. Las notas no cambian, solo se agrega el aviso («Solo agregar el aviso»). Después aprobó extender el aviso a 2B-HC.
+- `paes/nm2/notas.html`: nueva línea destacada en la leyenda, más dos líneas («si respondiste y no enviaste, se calificó» y «lo que entregues después se suma en la próxima actualización»). `node scripts/audit-planilla-semestre.js` pasó. Commit 62fcff09, desplegado con `deploy:prod:safe` y comprobado en www.
+- Francisco detectó guías entregadas que aparecían con 1,0. La causa: la foto de las 8:22 era anterior a que esos estudiantes se pusieran al día. Con su OK («Sí, actualizar ya») se tomó una foto nueva a las 9:35 y se volvió a cargar el nodo `planillas_semestre/2026-s2`. Cambiaron 34 celdas de 18 estudiantes, todos de 2B. Ninguna nota bajó. Un promedio bajó una décima por el recálculo, y Francisco decidió dejarlo. 2A no tuvo cambios. Los 74 ven exactamente su fila.
+- Hay un caso que no es error de la foto: un estudiante reclamó 1,0 en guías que nunca guardó (un borrador vacío y dos sin nada). Su nota de la guía que sí entregó está bien.
+- PDF por curso regenerados con el aviso y la hora 9:35 (PDF contra web: 1036 celdas, 0 diferencias). Se enviaron como respuesta en el hilo de cada curso con el texto aprobado: 2B a las 11:59 y 2A a las 12:03. Los PDF y las fotos están fuera del repositorio.
+
 ## 25-nov-2026 · Planilla web del 2.º semestre: se quita la fila de un estudiante de 2B-HC con el año cerrado
 
 - Orden de Francisco: el estudiante al que se le cerró el año sale de la planilla como los retirados («Sí, sácalo»). El OK se volvió a confirmar con él justo antes de escribir.

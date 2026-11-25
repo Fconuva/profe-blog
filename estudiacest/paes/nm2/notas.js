@@ -12,7 +12,7 @@
   function cell(c, k, curso) {
     if (k === 'nm2-1' && NM2_NO_CUENTA.has(curso) && c.nota == null && !c.pendiente) return ['sin', '—', 'No cuenta en 2.º A HC'];
     if (c.na) return ['na', 'N/A', 'Clase anterior a tu llegada'];
-    if (c.pendiente) return ['pend', c.nota == null ? 'P' : f(c.nota), c.nota == null ? 'Pendiente: no hay nada guardado' : 'Pendiente: el borrador quedó casi vacío'];
+    if (c.pendiente) return ['pend', c.nota == null ? 'P' : f(c.nota), c.nota == null ? 'Pendiente: no entra a tu promedio' : 'Pendiente: vale ' + f(c.nota) + ' por tener más de 5 pendientes'];
     if (c.nota == null) return ['sin', '—', 'Sin nota, no cuenta en el promedio'];
     return [c.nota < 4 ? 'low' : '', f(c.nota), ''];
   }
@@ -27,7 +27,7 @@
     const aviso = pend.length
       ? `<section class="box notas-aviso"><h2>Tienes ${pend.length} ${pend.length === 1 ? 'tarea pendiente' : 'tareas pendientes'}</h2><p>${pend.map(e).join(' · ')}</p><div class="actions"><a class="button primary" href="/estudiantes/dashboard.html?guias=simce">Ir a mis guías SIMCE (Unidades 3 y 4)</a>${p.celdas['nm2-1'].pendiente ? '<a class="button" href="clase.html?clase=1">Ir a la clase 1 de NM2</a>' : ''}</div></section>`
       : '<section class="box"><h2>No tienes tareas pendientes</h2><p>¡Bien hecho! Todas tus tareas tienen nota.</p></section>';
-    $('planilla').innerHTML = `<div class="notas-resumen"><div class="box"><b>${f(p.promedioTareas) || '—'}</b><span>Promedio de tus tareas</span></div><div class="box"><b>${p.pendientes}</b><span>Tareas pendientes</span></div><div class="box final"><b>${f(p.promedioFinal) || '—'}</b><span>Promedio final${p.piso ? ' · sube a 6,0 por tener 5 pendientes o menos' : ''}</span></div></div>${aviso}<div class="notas-bloques">${blocks}</div>`;
+    $('planilla').innerHTML = `<div class="notas-resumen"><div class="box"><b>${f(p.promedioTareas) || '—'}</b><span>Promedio de tus tareas</span></div><div class="box"><b>${p.pendientes}</b><span>Tareas pendientes</span></div><div class="box final"><b>${f(p.promedioFinal) || '—'}</b><span>Promedio final${p.pendientes > 5 ? ' · tus pendientes valen 1,0 por tener más de 5' : p.pendientes ? ' · las P no entran al promedio' : ''}</span></div></div>${aviso}<div class="notas-bloques">${blocks}</div>`;
     $('planilla').hidden = false;
     document.querySelectorAll('[data-curso]').forEach(el => { el.hidden = el.dataset.curso !== p.curso; });
   }

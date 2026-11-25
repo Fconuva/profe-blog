@@ -13,6 +13,7 @@
 - Cruce con Lirmi (libro de calificaciones, 2.º semestre): 2.º A HC sin retirados; 2.º B HC con 9 filas tachadas como retiradas, 8 de ellas con cuenta en la plataforma. Se excluyeron del PDF y de los correos. Quedan 75 estudiantes vigentes.
 - PDF privado para Francisco fuera del repositorio y 73 borradores de correo por estudiante; 2 vigentes sin correo institucional válido. No se envió ningún correo ni se escribió en Firebase o en Lirmi: espera el OK de Francisco.
 - Pendiente: la nota NM2 clase 1 de 2B-HC sigue sin publicarse para los estudiantes.
+- 25-nov: Francisco pidió informar por curso. Se envió desde el correo institucional un correo a la dirección de curso de 2.º A HC y otro a la de 2.º B HC, cada uno con su planilla en PDF, sin notas internas ni retirados. Los 73 correos individuales siguen sin enviarse. Pendiente: publicar la planilla en la plataforma.
 
 ## 25-nov-2026 · Notas del 2.º semestre 2A/2B-HC: revisión por envíos nuevos y dos alzas
 

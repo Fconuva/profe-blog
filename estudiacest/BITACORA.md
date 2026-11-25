@@ -1,3 +1,14 @@
+## 25-nov-2026 · Planilla del 2.º semestre: el panel de cada clase queda igual que la planilla, y una entrega tardía
+
+- Origen: un estudiante de 2B-HC escribió que no le había subido la nota aunque completó lo pendiente. Sí le había subido en la planilla y en Lirmi. Su panel «Mis notas de la Unidad 3» (`estudiantes/dashboard.html`) seguía mostrando las clases recuperadas como «pendiente de actualizar la nota». La causa general es que los recálculos de la planilla escriben solo `planillas_semestre/2026-s2` y no tocan `calificaciones_clase`, que es lo que lee ese panel.
+- Diagnóstico sobre una foto de las 13:08: 29 celdas de 11 estudiantes (10 de 2B-HC y 1 de 2A-HC) tenían en el panel otra nota que en la planilla. Son entregas puestas al día hoy y las dos correcciones individuales de Francisco. Las celdas que valen 1,0 por tener más de 5 pendientes no se tocaron. Hubo una sola entrega nueva después de la foto de las 9:35: un estudiante de 2B-HC entregó dos tareas más.
+- Antes de escribir se simuló y se mostró a Francisco. Él dio el OK («Sí, aplica todo»). Se respaldó lo vivo y se comprobó que nada había cambiado desde la foto.
+  - `calificaciones_clase`: se escribieron 29 registros con la misma forma que guarda adminprofe (`teacherGradeOverride` admin-manual, historial con el valor previo, `needsReview` falso y `publishedAt` nuevo).
+  - Planilla: se reescribió una fila, que pasa a tener 0 pendientes, y `meta.revisadaEl` queda en «25 de noviembre de 2026 a las 13:08».
+  - Lirmi 2B-HC, columna PROMEDIO (instrumento 11814134): cambió una celda. Se reenvió la lista completa con los valores que ya tenía, solo después de comprobar que la columna seguía igual a la carga de las 12:55.
+- Relectura: 29 de 29 registros iguales, y no queda ninguna celda del panel distinta de la planilla. En Lirmi hay 32 de 32 iguales, sin celdas de más y con la otra columna intacta. Los 74 promedios de Lirmi coinciden con `promedioFinal` de la planilla. No se tocaron respuestas, resultados ni código. No se envió ningún correo. Respaldos y scripts quedan fuera del repositorio.
+- El defecto de fondo sigue abierto: el próximo recálculo de la planilla volverá a desalinear el panel si no escribe también `calificaciones_clase`, o si el panel no lee la planilla. Además, el promedio parcial del panel cuenta como 1,0 las pendientes que la planilla deja en «P».
+
 ## 25-nov-2026 · Lirmi: promedio del 2.º semestre de 2.º A y 2.º B HC cargado en una columna «PROMEDIO»
 
 - Orden de Francisco: «sube las notas a lirmi». Dio el OK («Sí, súbelos») después de ver la simulación.

@@ -7,7 +7,10 @@
     { title: 'NM2', keys: [['nm2-1', 'Clase 1 · 18 de noviembre']] }
   ];
   const f = x => x == null ? '' : (Math.round(x * 10) / 10).toFixed(1).replace('.', ',');
-  function cell(c) {
+  // En 2.º A HC ninguna clase NM2 cuenta, tampoco la 1 (decisión del 25-nov-2026).
+  const NM2_NO_CUENTA = new Set(['2A-HC']);
+  function cell(c, k, curso) {
+    if (k === 'nm2-1' && NM2_NO_CUENTA.has(curso) && c.nota == null && !c.pendiente) return ['sin', '—', 'No cuenta en 2.º A HC'];
     if (c.na) return ['na', 'N/A', 'Clase anterior a tu llegada'];
     if (c.pendiente) return ['pend', c.nota == null ? 'P' : f(c.nota), c.nota == null ? 'Pendiente: no hay nada guardado' : 'Pendiente: el borrador quedó casi vacío'];
     if (c.nota == null) return ['sin', '—', 'Sin nota, no cuenta en el promedio'];
@@ -18,7 +21,7 @@
     const pend = GROUPS.flatMap(g => g.keys).filter(([k]) => p.celdas[k].pendiente)
       .map(([k, label]) => k === 'nm2-1' ? 'Clase 1 de NM2 (18 de noviembre)' : label + (where[k.replace(/-\d+$/, '')] || ''));
     const blocks = GROUPS.map(g => `<section class="box"><h2>${e(g.title)}</h2><ul class="notas-unidad">${g.keys.map(([k, label]) => {
-      const [cls, value, note] = cell(p.celdas[k]);
+      const [cls, value, note] = cell(p.celdas[k], k, p.curso);
       return `<li class="${cls === 'pend' ? 'es-pend' : ''}"><span>${e(label)}${note ? `<small>${e(note)}</small>` : ''}</span><span class="nota ${cls}">${e(value)}</span></li>`;
     }).join('')}</ul></section>`).join('');
     const aviso = pend.length
@@ -26,6 +29,7 @@
       : '<section class="box"><h2>No tienes tareas pendientes</h2><p>¡Bien hecho! Todas tus tareas tienen nota.</p></section>';
     $('planilla').innerHTML = `<div class="notas-resumen"><div class="box"><b>${f(p.promedioTareas) || '—'}</b><span>Promedio de tus tareas</span></div><div class="box"><b>${p.pendientes}</b><span>Tareas pendientes</span></div><div class="box final"><b>${f(p.promedioFinal) || '—'}</b><span>Promedio final${p.piso ? ' · sube a 6,0 por tener 5 pendientes o menos' : ''}</span></div></div>${aviso}<div class="notas-bloques">${blocks}</div>`;
     $('planilla').hidden = false;
+    document.querySelectorAll('[data-curso]').forEach(el => { el.hidden = el.dataset.curso !== p.curso; });
   }
   async function session() {
     const user = NM2.user;

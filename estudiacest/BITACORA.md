@@ -1,3 +1,18 @@
+## 25-nov-2026 · Notas del 2.º semestre 2A/2B-HC publicadas: cada estudiante ve solo su fila
+
+- Pedido de Francisco: subir la planilla a la página para que cada estudiante sepa lo que tiene pendiente. Eligió que cada uno vea solo su fila, con sesión iniciada.
+- Página nueva `/paes/nm2/notas.html` (`notas.js`), con el botón «Mis notas del semestre» en `/paes/nm2/`. Muestra el promedio de tareas, el número de pendientes, el promedio final con la regla del 6,0, un aviso naranja con las tareas pendientes y botones a las guías SIMCE y a la clase 1 de NM2, las notas por unidad y una leyenda.
+- API: acción `planilla-semestre` en `api/estudiantes.js` → `api/_planilla-semestre.js`. Pide token, responde `no-store` y entrega solo la fila del propio uid. Si la fila es de otro curso, si el estudiante está inactivo o si la planilla no está publicada, devuelve `null`. Nodo nuevo `plataforma_estudiantes/planillas_semestre/2026-s2`, que solo lee el admin. Las notas, las respuestas y Lirmi no se tocaron.
+- Carga con el OK de Francisco, simulada antes: 75 filas (42 de 2A-HC y 33 de 2B-HC). Se excluyeron los retirados: de los 9 de la lista, 8 estaban en la planilla. No había cuentas técnicas. Lo esperado es igual a lo aplicado. Se compararon con los PDF enviados a los cursos 1.050 casillas, sin diferencias.
+- Validaciones:
+  - Auditoría manual `scripts/audit-planilla-semestre.js` (API con datos simulados y página a 390, 1440 y 3840 px) correcta. Build correcto.
+  - Commit `753b1cfc`, desplegado con `deploy:prod:safe` (`dpl_73Ufr67FkYNjKMZuiRwRxmVS1QE1`, READY, alias www.estudiacest.com) desde una instantánea limpia en `C:/dev/worktrees/`.
+  - En producción, la página y el botón responden 200, y la API da 401 sin token o con un token falso.
+  - El módulo publicado, corrido contra Firebase, da a los 75 uid exactamente su fila.
+  - Se revisó la página de producción a 390 y 1440 px con cuatro respuestas reales: sin errores, sin desborde, y las casillas naranjas coinciden con las pendientes.
+- No se comprobó con una cuenta real de estudiante; no hay una cuenta de prueba autorizada.
+- Los 73 correos individuales siguen sin enviarse: Francisco dijo «Todavía no».
+
 ## 25-nov-2026 · Notas del 2.º semestre 2A/2B-HC: ¿las guías cerradas aceptan a quien la tiene pendiente?
 
 - Pedido: comprobar, leyendo código y Firebase en solo lectura, si un estudiante con una guía pendiente de la planilla puede enviarla aunque la sesión esté cerrada. No se escribió nada ni se probó con cuenta real de estudiante.

@@ -437,10 +437,10 @@
                 <div class="labor-summary-main">
                     <div class="labor-summary-kicker">Evaluación de trabajo en clases</div>
                     <div class="labor-summary-title">Mis notas de la Unidad 3</div>
-                    <div class="labor-summary-copy">Revisa la nota de cada clase y tu promedio parcial.</div>
+                    <div class="labor-summary-copy" id="laborSummaryCopy">Revisa la nota de cada clase y tu promedio parcial.</div>
                 </div>
                 <div class="labor-summary-side">
-                    <div class="labor-average"><span>Promedio parcial</span><strong id="laborAverage">-</strong></div>
+                    <div class="labor-average"><span id="laborAverageLabel">Promedio parcial</span><strong id="laborAverage">-</strong></div>
                     <span class="labor-toggle"><span class="labor-toggle-open">Ver detalle</span><span class="labor-toggle-close">Ocultar</span></span>
                 </div>
             </summary>
@@ -607,6 +607,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
     <script src="js/forced-refresh.js"></script>
+    <script src="js/planilla-panel.js"></script>
     <script>
         const FIREBASE_CONFIG = {
             apiKey: "AIzaSyCuDQ_iHDHmTd8bPeqUbsXQqdxw2SObt8w",
@@ -1256,6 +1257,7 @@
                 submission_inconsistent: { symbol:'!', label:'Por revisar', css:'adjusted' },
                 read_error: { symbol:'↻', label:'No se pudo comprobar', css:'draft' },
                 manual_grade: { symbol:'✎', label:'Nota docente', css:'draft' },
+                not_applicable: { symbol:'—', label:'No cuenta', css:'not-submitted' },
                 writing_incomplete: { symbol:'△', label:'Escritura incompleta', css:'incomplete' },
                 similarity_adjusted: { symbol:'!', label:'Nota ajustada', css:'adjusted' }
             };
@@ -1264,6 +1266,11 @@
 
         function reconcileLaborGradeStatus(item, respuestas) {
             const response = respuestas[item.evidenceSession || item.sessionId] || respuestas[item.sessionId];
+            // 2.º A y B HC: manda la planilla del semestre; no queda «pendiente de actualizar».
+            if (item.fromPlanilla) {
+                const submission = response && !response.__readError && !response.__loading ? classifySubmissionStatus(response) : null;
+                return { ...item, ...PlanillaPanel.cellStatus(item, submission) };
+            }
             if (response && response.__readError) return { ...item, status:'read_error', statusLabel:'No pudimos consultar la entrega. Recarga para comprobarla.' };
             const submissionStatus = classifySubmissionStatus(response);
             const submittedAt = Number(response && (response.submittedAt || response.completadaAt || response.submitted_at) || 0);
@@ -1282,7 +1289,7 @@
             };
         }
 
-        function renderLaborGrades(grades, respuestas) {
+        function renderLaborGrades(grades, respuestas, planilla) {
             const panel = document.getElementById('laborGradesPanel');
             const body = document.getElementById('laborGradesBody');
             const entries = Object.entries(grades || {})
@@ -1291,20 +1298,28 @@
                     sessionId: item.sessionId || sessionId
                 }, respuestas))
                 .filter(Boolean)
-                .sort((left, right) => Number(left.sessionId.match(/-u(\d+)-/)?.[1]||0)-Number(right.sessionId.match(/-u(\d+)-/)?.[1]||0)||Number(left.classNumber || 0) - Number(right.classNumber || 0));
+                .sort((left, right) => left.fromPlanilla && right.fromPlanilla ? left.order - right.order : Number(left.sessionId.match(/-u(\d+)-/)?.[1]||0)-Number(right.sessionId.match(/-u(\d+)-/)?.[1]||0)||Number(left.classNumber || 0) - Number(right.classNumber || 0));
             if (!panel || !body || !entries.length) {
                 if (panel) panel.classList.remove('visible');
                 return;
             }
 
-            const gradedEntries = entries.filter(item => item.needsReview !== true && item.grade !== null && item.grade !== undefined && item.grade !== '' && Number.isFinite(Number(item.grade)));
-            const total = gradedEntries.reduce((sum, item) => sum + Number(item.grade), 0);
-            document.getElementById('laborAverage').textContent = gradedEntries.length ? formatSchoolGrade(total / gradedEntries.length) : '-';
+            const planillaSummary = PlanillaPanel.summary(planilla);
+            if (planillaSummary) {
+                // Mismo promedio que la planilla: las P no cuentan, salvo con más de 5 (valen 1,0).
+                document.getElementById('laborAverage').textContent = Number.isFinite(Number(planillaSummary.average)) ? formatSchoolGrade(planillaSummary.average) : '-';
+                document.getElementById('laborAverageLabel').textContent = planillaSummary.averageLabel;
+                document.getElementById('laborSummaryCopy').textContent = planillaSummary.copy;
+            } else {
+                const gradedEntries = entries.filter(item => item.needsReview !== true && item.grade !== null && item.grade !== undefined && item.grade !== '' && Number.isFinite(Number(item.grade)));
+                const total = gradedEntries.reduce((sum, item) => sum + Number(item.grade), 0);
+                document.getElementById('laborAverage').textContent = gradedEntries.length ? formatSchoolGrade(total / gradedEntries.length) : '-';
+            }
             body.innerHTML = entries.map(item => {
                 const meta = laborStatusMeta(item.status);
                 return `<tr>
-                    <td>${item.sessionId.match(/-u(\d+)-/) ? 'Unidad '+item.sessionId.match(/-u(\d+)-/)[1]+' · ' : ''}Clase ${Number(item.classNumber || 0)}</td>
-                    <td><span class="labor-grade-value">${item.needsReview === true ? 'Pendiente de revisión' : item.grade === null || item.grade === undefined || item.grade === '' ? 'Pendiente' : formatSchoolGrade(item.grade)}</span></td>
+                    <td>${item.rowLabel ? escapeDashboardHtml(item.rowLabel) : (item.sessionId.match(/-u(\d+)-/) ? 'Unidad '+item.sessionId.match(/-u(\d+)-/)[1]+' · ' : '') + 'Clase ' + Number(item.classNumber || 0)}</td>
+                    <td><span class="labor-grade-value">${item.gradeText ? escapeDashboardHtml(item.gradeText) : item.needsReview === true ? 'Pendiente de revisión' : item.grade === null || item.grade === undefined || item.grade === '' ? 'Pendiente' : formatSchoolGrade(item.grade)}</span></td>
                     <td><span class="labor-status ${meta.css}"><span class="labor-status-symbol">${meta.symbol}</span>${meta.label}</span></td>
                     <td class="labor-reason">${escapeDashboardHtml(item.statusLabel || '')}</td>
                 </tr>`;
@@ -1325,7 +1340,7 @@
             const submissionStatus = classifySubmissionStatus(myResp);
             const hasResults = ses.resultados_visibles && myResult;
             const sessionTarget = ses.prefer_guia && ses.link_guia ? ses.link_guia : `sesion.html?id=${ses.id}`;
-                const noteValue = Number(myLaborGrade && myLaborGrade.grade);
+                const noteValue = myLaborGrade && myLaborGrade.grade !== null && myLaborGrade.grade !== undefined && myLaborGrade.grade !== '' ? Number(myLaborGrade.grade) : NaN;
                 const noteBadge = myLaborGrade?.needsReview === true
                     ? ' <span class="badge badge-grade">Nota pendiente de revisión</span>' : Number.isFinite(noteValue)
                     ? ' <span class="badge badge-grade">Nota ' + formatSchoolGrade(noteValue) + '</span>'
@@ -1482,16 +1497,36 @@
             };
         }
 
+        // Fila propia de la planilla del 2.º semestre (la misma acción que /paes/nm2/notas.html).
+        // Si falla o no hay fila, el panel sigue con calificaciones_clase.
+        async function loadPlanillaSemestre() {
+            try {
+                const user = auth.currentUser;
+                if (!user) return null;
+                const ctrl = typeof AbortController === 'function' ? new AbortController() : null;
+                const timer = ctrl ? setTimeout(() => ctrl.abort(), 8000) : null;
+                const r = await fetch('/api/estudiantes?action=planilla-semestre', {
+                    headers: { Authorization: 'Bearer ' + await user.getIdToken() },
+                    signal: ctrl ? ctrl.signal : undefined
+                });
+                if (timer) clearTimeout(timer);
+                const data = await r.json().catch(() => ({}));
+                return r.ok && PlanillaPanel.isPlanilla(data.planilla) ? data.planilla : null;
+            } catch (e) { return null; }
+        }
+
         async function loadDashboard(uid, curso, programa) {
             const archiveContainer = document.getElementById('sessionList');
             const currentContainer = document.getElementById('currentSessionList');
             try {
                 // El ranking oculto no forma parte de la carga del panel.
-                const [sesSnap, laborGradeSnap] = await Promise.all([
+                const [sesSnap, laborGradeSnap, planilla] = await Promise.all([
                     db.ref(BASE + '/sesiones').once('value'),
-                    db.ref(BASE + '/calificaciones_clase/' + uid).once('value').catch(() => null)
+                    db.ref(BASE + '/calificaciones_clase/' + uid).once('value').catch(() => null),
+                    PlanillaPanel.appliesTo(curso) ? loadPlanillaSemestre() : null
                 ]);
-                const laborGrades = laborGradeSnap && laborGradeSnap.exists() ? laborGradeSnap.val() : {};
+                // 2.º A y B HC: panel y tarjetas muestran la fila de la planilla del semestre.
+                const laborGrades = PlanillaPanel.mergeGrades(laborGradeSnap && laborGradeSnap.exists() ? laborGradeSnap.val() : {}, planilla);
 
                 const sessionMap = new Map(Object.entries(STATIC_SESSION_FALLBACKS).map(([id,session]) => [id,{ id, ...session }]));
                 if (sesSnap.exists()) {
@@ -1553,7 +1588,7 @@
                 await Promise.all(sesiones.map(async (ses) => {
                     if (!loadedSessions.has(ses.id)) await readSession(ses);
                 }));
-                renderLaborGrades(laborGrades, respuestas);
+                renderLaborGrades(laborGrades, respuestas, planilla);
 
                 // === RENDER SESSIONS ===
                 const rendered = renderSessionGroups(sesiones, respuestas, resultados, laborGrades);

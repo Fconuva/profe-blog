@@ -190,7 +190,9 @@ async function verifyDashboardPriority() {
     db:{ref:p=>({once:async()=>{reads.push(p);if(p==='fixture/sesiones')return snap(sessions);if(p.includes('/respuestas/past/'))await oldNetwork;return snap(null);}})},
     isSessionAssignedToStudent:()=>true,inferPanelUnit:s=>s.panel_unidad,
     renderSessionGroups:(all,responses)=>({unit4:{html:'current-ready',totalCount:1},current:{html:responses.past?.__loading?'history-loading':'history-ready',totalCount:1},archive:{html:'',totalCount:0},byUnit:{u4:{plan:[{session:sessions[0]}]}}}),
-    syncUnitShell(){},renderLaborGrades(){gradeRendered=true;},classifySubmissionStatus:()=>({completed:false})};
+    syncUnitShell(){},renderLaborGrades(){gradeRendered=true;},classifySubmissionStatus:()=>({completed:false}),
+    // 2.º HC lee además su fila de la planilla del semestre (scripts/audit-panel-planilla.js); aquí sin fila.
+    PlanillaPanel:require(path.join(root,'estudiantes/js/planilla-panel.js')),loadPlanillaSemestre:async()=>null};
   vm.createContext(context);vm.runInContext(dashboard.slice(begin,end),context);
   const pending=context.loadDashboard('fixture','2A-HC','simce');
   for(let i=0;i<12;i++)await Promise.resolve();

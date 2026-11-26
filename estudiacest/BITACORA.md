@@ -2,7 +2,7 @@
 
 - Un estudiante de 2.º B HC que está con licencia médica y no asiste al colegio se puso al día el 25-nov en la tarde, después del corte de las 13:08. Completó la clase 1 de NM2 y dos actividades de la Unidad 3 que ya contaban por el perdón de ese día.
 - Orden de Francisco: «recalcula para que le de 7 porq volvio a entregar y trabajar y eso lo vamos a valorar».
-- Planilla : la nota de NM2 y las dos notas de 5 por similitud de la Unidad 3 quedaron en 7, igual que en el caso de 2.º B del 25-nov. Las tareas pendientes de la Unidad 4 siguen como P y, con 3 o menos, no entran al promedio. El promedio final pasó de 6,6 a 7,0. Se simuló, se aplicó, se releyó y el resto del nodo quedó idéntico.
+- Planilla `2026-s2`: la nota de NM2 y las dos notas de 5 por similitud de la Unidad 3 quedaron en 7, igual que en la entrega tardía del 25-nov. Las tareas pendientes de la Unidad 4 siguen como P y, con 3 o menos, no entran al promedio. El promedio final pasó de 6,6 a 7,0. Se simuló, se aplicó, se releyó y el resto del nodo quedó idéntico.
 - Lirmi 2.º B HC, columna PROMEDIO (instrumento 11814134): se cambió solo esa celda, de 6,6 a 7,0, con el OK de Francisco. Se reenvió la columna con los valores que ya tenía. Al releer tras recargar, 0 celdas distintas de 32 y las otras columnas intactas.
 - La respuesta del 26-nov, con el OK de Francisco y desde el correo del colegio, salió solo al estudiante y en su hilo. Lo felicita por trabajar estando con licencia y le confirma el 7,0.
 

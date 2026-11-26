@@ -4,7 +4,8 @@
 - Export completo de Firebase a las 8:23, antes de la clase, con respaldo privado fuera de Git. Plan con el modelo de laboriosidad del 15-oct y sus guardas, solo 3.º HC y con la G29 (44 preguntas): 0 celdas por escribir. Nada baja; se conservan 24 celdas con nota sin entrega guardada (12 de la G19) y 3 notas más altas que la laboriosidad. No hay «A». Seis celdas de G22 a G28 bajo el 25 % siguen vacías (no se escribe un 1,0 nuevo). La G29 tenía 22 entregas en curso.
 - Promedio con la fórmula del Libro de notas del panel (`promedioDe`): G11 a G29, sin vacías ni «A», un decimal.
 - Lirmi, simulación de solo lectura (Taller PAES Lenguaje, Segundo Semestre, sin columnas previas). Emparejado por RUT con la nómina vigente: 39 de 3A-HC y 40 de 3B-HC. Cuatro estudiantes figuran retirados en Lirmi y quedan fuera; uno de 3B-HC, vigente, no tiene notas en el semestre. El formulario de la columna «PROMEDIO» (sumativa, parcial, 26-11-2026) se llenó y se cerró sin guardar.
-- Pendiente: export y promedio nuevos al terminar la G29, la decisión de Francisco sobre las vacías de quienes tienen más de 5 y su OK para cargar. No se escribió en Firebase ni en Lirmi.
+- Decisión de Francisco (26-nov): las guías vacías quedan fuera del promedio, como en 4.º HC, también para quienes tienen más de 5. No se extiende a 3.º HC la regla de 2.º HC (más de 5 pendientes valen 1,0). Quien no tiene ninguna nota queda en blanco.
+- Pendiente: export y promedio nuevos al terminar la G29, y el OK de Francisco para cargar. No se escribió en Firebase ni en Lirmi.
 
 ## 26-nov-2026 · Planilla del 2.º semestre: un reclamo de plazo en 2.º A HC respondido, sin reabrir tareas
 

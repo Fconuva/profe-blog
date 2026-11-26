@@ -1,3 +1,9 @@
+## 26-nov-2026 · Planilla del 2.º semestre: un reclamo de plazo en 2.º A HC respondido, sin reabrir tareas
+
+- Un estudiante de 2.º A HC escribió el 25-nov en la tarde, en el hilo de la planilla, que no podía entrar a la plataforma para hacer tareas pendientes.
+- Decisión de Francisco: la nota se mantiene y no hay más plazo. Ya habían conversado y se le había dado una semana completa para ponerse al día. Con el promedio cerrado, no se reciben tareas de hace meses.
+- La respuesta se envió con el OK de Francisco el 26-nov a las 8:25, desde el correo del colegio, solo al estudiante y en el mismo hilo. No se cambió ninguna nota, ni en la planilla ni en Lirmi.
+
 ## 25-nov-2026 · Planilla del 2.º semestre: el panel de cada clase queda igual que la planilla, y una entrega tardía
 
 - Origen: un estudiante de 2B-HC escribió que no le había subido la nota aunque completó lo pendiente. Sí le había subido en la planilla y en Lirmi. Su panel «Mis notas de la Unidad 3» (`estudiantes/dashboard.html`) seguía mostrando las clases recuperadas como «pendiente de actualizar la nota». La causa general es que los recálculos de la planilla escriben solo `planillas_semestre/2026-s2` y no tocan `calificaciones_clase`, que es lo que lee ese panel.

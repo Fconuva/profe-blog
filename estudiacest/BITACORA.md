@@ -1,3 +1,11 @@
+## 26-nov-2026 · Promedio del 2.º semestre de 2.º A y B HC enviado a las titulares de Lengua y Literatura
+
+- Orden de Francisco: mandar a las titulares de 2.º A HC y 2.º B HC en Lengua y Literatura el promedio del 2.º semestre del Taller de Comprensión Lectora, para que lo ingresen en su asignatura.
+- Fuente: Lirmi, columna «PROMEDIO» del 25-11-2026, leída sin escribir (2A-HC, instrumento 11814071: 42 notas; 2B-HC, instrumento 11814134: 32 notas). Cruzada con `promedioFinal` de la planilla `2026-s2`: 0 diferencias en los dos cursos. No se usó el `pares.json` viejo.
+- El estudiante de 2.º B HC con cierre anticipado de año va con su nota de «Evaluación proceso» del 5-nov y una aclaración al pie; así lo aprobó Francisco al ver la tabla.
+- Curso de cada titular deducido de los correos del colegio a los docentes de 2.º B EMHC, y confirmado por Francisco al dar el OK.
+- Con el OK «Sí, envía ambos», salieron dos correos desde el Gmail del colegio, cada uno con la tabla en el cuerpo y un Excel adjunto: 2.º B HC a las 10:09 y 2.º A HC a las 10:10. Los dos están verificados en Enviados con su adjunto. No se tocó Lirmi ni Firebase.
+
 ## 26-nov-2026 · Planilla del 2.º semestre: un estudiante de 2.º B HC con licencia queda con 7,0 por decisión de Francisco
 
 - Un estudiante de 2.º B HC que está con licencia médica y no asiste al colegio se puso al día el 25-nov en la tarde, después del corte de las 13:08. Completó la clase 1 de NM2 y dos actividades de la Unidad 3 que ya contaban por el perdón de ese día.
